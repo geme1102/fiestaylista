@@ -177,6 +177,7 @@ export default function Landing() {
                     backdropFilter: 'blur(12px)',
                     border: '1px solid rgba(255,255,255,0.4)',
                     boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
+                    willChange: 'transform',
                   }}
                 >
                   <img src={typeEntry?.icon || EVENT_ICONS[key as keyof typeof EVENT_ICONS]} alt="" loading="lazy" className="w-12 h-12" />
@@ -199,6 +200,7 @@ export default function Landing() {
                 key={feature.title}
                 whileHover={{ y: -4 }}
                 className="text-center"
+                style={{ willChange: 'transform' }}
               >
                 <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm" style={{ border: '1px solid rgba(255,255,255,0.4)' }}>
                   <img src={feature.icon} alt="" loading="lazy" className="w-full h-full object-contain p-2" />
@@ -230,6 +232,7 @@ export default function Landing() {
                   backdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.4)',
                   boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
+                  willChange: 'transform',
                 }}
               >
                 <div className="flex gap-1 mb-3">{'⭐'.repeat(5)}</div>

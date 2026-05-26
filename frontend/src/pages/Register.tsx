@@ -5,6 +5,31 @@ import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (score <= 1) return { score, label: 'Débil', color: 'bg-red-500' };
+  if (score <= 3) return { score, label: 'Media', color: 'bg-amber-500' };
+  return { score, label: 'Fuerte', color: 'bg-green-500' };
+}
+
+function PasswordStrengthBar({ password }: { password: string }) {
+  const { score, label, color } = getPasswordStrength(password);
+  const pct = (score / 5) * 100;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-300 ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={`text-xs font-medium whitespace-nowrap ${color.replace('bg-', 'text-')}`}>{label}</span>
+    </div>
+  );
+}
+
 export default function Register() {
   const { register, isAuthenticated, isLoading } = useAuth();
   const [name, setName] = useState('');
@@ -119,6 +144,11 @@ export default function Register() {
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
             />
+            {password && (
+              <div className="mt-2">
+                <PasswordStrengthBar password={password} />
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">

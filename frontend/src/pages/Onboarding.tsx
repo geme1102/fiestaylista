@@ -61,6 +61,7 @@ export default function Onboarding() {
                 <img
                   src={stepImages[step]}
                   alt=""
+                  loading="lazy"
                   className="w-48 h-48 mx-auto mb-6"
                 />
               )}

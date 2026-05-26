@@ -3,7 +3,7 @@ import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { events, boostPayments } from '../db/schema.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { NotFoundError } from '../utils/errors.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import type { Tier } from '../types/index.js';
@@ -49,7 +49,7 @@ export async function createCheckoutSession(
   tier: Tier,
   interval: 'month' | 'year',
   successUrl: string,
-  cancelUrl: string,
+  _cancelUrl: string,
 ): Promise<{ url: string }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
@@ -122,7 +122,7 @@ export async function createContributionPreference(
 
 export async function createBoostPreference(
   eventId: string,
-  userId: string,
+  _userId: string,
   successUrl: string,
 ): Promise<{ url: string }> {
   if (!client) {

@@ -98,7 +98,7 @@ export async function getUserEvents(userId: string) {
   return eventsWithCounts;
 }
 
-export async function getEvent(eventId: string, userId?: string) {
+export async function getEvent(eventId: string, _userId?: string) {
   const [event] = await db
     .select()
     .from(eventsTable)

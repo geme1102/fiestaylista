@@ -1,6 +1,6 @@
-import { eq, lte, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { failedWebhooks, cashContributions, subscriptions as subsTable, users } from './db/schema.js';
+import { failedWebhooks } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
@@ -8,24 +8,23 @@ import { cleanupStaleContributions } from './services/cashFund.js';
 import * as mercadopagoService from './services/mercadopago.js';
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
-let running = false;
+const locks = new Map<string, boolean>();
 
 export function startCronJobs(): void {
   console.log('[Cron] Iniciando jobs programados...');
 
   const DAILY_MS = 24 * 60 * 60 * 1000;
-  const HOURLY_MS = 60 * 60 * 1000;
 
   const runWithLock = async (name: string, fn: () => Promise<void>) => {
-    if (running) {
+    if (locks.get(name)) {
       console.log(`[Cron] Saltando ${name} - ejecución anterior aún en progreso`);
       return;
     }
-    running = true;
+    locks.set(name, true);
     try {
       await fn();
     } finally {
-      running = false;
+      locks.set(name, false);
     }
   };
 

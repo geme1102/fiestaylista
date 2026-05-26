@@ -112,7 +112,7 @@ export default function Account() {
           }}
         >
           <div className="flex items-center gap-4 mb-6">
-            <img src={avatarSrc} alt="" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
+            <img src={avatarSrc} alt="" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Información Personal</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">Tus datos de cuenta</p>

@@ -158,4 +158,14 @@ function gracefulShutdown(signal: string) {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
+process.on('uncaughtException', (error) => {
+  console.error('[Fatal] Excepción no capturada:', error);
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[Fatal] Promesa rechazada no capturada:', reason);
+  gracefulShutdown('unhandledRejection');
+});
+
 export default app;

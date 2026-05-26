@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, referrals, consentRecords, arcoRequests } from '../db/schema.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { NotFoundError } from '../utils/errors.js';
 
 export async function getUserData(userId: string) {
   const [user] = await db

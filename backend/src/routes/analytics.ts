@@ -1,17 +1,23 @@
 import { Router, type Request, type Response } from 'express';
+import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 
 const router = Router();
 
+const viewSchema = z.object({
+  eventId: z.string().uuid('ID de evento inválido'),
+});
+
 router.post('/analytics/view', async (req: Request, res: Response) => {
   try {
-    const { eventId } = req.body as { eventId?: string };
-    if (!eventId) {
+    const parsed = viewSchema.safeParse(req.body);
+    if (!parsed.success) {
       res.status(200).json({ ok: true });
       return;
     }
+    const { eventId } = parsed.data;
 
     await db.insert(eventViews).values({
       eventId,

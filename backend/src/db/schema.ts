@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, integer, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, integer, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -31,7 +31,9 @@ export const events = pgTable('events', {
   viewCount: integer('view_count').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index('events_user_id_idx').on(table.userId),
+}));
 
 export const gifts = pgTable('gifts', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -41,7 +43,9 @@ export const gifts = pgTable('gifts', {
   claimedBy: text('claimed_by'),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  eventIdIdx: index('gifts_event_id_idx').on(table.eventId),
+}));
 
 export const photos = pgTable('photos', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -149,7 +153,9 @@ export const referrals = pgTable('referrals', {
   status: text('status').notNull().default('pending'),
   bonusAwarded: boolean('bonus_awarded').notNull().default(false),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  referrerIdIdx: index('referrals_referrer_id_idx').on(table.referrerId),
+}));
 
 export const consentRecords = pgTable('consent_records', {
   id: uuid('id').defaultRandom().primaryKey(),

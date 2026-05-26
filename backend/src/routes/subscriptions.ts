@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
+import { paymentLimiter } from '../middleware/rateLimit.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
 import { ValidationError } from '../utils/errors.js';
@@ -17,7 +18,7 @@ const checkoutSchema = z.object({
   cancelUrl: z.string().url('URL de cancelación inválida'),
 });
 
-router.post('/create-checkout', requireAuth, async (req: AuthRequest, res, next) => {
+router.post('/create-checkout', paymentLimiter, requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const data = checkoutSchema.parse(req.body);
     const result = await mercadopagoService.createCheckoutSession(

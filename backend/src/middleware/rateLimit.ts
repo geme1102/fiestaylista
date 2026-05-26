@@ -88,3 +88,12 @@ export const arcoLimiter = rateLimit({
   keyGenerator,
   message: { error: 'Demasiadas solicitudes ARCO. Intenta de nuevo en un minuto.' },
 });
+
+export const paymentLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiados intentos de pago. Intenta de nuevo en un minuto.' },
+});

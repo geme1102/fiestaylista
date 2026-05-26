@@ -166,8 +166,25 @@ export default function EventAdmin() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <LoadingSpinner size="lg" text="Cargando evento..." />
+      <div className="animate-pulse space-y-6 py-10">
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-2xl w-1/3" />
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4" />
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-2xl" />
+            ))}
+          </div>
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

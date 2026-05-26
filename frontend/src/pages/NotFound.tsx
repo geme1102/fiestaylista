@@ -13,6 +13,7 @@ export default function NotFound() {
           <img
             src="/illustrations/illustration-404.png"
             alt="404"
+            loading="lazy"
             className="w-64 h-64 mx-auto mb-6"
           />
         </motion.div>

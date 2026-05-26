@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
+import { paymentLimiter } from '../middleware/rateLimit.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors.js';
@@ -10,9 +11,7 @@ import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
-const BOOST_DAYS = 30;
-
-router.post('/events/:eventId/boost', requireAuth, async (req: AuthRequest, res, next) => {
+router.post('/events/:eventId/boost', paymentLimiter, requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const eventId = String(req.params.eventId);
     if (!eventId) throw new ValidationError('ID del evento requerido');

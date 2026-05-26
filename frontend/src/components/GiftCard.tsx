@@ -38,14 +38,15 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: '1px solid rgba(236,72,153,0.15)',
+          willChange: 'transform',
         }}
       >
         <div className="absolute inset-0 opacity-[0.03]">
-          <img src="/backgrounds/gift-card-bg.png" alt="" className="w-full h-full object-cover" />
+          <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" />
         </div>
         <div className="flex items-center gap-3 relative">
           <div className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden opacity-60">
-            <img src={image} alt="" className="w-full h-full object-cover" />
+            <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-500 dark:text-gray-400 line-through truncate text-sm">
@@ -99,15 +100,16 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
         WebkitBackdropFilter: 'blur(20px)',
         border: '1px solid rgba(255,255,255,0.4)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+        willChange: 'transform',
       }}
     >
       <div className="absolute inset-0 opacity-[0.04]">
-        <img src="/backgrounds/gift-card-bg.png" alt="" className="w-full h-full object-cover" />
+        <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" />
       </div>
 
       <div className="flex items-start gap-4 relative">
         <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300">
-          <img src={image} alt={gift.name} className="w-full h-full object-contain" />
+          <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" />
         </div>
 
         <div className="flex-1 min-w-0 pt-0.5">
@@ -137,6 +139,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
             style={{
               background: 'linear-gradient(135deg, #ec4899, #db2777)',
               boxShadow: '0 2px 12px rgba(236,72,153,0.25)',
+              willChange: 'transform',
             }}
           >
             {claimingId === gift.id ? (

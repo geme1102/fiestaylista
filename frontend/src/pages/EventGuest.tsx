@@ -233,7 +233,7 @@ export default function EventGuest() {
                   key={photo.id}
                   whileHover={{ scale: 1.03 }}
                   className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700"
-                  style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+                  style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', willChange: 'transform' }}
                 >
                   <img src={photo.url} alt={photo.caption || ''} loading="lazy" className="w-full h-36 sm:h-40 object-cover" />
                 </motion.div>
