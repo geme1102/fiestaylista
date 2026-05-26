@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+﻿import { useEffect, useState } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [message, setMessage] = useState('Verificando...');
+  const { refreshUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -16,7 +19,8 @@ export default function VerifyEmail() {
     }
 
     apiClient.post('/api/auth/verify-email', { token })
-      .then(() => {
+      .then(async () => {
+        await refreshUser();
         setStatus('success');
         setMessage('¡Correo verificado exitosamente!');
       })
@@ -24,7 +28,11 @@ export default function VerifyEmail() {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Error al verificar correo');
       });
-  }, [searchParams]);
+  }, [searchParams, refreshUser]);
+
+  const goToDashboard = () => {
+    navigate('/dashboard');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 to-white dark:from-gray-900 dark:to-gray-900 px-4">
@@ -37,12 +45,12 @@ export default function VerifyEmail() {
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">{message}</p>
         {status === 'success' && (
-          <Link
-            to="/dashboard"
+          <button
+            onClick={goToDashboard}
             className="inline-flex px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             Ir al Dashboard
-          </Link>
+          </button>
         )}
         {status === 'error' && (
           <Link
