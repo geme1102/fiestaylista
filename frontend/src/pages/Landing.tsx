@@ -1,10 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { apiClient, setTokens } from '../services/api';
 import { EVENT_ICONS, EVENT_LABELS } from '../types';
-import { showToast } from '../hooks/useToast';
 import LiveCounter from '../components/LiveCounter';
 
 const FEATURES = [
@@ -39,41 +37,7 @@ const TESTIMONIALS = [
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guestName, setGuestName] = useState('');
-  const [guestTitle, setGuestTitle] = useState('');
-  const [guestType, setGuestType] = useState('BABY_SHOWER');
-  const [guestCreating, setGuestCreating] = useState(false);
-  const [guestAcceptTerms, setGuestAcceptTerms] = useState(false);
-
   const heroBg = useMemo(() => HERO_BGS[Math.floor(Math.random() * HERO_BGS.length)], []);
-
-  const handleGuestCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guestName.trim() || !guestTitle.trim()) {
-      showToast('Completa todos los campos', 'error');
-      return;
-    }
-    if (!guestAcceptTerms) {
-      showToast('Debes aceptar los términos y condiciones', 'error');
-      return;
-    }
-    setGuestCreating(true);
-    try {
-      const data = await apiClient.post<{ event: { id: string }; accessToken: string; refreshToken: string }>('/api/events/guest', {
-        title: guestTitle.trim(),
-        eventType: guestType,
-        hostName: guestName.trim(),
-      });
-      setTokens(data.accessToken, data.refreshToken);
-      showToast('Evento creado. Regístrate para guardarlo permanentemente.', 'success');
-      navigate(`/event/${data.event.id}`);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
-    } finally {
-      setGuestCreating(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
@@ -152,16 +116,10 @@ export default function Landing() {
               ) : (
                 <>
                   <button
-                    onClick={() => setShowGuestForm(true)}
+                    onClick={() => navigate('/register')}
                     className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all"
                   >
                     Comenzar Gratis →
-                  </button>
-                  <button
-                    onClick={() => navigate('/register')}
-                    className="px-8 py-4 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-lg font-semibold hover:shadow-lg transition-all"
-                  >
-                    Registrarse
                   </button>
                   <Link
                     to="/pricing"
@@ -197,88 +155,6 @@ export default function Landing() {
           />
         </motion.div>
       </section>
-
-      {showGuestForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowGuestForm(false)}>
-          <form
-            onSubmit={handleGuestCreate}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-8 w-full max-w-md shadow-2xl"
-            style={{ animation: 'pop-in 0.3s ease-out' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Crear evento rápido</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Sin registro. Crea tu lista en segundos.</p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tu nombre</label>
-                <input
-                  type="text"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 outline-none"
-                  placeholder="Ej: María"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre del evento</label>
-                <input
-                  type="text"
-                  value={guestTitle}
-                  onChange={(e) => setGuestTitle(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 outline-none"
-                  placeholder="Ej: Baby Shower de Mateo"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo de evento</label>
-                <select
-                  value={guestType}
-                  onChange={(e) => setGuestType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 outline-none"
-                >
-                  {EVENT_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <label className="flex items-start gap-3 mt-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={guestAcceptTerms}
-                onChange={(e) => setGuestAcceptTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-pink-500 shrink-0"
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Acepto los{' '}
-                <Link to="/terminos-y-condiciones" target="_blank" className="text-pink-600 hover:underline">Términos y Condiciones</Link>
-                {' '}y la{' '}
-                <Link to="/politica-de-privacidad" target="_blank" className="text-pink-600 hover:underline">Política de Privacidad</Link>.
-              </span>
-            </label>
-
-            <div className="flex gap-3 mt-4">
-              <button
-                type="button"
-                onClick={() => setShowGuestForm(false)}
-                className="flex-1 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={guestCreating || !guestAcceptTerms}
-                className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center"
-              >
-                {guestCreating ? 'Creando...' : 'Crear evento'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       <section className="py-20 bg-white dark:bg-gray-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
