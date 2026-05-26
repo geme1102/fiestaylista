@@ -45,6 +45,11 @@ app.use(helmet({
       connectSrc: ["'self'", config.FRONTEND_URL].filter(Boolean),
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'", "https://mpago.la"],
+      workerSrc: ["'none'"],
+      manifestSrc: ["'self'"],
       upgradeInsecureRequests: [],
     },
   },
@@ -77,9 +82,7 @@ app.use('/api', apiLimiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-if (config.NODE_ENV !== 'production') {
-  app.use('/uploads', express.static('uploads'));
-}
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', authRouter);
 app.use('/api/events', eventsRouter);

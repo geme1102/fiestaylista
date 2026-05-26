@@ -1,10 +1,8 @@
 import { Router } from 'express';
 import { eq, and, sql } from 'drizzle-orm';
-import { z } from 'zod';
 import { db } from '../db/index.js';
 import { users, referrals } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
-import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();

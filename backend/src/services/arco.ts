@@ -1,6 +1,6 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, referrals, refreshTokens, consentRecords, arcoRequests } from '../db/schema.js';
+import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, referrals, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 export async function getUserData(userId: string) {

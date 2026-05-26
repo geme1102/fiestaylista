@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { randomBytes, createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { users, refreshTokens } from '../db/schema.js';

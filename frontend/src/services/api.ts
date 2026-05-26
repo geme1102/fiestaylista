@@ -152,6 +152,7 @@ async function tryRefreshToken(): Promise<boolean> {
       return false;
     } finally {
       refreshPromise = null;
+      refreshRetries = 0;
     }
   })();
 

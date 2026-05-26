@@ -37,7 +37,7 @@ export const config = {
   DATABASE_URL: process.env.DATABASE_URL!,
   JWT_SECRET: process.env.JWT_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (process.env.JWT_SECRET! + '_guest'),
+  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (process.env.JWT_GUEST_SECRET !== undefined ? process.env.JWT_GUEST_SECRET : process.env.JWT_SECRET! + '_guest'),
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
   MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',
   MERCADO_PAGO_PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID ?? '',

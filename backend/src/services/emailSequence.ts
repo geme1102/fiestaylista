@@ -1,4 +1,4 @@
-import { eq, and, sql, lte } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';

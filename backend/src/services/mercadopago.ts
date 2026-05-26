@@ -6,7 +6,7 @@ import { events, boostPayments } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
-import type { Tier, SubscriptionStatus } from '../types/index.js';
+import type { Tier } from '../types/index.js';
 
 let client: MercadoPagoConfig | null = null;
 
