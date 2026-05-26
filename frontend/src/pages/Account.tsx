@@ -101,16 +101,7 @@ export default function Account() {
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8">Mi Cuenta</h1>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <div
-          className="rounded-2xl p-6 sm:p-8"
-          style={{
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.4)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-          }}
-        >
+        <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
           <div className="flex items-center gap-4 mb-6">
             <img src={avatarSrc} alt="" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
             <div>
@@ -134,16 +125,7 @@ export default function Account() {
           </dl>
         </div>
 
-        <div
-          className="rounded-2xl p-6 sm:p-8"
-          style={{
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.4)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-          }}
-        >
+        <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Suscripción</h2>
           {loadingSub ? (
             <div className="flex justify-center py-8">
@@ -199,16 +181,7 @@ export default function Account() {
       </div>
 
       {referralStats && (
-        <div
-          className="rounded-2xl p-6 sm:p-8 mb-8"
-          style={{
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.4)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-          }}
-        >
+        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">👥 Invita y Gana</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Invita a tus amigos a crear su lista de regalos. Ambos reciben <strong>1 mes Pro gratis</strong> cuando se registren.
@@ -246,16 +219,7 @@ export default function Account() {
         </div>
       )}
 
-      <div
-        className="rounded-2xl p-6 sm:p-8 mb-8"
-        style={{
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255,255,255,0.4)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-        }}
-      >
+      <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🔐 Mis Datos Personales</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           De acuerdo con la Ley 1581 de 2012, puedes ejercer tus derechos ARCO sobre tus datos personales.

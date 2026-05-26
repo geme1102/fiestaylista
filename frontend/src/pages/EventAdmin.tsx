@@ -215,14 +215,7 @@ export default function EventAdmin() {
       </div>
 
       <div
-        className="rounded-2xl p-6 sm:p-8 mb-8"
-        style={{
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.4)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-        }}
+        className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -324,12 +317,7 @@ export default function EventAdmin() {
 
           {gifts.length === 0 && (
             <div
-              className="rounded-2xl p-6 text-center"
-              style={{
-                background: 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.4)',
-              }}
+              className="rounded-2xl p-6 text-center glass-card"
             >
               <img src="/illustrations/empty-admin.png" alt="" loading="lazy" className="w-48 h-48 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400 mb-4">Agrega regalos sugeridos para tu evento</p>
@@ -369,12 +357,7 @@ export default function EventAdmin() {
 
           {photos.length === 0 && (
             <div
-              className="rounded-2xl p-6 text-center mb-4"
-              style={{
-                background: 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.4)',
-              }}
+              className="rounded-2xl p-6 text-center mb-4 glass-card"
             >
               <p className="text-gray-500 dark:text-gray-400">Aún no hay fotos. Sube la primera.</p>
             </div>

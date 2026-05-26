@@ -32,12 +32,8 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 0.8, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
-        className="relative rounded-2xl p-4 overflow-hidden"
+        className="relative rounded-2xl p-4 overflow-hidden glass-card border border-pink-500/20 dark:border-pink-900/30"
         style={{
-          background: 'rgba(255,255,255,0.65)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(236,72,153,0.15)',
           willChange: 'transform',
         }}
       >
@@ -93,13 +89,8 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
       animate="visible"
       whileHover="hover"
       whileTap="tap"
-      className="relative rounded-2xl p-5 overflow-hidden cursor-default group"
+      className="relative rounded-2xl p-5 overflow-hidden cursor-default group glass-card-premium"
       style={{
-        background: 'rgba(255,255,255,0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.4)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
         willChange: 'transform',
       }}
     >

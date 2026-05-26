@@ -189,13 +189,7 @@ export default function ArcoRights() {
         </div>
 
         {!isAuthenticated ? (
-          <div className="rounded-2xl p-8 text-center" style={{
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.4)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-          }}>
+          <div className="rounded-2xl p-8 text-center glass-card-premium">
             <p className="text-gray-600 dark:text-gray-400 mb-4">{content.loginRequired}</p>
             <Link to="/login" className="inline-flex px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
               {lang === 'es' ? 'Iniciar Sesión' : 'Log In'}
@@ -207,14 +201,7 @@ export default function ArcoRights() {
 
             <div className="grid sm:grid-cols-2 gap-6 mb-8">
               <button onClick={handleDownloadData} disabled={loading}
-                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-                }}>
+                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.access.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.access.desc}</p>
                 <span className="text-pink-600 font-medium text-sm">
@@ -223,28 +210,14 @@ export default function ArcoRights() {
               </button>
 
               <button onClick={() => openForm('rectify')}
-                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-                }}>
+                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.rectify.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.rectify.desc}</p>
                 <span className="text-pink-600 font-medium text-sm">{content.rectify.btn}</span>
               </button>
 
               <button onClick={handleDeleteAccount} disabled={loading}
-                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-                }}>
+                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
                 <h3 className="text-lg font-semibold text-red-600 mb-2">{content.cancel.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.cancel.desc}</p>
                 <span className="text-red-600 font-medium text-sm">
@@ -253,14 +226,7 @@ export default function ArcoRights() {
               </button>
 
               <button onClick={() => openForm('oppose')}
-                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-                }}>
+                className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.oppose.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.oppose.desc}</p>
                 <span className="text-pink-600 font-medium text-sm">{content.oppose.btn}</span>
@@ -312,13 +278,7 @@ export default function ArcoRights() {
               </div>
             )}
 
-            <div className="rounded-2xl p-6 sm:p-8" style={{
-              background: 'rgba(255,255,255,0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.4)',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-            }}>
+            <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
               <button
                 onClick={() => { setShowRequests(!showRequests); if (!showRequests) loadRequests(); }}
                 className="flex items-center justify-between w-full"

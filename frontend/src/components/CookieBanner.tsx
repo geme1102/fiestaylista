@@ -59,16 +59,7 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] p-4">
-      <div
-        className="mx-auto max-w-3xl rounded-2xl p-6 shadow-2xl"
-        style={{
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.4)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-        }}
-      >
+      <div className="mx-auto max-w-3xl rounded-2xl p-6 shadow-2xl glass-card-premium">
         {!showConfig ? (
           <>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">

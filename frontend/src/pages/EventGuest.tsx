@@ -183,10 +183,10 @@ export default function EventGuest() {
 
       <div className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center opacity-30 dark:opacity-15"
           style={{ backgroundImage: `url(${HERO_BG[event.eventType] || '/backgrounds/hero-pattern.png'})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white dark:via-gray-900/60 dark:to-gray-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/80 to-white dark:from-gray-900/40 dark:via-gray-900/85 dark:to-gray-900" />
         <div className="relative py-16 px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

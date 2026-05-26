@@ -91,12 +91,11 @@ export default function Onboarding() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => { setEventType(t.value); setStep(2); }}
-                    className="flex flex-col items-center gap-2 p-6 rounded-2xl border-2 transition-all min-h-[120px]"
-                    style={{
-                      borderColor: eventType === t.value ? '#ec4899' : undefined,
-                      background: eventType === t.value ? 'rgba(236,72,153,0.08)' : 'rgba(255,255,255,0.85)',
-                      backdropFilter: 'blur(12px)',
-                    }}
+                    className={`flex flex-col items-center gap-2 p-6 rounded-2xl border-2 transition-all min-h-[120px] ${
+                      eventType === t.value
+                        ? 'border-pink-500 bg-pink-50/50 dark:bg-pink-900/10 ring-2 ring-pink-500'
+                        : 'border-gray-200 dark:border-gray-700 glass-card-premium'
+                    }`}
                   >
                     <span className="text-3xl">{t.icon}</span>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.label}</span>
@@ -106,14 +105,7 @@ export default function Onboarding() {
             )}
 
             {step === 2 && (
-              <div
-                className="rounded-2xl p-8 border"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  borderColor: 'rgba(255,255,255,0.4)',
-                }}
-              >
+              <div className="rounded-2xl p-8 glass-card-premium">
                 <div className="text-center mb-6">
                   <span className="text-5xl">{EVENT_ICONS[eventType]}</span>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{EVENT_LABELS[eventType]}</p>
@@ -146,14 +138,7 @@ export default function Onboarding() {
             )}
 
             {step === 3 && (
-              <div
-                className="rounded-2xl p-8 text-center border"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(16px)',
-                  borderColor: 'rgba(255,255,255,0.4)',
-                }}
-              >
+              <div className="rounded-2xl p-8 text-center glass-card-premium">
                 <span className="text-5xl block mb-4">{EVENT_ICONS[eventType]}</span>
                 <p className="font-semibold text-gray-900 dark:text-white text-lg mb-1">{title}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{EVENT_LABELS[eventType]}</p>

@@ -116,13 +116,7 @@ export default function TermsConditions() {
           </button>
         </div>
 
-        <div className="rounded-2xl p-8 sm:p-10" style={{
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255,255,255,0.4)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-        }}>
+        <div className="rounded-2xl p-8 sm:p-10 glass-card-premium">
           <p className="text-gray-600 dark:text-gray-400 mb-8">{content.intro}</p>
 
           <div className="space-y-8">

@@ -41,7 +41,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
-      <nav className="sticky top-0 z-50" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.4)' }}>
+      <nav className="sticky top-0 z-50 glass-card border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
@@ -78,10 +78,10 @@ export default function Landing() {
 
       <section className="relative overflow-hidden pt-20 pb-32">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20"
+          className="absolute inset-0 bg-cover bg-center opacity-30 dark:opacity-15"
           style={{ backgroundImage: `url(${heroBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white dark:via-gray-900/80 dark:to-gray-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/80 to-white dark:from-gray-900/40 dark:via-gray-900/85 dark:to-gray-900" />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-200/30 rounded-full blur-3xl dark:bg-pink-900/20" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-rose-200/30 rounded-full blur-3xl dark:bg-rose-900/20" />
@@ -171,12 +171,8 @@ export default function Landing() {
                 <motion.div
                   key={key}
                   whileHover={{ y: -4, scale: 1.02 }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-2xl"
+                  className="flex flex-col items-center gap-3 p-6 rounded-2xl glass-card-premium"
                   style={{
-                    background: 'rgba(255,255,255,0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255,255,255,0.4)',
-                    boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
                     willChange: 'transform',
                   }}
                 >
@@ -226,12 +222,8 @@ export default function Landing() {
               <motion.div
                 key={t.name}
                 whileHover={{ y: -4 }}
-                className="rounded-2xl p-6"
+                className="rounded-2xl p-6 glass-card-premium"
                 style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
                   willChange: 'transform',
                 }}
               >
