@@ -198,13 +198,13 @@ export async function revertContribution(contributionId: string): Promise<void> 
 
 export async function cleanupStaleContributions(): Promise<number> {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [result] = await db
+  const result = await db
     .update(cashContributions)
     .set({ status: 'expired' })
     .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < ${cutoff}`)
-    .returning({ count: sql<number>`count(*)::int` });
+    .returning({ id: cashContributions.id });
 
-  return result?.count ?? 0;
+  return result.length;
 }
 
 export async function getContributions(cashFundId: string) {

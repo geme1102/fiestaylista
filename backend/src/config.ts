@@ -53,3 +53,15 @@ export const config = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
   FROM_EMAIL: process.env.FROM_EMAIL || 'Fiesta y Lista <noreply@app.fiestaylista.com>',
 } as const;
+
+const isProduction = config.NODE_ENV === 'production';
+
+if (isProduction && (config.BACKEND_URL.includes('localhost') || config.FRONTEND_URL.includes('localhost'))) {
+  const missing: string[] = [];
+  if (config.BACKEND_URL.includes('localhost')) missing.push('BACKEND_URL');
+  if (config.FRONTEND_URL.includes('localhost')) missing.push('FRONTEND_URL');
+  console.error(`[config] ERROR: En producción las siguientes variables deben configurarse en Railway:`);
+  missing.forEach(v => console.error(`[config]   - ${v}`));
+  console.error(`[config] El servidor se detiene para evitar fallos silenciosos.`);
+  process.exit(1);
+}
