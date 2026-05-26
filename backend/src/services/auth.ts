@@ -6,7 +6,7 @@ import { db } from '../db/index.js';
 import { users, refreshTokens } from '../db/schema.js';
 import { config } from '../config.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
-import { sendVerificationEmail, sendPasswordResetEmail } from './email.js';
+import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
 import type { JwtPayload } from '../types/index.js';
 
 interface TokenPair {
@@ -113,7 +113,7 @@ export async function register(
   password: string,
   name: string,
   referralCode?: string,
-): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
+): Promise<{ user: UserResponse; accessToken: string; refreshToken: string; emailSent: boolean }> {
   const emailLower = email.toLowerCase();
 
   return await db.transaction(async (tx) => {
@@ -145,10 +145,16 @@ export async function register(
       })
       .returning();
 
-    try {
-      await sendVerificationEmail(user.email, verificationToken);
-    } catch (err) {
-      console.error('[Auth] Error al enviar email de verificación:', err);
+    let emailSent = false;
+    if (isEmailConfigured()) {
+      try {
+        await sendVerificationEmail(user.email, verificationToken);
+        emailSent = true;
+      } catch (err) {
+        console.error('[Auth] Error al enviar email de verificación:', err);
+      }
+    } else {
+      console.warn('[Auth] Email service not configured — verification email not sent');
     }
 
     if (referralCode) {
@@ -161,6 +167,7 @@ export async function register(
     return {
       user: toUserResponse(user),
       ...tokens,
+      emailSent,
     };
   });
 }

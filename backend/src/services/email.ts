@@ -13,15 +13,28 @@ function getBaseUrl(): string {
   return config.FRONTEND_URL;
 }
 
-export async function sendVerificationEmail(email: string, token: string): Promise<void> {
-  if (!resend) {
-    console.warn('[Email] RESEND_API_KEY no configurada. Email no enviado.');
-    return;
-  }
+export function isEmailConfigured(): boolean {
+  return resend !== null;
+}
 
+async function sendEmail(options: { from: string; to: string; subject: string; html: string }): Promise<void> {
+  if (!resend) {
+    throw new Error('Email service not configured: RESEND_API_KEY is missing');
+  }
+  try {
+    await resend.emails.send(options);
+  } catch (err) {
+    console.error('[Email] Error sending email:', err);
+    throw new Error(
+      `Failed to send email: ${err instanceof Error ? err.message : 'Unknown error'}`,
+    );
+  }
+}
+
+export async function sendVerificationEmail(email: string, token: string): Promise<void> {
   const url = `${getBaseUrl()}/verify-email?token=${token}`;
 
-  await resend.emails.send({
+  await sendEmail({
     from: FROM,
     to: email,
     subject: 'Verifica tu correo — Fiesta y Lista',
@@ -40,14 +53,9 @@ export async function sendVerificationEmail(email: string, token: string): Promi
 }
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  if (!resend) {
-    console.warn('[Email] RESEND_API_KEY no configurada. Email no enviado.');
-    return;
-  }
-
   const url = `${getBaseUrl()}/reset-password?token=${token}`;
 
-  await resend.emails.send({
+  await sendEmail({
     from: FROM,
     to: email,
     subject: 'Restablece tu contraseña — Fiesta y Lista',
@@ -66,11 +74,9 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
 }
 
 export async function sendReminderEmail(email: string, eventTitle: string, slug: string, unclaimedCount: number): Promise<void> {
-  if (!resend) return;
-
   const url = `${getBaseUrl()}/e/${slug}`;
 
-  await resend.emails.send({
+  await sendEmail({
     from: FROM,
     to: email,
     subject: `💝 Tienes ${unclaimedCount} regalos sin apartar — ${eventTitle}`,
