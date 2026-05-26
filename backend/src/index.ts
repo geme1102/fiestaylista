@@ -1,0 +1,158 @@
+import express, { type Request, type Response, type NextFunction } from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { randomUUID } from 'node:crypto';
+import { config } from './config.js';
+import { sql } from './db/index.js';
+import { apiLimiter } from './middleware/rateLimit.js';
+import { errorHandler } from './middleware/error.js';
+import authRouter from './routes/auth.js';
+import eventsRouter from './routes/events.js';
+import giftsRouter from './routes/gifts.js';
+import photosRouter from './routes/photos.js';
+import subscriptionsRouter from './routes/subscriptions.js';
+import webhooksRouter from './routes/webhooks.js';
+import uploadRouter from './routes/upload.js';
+import guestRouter from './routes/guest.js';
+import plansRouter from './routes/plans.js';
+import analyticsRouter from './routes/analytics.js';
+import publicRouter from './routes/public.js';
+import cashRouter from './routes/cash.js';
+import boostRouter from './routes/boost.js';
+import referralsRouter from './routes/referrals.js';
+import consentRouter from './routes/consent.js';
+import arcoRouter from './routes/arco.js';
+import { startCronJobs, stopCronJobs } from './cron.js';
+
+const app = express();
+
+app.set('trust proxy', 1);
+
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  (req as any).requestId = randomUUID();
+  next();
+});
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      frameSrc: ["'self'", "https://mpago.la"],
+      imgSrc: ["'self'", "https:", "data:", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", config.FRONTEND_URL].filter(Boolean),
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  xContentTypeOptions: true,
+  xFrameOptions: { action: 'deny' },
+}));
+
+app.use(cors({
+  origin: config.FRONTEND_URL,
+  credentials: true,
+}));
+
+app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
+  const chunks: Buffer[] = [];
+  req.on('data', (chunk: Buffer) => chunks.push(chunk));
+  req.on('end', () => {
+    (req as any).rawBody = Buffer.concat(chunks).toString('utf-8');
+    next();
+  });
+  req.on('error', next);
+});
+
+app.use('/api/webhooks', webhooksRouter);
+
+app.use('/api', apiLimiter);
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+if (config.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static('uploads'));
+}
+
+app.use('/api/auth', authRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/events/:eventId/gifts', giftsRouter);
+app.use('/api/events/:eventId/photos', photosRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/upload', uploadRouter);
+app.use('/api', guestRouter);
+app.use('/api', plansRouter);
+app.use('/api', analyticsRouter);
+app.use('/api', publicRouter);
+app.use('/api', cashRouter);
+app.use('/api', boostRouter);
+app.use('/api', referralsRouter);
+app.use('/api/auth/consent', consentRouter);
+app.use('/api/auth/arco', arcoRouter);
+
+app.get('/api/health', async (_req, res) => {
+  try {
+    await sql`SELECT 1`;
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: config.NODE_ENV,
+      database: 'connected',
+    });
+  } catch {
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      environment: config.NODE_ENV,
+      database: 'disconnected',
+    });
+  }
+});
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+app.use(errorHandler);
+
+const server = app.listen(config.PORT, () => {
+  console.log(`\n  🎉 Fiesta y Lista API`);
+  console.log(`  ─────────────────────`);
+  console.log(`  Ambiente: ${config.NODE_ENV}`);
+  console.log(`  Puerto:   ${config.PORT}`);
+  console.log(`  URL:      http://localhost:${config.PORT}`);
+  console.log(`  Frontend: ${config.FRONTEND_URL}\n`);
+
+  startCronJobs();
+});
+
+const SHUTDOWN_TIMEOUT = 10_000;
+
+function gracefulShutdown(signal: string) {
+  console.log(`\n  Recibido ${signal}. Cerrando servidor...`);
+  stopCronJobs();
+
+  server.close(() => {
+    sql.end({ timeout: 5 }).then(() => {
+      console.log('  Conexiones cerradas correctamente.');
+      process.exit(0);
+    });
+  });
+
+  setTimeout(() => {
+    console.error('  Timeout de cierre forzado.');
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+export default app;

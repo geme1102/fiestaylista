@@ -1,0 +1,55 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+function loadEnv(): void {
+  const envPath = resolve(process.cwd(), '.env');
+  try {
+    const content = readFileSync(envPath, 'utf-8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx === -1) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      const value = trimmed.slice(eqIdx + 1).trim();
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch {}
+}
+
+loadEnv();
+
+function requireConfig(key: string, value: string | undefined): asserts value is string {
+  if (!value) {
+    throw new Error(`Variable de entorno requerida: ${key}`);
+  }
+}
+
+requireConfig('DATABASE_URL', process.env.DATABASE_URL);
+requireConfig('JWT_SECRET', process.env.JWT_SECRET);
+requireConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
+requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
+
+export const config = {
+  DATABASE_URL: process.env.DATABASE_URL!,
+  JWT_SECRET: process.env.JWT_SECRET!,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
+  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (process.env.JWT_SECRET! + '_guest'),
+  MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
+  MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',
+  MERCADO_PAGO_PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID ?? '',
+  BACKEND_URL: process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || '3001'}`,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  PORT: parseInt(process.env.PORT || '3001', 10),
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
+  REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+  RESEND_API_KEY: process.env.RESEND_API_KEY!,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
+  FROM_EMAIL: process.env.FROM_EMAIL || 'Fiesta y Lista <noreply@app.fiestaylista.com>',
+} as const;

@@ -1,0 +1,87 @@
+import { Resend } from 'resend';
+import { config } from '../config.js';
+
+let resend: Resend | null = null;
+
+if (config.RESEND_API_KEY) {
+  resend = new Resend(config.RESEND_API_KEY);
+}
+
+const FROM = config.FROM_EMAIL;
+
+function getBaseUrl(): string {
+  return config.FRONTEND_URL;
+}
+
+export async function sendVerificationEmail(email: string, token: string): Promise<void> {
+  if (!resend) {
+    console.warn('[Email] RESEND_API_KEY no configurada. Email no enviado.');
+    return;
+  }
+
+  const url = `${getBaseUrl()}/verify-email?token=${token}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Verifica tu correo — Fiesta y Lista',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="font-size:32px;text-align:center;margin-bottom:16px">🎉</div>
+        <h1 style="text-align:center;color:#1f2937;font-size:20px">Verifica tu correo electrónico</h1>
+        <p style="color:#6b7280;text-align:center;margin:16px 0">Gracias por registrarte en Fiesta y Lista. Haz clic en el botón para verificar tu dirección de correo.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Verificar correo</a>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center">Si no creaste una cuenta, ignora este mensaje.</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  if (!resend) {
+    console.warn('[Email] RESEND_API_KEY no configurada. Email no enviado.');
+    return;
+  }
+
+  const url = `${getBaseUrl()}/reset-password?token=${token}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Restablece tu contraseña — Fiesta y Lista',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="font-size:32px;text-align:center;margin-bottom:16px">🔐</div>
+        <h1 style="text-align:center;color:#1f2937;font-size:20px">Restablece tu contraseña</h1>
+        <p style="color:#6b7280;text-align:center;margin:16px 0">Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón para continuar.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Restablecer contraseña</a>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center">Si no solicitaste esto, ignora este mensaje.</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendReminderEmail(email: string, eventTitle: string, slug: string, unclaimedCount: number): Promise<void> {
+  if (!resend) return;
+
+  const url = `${getBaseUrl()}/e/${slug}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `💝 Tienes ${unclaimedCount} regalos sin apartar — ${eventTitle}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
+        <p style="color:#6b7280">Tienes <strong>${unclaimedCount} regalos</strong> que aún no han sido apartados por tus invitados.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver lista de regalos</a>
+        </div>
+      </div>
+    `,
+  });
+}

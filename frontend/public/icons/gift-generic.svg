@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2f8"/>
+      <stop offset="100%" stop-color="#fce7f3"/>
+    </linearGradient>
+    <linearGradient id="ribbon6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#be185d"/>
+    </linearGradient>
+    <linearGradient id="box6" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fefce8"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <filter id="shadow6">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#ec4899" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow6">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#fbbf24" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#bg6)"/>
+  <g transform="translate(100, 105)" filter="url(#shadow6)">
+    <rect x="-40" y="-5" width="80" height="55" rx="6" fill="url(#box6)"/>
+    <rect x="-4" y="-5" width="8" height="55" fill="url(#ribbon6)"/>
+    <rect x="-40" y="18" width="80" height="8" fill="url(#ribbon6)"/>
+    <rect x="-42" y="-18" width="84" height="16" rx="6" fill="#fef3c7" stroke="#fde68a" stroke-width="1"/>
+    <rect x="-4" y="-18" width="8" height="16" fill="#db2777"/>
+  </g>
+  <g transform="translate(100, 72)" filter="url(#glow6)">
+    <path d="M0,-2 Q-15,-18 -28,-8 Q-20,0 0,2" fill="url(#ribbon6)"/>
+    <path d="M0,-2 Q15,-18 28,-8 Q20,0 0,2" fill="url(#ribbon6)"/>
+    <path d="M0,2 Q-12,10 -8,16 Q0,10 2,4" fill="url(#ribbon6)" opacity="0.9"/>
+    <path d="M0,2 Q12,10 8,16 Q0,10 -2,4" fill="url(#ribbon6)" opacity="0.9"/>
+    <circle cx="0" cy="0" r="4" fill="#fbbf24"/>
+  </g>
+  <g opacity="0.4">
+    <text x="35" y="55" font-size="10" fill="#fbbf24">✦</text>
+    <text x="155" y="50" font-size="8" fill="#fbbf24">✦</text>
+    <text x="30" y="170" font-size="6" fill="#ec4899">✦</text>
+    <text x="170" y="175" font-size="7" fill="#fbbf24">✦</text>
+  </g>
+</svg>

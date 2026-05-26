@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+    <linearGradient id="candle3" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="frost3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fce7f3"/>
+      <stop offset="100%" stop-color="#fbcfe8"/>
+    </linearGradient>
+    <filter id="shadow3">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#f59e0b" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#bg3)"/>
+  <g transform="translate(100, 120)">
+    <rect x="-30" y="-20" width="60" height="35" rx="6" fill="url(#frost3)" filter="url(#shadow3)"/>
+    <rect x="-28" y="-25" width="56" height="8" rx="4" fill="#f472b6"/>
+    <rect x="-32" y="10" width="64" height="8" rx="4" fill="#ec4899"/>
+    <path d="M-25,-20 Q-22,-14 -18,-20 Q-14,-12 -10,-20 Q-6,-16 -2,-20 Q2,-14 6,-20 Q10,-12 14,-20 Q18,-16 22,-20" fill="#fce7f3" opacity="0.8"/>
+    <rect x="-2" y="-50" width="4" height="28" rx="2" fill="url(#candle3)"/>
+    <path d="M0,-52 Q-4,-56 0,-60 Q4,-56 0,-52" fill="#f97316"/>
+    <text x="0" y="-56" font-size="4" fill="#fef3c7" text-anchor="middle">✦</text>
+    <circle cx="0" cy="-56" r="6" fill="#fbbf24" opacity="0.15"/>
+  </g>
+  <g transform="translate(52, 132)" filter="url(#shadow3)">
+    <rect x="-12" y="-8" width="24" height="20" rx="3" fill="#ec4899"/>
+    <rect x="-14" y="-10" width="28" height="4" rx="2" fill="#db2777"/>
+    <line x1="0" y1="-8" x2="0" y2="12" stroke="#db2777" stroke-width="2"/>
+    <path d="M-14,-10 Q0,-16 14,-10" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+  </g>
+  <g opacity="0.9">
+    <ellipse cx="140" cy="55" rx="14" ry="18" fill="#fca5a5" filter="url(#shadow3)"/>
+    <path d="M140,73 L140,90" stroke="#fca5a5" stroke-width="1.5"/>
+    <polygon points="140,73 136,77 144,77" fill="#fca5a5"/>
+    <ellipse cx="160" cy="40" rx="11" ry="14" fill="#93c5fd" filter="url(#shadow3)"/>
+    <path d="M160,54 L160,68" stroke="#93c5fd" stroke-width="1.5"/>
+    <polygon points="160,54 157,57 163,57" fill="#93c5fd"/>
+  </g>
+  <circle cx="30" cy="40" r="3" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="170" cy="90" r="2" fill="#ec4899" opacity="0.3"/>
+  <circle cx="40" cy="160" r="2.5" fill="#fca5a5" opacity="0.3"/>
+  <circle cx="160" cy="150" r="2" fill="#93c5fd" opacity="0.25"/>
+</svg>

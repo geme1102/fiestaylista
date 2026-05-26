@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg24" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+    <linearGradient id="hat24" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fca5a5"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <filter id="shadow24">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#f59e0b" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#bg24)"/>
+  <g transform="translate(100, 95)" filter="url(#shadow24)">
+    <path d="M-25,10 L0,-30 L25,10 Z" fill="url(#hat24)" transform="rotate(15)"/>
+    <circle cx="0" cy="-28" r="5" fill="#fbbf24"/>
+    <circle cx="-8" cy="-12" r="2" fill="#fef3c7" opacity="0.5"/>
+    <circle cx="5" cy="-8" r="2" fill="#fef3c7" opacity="0.5"/>
+  </g>
+  <g transform="translate(100, 125)" filter="url(#shadow24)">
+    <rect x="-12" y="-5" width="24" height="18" rx="2" fill="#ec4899"/>
+    <path d="M-12,-5 Q0,-12 12,-5" fill="#db2777"/>
+    <line x1="0" y1="-5" x2="0" y2="13" stroke="#db2777" stroke-width="1.5"/>
+  </g>
+  <circle cx="40" cy="45" r="3" fill="#fbbf24" opacity="0.3"/>
+  <circle cx="160" cy="50" r="2" fill="#fca5a5" opacity="0.25"/>
+  <circle cx="45" cy="155" r="2.5" fill="#fca5a5" opacity="0.2"/>
+  <circle cx="155" cy="150" r="2" fill="#fbbf24" opacity="0.2"/>
+</svg>

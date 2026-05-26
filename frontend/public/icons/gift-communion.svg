@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fefce8"/>
+      <stop offset="100%" stop-color="#fef9c3"/>
+    </linearGradient>
+    <linearGradient id="gold5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="shadow5">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#f59e0b" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow5">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#fbbf24" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#bg5)"/>
+  <g transform="translate(100, 100)" filter="url(#glow5)">
+    <path d="M-15,0 Q-18,25 -12,35 L12,35 Q18,25 15,0 Z" fill="url(#gold5)" opacity="0.9"/>
+    <rect x="-12" y="35" width="24" height="4" rx="2" fill="url(#gold5)"/>
+    <rect x="-6" y="39" width="12" height="15" rx="2" fill="url(#gold5)" opacity="0.8"/>
+    <rect x="-8" y="52" width="16" height="4" rx="2" fill="url(#gold5)"/>
+    <circle cx="0" cy="-3" r="8" fill="#fefce8" stroke="#fde68a" stroke-width="1" filter="url(#shadow5)"/>
+    <path d="M-3,-3 L3,-3 M0,-6 L0,0" stroke="#fbbf24" stroke-width="1" opacity="0.5"/>
+    <path d="M-12,2 Q-14,15 -10,25" fill="none" stroke="#fef3c7" stroke-width="1.5" opacity="0.5"/>
+  </g>
+  <g transform="translate(50, 140)" filter="url(#shadow5)">
+    <rect x="0" y="0" width="22" height="28" rx="2" fill="#fff" stroke="#e5e7eb" stroke-width="1"/>
+    <rect x="2" y="2" width="18" height="24" rx="1" fill="#fefce8"/>
+    <line x1="5" y1="6" x2="17" y2="6" stroke="#d1d5db" stroke-width="0.5"/>
+    <line x1="5" y1="9" x2="15" y2="9" stroke="#d1d5db" stroke-width="0.5"/>
+    <line x1="5" y1="12" x2="16" y2="12" stroke="#d1d5db" stroke-width="0.5"/>
+    <path d="M20,0 Q24,2 22,8" fill="none" stroke="#ec4899" stroke-width="2"/>
+  </g>
+  <g transform="translate(140, 120)" opacity="0.7">
+    <line x1="10" y1="0" x2="10" y2="40" stroke="#fbbf24" stroke-width="1.5"/>
+    <ellipse cx="10" cy="5" rx="2" ry="4" fill="#fbbf24"/>
+    <ellipse cx="10" cy="12" rx="2" ry="4" fill="#fbbf24"/>
+    <ellipse cx="10" cy="19" rx="2" ry="4" fill="#fbbf24"/>
+    <ellipse cx="10" cy="26" rx="2" ry="4" fill="#fbbf24"/>
+  </g>
+  <g opacity="0.08">
+    <polygon points="100,0 60,200 140,200" fill="#fbbf24"/>
+  </g>
+</svg>

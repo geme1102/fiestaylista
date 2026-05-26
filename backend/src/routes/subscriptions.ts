@@ -1,0 +1,63 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { requireAuth } from '../middleware/auth.js';
+import * as mercadopagoService from '../services/mercadopago.js';
+import * as subscriptionService from '../services/subscription.js';
+import { ValidationError } from '../utils/errors.js';
+import type { AuthRequest } from '../types/index.js';
+
+const router = Router();
+
+const checkoutSchema = z.object({
+  tier: z.enum(['pro'], {
+    errorMap: () => ({ message: 'Plan inválido. Debe ser pro' }),
+  }),
+  interval: z.enum(['month', 'year']).default('month'),
+  successUrl: z.string().url('URL de éxito inválida'),
+  cancelUrl: z.string().url('URL de cancelación inválida'),
+});
+
+router.post('/create-checkout', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const data = checkoutSchema.parse(req.body);
+    const result = await mercadopagoService.createCheckoutSession(
+      req.user!.userId,
+      req.user!.email,
+      data.tier,
+      data.interval,
+      data.successUrl,
+      data.cancelUrl,
+    );
+    res.json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
+      return;
+    }
+    next(error);
+  }
+});
+
+router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
+    if (sub?.mpSubscriptionId) {
+      await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
+    }
+    await subscriptionService.cancelSubscription(req.user!.userId);
+    res.json({ message: 'Suscripción cancelada exitosamente' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/current', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const subscription = await subscriptionService.getCurrentSubscription(req.user!.userId);
+    res.json({ subscription });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2f8"/>
+      <stop offset="100%" stop-color="#fce7f3"/>
+    </linearGradient>
+    <linearGradient id="dress8" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f9a8d4"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="wood8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4a373"/>
+      <stop offset="100%" stop-color="#a16207"/>
+    </linearGradient>
+    <filter id="shadow8">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#ec4899" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="24" fill="url(#bg8)"/>
+  <g transform="translate(75, 50)" filter="url(#shadow8)">
+    <path d="M-5,0 Q0,-8 5,0" fill="none" stroke="url(#wood8)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M0,-8 L0,5" stroke="url(#wood8)" stroke-width="2"/>
+    <circle cx="0" cy="5" r="2" fill="url(#wood8)"/>
+    <path d="M-22,0 Q-24,20 -20,50 L-15,55 L15,55 L20,50 Q24,20 22,0 Z" fill="url(#dress8)" opacity="0.85"/>
+    <path d="M-8,0 Q-10,15 -8,30 L8,30 Q10,15 8,0" fill="#fbcfe8" opacity="0.5"/>
+    <path d="M-22,0 Q-15,-5 -8,0 M22,0 Q15,-5 8,0" fill="none" stroke="#db2777" stroke-width="1" opacity="0.5"/>
+    <circle cx="-6" cy="3" r="1" fill="#fff" opacity="0.4"/>
+    <circle cx="0" cy="4" r="1" fill="#fff" opacity="0.4"/>
+    <circle cx="6" cy="3" r="1" fill="#fff" opacity="0.4"/>
+  </g>
+  <g transform="translate(125, 115)" filter="url(#shadow8)">
+    <rect x="-14" y="0" width="28" height="35" rx="6" fill="#fefce8" stroke="#fbcfe8" stroke-width="1"/>
+    <rect x="-10" y="3" width="20" height="12" rx="3" fill="#fce7f3"/>
+    <rect x="-8" y="18" width="16" height="2" rx="1" fill="#fbcfe8"/>
+    <circle cx="-5" cy="7" r="2" fill="#ec4899" opacity="0.3"/>
+    <circle cx="5" cy="7" r="2" fill="#ec4899" opacity="0.3"/>
+  </g>
+  <g transform="translate(55, 130)" filter="url(#shadow8)">
+    <ellipse cx="0" cy="5" rx="15" ry="4" fill="#fbcfe8"/>
+    <path d="M-10,5 Q-12,-8 0,-12 Q12,-8 10,5" fill="#f9a8d4"/>
+    <circle cx="0" cy="-10" r="3" fill="#ec4899"/>
+  </g>
+  <circle cx="30" cy="35" r="2.5" fill="#f9a8d4" opacity="0.2"/>
+  <circle cx="170" cy="175" r="3" fill="#ec4899" opacity="0.15"/>
+</svg>
