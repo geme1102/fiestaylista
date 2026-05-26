@@ -27,14 +27,17 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-async function persistRefreshToken(userId: string, token: string): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbClient = any;
+
+async function persistRefreshToken(userId: string, token: string, client: DbClient = db): Promise<void> {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await db.insert(refreshTokens).values({
+  await client.insert(refreshTokens).values({
     userId,
     tokenHash: hashToken(token),
     expiresAt,
   });
-  await db
+  await client
     .delete(refreshTokens)
     .where(and(
       eq(refreshTokens.userId, userId),
@@ -74,7 +77,7 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
   return decoded;
 }
 
-async function issueTokenPair(userId: string, email: string): Promise<TokenPair> {
+async function issueTokenPair(userId: string, email: string, client: DbClient = db): Promise<TokenPair> {
   const payload: JwtPayload = { userId, email };
 
   const accessToken = jwt.sign(payload, config.JWT_SECRET, {
@@ -85,7 +88,7 @@ async function issueTokenPair(userId: string, email: string): Promise<TokenPair>
     expiresIn: config.REFRESH_TOKEN_EXPIRY as any,
   });
 
-  await persistRefreshToken(userId, refreshToken);
+  await persistRefreshToken(userId, refreshToken, client);
 
   return { accessToken, refreshToken };
 }
@@ -153,7 +156,7 @@ export async function register(
       await trackReferral(user.email, referralCode);
     }
 
-    const tokens = await issueTokenPair(user.id, user.email);
+    const tokens = await issueTokenPair(user.id, user.email, tx);
 
     return {
       user: toUserResponse(user),
