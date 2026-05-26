@@ -69,8 +69,8 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
       result.id = result.id || parsed.id || parsed.data?.id;
     } catch {
       const params = new URLSearchParams(raw);
-      result.topic = result.topic || params.get('topic') ?? undefined;
-      result.id = result.id || params.get('id') ?? undefined;
+      result.topic = result.topic || (params.get('topic') ?? undefined);
+      result.id = result.id || (params.get('id') ?? undefined);
     }
   } else if (!result.topic && typeof req.body === 'object' && req.body !== null) {
     result.topic = result.topic || req.body.topic || req.body.type;
