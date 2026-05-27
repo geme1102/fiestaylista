@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 interface MousePosition {
   x: number;
@@ -46,7 +46,7 @@ export function useMousePosition(): MousePosition {
     };
   }, []);
 
-  return pos;
+  return useMemo(() => pos, [pos.x, pos.y, pos.normalizedX, pos.normalizedY]);
 }
 
 export function useDeviceOrientation() {

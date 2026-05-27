@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,6 +46,7 @@ const TRUST_PILLS = [
 ];
 
 const CONFETTI_COLORS = ['#F43F5E', '#E11D48', '#D946EF', '#D97706', '#FDE68A', '#ec4899'];
+const TYPING_PHRASES = ['compartir momentos', 'recibir con amor', 'celebrar en familia'];
 
 function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pauseTime = 2500) {
   const [displayed, setDisplayed] = useState('');
@@ -82,6 +83,10 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
 function useConfettiParticles(count: number) {
   const mouse = useMousePosition();
   const orientation = useDeviceOrientation();
+  const mouseRef = useRef(mouse);
+  const orientationRef = useRef(orientation);
+  mouseRef.current = mouse;
+  orientationRef.current = orientation;
   const [particles, setParticles] = useState(() =>
     Array.from({ length: count }, (_, i) => ({
       id: i,
@@ -99,8 +104,8 @@ function useConfettiParticles(count: number) {
     let frame = requestAnimationFrame(function animate() {
       setParticles((prev) =>
         prev.map((p) => {
-          const normX = mouse.normalizedX || orientation.gamma / 45;
-          const normY = mouse.normalizedY || orientation.beta / 45;
+          const normX = mouseRef.current.normalizedX || orientationRef.current.gamma / 45;
+          const normY = mouseRef.current.normalizedY || orientationRef.current.beta / 45;
           let x = p.x + normX * p.drift * 2;
           let y = p.y + normY * p.speed * 0.5;
           if (y > 100) y = -5;
@@ -113,7 +118,7 @@ function useConfettiParticles(count: number) {
       frame = requestAnimationFrame(animate);
     });
     return () => cancelAnimationFrame(frame);
-  }, [mouse, orientation]);
+  }, []);
 
   return particles;
 }
@@ -163,7 +168,7 @@ export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const heroBg = useMemo(() => HERO_BGS[Math.floor(Math.random() * HERO_BGS.length)], []);
-  const typedText = useTypewriter(['compartir momentos', 'recibir con amor', 'celebrar en familia']);
+  const typedText = useTypewriter(TYPING_PHRASES);
   const particles = useConfettiParticles(16);
   const [_scrolled, setScrolled] = useState(0);
   const categoryScrollRef = useMemo(() => {
