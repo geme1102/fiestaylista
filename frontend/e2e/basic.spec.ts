@@ -4,7 +4,7 @@ test.describe('Fiesta y Lista', () => {
   test('landing page loads and shows title', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Fiesta y Lista', { exact: true })).toBeVisible();
-    await expect(page.locator('text=organizar tus regalos')).toBeVisible();
+    await expect(page.locator('text=compartir momentos')).toBeVisible();
   });
 
   test('can navigate to pricing page', async ({ page }) => {
