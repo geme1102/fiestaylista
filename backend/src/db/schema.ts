@@ -7,7 +7,7 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   name: text('name').notNull(),
   tier: text('tier').notNull().default('free'),
-  referralCode: text('referral_code').unique(),
+
   lastSequenceCheck: timestamp('last_sequence_check', { mode: 'date' }),
   emailVerified: boolean('email_verified').notNull().default(false),
   verificationToken: text('verification_token'),
@@ -146,17 +146,6 @@ export const refreshTokens = pgTable('refresh_tokens', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 });
 
-export const referrals = pgTable('referrals', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  referrerId: uuid('referrer_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  referredEmail: text('referred_email').notNull(),
-  status: text('status').notNull().default('pending'),
-  bonusAwarded: boolean('bonus_awarded').notNull().default(false),
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-}, (table) => ({
-  referrerIdIdx: index('referrals_referrer_id_idx').on(table.referrerId),
-}));
-
 export const consentRecords = pgTable('consent_records', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -196,7 +185,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [subscriptions.userId],
   }),
-  referrals: many(referrals),
+
   emailTracking: many(emailTracking),
 }));
 
@@ -269,13 +258,6 @@ export const eventViewsRelations = relations(eventViews, ({ one }) => ({
   event: one(events, {
     fields: [eventViews.eventId],
     references: [events.id],
-  }),
-}));
-
-export const referralsRelations = relations(referrals, ({ one }) => ({
-  referrer: one(users, {
-    fields: [referrals.referrerId],
-    references: [users.id],
   }),
 }));
 

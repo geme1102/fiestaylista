@@ -172,11 +172,8 @@ export default function Landing() {
                   key={key}
                   whileHover={{ y: -4, scale: 1.02 }}
                   className="flex flex-col items-center gap-3 p-6 rounded-2xl glass-card-premium"
-                  style={{
-                    willChange: 'transform',
-                  }}
                 >
-                  <img src={typeEntry?.icon || EVENT_ICONS[key as keyof typeof EVENT_ICONS]} alt="" loading="lazy" className="w-12 h-12" />
+                  <img src={typeEntry?.icon || EVENT_ICONS[key as keyof typeof EVENT_ICONS]} alt={`Ícono ${label}`} loading="lazy" className="w-12 h-12" />
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
                 </motion.div>
               );
@@ -193,13 +190,12 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {FEATURES.map((feature) => (
               <motion.div
-                key={feature.title}
-                whileHover={{ y: -4 }}
-                className="text-center"
-                style={{ willChange: 'transform' }}
-              >
-                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm" style={{ border: '1px solid rgba(255,255,255,0.4)' }}>
-                  <img src={feature.icon} alt="" loading="lazy" className="w-full h-full object-contain p-2" />
+                  key={feature.title}
+                  whileHover={{ y: -4 }}
+                  className="text-center"
+                >
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm" style={{ border: '1px solid rgba(255,255,255,0.4)' }}>
+                  <img src={feature.icon} alt={feature.title} loading="lazy" className="w-full h-full object-contain p-2" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400">{feature.desc}</p>
@@ -220,17 +216,14 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {TESTIMONIALS.map((t) => (
               <motion.div
-                key={t.name}
-                whileHover={{ y: -4 }}
-                className="rounded-2xl p-6 glass-card-premium"
-                style={{
-                  willChange: 'transform',
-                }}
-              >
-                <div className="flex gap-1 mb-3">{'⭐'.repeat(5)}</div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <img src={t.avatar} alt="" loading="lazy" className="w-10 h-10 rounded-full object-cover bg-gray-100" />
+                  key={t.name}
+                  whileHover={{ y: -4 }}
+                  className="rounded-2xl p-6 glass-card-premium"
+                >
+                  <div className="flex gap-1 mb-3">{'⭐'.repeat(5)}</div>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">"{t.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <img src={t.avatar} alt={`Avatar de ${t.name}`} loading="lazy" className="w-10 h-10 rounded-full object-cover bg-gray-100" />
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</p>
                     <p className="text-xs text-gray-400">{t.role}</p>

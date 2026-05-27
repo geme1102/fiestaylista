@@ -17,7 +17,7 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors pb-16 sm:pb-0">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors pb-safe sm:pb-0">
       <nav className="sticky top-0 z-50 glass-card border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -114,7 +114,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="hidden sm:block border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400">
             <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>

@@ -27,24 +27,13 @@ export default function Account() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [referralStats, setReferralStats] = useState<{ total: number; pending: number; completed: number; referralCode: string } | null>(null);
-  const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
     getCurrentSubscription()
       .then((res) => setSubscription(res.subscription))
       .catch(() => {})
       .finally(() => setLoadingSub(false));
-    loadReferralStats();
   }, []);
-
-  async function loadReferralStats() {
-    try {
-      const res = await apiClient.get<{ stats: typeof referralStats; shareUrl: string }>('/api/referrals/stats');
-      setReferralStats(res.stats);
-      setShareUrl(res.shareUrl);
-    } catch {}
-  }
 
   const handleCancelSubscription = async () => {
     if (!window.confirm('¿Estás seguro de cancelar tu suscripción? Perderás acceso a funciones Pro al final del período actual.')) return;
@@ -57,11 +46,6 @@ export default function Account() {
       showToast(err instanceof Error ? err.message : 'Error al cancelar suscripción', 'error');
       setCancelLoading(false);
     }
-  };
-
-  const copyReferralLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    showToast('Enlace de invitación copiado 📋', 'success');
   };
 
   const handleDownloadData = async () => {
@@ -103,7 +87,7 @@ export default function Account() {
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
           <div className="flex items-center gap-4 mb-6">
-            <img src={avatarSrc} alt="" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
+            <img src={avatarSrc} alt="Avatar del usuario" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Información Personal</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">Tus datos de cuenta</p>
@@ -179,45 +163,6 @@ export default function Account() {
           )}
         </div>
       </div>
-
-      {referralStats && (
-        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">👥 Invita y Gana</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Invita a tus amigos a crear su lista de regalos. Ambos reciben <strong>1 mes Pro gratis</strong> cuando se registren.
-          </p>
-
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Invitaciones enviadas</span>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">{referralStats.total}</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Pendientes</span>
-              <span className="text-lg font-bold text-amber-600">{referralStats.pending}</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-xl">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Completadas</span>
-              <span className="text-lg font-bold text-green-600">{referralStats.completed}</span>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              readOnly
-              value={shareUrl}
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none"
-            />
-            <button
-              onClick={copyReferralLink}
-              className="px-5 py-3 min-h-[44px] bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm"
-            >
-              Copiar
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🔐 Mis Datos Personales</h2>

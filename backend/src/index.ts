@@ -19,7 +19,6 @@ import analyticsRouter from './routes/analytics.js';
 import publicRouter from './routes/public.js';
 import cashRouter from './routes/cash.js';
 import boostRouter from './routes/boost.js';
-import referralsRouter from './routes/referrals.js';
 import consentRouter from './routes/consent.js';
 import arcoRouter from './routes/arco.js';
 import { startCronJobs, stopCronJobs } from './cron.js';
@@ -96,7 +95,6 @@ app.use('/api', analyticsRouter);
 app.use('/api', publicRouter);
 app.use('/api', cashRouter);
 app.use('/api', boostRouter);
-app.use('/api', referralsRouter);
 app.use('/api/auth/consent', consentRouter);
 app.use('/api/auth/arco', arcoRouter);
 

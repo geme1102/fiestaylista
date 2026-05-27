@@ -1,6 +1,6 @@
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, referrals, consentRecords, arcoRequests } from '../db/schema.js';
+import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 
 export async function getUserData(userId: string) {
@@ -41,11 +41,6 @@ export async function getUserData(userId: string) {
     .where(eq(subscriptions.userId, userId))
     .limit(1);
 
-  const userReferrals = await db
-    .select()
-    .from(referrals)
-    .where(eq(referrals.referrerId, userId));
-
   const userConsents = await db
     .select()
     .from(consentRecords)
@@ -71,7 +66,6 @@ export async function getUserData(userId: string) {
     cashFunds: userCashFunds,
     contributions: userContributions,
     subscription: userSubscription ?? null,
-    referrals: userReferrals,
     consentHistory: userConsents,
     arcoRequests: userArcoRequests,
   };

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -19,7 +19,7 @@ router.get('/public/events/:slug', (async (req: Request, res: Response, next: Ne
         createdAt: events.createdAt,
       })
       .from(events)
-      .where(eq(events.slug, eventSlug))
+      .where(and(eq(events.slug, eventSlug), sql`${events.deletedAt} IS NULL`))
       .limit(1);
 
     if (!event || !event.isActive) {
@@ -38,7 +38,7 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
     const [event] = await db
       .select({ id: events.id, isActive: events.isActive })
       .from(events)
-      .where(eq(events.slug, eventSlug))
+      .where(and(eq(events.slug, eventSlug), sql`${events.deletedAt} IS NULL`))
       .limit(1);
 
     if (!event || !event.isActive) {

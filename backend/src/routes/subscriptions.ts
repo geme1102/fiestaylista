@@ -18,7 +18,7 @@ const checkoutSchema = z.object({
   cancelUrl: z.string().url('URL de cancelación inválida'),
 });
 
-router.post('/create-checkout', paymentLimiter, requireAuth, async (req: AuthRequest, res, next) => {
+router.post('/create-checkout', requireAuth, paymentLimiter, async (req: AuthRequest, res, next) => {
   try {
     const data = checkoutSchema.parse(req.body);
     const result = await mercadopagoService.createCheckoutSession(

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -186,3 +187,14 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .dark .glass-card { background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); }
+  .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .dark .glass-card-premium { background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); }
+}
+
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}

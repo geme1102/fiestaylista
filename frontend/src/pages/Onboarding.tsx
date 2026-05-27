@@ -60,7 +60,7 @@ export default function Onboarding() {
               {step <= 2 && (
                 <img
                   src={stepImages[step]}
-                  alt=""
+                  alt={`Paso ${step} del tutorial`}
                   loading="lazy"
                   className="w-48 h-48 mx-auto mb-6"
                 />

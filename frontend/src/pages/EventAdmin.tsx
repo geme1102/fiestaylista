@@ -9,11 +9,11 @@ import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
 import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
+import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
 }
-import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function EventAdmin() {
@@ -93,7 +93,7 @@ export default function EventAdmin() {
   const handleUpdateTitle = async () => {
     if (!titleDraft.trim()) return;
     try {
-      const res = await apiClient.put<{ event: any }>(`/api/events/${id}`, { title: titleDraft.trim() });
+      const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, { title: titleDraft.trim() });
       setEvent((prev) => prev ? { ...prev, title: res.event.title } : prev);
       setEditingTitle(false);
       showToast('Título actualizado', 'success');
@@ -192,7 +192,7 @@ export default function EventAdmin() {
   if (!event) {
     return (
       <div className="text-center py-20">
-        <img src="/illustrations/illustration-404.png" alt="" loading="lazy" className="w-48 h-48 mx-auto mb-6" />
+        <img src="/illustrations/illustration-404.png" alt="Evento no encontrado" loading="lazy" className="w-48 h-48 mx-auto mb-6" />
         <p className="text-gray-500 dark:text-gray-400 mb-4">Evento no encontrado</p>
         <Link to="/dashboard" className="text-pink-600 font-medium inline-block">Volver al dashboard</Link>
       </div>
@@ -319,7 +319,7 @@ export default function EventAdmin() {
             <div
               className="rounded-2xl p-6 text-center glass-card"
             >
-              <img src="/illustrations/empty-admin.png" alt="" loading="lazy" className="w-48 h-48 mx-auto mb-4" />
+              <img src="/illustrations/empty-admin.png" alt="Sin regalos aún" loading="lazy" className="w-48 h-48 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400 mb-4">Agrega regalos sugeridos para tu evento</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.slice(0, 8).map((s) => (
@@ -371,7 +371,7 @@ export default function EventAdmin() {
                 className="relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700"
                 style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
               >
-                <img src={photo.url} alt={photo.caption || ''} loading="lazy" className="w-full h-40 object-cover" />
+                <img src={photo.url} alt={photo.caption || 'Foto del evento'} loading="lazy" className="w-full aspect-[4/3] object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 <button
                   onClick={() => handleDeletePhoto(photo.id)}
                   className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 text-white rounded-full text-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"

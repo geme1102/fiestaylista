@@ -46,7 +46,7 @@ export default function Dashboard() {
       setEvents((prev) => [res.event, ...prev]);
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '' });
-      showToast('Evento creado ðŸŽ‰', 'success');
+      showToast('Evento creado 🎉', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
     } finally {
@@ -55,7 +55,7 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Â¿Eliminar este evento? Los regalos y fotos tambiÃ©n se eliminarÃ¡n.')) return;
+    if (!confirm('¿Eliminar este evento? Los regalos y fotos también se eliminarán.')) return;
     setDeleting(id);
     try {
       await apiClient.del(`/api/events/${id}`);
@@ -70,7 +70,7 @@ export default function Dashboard() {
 
   const copyLink = (slug: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
-    showToast('Enlace copiado ðŸ“‹', 'success');
+    showToast('Enlace copiado 📋', 'success');
   };
 
   const limits = TIER_LIMITS[user?.tier ?? 'free'];
@@ -152,8 +152,8 @@ export default function Dashboard() {
         </div>
 
         <div className="text-center py-12">
-          <span className="text-5xl mb-6 block">ðŸŽ‰</span>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Â¿QuÃ© evento quieres crear?</h2>
+          <span className="text-5xl mb-6 block">🎉</span>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">¿Qué evento quieres crear?</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
             Elige el tipo de evento y empieza a armar tu lista de regalos en segundos.
           </p>
@@ -195,7 +195,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Mis Eventos</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {eventCount} evento{eventCount !== 1 ? 's' : ''} â€¢ {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+            {eventCount} evento{eventCount !== 1 ? 's' : ''} • {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
           </p>
         </div>
         <button
@@ -217,9 +217,9 @@ export default function Dashboard() {
           return (
             <div
               key={event.id}
-              className="glass-card rounded-2xl overflow-hidden hover:shadow-md transition-all"
+              className="glass-card rounded-2xl hover:shadow-md transition-all"
             >
-              <div className="h-1.5" style={{ background: theme.primary }} />
+              <div className="h-1.5 rounded-t-2xl" style={{ background: theme.primary }} />
               <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2 min-w-0">
@@ -238,7 +238,7 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
                   <span>{total} regalos</span>
-                  {event.photoCount !== undefined && <span>â€¢ {event.photoCount} fotos</span>}
+                  {event.photoCount !== undefined && <span>• {event.photoCount} fotos</span>}
                 </div>
 
                 <div className="mb-3">
@@ -258,7 +258,7 @@ export default function Dashboard() {
                   <div className="mb-3 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                     <div className="flex justify-between text-xs">
                       <span className="text-emerald-700 dark:text-emerald-400 font-medium">
-                        ðŸ’° ${(fund.collectedAmount / 100).toFixed(2)}
+                        💰 ${(fund.collectedAmount / 100).toFixed(2)}
                       </span>
                       {fund.targetAmount && (
                         <span className="text-emerald-600 dark:text-emerald-500">
@@ -282,14 +282,14 @@ export default function Dashboard() {
                     className="px-3 py-2 min-h-[44px] text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                     title="Copiar enlace"
                   >
-                    ðŸ”—
+                    🔗
                   </button>
                   <button
                     onClick={() => handleDelete(event.id)}
                     disabled={deleting === event.id}
                     className="px-3 py-2 min-h-[44px] text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-50"
                   >
-                    {deleting === event.id ? '...' : 'ðŸ—‘ï¸'}
+                    {deleting === event.id ? '...' : '🗑️'}
                   </button>
                 </div>
               </div>
@@ -351,14 +351,14 @@ function CreateForm({ formData, setFormData, creating, setShowCreateModal, handl
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
-          placeholder="Ej: Boda de MarÃ­a y Juan"
+          placeholder="Ej: Boda de María y Juan"
           autoFocus
         />
       </div>
 
       <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          TelÃ©fono (opcional)
+          Teléfono (opcional)
         </label>
         <input
           id="phone"
@@ -403,7 +403,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
             onClick={onClose}
             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            âœ•
+            ✕
           </button>
         </div>
         {children}

@@ -32,15 +32,34 @@ const PAGE_TITLES: Record<string, string> = {
   '/onboarding': 'Primeros Pasos - Fiesta y Lista',
   '/verify-email': 'Verificar Correo - Fiesta y Lista',
   '/terminos-y-condiciones': 'Términos y Condiciones - Fiesta y Lista',
+  '/terms-and-conditions': 'Términos y Condiciones - Fiesta y Lista',
   '/politica-de-privacidad': 'Política de Privacidad - Fiesta y Lista',
+  '/privacy-policy': 'Política de Privacidad - Fiesta y Lista',
   '/politica-de-cookies': 'Política de Cookies - Fiesta y Lista',
+  '/cookies-policy': 'Política de Cookies - Fiesta y Lista',
   '/derechos-arco': 'Derechos ARCO - Fiesta y Lista',
+  '/arco-rights': 'Derechos ARCO - Fiesta y Lista',
+  '/baby-shower': 'Baby Shower - Fiesta y Lista',
+  '/boda': 'Boda - Fiesta y Lista',
+  '/cumpleanos': 'Cumpleaños - Fiesta y Lista',
+  '/bautizo': 'Bautizo - Fiesta y Lista',
+  '/comunion': 'Comunión - Fiesta y Lista',
 };
 
 function TitleUpdater() {
   const location = useLocation();
   const path = location.pathname;
-  const title = PAGE_TITLES[path] || PAGE_TITLES['/'];
+  let title = PAGE_TITLES[path];
+
+  if (!title) {
+    if (path.startsWith('/e/')) {
+      title = 'Lista de Regalos - Fiesta y Lista';
+    } else if (path.startsWith('/event/')) {
+      title = 'Administrar Evento - Fiesta y Lista';
+    } else {
+      title = PAGE_TITLES['/'];
+    }
+  }
 
   return (
     <Helmet>
@@ -55,8 +74,9 @@ function TitleUpdater() {
 export default function App() {
   return (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
+      <TitleUpdater />
       <Routes>
-        <Route path="/" element={<><TitleUpdater /><Landing /></>} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/pricing" element={<Pricing />} />

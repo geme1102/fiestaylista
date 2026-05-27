@@ -95,6 +95,19 @@ router.put('/:giftId/claim', (async (req: Request, res: Response, next: NextFunc
   }
 }) as any);
 
+router.put('/:giftId/free', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const giftId = req.params.giftId as string | undefined;
+    if (!giftId) {
+      throw new ValidationError('ID del regalo requerido');
+    }
+    const gift = await giftService.releaseGift(giftId);
+    res.json({ gift });
+  } catch (error) {
+    next(error);
+  }
+}) as any);
+
 router.delete('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const giftId = req.params.giftId as string | undefined;

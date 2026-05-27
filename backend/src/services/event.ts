@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
@@ -151,7 +151,7 @@ export async function getEventBySlug(eventSlug: string) {
   const [event] = await db
     .select()
     .from(eventsTable)
-    .where(eq(eventsTable.slug, eventSlug))
+    .where(and(eq(eventsTable.slug, eventSlug), sql`${eventsTable.deletedAt} IS NULL`))
     .limit(1);
 
   if (!event) {

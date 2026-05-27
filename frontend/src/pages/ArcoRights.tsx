@@ -218,9 +218,9 @@ export default function ArcoRights() {
 
               <button onClick={handleDeleteAccount} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
-                <h3 className="text-lg font-semibold text-red-600 mb-2">{content.cancel.title}</h3>
+                <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">{content.cancel.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.cancel.desc}</p>
-                <span className="text-red-600 font-medium text-sm">
+                <span className="text-red-600 dark:text-red-400 font-medium text-sm">
                   {loading ? content.cancel.deleting : content.cancel.btn}
                 </span>
               </button>

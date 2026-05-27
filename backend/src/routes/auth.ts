@@ -16,7 +16,6 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  referralCode: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -47,8 +46,8 @@ const resetPasswordSchema = z.object({
 
 router.post('/register', authLimiter, async (req, res, next) => {
   try {
-    const { email, password, name, referralCode } = registerSchema.parse(req.body);
-    const result = await authService.register(email, password, name, referralCode);
+    const { email, password, name } = registerSchema.parse(req.body);
+    const result = await authService.register(email, password, name);
     res.status(201).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {

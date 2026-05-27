@@ -80,19 +80,6 @@ export interface CashContribution {
   createdAt: string;
 }
 
-export interface Plan {
-  tier: Tier;
-  name: string;
-  price: number;
-  yearlyPrice?: number;
-  currency: string;
-  interval: string;
-  popular: boolean;
-  prices: { month: number; year: number };
-  features: string[];
-  badge?: string;
-}
-
 export interface TierLimits {
   maxEvents: number;
   maxGiftsPerEvent: number;

@@ -126,7 +126,7 @@ function PricingCard({ plan, yearly, onSelect, userTier, loading }: {
 }
 
 export default function Pricing() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -178,9 +178,14 @@ export default function Pricing() {
         </Link>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link to="/dashboard" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              Dashboard
-            </Link>
+            <>
+              <Link to="/dashboard" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                Dashboard
+              </Link>
+              <button onClick={logout} className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                Salir
+              </button>
+            </>
           ) : (
             <>
               <Link to="/login" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">

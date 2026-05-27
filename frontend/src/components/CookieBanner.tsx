@@ -58,7 +58,7 @@ export default function CookieBanner() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
       <div className="mx-auto max-w-3xl rounded-2xl p-6 shadow-2xl glass-card-premium">
         {!showConfig ? (
           <>

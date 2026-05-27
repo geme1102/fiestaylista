@@ -25,6 +25,10 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
 
+  const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = '/icons/gift-generic.svg';
+  };
+
   if (gift.isClaimed) {
     return (
       <motion.div
@@ -33,16 +37,13 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
         animate={{ opacity: 0.8, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
         className="relative rounded-2xl p-4 overflow-hidden glass-card border border-pink-500/20 dark:border-pink-900/30"
-        style={{
-          willChange: 'transform',
-        }}
       >
         <div className="absolute inset-0 opacity-[0.03]">
-          <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" />
+          <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
         </div>
         <div className="flex items-center gap-3 relative">
           <div className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden opacity-60">
-            <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" />
+            <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-500 dark:text-gray-400 line-through truncate text-sm">
@@ -90,17 +91,14 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
       whileHover="hover"
       whileTap="tap"
       className="relative rounded-2xl p-5 overflow-hidden cursor-default group glass-card-premium"
-      style={{
-        willChange: 'transform',
-      }}
     >
       <div className="absolute inset-0 opacity-[0.04]">
-        <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" />
+        <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
       </div>
 
       <div className="flex items-start gap-4 relative">
         <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300">
-          <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" />
+          <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" onError={onImgError} />
         </div>
 
         <div className="flex-1 min-w-0 pt-0.5">
@@ -130,7 +128,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
             style={{
               background: 'linear-gradient(135deg, #ec4899, #db2777)',
               boxShadow: '0 2px 12px rgba(236,72,153,0.25)',
-              willChange: 'transform',
             }}
           >
             {claimingId === gift.id ? (

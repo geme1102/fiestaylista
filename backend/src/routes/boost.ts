@@ -11,7 +11,7 @@ import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
-router.post('/events/:eventId/boost', paymentLimiter, requireAuth, async (req: AuthRequest, res, next) => {
+router.post('/events/:eventId/boost', requireAuth, paymentLimiter, async (req: AuthRequest, res, next) => {
   try {
     const eventId = String(req.params.eventId);
     if (!eventId) throw new ValidationError('ID del evento requerido');

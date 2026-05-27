@@ -153,7 +153,7 @@ export default function EventGuest() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
         <div className="text-center max-w-sm">
-          <img src="/illustrations/illustration-404.png" alt="" loading="lazy" className="w-48 h-48 mx-auto mb-6" />
+          <img src="/illustrations/illustration-404.png" alt="Evento no encontrado" loading="lazy" className="w-48 h-48 mx-auto mb-6" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Evento no encontrado</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
           <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
@@ -233,9 +233,9 @@ export default function EventGuest() {
                   key={photo.id}
                   whileHover={{ scale: 1.03 }}
                   className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700"
-                  style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', willChange: 'transform' }}
+                  style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
                 >
-                  <img src={photo.url} alt={photo.caption || ''} loading="lazy" className="w-full h-36 sm:h-40 object-cover" />
+                  <img src={photo.url} alt={photo.caption || 'Foto del evento'} loading="lazy" className="w-full aspect-[4/3] object-cover" />
                 </motion.div>
               ))}
             </div>
@@ -267,7 +267,7 @@ export default function EventGuest() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-12"
             >
-              <img src="/illustrations/empty-guest.png" alt="" loading="lazy" className="w-64 h-64 mx-auto mb-6" />
+              <img src="/illustrations/empty-guest.png" alt="Lista vacía" loading="lazy" className="w-64 h-64 mx-auto mb-6" />
               <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">La lista de regalos se está preparando</p>
               <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
             </motion.div>

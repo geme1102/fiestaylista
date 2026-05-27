@@ -104,15 +104,10 @@ function toUserResponse(user: typeof users.$inferSelect): UserResponse {
   };
 }
 
-function generateReferralCode(): string {
-  return randomBytes(4).toString('hex');
-}
-
 export async function register(
   email: string,
   password: string,
   name: string,
-  referralCode?: string,
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string; emailSent: boolean }> {
   const emailLower = email.toLowerCase();
 
@@ -130,7 +125,6 @@ export async function register(
     const passwordHash = await bcrypt.hash(password, 12);
     const verificationToken = randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const userReferralCode = generateReferralCode();
 
     const [user] = await tx
       .insert(users)
@@ -138,7 +132,6 @@ export async function register(
         email: emailLower,
         passwordHash,
         name,
-        referralCode: userReferralCode,
         emailVerified: false,
         verificationToken,
         verificationTokenExpires,
@@ -155,11 +148,6 @@ export async function register(
       }
     } else {
       console.warn('[Auth] Email service not configured — verification email not sent');
-    }
-
-    if (referralCode) {
-      const { trackReferral } = await import('../routes/referrals.js');
-      await trackReferral(user.email, referralCode);
     }
 
     const tokens = await issueTokenPair(user.id, user.email, tx);
@@ -291,7 +279,16 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
     .set({ verificationToken, verificationTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
-  await sendVerificationEmail(user.email, verificationToken);
+  if (!isEmailConfigured()) {
+    throw new Error('Email service not configured');
+  }
+
+  try {
+    await sendVerificationEmail(user.email, verificationToken);
+  } catch (err) {
+    console.error('[Auth] Error al reenviar email de verificación:', err);
+    throw new Error('No se pudo enviar el correo de verificación. Intenta de nuevo más tarde.');
+  }
 }
 
 export async function forgotPassword(email: string): Promise<void> {
@@ -313,7 +310,16 @@ export async function forgotPassword(email: string): Promise<void> {
     .set({ resetToken, resetTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  await sendPasswordResetEmail(user.email, resetToken);
+  if (!isEmailConfigured()) {
+    console.warn('[Auth] Email service not configured — password reset email not sent');
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(user.email, resetToken);
+  } catch (err) {
+    console.error('[Auth] Error al enviar email de restablecimiento:', err);
+  }
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
