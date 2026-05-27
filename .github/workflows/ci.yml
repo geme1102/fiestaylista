@@ -1,4 +1,4 @@
-name: CI/CD
+﻿name: CI/CD
 
 on:
   push:
@@ -69,11 +69,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: [e2e-tests]
     runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: railwayapp/railway-action@v3
-        with:
-          service: fiesta-y-lista-api
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - run: railway up --service=fiesta-y-lista-api
+
 
