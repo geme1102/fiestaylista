@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useScroll, useTransform } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,7 @@ import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
+import { getGiftCategory } from '../data/giftEmojis';
 
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
@@ -167,8 +169,30 @@ export default function EventGuest() {
   const availableGifts = gifts.filter((g) => !g.isClaimed);
   const claimedGifts = gifts.filter((g) => g.isClaimed);
   const [easyReadMode, setEasyReadMode] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const filterBarRef = useRef<HTMLDivElement>(null);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    const cats: { label: string; color: string }[] = [];
+    availableGifts.forEach((g) => {
+      const c = getGiftCategory(g.name);
+      if (!seen.has(c.label)) {
+        seen.add(c.label);
+        cats.push(c);
+      }
+    });
+    return cats;
+  }, [gifts]);
+
+  const filteredGifts = categoryFilter
+    ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
+    : availableGifts;
 
   const eventDate = event.createdAt ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+  const { scrollY } = useScroll();
+  const parallaxY = useTransform(scrollY, [0, 400], [0, 80]);
 
   return (
     <>
@@ -185,9 +209,9 @@ export default function EventGuest() {
       {showConfetti && <PremiumConfetti />}
 
       <div className="relative min-h-[340px] sm:min-h-[400px] overflow-hidden flex items-center">
-        <div
+        <motion.div
           className="absolute inset-0 bg-cover bg-center opacity-25 dark:opacity-10 scale-110"
-          style={{ backgroundImage: `url(${HERO_BG[event.eventType] || '/backgrounds/hero-pattern.png'})` }}
+          style={{ backgroundImage: `url(${HERO_BG[event.eventType] || '/backgrounds/hero-pattern.png'})`, y: parallaxY }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/70 to-white dark:from-gray-900/30 dark:via-gray-900/80 dark:to-gray-900" />
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20 blur-3xl" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
@@ -266,7 +290,7 @@ export default function EventGuest() {
                 <motion.div
                   key={photo.id}
                   whileHover={{ scale: 1.03 }}
-                  className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50"
+                  className="overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50 clip-path-organic"
                 >
                   <img src={photo.url} alt={photo.caption || 'Foto del evento'} loading="lazy" className="w-full aspect-[4/3] object-cover" />
                 </motion.div>
@@ -320,9 +344,43 @@ export default function EventGuest() {
             </div>
           </div>
 
+          {categories.length > 1 && (
+            <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 mb-4 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 w-max">
+                <button
+                  onClick={() => setCategoryFilter(null)}
+                  className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
+                    categoryFilter === null
+                      ? 'bg-pink-500 text-white border-pink-500 shadow-md shadow-pink-500/20'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-pink-300'
+                  }`}
+                >
+                  🎁 Todos
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.label}
+                    onClick={() => setCategoryFilter(cat.label === categoryFilter ? null : cat.label)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
+                      categoryFilter === cat.label
+                        ? 'text-white shadow-md'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-pink-300'
+                    }`}
+                    style={{
+                      backgroundColor: categoryFilter === cat.label ? cat.color : undefined,
+                      borderColor: categoryFilter === cat.label ? cat.color : undefined,
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {availableGifts.map((gift) => (
+              {filteredGifts.map((gift) => (
                 <GiftCard
                   key={gift.id}
                   gift={gift}

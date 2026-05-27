@@ -21,6 +21,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isSealed, setIsSealed] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const commission = ownerTier === 'pro' ? 2 : 4;
@@ -146,11 +147,11 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
     <div className="mb-12 relative">
       {showConfetti && <ConfettiOverlay />}
 
-      <div className="rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
+      <div className={`rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden transition-all duration-500 ${isSealed ? 'animate-envelope-seal' : ''}`}
         style={{
           background: 'linear-gradient(135deg, #065F46, #047857, #059669)',
-          border: '1px solid rgba(217, 119, 6, 0.3)',
-          boxShadow: '0 4px 24px rgba(217, 119, 6, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          border: isSealed ? '1px solid rgba(217, 119, 6, 0.6)' : '1px solid rgba(217, 119, 6, 0.3)',
+          boxShadow: isSealed ? '0 4px 32px rgba(217, 119, 6, 0.3)' : '0 4px 24px rgba(217, 119, 6, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         }}
       >
         <div className="absolute inset-0 opacity-20">
@@ -208,8 +209,14 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-200/80">
-            <span className="flex items-center gap-1">🔐 Procesado por <strong>Mercado Pago</strong></span>
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-200/80 flex-wrap">
+            <span className="flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="#34D399" strokeWidth="2" className="animate-checkmark" />
+                <path d="M8 12l3 3 5-5" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-checkmark" style={{ animationDelay: '0.3s' }} />
+              </svg>
+              <strong>Mercado Pago</strong>
+            </span>
             <span className="w-1 h-1 rounded-full bg-emerald-600" />
             <span className="flex items-center gap-1">💰 El dinero va directo al anfitrión</span>
           </div>
@@ -223,7 +230,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                     <button
                       key={amt}
                       type="button"
-                      onClick={() => { setSelectedAmount(amt); setAmount(''); }}
+                      onClick={() => { setSelectedAmount(amt); setAmount(''); setIsSealed(true); setTimeout(() => setIsSealed(false), 2000); }}
                       className={`px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all border ${
                         selectedAmount === amt
                           ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-emerald-900 border-yellow-300 shadow-lg shadow-yellow-500/30 scale-105'
@@ -237,7 +244,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
+                  onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); if (e.target.value) { setIsSealed(true); setTimeout(() => setIsSealed(false), 2000); } }}
                   placeholder="Monto personalizado"
                   min="2000"
                   className="mt-2 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"

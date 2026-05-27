@@ -1,9 +1,10 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { EVENT_ICONS, EVENT_LABELS } from '../types';
 import LiveCounter from '../components/LiveCounter';
+import { useMousePosition, useDeviceOrientation } from '../hooks/useMousePosition';
 
 const FEATURES = [
   { icon: '/icons/feature-gifts.png', title: 'Listas de Regalos', desc: 'Crea listas personalizadas para cualquier evento especial.' },
@@ -34,17 +35,109 @@ const TESTIMONIALS = [
   { name: 'Ana L.', role: 'Cumpleaños', text: 'Creé la lista en 2 minutos. Mis amigos preguntaron qué app usaba. Muy recomendada.', avatar: '/illustrations/avatar-3.png' },
 ];
 
+const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
+
 const FLOATING_TESTIMONIALS = [
   { text: '✨ "Super fácil de usar"', color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300' },
   { text: '🎉 "Invitados encantados"', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
   { text: '💝 "Me encantó"', color: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300' },
 ];
 
+const CONFETTI_COLORS = ['#F43F5E', '#E11D48', '#D946EF', '#D97706', '#FDE68A', '#ec4899'];
+
+const TYPED_LINES = [
+  'organizar tus regalos',
+  'compartir momentos',
+  'recibir con amor',
+];
+
+function useTypewriter(texts: string[], typingSpeed = 60, deletingSpeed = 35, pauseTime = 2000) {
+  const [displayed, setDisplayed] = useState('');
+  const [lineIdx, setLineIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = texts[lineIdx];
+    const timeout = setTimeout(() => {
+      if (!deleting) {
+        if (charIdx < current.length) {
+          setDisplayed(current.slice(0, charIdx + 1));
+          setCharIdx((i) => i + 1);
+        } else {
+          setTimeout(() => setDeleting(true), pauseTime);
+        }
+      } else {
+        if (charIdx > 0) {
+          setDisplayed(current.slice(0, charIdx - 1));
+          setCharIdx((i) => i - 1);
+        } else {
+          setDeleting(false);
+          setLineIdx((i) => (i + 1) % texts.length);
+        }
+      }
+    }, deleting ? deletingSpeed : typingSpeed);
+    return () => clearTimeout(timeout);
+  }, [charIdx, deleting, lineIdx, texts, typingSpeed, deletingSpeed, pauseTime]);
+
+  return displayed;
+}
+
+function useConfettiParticles(count: number) {
+  const mouse = useMousePosition();
+  const orientation = useDeviceOrientation();
+  const [particles, setParticles] = useState(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 2 + Math.random() * 3,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      speed: 0.2 + Math.random() * 0.4,
+      drift: (Math.random() - 0.5) * 0.5,
+      phase: Math.random() * Math.PI * 2,
+    }))
+  );
+
+  useEffect(() => {
+    let frame = requestAnimationFrame(function animate() {
+      setParticles((prev) =>
+        prev.map((p) => {
+          const normX = mouse.normalizedX || orientation.gamma / 45;
+          const normY = mouse.normalizedY || orientation.beta / 45;
+          let x = p.x + normX * p.drift * 2;
+          let y = p.y + normY * p.speed * 0.5;
+          if (y > 100) y = -5;
+          if (y < -5) y = 100;
+          if (x > 105) x = -5;
+          if (x < -5) x = 105;
+          return { ...p, x, y };
+        })
+      );
+      frame = requestAnimationFrame(animate);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mouse, orientation]);
+
+  return particles;
+}
+
+
+
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const heroBg = useMemo(() => HERO_BGS[Math.floor(Math.random() * HERO_BGS.length)], []);
   const [floatingIdx, setFloatingIdx] = useState(0);
+  const typedText = useTypewriter(TYPED_LINES);
+  const particles = useConfettiParticles(16);
+  const [flashCard, setFlashCard] = useState<string | null>(null);
+
+  const handleCategoryTap = useCallback((key: string) => {
+    navigator.vibrate?.(15);
+    setFlashCard(key);
+    setTimeout(() => setFlashCard(null), 400);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -54,7 +147,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+    <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border-b border-white/20 dark:border-gray-800/50 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -62,7 +155,7 @@ export default function Landing() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-sm font-bold shadow-md">
                 F
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent font-outfit">
+              <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent font-outfit tracking-tight">
                 Fiesta y Lista
               </span>
             </div>
@@ -104,6 +197,22 @@ export default function Landing() {
           <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-amber-300/10 rounded-full blur-3xl dark:bg-amber-600/5 animate-aurora" style={{ animationDelay: '-14s' }} />
         </div>
 
+        {particles.map((p) => (
+          <motion.div
+            key={p.id}
+            className="absolute pointer-events-none rounded-full"
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              opacity: 0.15,
+              filter: 'blur(0.5px)',
+            }}
+          />
+        ))}
+
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -114,14 +223,15 @@ export default function Landing() {
               🎊 Crea tu lista de regalos en segundos
             </div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 dark:text-white mb-6 font-outfit leading-tight">
+            <h1 className="text-fluid-hero font-bold tracking-tight text-gray-900 dark:text-white mb-6 font-outfit leading-tight">
               La forma más fácil de
-              <span className="block bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500 bg-clip-text text-transparent">
-                organizar tus regalos
+              <span className="block bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500 bg-clip-text text-transparent min-h-[1.2em]">
+                {typedText}
+                <span className="animate-typewriter-cursor text-pink-500">|</span>
               </span>
             </h1>
 
-            <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-10">
+            <p className="max-w-2xl mx-auto text-fluid-body text-gray-600 dark:text-gray-400 mb-10">
               Crea listas de regalos para baby showers, bodas, cumpleaños y más.
               Tus invitados pueden apartar regalos o contribuir económicamente.
             </p>
@@ -130,17 +240,19 @@ export default function Landing() {
               {isAuthenticated ? (
                 <Link
                   to="/dashboard"
-                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all shadow-lg shadow-pink-500/20"
+                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all shadow-lg shadow-pink-500/20 relative overflow-hidden group"
                 >
-                  Ir a Mis Eventos
+                  <span className="relative z-10">Ir a Mis Eventos</span>
+                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-card-shine" />
                 </Link>
               ) : (
                 <>
                   <button
                     onClick={() => navigate('/register')}
-                    className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all shadow-lg shadow-pink-500/20 animate-pulse-cta"
+                    className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all shadow-lg shadow-pink-500/20 animate-pulse-cta relative overflow-hidden group"
                   >
-                    Comenzar Gratis →
+                    <span className="relative z-10">Comenzar Gratis →</span>
+                    <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-card-shine" />
                   </button>
                   <Link
                     to="/pricing"
@@ -197,7 +309,7 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      <section className="py-20 bg-white/70 dark:bg-gray-900/50 backdrop-blur-sm">
+      <section className="space-fluid-section bg-white/70 dark:bg-gray-900/50 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -205,10 +317,10 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4 font-outfit">
+            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-4 font-outfit tracking-tight">
               Perfecto para cualquier ocasión
             </h2>
-            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto">
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto text-fluid-body">
               Sea cual sea el evento, tenemos todo lo que necesitas para organizar los regalos.
             </p>
           </motion.div>
@@ -216,25 +328,41 @@ export default function Landing() {
             {Object.entries(EVENT_LABELS).map(([key, label], idx) => {
               const typeEntry = EVENT_TYPES.find(t => t.value === key);
               return (
-                <motion.div
+                <motion.button
                   key={key}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: idx * 0.1 }}
                   whileHover={{ y: -6, scale: 1.03 }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-2xl glass-card-premium hover:shadow-lg hover:shadow-pink-500/5 transition-all duration-300 cursor-default"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleCategoryTap(key)}
+                  className="flex flex-col items-center gap-3 p-6 rounded-2xl glass-card-premium hover:shadow-lg hover:shadow-pink-500/5 transition-all duration-300 cursor-pointer relative overflow-hidden group"
+                  style={{
+                    transformStyle: 'preserve-3d',
+                    perspective: '600px',
+                  }}
                 >
-                  <img src={typeEntry?.icon || EVENT_ICONS[key as keyof typeof EVENT_ICONS]} alt={`Ícono ${label}`} loading="lazy" className="w-12 h-12" />
+                  {flashCard === key && (
+                    <motion.div
+                      initial={{ opacity: 1, scale: 2 }}
+                      animate={{ opacity: 0, scale: 4 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 bg-gradient-to-br from-pink-400/30 to-rose-500/30 rounded-2xl pointer-events-none"
+                    />
+                  )}
+                  <div className="relative group-hover:scale-110 transition-transform duration-300">
+                    <img src={typeEntry?.icon || EVENT_ICONS[key as keyof typeof EVENT_ICONS]} alt={`Ícono ${label}`} loading="lazy" className="w-12 h-12" />
+                  </div>
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="space-fluid-section bg-white dark:bg-gray-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -242,7 +370,7 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-16 font-outfit">
+            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-16 font-outfit tracking-tight">
               Todo lo que necesitas
             </h2>
           </motion.div>
@@ -261,14 +389,14 @@ export default function Landing() {
                   <img src={feature.icon} alt={feature.title} loading="lazy" className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400">{feature.desc}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-fluid-body">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm">
+      <section className="space-fluid-section bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -276,40 +404,42 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4 font-outfit">
+            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-4 font-outfit tracking-tight">
               Lo que dicen nuestros usuarios
             </h2>
-            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto">
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto text-fluid-body">
               Miles de personas ya organizan sus eventos con Fiesta y Lista.
             </p>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {TESTIMONIALS.map((t, idx) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.15 }}
-                whileHover={{ y: -6 }}
-                className="rounded-2xl p-6 glass-card-premium"
-              >
-                <div className="flex gap-1 mb-3">{'⭐'.repeat(5)}</div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <img src={t.avatar} alt={`Avatar de ${t.name}`} loading="lazy" className="w-10 h-10 rounded-full object-cover bg-gray-100 ring-2 ring-pink-200/50" />
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.role}</p>
+          <div className="relative overflow-hidden">
+            <div className="flex gap-6 animate-marquee-scroll w-max">
+              {MARQUEE_TESTIMONIALS.map((t, idx) => (
+                <div
+                  key={`${t.name}-${idx}`}
+                  className="w-[280px] sm:w-[320px] shrink-0 rounded-2xl p-6 glass-card-premium"
+                >
+                  <div className="flex gap-1 mb-3">{'⭐'.repeat(5)}</div>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">"{t.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={t.avatar}
+                      alt={`Avatar de ${t.name}`}
+                      loading="lazy"
+                      className="w-10 h-10 rounded-full object-cover bg-gray-100 animate-marquee-avatar-glow"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</p>
+                      <p className="text-xs text-gray-400">{t.role}</p>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20">
+      <section className="space-fluid-section">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -323,17 +453,18 @@ export default function Landing() {
               <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
             </div>
             <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-outfit">
+              <h2 className="text-fluid-h2 font-bold mb-4 font-outfit tracking-tight">
                 ¿Listo para empezar?
               </h2>
-              <p className="text-lg sm:text-xl mb-8 text-pink-100 max-w-xl mx-auto">
+              <p className="text-fluid-body mb-8 text-pink-100 max-w-xl mx-auto">
                 Crea tu primer evento gratis. No necesitas tarjeta de crédito.
               </p>
               <Link
                 to="/register"
-                className="inline-flex px-8 py-4 bg-white text-pink-600 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-white/20 transition-all shadow-lg"
+                className="inline-flex px-8 py-4 bg-white text-pink-600 rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-white/20 transition-all shadow-lg relative overflow-hidden group"
               >
-                Crear mi primera lista
+                <span className="relative z-10">Crear mi primera lista</span>
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-card-shine" />
               </Link>
             </div>
           </motion.div>

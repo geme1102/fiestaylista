@@ -1,8 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface LiveStats {
   totalEvents: number;
   eventsToday: number;
+}
+
+function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  const startRef = useRef<number | null>(null);
+  const fromRef = useRef(0);
+
+  useEffect(() => {
+    fromRef.current = display;
+    startRef.current = null;
+    let frame: number;
+    const animate = (timestamp: number) => {
+      if (startRef.current === null) startRef.current = timestamp;
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(fromRef.current + (value - fromRef.current) * easeOut);
+      setDisplay(current);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value, duration]);
+
+  return <span>{display.toLocaleString()}</span>;
 }
 
 export default function LiveCounter() {
@@ -24,8 +51,11 @@ export default function LiveCounter() {
   return (
     <div className="flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 mt-8">
       <span className="flex items-center gap-1.5">
-        <span className="text-lg">📊</span>
-        <span><strong className="text-gray-900 dark:text-white">{stats.totalEvents.toLocaleString()}</strong> listas creadas</span>
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+        </span>
+        <span><strong className="text-gray-900 dark:text-white"><AnimatedNumber value={stats.totalEvents} /></strong> listas creadas</span>
       </span>
     </div>
   );

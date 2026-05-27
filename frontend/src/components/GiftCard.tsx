@@ -127,7 +127,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: '0 4px 20px rgba(236,72,153,0.35)' }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => onClaim(gift.id, gift.name)}
+            onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
             disabled={claimingId === gift.id}
             className="w-full py-3 min-h-[48px] text-sm font-bold text-white rounded-xl transition-all disabled:opacity-50 bg-gradient-to-r from-pink-500 to-rose-500 shadow-md shadow-pink-500/20 hover:shadow-lg hover:shadow-pink-500/30"
           >
