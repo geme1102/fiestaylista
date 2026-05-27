@@ -146,17 +146,31 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
     <div className="mb-12 relative">
       {showConfetti && <ConfettiOverlay />}
 
-      <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-700 dark:from-emerald-600 dark:to-green-800 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-300 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-300 rounded-full blur-3xl" />
+      <div className="rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #065F46, #047857, #059669)',
+          border: '1px solid rgba(217, 119, 6, 0.3)',
+          boxShadow: '0 4px 24px rgba(217, 119, 6, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-10 -right-10 w-48 h-48 bg-yellow-300 rounded-full blur-3xl animate-aurora" />
+          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-amber-400 rounded-full blur-3xl animate-aurora" style={{ animationDelay: '-7s' }} />
+        </div>
+
+        <div className="absolute top-3 right-3 z-10">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-400/20 backdrop-blur-sm text-yellow-300 text-[10px] font-bold rounded-full border border-yellow-400/30">
+            🔒 Transacción 100% segura
+          </span>
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-3xl">💰</span>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-2xl shadow-lg shadow-yellow-500/30">
+              💰
+            </div>
             <div>
-              <h3 className="text-xl font-bold">{fund.title || 'Lluvia de Sobres'}</h3>
+              <h3 className="text-xl font-bold font-outfit">{fund.title || 'Lluvia de Sobres'}</h3>
               {fund.description && (
                 <p className="text-sm text-emerald-100">{fund.description}</p>
               )}
@@ -165,18 +179,18 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
 
           <div className="mt-6">
             <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-emerald-100">
+              <span className="text-emerald-100 font-medium">
                 {formatCOP(fund.collectedAmount)} recaudados
               </span>
               {fund.targetAmount && (
-                <span className="text-emerald-100">
-                  meta: {formatCOP(fund.targetAmount)}
+                <span className="text-emerald-200">
+                  Meta: {formatCOP(fund.targetAmount)}
                 </span>
               )}
             </div>
-            <div className="w-full h-3 bg-emerald-800/50 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-emerald-800/40 rounded-full overflow-hidden ring-1 ring-yellow-500/20">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-300 transition-all duration-1000 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300 transition-all duration-1000 ease-out shadow-lg shadow-yellow-500/30"
                 style={{ width: `${Math.min(progressPercent, 100)}%` }}
               />
             </div>
@@ -185,29 +199,35 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
           {recentContributions.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {recentContributions.map((c) => (
-                <span key={c.id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">
+                <span key={c.id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs border border-white/10">
                   <span>💛</span>
-                  <span>{c.contributorName}</span>
-                  <span className="font-semibold">{formatCOP(c.amount)}</span>
+                  <span className="font-medium">{c.contributorName}</span>
+                  <span className="font-semibold text-yellow-300">{formatCOP(c.amount)}</span>
                 </span>
               ))}
             </div>
           )}
 
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-200/80">
+            <span className="flex items-center gap-1">🔐 Procesado por <strong>Mercado Pago</strong></span>
+            <span className="w-1 h-1 rounded-full bg-emerald-600" />
+            <span className="flex items-center gap-1">💰 El dinero va directo al anfitrión</span>
+          </div>
+
           {canContribute && (
-            <form onSubmit={handleContribute} className="mt-6 space-y-4">
+            <form onSubmit={handleContribute} className="mt-5 space-y-4">
               <div>
-                <label className="block text-sm text-emerald-100 mb-2">Monto</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-sm text-emerald-100 mb-2 font-medium">Elige un monto</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {SUGGESTED_AMOUNTS.map((amt) => (
                     <button
                       key={amt}
                       type="button"
                       onClick={() => { setSelectedAmount(amt); setAmount(''); }}
-                      className={`px-4 py-2 min-h-[44px] rounded-xl text-sm font-medium transition-all ${
+                      className={`px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all border ${
                         selectedAmount === amt
-                          ? 'bg-white text-emerald-700 shadow-md'
-                          : 'bg-white/20 text-white hover:bg-white/30'
+                          ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-emerald-900 border-yellow-300 shadow-lg shadow-yellow-500/30 scale-105'
+                          : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'
                       }`}
                     >
                       {formatCOP(amt)}
@@ -218,9 +238,9 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                   type="number"
                   value={amount}
                   onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
-                  placeholder="Otro monto"
+                  placeholder="Monto personalizado"
                   min="2000"
-                  className="mt-2 w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-emerald-200 outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
+                  className="mt-2 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
                 />
               </div>
 
@@ -231,7 +251,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
                   required
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-emerald-200 outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
                 />
               </div>
 
@@ -239,27 +259,27 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Mensaje (opcional)"
+                placeholder="Mensaje para los anfitriones (opcional)"
                 maxLength={500}
-                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-emerald-200 outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
               />
 
               <button
                 type="submit"
                 disabled={contributing}
-                className="w-full py-3 px-6 bg-gradient-to-r from-yellow-400 to-amber-500 text-emerald-900 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-yellow-500/30 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
+                className="w-full py-3.5 px-6 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-emerald-900 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-yellow-500/30 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
               >
-                {contributing ? <LoadingSpinner size="sm" /> : '💛 Aportar'}
+                {contributing ? <LoadingSpinner size="sm" /> : '💛 Aportar ahora'}
               </button>
 
-              <p className="text-xs text-center text-emerald-200">
-                Comisión de {commission}% + $0.30. Procesado por Mercado Pago de forma segura.
+              <p className="text-[11px] text-center text-emerald-200/70">
+                Comisión de {commission}% + $0.30. Pagos procesados de forma segura por Mercado Pago.
               </p>
             </form>
           )}
 
           {!canContribute && !isOwner && (
-            <p className="mt-4 text-sm text-emerald-200 text-center">
+            <p className="mt-4 text-sm text-emerald-200/70 text-center">
               {!fund.isActive ? 'Este fondo ya no está activo' : 'No disponible'}
             </p>
           )}

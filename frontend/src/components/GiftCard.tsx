@@ -34,25 +34,27 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
       <motion.div
         layout
         initial={{ opacity: 0, x: 30 }}
-        animate={{ opacity: 0.8, x: 0 }}
+        animate={{ opacity: 0.75, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
-        className="relative rounded-2xl p-4 overflow-hidden glass-card border border-pink-500/20 dark:border-pink-900/30"
+        className="relative rounded-2xl p-4 overflow-hidden border border-pink-200/30 dark:border-pink-900/20 bg-gradient-to-br from-pink-50/80 to-rose-50/80 dark:from-pink-950/30 dark:to-rose-950/30 backdrop-blur-sm"
       >
-        <div className="absolute inset-0 opacity-[0.03]">
-          <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
+        <div className="absolute top-2 right-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg shadow-pink-500/25 animate-glow-pulse-soft">
+            <span>💝</span>
+            Apartado con amor
+          </span>
         </div>
-        <div className="flex items-center gap-3 relative">
-          <div className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden opacity-60">
+        <div className="flex items-center gap-3 relative pt-1">
+          <div className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden opacity-50 saturate-50">
             <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-500 dark:text-gray-400 line-through truncate text-sm">
+            <p className="font-medium text-gray-400 dark:text-gray-500 line-through truncate text-sm">
               {gift.name}
             </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <img src="/badges/claimed-badge.svg" alt="Apartado" className="h-5" />
-              <span className="text-xs font-medium text-pink-600 dark:text-pink-400">
-                {gift.claimedBy}
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-xs font-semibold text-pink-600 dark:text-pink-400">
+                💝 {gift.claimedBy}
               </span>
             </div>
           </div>
@@ -90,48 +92,47 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
       animate="visible"
       whileHover="hover"
       whileTap="tap"
-      className="relative rounded-2xl p-5 overflow-hidden cursor-default group glass-card-premium"
+      className="relative rounded-2xl p-5 overflow-hidden cursor-default group glass-card-premium hover:shadow-lg hover:shadow-pink-500/5 transition-all duration-300"
     >
-      <div className="absolute inset-0 opacity-[0.04]">
-        <img src="/backgrounds/gift-card-bg.png" alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
+      <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-pink-100/20 to-rose-100/20 dark:from-pink-900/10 dark:to-rose-900/10" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <div className="animate-card-shine w-full h-full" />
       </div>
 
-      <div className="flex items-start gap-4 relative">
-        <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300">
-          <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" onError={onImgError} />
-        </div>
-
-        <div className="flex-1 min-w-0 pt-0.5">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span
-              className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
-              style={{
-                backgroundColor: category.color + '18',
-                color: category.color,
-              }}
-            >
-              {category.label}
-            </span>
+      <div className="flex flex-col gap-3 relative">
+        <div className="flex items-start gap-4">
+          <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300 ring-1 ring-pink-200/50 dark:ring-pink-800/30">
+            <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" onError={onImgError} />
           </div>
-          <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-snug">
-            {gift.name}
-          </h3>
+
+          <div className="flex-1 min-w-0 pt-0.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span
+                className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
+                style={{
+                  backgroundColor: category.color + '18',
+                  color: category.color,
+                }}
+              >
+                {category.label}
+              </span>
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-snug font-outfit">
+              {gift.name}
+            </h3>
+          </div>
         </div>
 
         {onClaim && (
           <motion.button
-            whileHover={{ scale: 1.05, boxShadow: '0 4px 20px rgba(236,72,153,0.35)' }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02, boxShadow: '0 4px 20px rgba(236,72,153,0.35)' }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => onClaim(gift.id, gift.name)}
             disabled={claimingId === gift.id}
-            className="shrink-0 px-4 py-2.5 min-h-[44px] text-sm font-semibold text-white rounded-xl transition-all disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, #ec4899, #db2777)',
-              boxShadow: '0 2px 12px rgba(236,72,153,0.25)',
-            }}
+            className="w-full py-3 min-h-[48px] text-sm font-bold text-white rounded-xl transition-all disabled:opacity-50 bg-gradient-to-r from-pink-500 to-rose-500 shadow-md shadow-pink-500/20 hover:shadow-lg hover:shadow-pink-500/30"
           >
             {claimingId === gift.id ? (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center justify-center gap-1.5">
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -139,8 +140,8 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
                 ...
               </span>
             ) : (
-              <span className="flex items-center gap-1.5">
-                🎁 Lo regalo!
+              <span className="flex items-center justify-center gap-1.5">
+                🎁 ¡Yo regalo esto!
               </span>
             )}
           </motion.button>

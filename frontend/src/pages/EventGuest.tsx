@@ -8,10 +8,10 @@ import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
-import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
 
 interface GuestEvent {
-  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean;
+  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
 }
 
 const HERO_BG: Record<string, string> = {
@@ -135,15 +135,15 @@ export default function EventGuest() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
         <div className="text-center">
-          <video
-            src="/animations/gift-loading.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-32 h-32 mx-auto mb-4"
-          />
-          <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">Cargando lista de regalos...</p>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-4xl shadow-xl shadow-pink-500/20 animate-float-slow"
+          >
+            🎁
+          </motion.div>
+          <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse font-outfit">Cargando lista de regalos...</p>
         </div>
       </div>
     );
@@ -166,6 +166,9 @@ export default function EventGuest() {
 
   const availableGifts = gifts.filter((g) => !g.isClaimed);
   const claimedGifts = gifts.filter((g) => g.isClaimed);
+  const [easyReadMode, setEasyReadMode] = useState(false);
+
+  const eventDate = event.createdAt ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
   return (
     <>
@@ -178,25 +181,56 @@ export default function EventGuest() {
         <meta name="twitter:title" content={`${event.title} - Fiesta y Lista`} />
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
       </Helmet>
-      <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className={`min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 transition-all duration-300 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
       {showConfetti && <PremiumConfetti />}
 
-      <div className="relative overflow-hidden">
+      <div className="relative min-h-[340px] sm:min-h-[400px] overflow-hidden flex items-center">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30 dark:opacity-15"
+          className="absolute inset-0 bg-cover bg-center opacity-25 dark:opacity-10 scale-110"
           style={{ backgroundImage: `url(${HERO_BG[event.eventType] || '/backgrounds/hero-pattern.png'})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/80 to-white dark:from-gray-900/40 dark:via-gray-900/85 dark:to-gray-900" />
-        <div className="relative py-16 px-4 text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/70 to-white dark:from-gray-900/30 dark:via-gray-900/80 dark:to-gray-900" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20 blur-3xl" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-15 blur-3xl" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
+
+        <div className="relative w-full px-4 py-12 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
           >
-            <div className="text-5xl mb-4 inline-block animate-float-slow">{EVENT_ICONS[event.eventType]}</div>
-            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white mb-2">{event.title}</h1>
-            <p className="text-gray-500 dark:text-gray-400">{EVENT_LABELS[event.eventType]}</p>
+            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-md mb-5 shadow-lg ${easyReadMode ? 'w-20 h-20 sm:w-24 sm:h-24' : ''}`}
+              style={{ boxShadow: `0 4px 20px ${THEME_COLORS[event.eventType]?.primary || '#ec4899'}20` }}>
+              <span className={`${easyReadMode ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'}`}>{EVENT_ICONS[event.eventType]}</span>
+            </div>
+            <h1 className={`font-black text-gray-900 dark:text-white mb-2 font-outfit leading-tight ${easyReadMode ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'}`}>
+              {event.title}
+            </h1>
+            <p className={`text-gray-500 dark:text-gray-400 mb-2 inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-full ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
+              {EVENT_ICONS[event.eventType]} {EVENT_LABELS[event.eventType]}
+            </p>
+            {eventDate && (
+              <p className="text-gray-400 dark:text-gray-500 mt-3 flex items-center justify-center gap-1.5">
+                <span>📅</span> <span className={easyReadMode ? 'text-base' : 'text-sm'}>{eventDate}</span>
+              </p>
+            )}
           </motion.div>
+        </div>
+
+        <div className="absolute top-4 right-4 z-20">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setEasyReadMode(!easyReadMode)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all backdrop-blur-sm border min-h-[36px] ${
+              easyReadMode
+                ? 'bg-pink-500/20 text-pink-600 dark:text-pink-400 border-pink-300/40 shadow-lg shadow-pink-500/10'
+                : 'bg-white/60 text-gray-500 border-gray-200/50 dark:bg-gray-800/40 dark:text-gray-400 dark:border-gray-700/50'
+            }`}
+            title={easyReadMode ? 'Modo normal' : 'Modo Lectura Fácil'}
+          >
+            {easyReadMode ? '🔤 Normal' : '🔤 Fácil'}
+          </motion.button>
         </div>
       </div>
 
@@ -222,9 +256,9 @@ export default function EventGuest() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="mb-12"
+            className={`mb-12 ${easyReadMode ? 'space-y-6' : ''}`}
           >
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className={`font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
               <span>📸</span> Galería
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -232,8 +266,7 @@ export default function EventGuest() {
                 <motion.div
                   key={photo.id}
                   whileHover={{ scale: 1.03 }}
-                  className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700"
-                  style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+                  className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50"
                 >
                   <img src={photo.url} alt={photo.caption || 'Foto del evento'} loading="lazy" className="w-full aspect-[4/3] object-cover" />
                 </motion.div>
@@ -242,16 +275,16 @@ export default function EventGuest() {
           </motion.div>
         )}
 
-        <div className="mb-12">
+        <div className={`mb-12 ${easyReadMode ? 'space-y-8' : ''}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex items-center justify-between mb-6"
           >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className={`font-bold text-gray-900 dark:text-white flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
               🎁 Lista de Regalos
-              <span className="text-sm font-normal text-gray-500">({availableGifts.length} disponibles)</span>
+              <span className={`font-normal text-gray-500 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>({availableGifts.length} disponibles)</span>
             </h2>
             {gifts.length > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -268,7 +301,7 @@ export default function EventGuest() {
               className="text-center py-12"
             >
               <img src="/illustrations/empty-guest.png" alt="Lista vacía" loading="lazy" className="w-64 h-64 mx-auto mb-6" />
-              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">La lista de regalos se está preparando</p>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">La lista de regalos se está preparando</p>
               <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
             </motion.div>
           )}
@@ -281,7 +314,7 @@ export default function EventGuest() {
                 value={claimName}
                 onChange={(e) => setClaimName(e.target.value)}
                 placeholder="Escribe tu nombre para apartar un regalo"
-                className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-400 transition-all min-h-[48px] backdrop-blur-sm"
+                className={`w-full rounded-2xl border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-400 transition-all backdrop-blur-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}
               />
             </div>
@@ -307,7 +340,7 @@ export default function EventGuest() {
               transition={{ delay: 0.5 }}
               className="mt-10"
             >
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <h3 className={`font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                 <span>💝</span>
                 Ya apartados ({claimedGifts.length})
               </h3>
@@ -326,7 +359,7 @@ export default function EventGuest() {
           )}
         </div>
 
-        <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <div className={`text-center pt-8 border-t border-gray-200 dark:border-gray-700 ${easyReadMode ? 'text-gray-500' : 'text-sm text-gray-500 dark:text-gray-400'}`}>
           <p>Hecho con 🎉 por <a href="/" className="text-pink-600 hover:text-pink-700 font-medium">Fiesta y Lista</a></p>
         </div>
       </div>
