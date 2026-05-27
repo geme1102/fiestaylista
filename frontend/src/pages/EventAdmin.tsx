@@ -40,6 +40,21 @@ export default function EventAdmin() {
     loadEvent();
   }, [id]);
 
+  useEffect(() => {
+    if (!event?.slug) return;
+    const es = new EventSource(`/api/events/${id}/gifts/subscribe`);
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === 'connected') return;
+        showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
+        loadEvent();
+      } catch {}
+    };
+    es.onerror = () => {};
+    return () => es.close();
+  }, [id, event?.slug]);
+
   async function loadEvent() {
     try {
       const [eventRes, giftsRes, photosRes, fundRes] = await Promise.all([
@@ -270,8 +285,16 @@ export default function EventAdmin() {
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-3">
           <ShareButtons slug={event.slug} title={event.title} />
+          <a
+            href={`/e/${event.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium text-pink-600 bg-pink-50 dark:bg-pink-900/20 dark:text-pink-400 rounded-xl hover:bg-pink-100 dark:hover:bg-pink-900/40 transition-colors"
+          >
+            👁️ Vista previa
+          </a>
         </div>
       </div>
 

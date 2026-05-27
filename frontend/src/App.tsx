@@ -15,6 +15,8 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const Account = lazy(() => import('./pages/Account'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'));
@@ -31,6 +33,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/account': 'Mi Cuenta - Fiesta y Lista',
   '/onboarding': 'Primeros Pasos - Fiesta y Lista',
   '/verify-email': 'Verificar Correo - Fiesta y Lista',
+  '/forgot-password': 'Recuperar Contraseña - Fiesta y Lista',
+  '/reset-password': 'Nueva Contraseña - Fiesta y Lista',
   '/terminos-y-condiciones': 'Términos y Condiciones - Fiesta y Lista',
   '/terms-and-conditions': 'Términos y Condiciones - Fiesta y Lista',
   '/politica-de-privacidad': 'Política de Privacidad - Fiesta y Lista',
@@ -82,6 +86,8 @@ export default function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/e/:slug" element={<EventGuest />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/baby-shower" element={<SeoEventPage eventKey="baby-shower" />} />
         <Route path="/boda" element={<SeoEventPage eventKey="boda" />} />
         <Route path="/cumpleanos" element={<SeoEventPage eventKey="cumpleanos" />} />

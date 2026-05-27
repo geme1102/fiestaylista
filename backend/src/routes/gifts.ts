@@ -7,6 +7,9 @@ import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+import { emitGiftClaimed } from '../services/notifications.js';
+
+const clients = new Map<string, Set<Response>>();
 
 const router = Router({ mergeParams: true });
 
@@ -80,6 +83,7 @@ router.put('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthRequ
 
 router.put('/:giftId/claim', (async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const eventId = req.params.eventId as string | undefined;
     const giftId = req.params.giftId as string | undefined;
     if (!giftId) {
       throw new ValidationError('ID del regalo requerido');
@@ -89,6 +93,25 @@ router.put('/:giftId/claim', (async (req: Request, res: Response, next: NextFunc
       throw new ValidationError('El nombre es requerido para apartar el regalo');
     }
     const gift = await giftService.claimGift(giftId, claimedBy.trim());
+
+    const data = {
+      eventId: eventId || '',
+      giftId: gift.id,
+      giftName: gift.name,
+      claimedBy: gift.claimedBy || '',
+      timestamp: new Date().toISOString(),
+    };
+
+    emitGiftClaimed(data);
+
+    const eventClients = clients.get(data.eventId);
+    if (eventClients) {
+      const payload = `data: ${JSON.stringify(data)}\n\n`;
+      for (const client of eventClients) {
+        client.write(payload);
+      }
+    }
+
     res.json({ gift });
   } catch (error) {
     next(error);
@@ -119,6 +142,43 @@ router.delete('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthR
   } catch (error) {
     next(error);
   }
+}) as any);
+
+router.get('/subscribe', (async (req: Request, res: Response) => {
+  const eventId = req.params.eventId as string;
+  if (!eventId) {
+    res.status(400).json({ error: 'ID del evento requerido' });
+    return;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+
+  res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+
+  if (!clients.has(eventId)) {
+    clients.set(eventId, new Set());
+  }
+  clients.get(eventId)!.add(res);
+
+  const keepAlive = setInterval(() => {
+    res.write(':keepalive\n\n');
+  }, 30000);
+
+  req.on('close', () => {
+    clearInterval(keepAlive);
+    const eventClients = clients.get(eventId);
+    if (eventClients) {
+      eventClients.delete(res);
+      if (eventClients.size === 0) {
+        clients.delete(eventId);
+      }
+    }
+  });
 }) as any);
 
 export default router;

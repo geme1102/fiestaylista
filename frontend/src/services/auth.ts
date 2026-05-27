@@ -16,3 +16,11 @@ export function refresh(refreshToken: string): Promise<AuthResponse> {
 export function getMe(): Promise<{ user: User }> {
   return apiClient.get<{ user: User }>('/api/auth/me');
 }
+
+export function forgotPassword(email: string): Promise<void> {
+  return apiClient.post('/api/auth/forgot-password', { email });
+}
+
+export function resetPassword(token: string, password: string): Promise<void> {
+  return apiClient.post('/api/auth/reset-password', { token, password });
+}

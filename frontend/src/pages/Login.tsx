@@ -84,6 +84,11 @@ export default function Login() {
               placeholder="••••••••"
               autoComplete="current-password"
             />
+            <div className="text-right mt-1">
+              <Link to="/forgot-password" className="text-sm text-pink-600 hover:text-pink-700 dark:text-pink-400 font-medium">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </div>
 
           <button
