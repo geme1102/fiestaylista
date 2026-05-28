@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import NavbarPremium from '../components/NavbarPremium';
 
 const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: string; benefits: string[]; faq: { q: string; a: string }[] }> = {
   'baby-shower': {
@@ -101,69 +102,62 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
         <meta name="twitter:title" content={content.title} />
         <meta name="twitter:description" content={content.subtitle} />
       </Helmet>
-      <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl">🎉</span>
-          <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
-            Fiesta y Lista
-          </span>
-        </Link>
-        <Link to="/register" className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl hover:shadow-lg transition-all">
-          Crear mi lista
-        </Link>
-      </nav>
+      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
+        <NavbarPremium />
 
-      <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
-        <div className="text-center mb-12">
-          <span className="text-6xl mb-6 block">{content.icon}</span>
-          <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white mb-4">
-            {content.title}
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            {content.subtitle}
-          </p>
-          <Link
-            to="/register"
-            className="mt-8 inline-flex px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/30 transition-all"
-          >
-            Crear mi lista gratis →
-          </Link>
-        </div>
+        <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
+          <div className="text-center mb-12">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-4xl">
+              {content.icon}
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white mb-4 font-outfit">
+              {content.title}
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              {content.subtitle}
+            </p>
+            <Link
+              to="/register"
+              className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-rose-500/30 transition-all shadow-lg shadow-rose-500/20"
+            >
+              Crear mi lista gratis
+              <span className="text-rose-200">→</span>
+            </Link>
+          </div>
 
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Beneficios</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {content.benefits.map((b) => (
-              <div key={b} className="flex items-center gap-3 p-4 glass-card rounded-xl">
-                <span className="text-green-500 text-xl">✓</span>
-                <span className="text-gray-700 dark:text-gray-300">{b}</span>
-              </div>
-            ))}
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center font-outfit">Beneficios</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {content.benefits.map((b) => (
+                <div key={b} className="flex items-center gap-3 p-4 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-xl shadow-sm">
+                  <span className="text-emerald-500 text-xl shrink-0">✓</span>
+                  <span className="text-gray-700 dark:text-gray-300">{b}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center font-outfit">Preguntas Frecuentes</h2>
+            <div className="max-w-2xl mx-auto space-y-3">
+              {content.faq.map((faq) => (
+                <details key={faq.q} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl group">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
+                    {faq.q}
+                    <span className="ml-2 text-rose-500 group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <div className="px-4 pb-4 text-sm text-gray-600 dark:text-gray-400">{faq.a}</div>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link to="/pricing" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
+              Ver planes y precios →
+            </Link>
           </div>
         </div>
-
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Preguntas Frecuentes</h2>
-          <div className="max-w-2xl mx-auto space-y-3">
-            {content.faq.map((faq) => (
-              <details key={faq.q} className="glass-card rounded-2xl group">
-                <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
-                  {faq.q}
-                  <span className="ml-2 text-pink-500 group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <div className="px-4 pb-4 text-sm text-gray-600 dark:text-gray-400">{faq.a}</div>
-              </details>
-            ))}
-          </div>
-        </div>
-
-        <div className="text-center">
-          <Link to="/pricing" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
-            Ver planes y precios →
-          </Link>
-        </div>
-      </div>
       </div>
     </>
   );

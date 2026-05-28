@@ -11,6 +11,7 @@ import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
 import { getGiftCategory } from '../data/giftEmojis';
+import ImageWithSkeleton from '../components/ImageWithSkeleton';
 
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
@@ -65,24 +66,6 @@ function PremiumConfetti() {
           />
         </motion.div>
       ))}
-    </div>
-  );
-}
-
-function DaysCounter({ date }: { date: string }) {
-  const eventDate = new Date(date);
-  const now = new Date();
-  const diffTime = eventDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 0) return null;
-
-  return (
-    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50">
-      <span className="text-amber-500">⏰</span>
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {diffDays === 1 ? '1 día restante' : `${diffDays} días restantes`}
-      </span>
     </div>
   );
 }
@@ -246,7 +229,9 @@ export default function EventGuest() {
     ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
     : availableGifts;
 
-  const eventDate = event.createdAt ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  const createdDate = event.createdAt
+    ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
 
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 400], [0, 80]);
@@ -304,16 +289,13 @@ export default function EventGuest() {
                 {EVENT_ICONS[event.eventType]} {EVENT_LABELS[event.eventType]}
               </p>
 
-              {/* Date & Days Counter */}
-              <div className="flex items-center justify-center gap-3 mt-3">
-                {eventDate && (
-                  <span className="text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
-                    <span>📅</span>
-                    <span className={easyReadMode ? 'text-base' : 'text-sm'}>{eventDate}</span>
-                  </span>
-                )}
-                <DaysCounter date={event.createdAt} />
-              </div>
+              {/* Created date */}
+              {createdDate && (
+                <span className="text-gray-400 dark:text-gray-500 inline-flex items-center gap-1.5 text-sm">
+                  <span>📅</span>
+                  <span>Creado el {createdDate}</span>
+                </span>
+              )}
             </motion.div>
           </div>
 
@@ -359,9 +341,14 @@ export default function EventGuest() {
                   <motion.div
                     key={photo.id}
                     whileHover={{ scale: 1.03 }}
-                    className="overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50 clip-path-organic rounded-xl"
+                    className="relative overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50 rounded-xl group"
                   >
-                    <img src={photo.url} alt={photo.caption || 'Foto del evento'} loading="lazy" className="w-full aspect-[4/3] object-cover" />
+                    <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
+                    {photo.caption && (
+                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <p className="text-white text-xs">{photo.caption}</p>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
