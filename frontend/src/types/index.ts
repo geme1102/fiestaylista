@@ -32,6 +32,9 @@ export interface Gift {
   name: string;
   isClaimed: boolean;
   claimedBy?: string;
+  isCollective?: boolean;
+  targetAmount?: number;
+  collectedAmount?: number;
   createdAt: string;
 }
 

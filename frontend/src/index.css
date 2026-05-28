@@ -206,6 +206,39 @@
   100% { transform: translateY(-40px) scale(0); opacity: 0; }
 }
 
+@keyframes social-proof-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+  50% { transform: translateY(-6px) scale(1.02); opacity: 1; }
+}
+
+@keyframes category-card-glow {
+  0%, 100% { border-color: rgba(244, 63, 94, 0.2); box-shadow: 0 0 20px rgba(244, 63, 94, 0.05); }
+  50% { border-color: rgba(244, 63, 94, 0.5); box-shadow: 0 0 30px rgba(244, 63, 94, 0.15); }
+}
+
+@keyframes gift-progress-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes cash-gold-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes floating-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(30px, 30px) scale(1.05); }
+}
+
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Apple-style easing curve */
 :root {
   --apple-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -248,6 +281,12 @@
 .animate-avatar-pulse-ring { animation: avatar-pulse-ring 2.5s ease-in-out infinite; }
 .animate-radial-pulse { animation: radial-pulse 2.5s var(--apple-ease) infinite; }
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
+.animate-social-proof-float { animation: social-proof-float 3s ease-in-out infinite; }
+.animate-category-card-glow { animation: category-card-glow 3s ease-in-out infinite; }
+.animate-gift-progress-pulse { animation: gift-progress-pulse 2s ease-in-out infinite; }
+.animate-cash-gold-shimmer { background: linear-gradient(90deg, transparent, rgba(217,119,6,0.1), transparent); background-size: 200% 100%; animation: cash-gold-shimmer 3s infinite; }
+.animate-floating-orb { animation: floating-orb 20s ease-in-out infinite; }
+.animate-border-flow { background: linear-gradient(135deg, #f43f5e, #d946ef, #f43f5e); background-size: 200% 200%; animation: border-flow 4s ease-in-out infinite; }
 
 /* Fluid typography with clamp() */
 .text-fluid-hero { font-size: clamp(2.5rem, 6vw, 4.5rem); }
@@ -299,6 +338,20 @@
 }
 .dark .glass-card-premium::before {
   background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+}
+
+.glass-card-gold {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,240,0.95));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  position: relative;
+  box-shadow: 0 4px 24px rgba(217, 119, 6, 0.08), 0 1px 4px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255,215,0,0.1);
+}
+.dark .glass-card-gold {
+  background: linear-gradient(135deg, rgba(15, 18, 30, 0.9), rgba(20, 15, 5, 0.9));
+  border-color: rgba(217, 119, 6, 0.15);
+  box-shadow: 0 4px 24px rgba(217, 119, 6, 0.06);
 }
 
 /* Ghost button premium with reflective crystal border */

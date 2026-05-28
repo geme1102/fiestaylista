@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { formatCOP } from '../utils/format';
 import LoadingSpinner from './LoadingSpinner';
 import type { CashFund, CashContribution } from '../types';
 
-const SUGGESTED_AMOUNTS = [5000, 10000, 20000, 50000];
+const SUGGESTED_AMOUNTS = [50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
 
-export default function CashFundSection({ eventId, isOwner, ownerTier }: { eventId: string; isOwner: boolean; ownerTier?: string }) {
+export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,6 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isSealed, setIsSealed] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const commission = ownerTier === 'pro' ? 2 : 4;
@@ -44,7 +44,6 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
         setContributions(contribRes.contributions.filter((c) => c.status === 'completed'));
       }
     } catch {
-      // fund not found
     } finally {
       setLoading(false);
     }
@@ -113,15 +112,15 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
 
   if (loading) {
     return (
-      <div className="mb-12 rounded-2xl p-6 bg-gray-100 dark:bg-gray-800 animate-pulse h-48" />
+      <div className={`mb-12 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
     );
   }
 
   if (!fund) {
     if (isOwner && ownerTier === 'free' && !isBoostNeeded) {
       return (
-        <div className="mb-12 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-6 text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-3">Activa la Lluvia de Sobres para recibir aportaciones</p>
+        <div className={`mb-12 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center ${easyRead ? 'p-8' : 'p-6'}`}>
+          <p className={`text-gray-500 dark:text-gray-400 mb-4 ${easyRead ? 'text-lg' : ''}`}>Activa la Lluvia de Sobres para recibir aportaciones</p>
           <button
             onClick={() => setBoostModal(true)}
             className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px]"
@@ -145,54 +144,59 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
 
   return (
     <div className="mb-12 relative">
-      {showConfetti && <ConfettiOverlay />}
+      <AnimatePresence>
+        {showConfetti && <ConfettiOverlay />}
+      </AnimatePresence>
 
-      <div className={`rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden transition-all duration-500 ${isSealed ? 'animate-envelope-seal' : ''}`}
-        style={{
-          background: 'linear-gradient(135deg, #065F46, #047857, #059669)',
-          border: isSealed ? '1px solid rgba(217, 119, 6, 0.6)' : '1px solid rgba(217, 119, 6, 0.3)',
-          boxShadow: isSealed ? '0 4px 32px rgba(217, 119, 6, 0.3)' : '0 4px 24px rgba(217, 119, 6, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-        }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+        className={`rounded-2xl relative overflow-hidden transition-all duration-300 ${easyRead ? 'p-8' : 'p-6 sm:p-8'} glass-card-gold`}
       >
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute -top-10 -right-10 w-48 h-48 bg-yellow-300 rounded-full blur-3xl animate-aurora" />
-          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-amber-400 rounded-full blur-3xl animate-aurora" style={{ animationDelay: '-7s' }} />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-300/10 rounded-full blur-3xl animate-aurora" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-yellow-300/10 rounded-full blur-3xl animate-aurora" style={{ animationDelay: '-7s' }} />
         </div>
 
-        <div className="absolute top-3 right-3 z-10">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-400/20 backdrop-blur-sm text-yellow-300 text-[10px] font-bold rounded-full border border-yellow-400/30">
-            🔒 Transacción 100% segura
+        <div className="absolute top-3 right-3 z-10 flex gap-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-400/15 backdrop-blur-sm text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-full border border-amber-400/30">
+            🔒 Candado de seguridad activa
           </span>
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-2xl shadow-lg shadow-yellow-500/30">
-              💰
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/25 ${easyRead ? 'w-16 h-16 text-3xl' : 'w-12 h-12 text-2xl'}`}>
+              ✉️
             </div>
             <div>
-              <h3 className="text-xl font-bold font-outfit">{fund.title || 'Lluvia de Sobres'}</h3>
+              <h3 className={`font-bold text-gray-900 dark:text-white font-outfit ${easyRead ? 'text-2xl' : 'text-xl'}`}>
+                {fund.title || 'Lluvia de Sobres Digital'}
+              </h3>
               {fund.description && (
-                <p className="text-sm text-emerald-100">{fund.description}</p>
+                <p className={`text-gray-500 dark:text-gray-400 ${easyRead ? 'text-base' : 'text-sm'}`}>{fund.description}</p>
               )}
             </div>
           </div>
 
           <div className="mt-6">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-emerald-100 font-medium">
+            <div className={`flex justify-between mb-1.5 ${easyRead ? 'text-base' : 'text-sm'}`}>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">
                 {formatCOP(fund.collectedAmount)} recaudados
               </span>
               {fund.targetAmount && (
-                <span className="text-emerald-200">
+                <span className="text-gray-500 dark:text-gray-400">
                   Meta: {formatCOP(fund.targetAmount)}
                 </span>
               )}
             </div>
-            <div className="w-full h-3 bg-emerald-800/40 rounded-full overflow-hidden ring-1 ring-yellow-500/20">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-300 transition-all duration-1000 ease-out shadow-lg shadow-yellow-500/30"
-                style={{ width: `${Math.min(progressPercent, 100)}%` }}
+            <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ring-1 ring-amber-500/20">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(progressPercent, 100)}%` }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-[length:200%_100%] animate-cash-gold-shimmer shadow-lg shadow-amber-500/30"
               />
             </div>
           </div>
@@ -200,42 +204,50 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
           {recentContributions.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {recentContributions.map((c) => (
-                <span key={c.id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs border border-white/10">
+                <span key={c.id} className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-full text-xs border border-amber-200/30 dark:border-amber-800/20">
                   <span>💛</span>
-                  <span className="font-medium">{c.contributorName}</span>
-                  <span className="font-semibold text-yellow-300">{formatCOP(c.amount)}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{c.contributorName}</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCOP(c.amount)}</span>
                 </span>
               ))}
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-200/80 flex-wrap">
+          <div className="mt-4 flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400 flex-wrap">
             <span className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="#34D399" strokeWidth="2" className="animate-checkmark" />
-                <path d="M8 12l3 3 5-5" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-checkmark" style={{ animationDelay: '0.3s' }} />
+              <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <strong>Mercado Pago</strong>
+              <strong className="text-gray-700 dark:text-gray-300">Mercado Pago</strong>
             </span>
-            <span className="w-1 h-1 rounded-full bg-emerald-600" />
-            <span className="flex items-center gap-1">💰 El dinero va directo al anfitrión</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <span>100% garantizado</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <span>💰 El dinero va directo al anfitrión</span>
           </div>
 
+          <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
+            Procesado de forma segura y 100% garantizada por Mercado Pago
+          </p>
+
           {canContribute && (
-            <form onSubmit={handleContribute} className="mt-5 space-y-4">
+            <form onSubmit={handleContribute} className="mt-6 space-y-4">
               <div>
-                <label className="block text-sm text-emerald-100 mb-2 font-medium">Elige un monto</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <label className={`block text-gray-700 dark:text-gray-300 mb-2 font-medium ${easyRead ? 'text-lg' : 'text-sm'}`}>
+                  Elige un monto
+                </label>
+                <div className="grid grid-cols-3 gap-2">
                   {SUGGESTED_AMOUNTS.map((amt) => (
                     <button
                       key={amt}
                       type="button"
-                      onClick={() => { setSelectedAmount(amt); setAmount(''); setIsSealed(true); setTimeout(() => setIsSealed(false), 2000); }}
-                      className={`px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all border ${
+                      onClick={() => { setSelectedAmount(amt); setAmount(''); }}
+                      className={`px-3 py-3 min-h-[48px] rounded-xl font-semibold transition-all border ${
                         selectedAmount === amt
-                          ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-emerald-900 border-yellow-300 shadow-lg shadow-yellow-500/30 scale-105'
-                          : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'
-                      }`}
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white border-amber-300 shadow-lg shadow-amber-500/25 scale-105'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-md'
+                      } ${easyRead ? 'text-lg' : 'text-sm'}`}
                     >
                       {formatCOP(amt)}
                     </button>
@@ -244,10 +256,10 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); if (e.target.value) { setIsSealed(true); setTimeout(() => setIsSealed(false), 2000); } }}
+                  onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
                   placeholder="Monto personalizado"
                   min="2000"
-                  className="mt-2 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
+                  className={`mt-2 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all ${easyRead ? 'px-5 py-3.5 text-lg min-h-[52px]' : 'px-4 py-3 text-sm min-h-[44px]'}`}
                 />
               </div>
 
@@ -258,7 +270,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
                   required
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
+                  className={`flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all ${easyRead ? 'px-5 py-3.5 text-lg min-h-[52px]' : 'px-4 py-3 text-sm min-h-[44px]'}`}
                 />
               </div>
 
@@ -268,38 +280,56 @@ export default function CashFundSection({ eventId, isOwner, ownerTier }: { event
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Mensaje para los anfitriones (opcional)"
                 maxLength={500}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 min-h-[44px] transition-all"
+                className={`w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all ${easyRead ? 'px-5 py-3.5 text-lg min-h-[52px]' : 'px-4 py-3 text-sm min-h-[44px]'}`}
               />
 
-              <button
+              <motion.button
                 type="submit"
                 disabled={contributing}
-                className="w-full py-3.5 px-6 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-emerald-900 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-yellow-500/30 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
+                whileHover={{ scale: 1.01, boxShadow: '0 8px 32px rgba(217,119,6,0.3)' }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 bg-[length:200%_100%] animate-cash-gold-shimmer text-white rounded-xl font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-lg shadow-amber-500/20 ${easyRead ? 'py-4 text-xl min-h-[56px]' : 'py-3.5 text-lg min-h-[52px]'}`}
               >
-                {contributing ? <LoadingSpinner size="sm" /> : '💛 Aportar ahora'}
-              </button>
+                {contributing ? <LoadingSpinner size="sm" /> : (
+                  <span className="flex items-center justify-center gap-2">
+                    ✉️ Aportar ahora
+                  </span>
+                )}
+              </motion.button>
 
-              <p className="text-[11px] text-center text-emerald-200/70">
+              <p className={`text-center text-gray-400 dark:text-gray-500 ${easyRead ? 'text-sm' : 'text-[11px]'}`}>
                 Comisión de {commission}% + $0.30. Pagos procesados de forma segura por Mercado Pago.
               </p>
             </form>
           )}
 
           {!canContribute && !isOwner && (
-            <p className="mt-4 text-sm text-emerald-200/70 text-center">
+            <p className={`mt-4 text-center text-gray-500 dark:text-gray-400 ${easyRead ? 'text-base' : 'text-sm'}`}>
               {!fund.isActive ? 'Este fondo ya no está activo' : 'No disponible'}
             </p>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
 function ConfettiOverlay() {
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-      <div className="text-6xl animate-pop-in">💛</div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
+    >
+      <motion.div
+        initial={{ scale: 0, rotate: -20 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        className="text-7xl"
+      >
+        💛
+      </motion.div>
       {Array.from({ length: 20 }).map((_, i) => (
         <div
           key={i}
@@ -314,17 +344,22 @@ function ConfettiOverlay() {
           {['✨', '💛', '🎉', '💰', '🌟'][Math.floor(Math.random() * 5)]}
         </div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
 function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; onClose: () => void; loading: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-md bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+        className="w-full sm:max-w-md bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl shadow-xl"
+      >
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Activar Lluvia de Sobres</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Por solo <strong className="text-gray-900 dark:text-white">$4.99</strong> activa el Cash Fund para este evento durante 30 días. Recibe aportaciones económicas de tus invitados.
+          Por solo <strong className="text-gray-900 dark:text-white">$4.99</strong> activa el Cash Fund para este evento durante 30 días.
         </p>
         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
           <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
@@ -339,7 +374,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
             {loading ? <LoadingSpinner size="sm" /> : 'Pagar $4.99'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
