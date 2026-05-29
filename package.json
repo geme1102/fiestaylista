@@ -16,6 +16,6 @@
     "test:e2e": "cd frontend && npm run test:e2e"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^10.0.0"
   }
 }
