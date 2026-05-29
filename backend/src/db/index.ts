@@ -5,7 +5,7 @@ import * as schema from './schema.js';
 
 const sql = postgres(config.DATABASE_URL, {
   max: 10,
-  ssl: 'require',
+  ssl: config.NODE_ENV === 'production' ? 'require' : false,
   connect_timeout: 10,
   idle_timeout: 30,
   max_lifetime: 60 * 30,

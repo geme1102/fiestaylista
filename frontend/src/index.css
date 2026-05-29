@@ -148,21 +148,10 @@
   100% { transform: translateX(-50%); }
 }
 
-@keyframes envelope-seal {
-  0% { transform: rotateX(0deg); opacity: 1; }
-  50% { transform: rotateX(15deg); opacity: 0.8; }
-  100% { transform: rotateX(0deg); opacity: 1; box-shadow: 0 4px 24px rgba(217,119,6,0.3); }
-}
-
 @keyframes card-tilt-glow {
   0% { background-position: 0% 50%; opacity: 0.3; }
   50% { background-position: 100% 50%; opacity: 0.6; }
   100% { background-position: 0% 50%; opacity: 0.3; }
-}
-
-@keyframes number-count {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes marquee-avatar-glow {
@@ -178,27 +167,10 @@
   100% { transform: translate(0, 0) scale(1); opacity: 0.04; }
 }
 
-@keyframes breathing-shadow {
-  0%, 100% { box-shadow: 0 8px 32px rgba(244, 63, 94, 0.2); transform: scale(1); }
-  50% { box-shadow: 0 12px 48px rgba(244, 63, 94, 0.35); transform: scale(1.02); }
-}
-
-@keyframes gold-brushed {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 @keyframes avatar-pulse-ring {
   0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
   50% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0.1); }
   100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-}
-
-@keyframes radial-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5), 0 4px 20px rgba(244, 63, 94, 0.3); }
-  50% { box-shadow: 0 0 0 20px rgba(244, 63, 94, 0), 0 4px 30px rgba(244, 63, 94, 0.4); }
-  100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5), 0 4px 20px rgba(244, 63, 94, 0.3); }
 }
 
 @keyframes gold-particle {
@@ -211,11 +183,6 @@
   50% { transform: translateY(-6px) scale(1.02); opacity: 1; }
 }
 
-@keyframes category-card-glow {
-  0%, 100% { border-color: rgba(244, 63, 94, 0.2); box-shadow: 0 0 20px rgba(244, 63, 94, 0.05); }
-  50% { border-color: rgba(244, 63, 94, 0.5); box-shadow: 0 0 30px rgba(244, 63, 94, 0.15); }
-}
-
 @keyframes gift-progress-pulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
@@ -224,19 +191,6 @@
 @keyframes cash-gold-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-
-@keyframes floating-orb {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(40px, -30px) scale(1.1); }
-  50% { transform: translate(-20px, 20px) scale(0.95); }
-  75% { transform: translate(30px, 30px) scale(1.05); }
-}
-
-@keyframes border-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 /* Apple-style easing curve */
@@ -270,23 +224,14 @@
 .animate-typewriter-cursor { animation: typewriter-cursor 1s step-end infinite; }
 .animate-marquee-scroll { animation: marquee-scroll 30s linear infinite; }
 .animate-marquee-scroll:hover { animation-play-state: paused; }
-.animate-envelope-seal { animation: envelope-seal 0.6s ease-out forwards; }
 .animate-card-tilt-glow { background: linear-gradient(135deg, rgba(236,72,153,0.08), rgba(219,39,119,0.12), rgba(236,72,153,0.08)); background-size: 200% 200%; animation: card-tilt-glow 3s ease-in-out infinite; }
-.animate-number-count { animation: number-count 0.3s ease-out forwards; }
 .animate-marquee-avatar-glow { animation: marquee-avatar-glow 2s ease-in-out infinite; }
 .animate-mesh-drift { animation: mesh-drift 20s ease-in-out infinite; }
-.animate-mesh-drift-reverse { animation: mesh-drift 25s ease-in-out infinite reverse; }
-.animate-breathing-shadow { animation: breathing-shadow 3s var(--apple-ease) infinite; }
-.animate-gold-brushed { background: linear-gradient(135deg, #D97706, #FDE68A, #D97706); background-size: 200% 200%; animation: gold-brushed 3s ease-in-out infinite; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .animate-avatar-pulse-ring { animation: avatar-pulse-ring 2.5s ease-in-out infinite; }
-.animate-radial-pulse { animation: radial-pulse 2.5s var(--apple-ease) infinite; }
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
 .animate-social-proof-float { animation: social-proof-float 3s ease-in-out infinite; }
-.animate-category-card-glow { animation: category-card-glow 3s ease-in-out infinite; }
 .animate-gift-progress-pulse { animation: gift-progress-pulse 2s ease-in-out infinite; }
 .animate-cash-gold-shimmer { background: linear-gradient(90deg, transparent, rgba(217,119,6,0.1), transparent); background-size: 200% 100%; animation: cash-gold-shimmer 3s infinite; }
-.animate-floating-orb { animation: floating-orb 20s ease-in-out infinite; }
-.animate-border-flow { background: linear-gradient(135deg, #f43f5e, #d946ef, #f43f5e); background-size: 200% 200%; animation: border-flow 4s ease-in-out infinite; }
 
 /* Fluid typography with clamp() */
 .text-fluid-hero { font-size: clamp(2.5rem, 6vw, 4.5rem); }
@@ -385,17 +330,6 @@
 .dark .glass-ghost:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-
-.gift-card { animation: pop-in 0.3s ease-out forwards; opacity: 0; }
-.gift-card:nth-child(1) { animation-delay: 0.05s; }
-.gift-card:nth-child(2) { animation-delay: 0.1s; }
-.gift-card:nth-child(3) { animation-delay: 0.15s; }
-.gift-card:nth-child(4) { animation-delay: 0.2s; }
-.gift-card:nth-child(5) { animation-delay: 0.25s; }
-.gift-card:nth-child(6) { animation-delay: 0.3s; }
-.gift-card:nth-child(7) { animation-delay: 0.35s; }
-.gift-card:nth-child(8) { animation-delay: 0.4s; }
-.gift-card:nth-child(n+9) { animation-delay: 0.45s; }
 
 .scrollbar-hide {
   -ms-overflow-style: none;

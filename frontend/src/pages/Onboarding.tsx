@@ -155,7 +155,7 @@ export default function Onboarding() {
                     className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 min-h-[44px] flex items-center justify-center"
                   >
                     {creating ? (
-                      <video src="/animations/gift-loading.mp4" autoPlay loop muted playsInline className="h-6 w-6" />
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
                       'Crear mi primer evento'
                     )}

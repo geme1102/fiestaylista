@@ -10,7 +10,7 @@ interface ImageWithSkeletonProps {
   fallback?: string;
 }
 
-export default function ImageWithSkeleton({ src, alt, className, containerClassName, aspectRatio = 'aspect-[4/3]', fallback = '/icons/gift-generic.svg' }: ImageWithSkeletonProps) {
+export default function ImageWithSkeleton({ src, alt, className, containerClassName, aspectRatio = 'aspect-[4/3]' }: ImageWithSkeletonProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 

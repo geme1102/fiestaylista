@@ -8,6 +8,7 @@ import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import type { Tier } from '../types/index.js';
 
+const BOOST_PRICE_CENTS = 49900;
 let client: MercadoPagoConfig | null = null;
 
 if (config.MERCADO_PAGO_ACCESS_TOKEN) {
@@ -136,7 +137,7 @@ export async function createBoostPreference(
         id: `boost_${eventId}`,
         title: 'Boost de evento - Fiesta y Lista',
         quantity: 1,
-        unit_price: 49900,
+        unit_price: BOOST_PRICE_CENTS,
         currency_id: 'COP',
       }],
       back_urls: {
@@ -252,7 +253,7 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
 
     await tx
       .insert(boostPayments)
-      .values({ eventId, mpPaymentId: paymentId, amount: 49900 });
+      .values({ eventId, mpPaymentId: paymentId, amount: BOOST_PRICE_CENTS });
   });
 }
 

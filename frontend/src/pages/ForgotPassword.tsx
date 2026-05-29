@@ -36,8 +36,8 @@ export default function ForgotPassword() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-2 mb-6">
-              <span className="text-3xl">🎉</span>
+            <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
+              <span className="text-3xl" aria-hidden="true">🎉</span>
               <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>

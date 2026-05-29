@@ -62,7 +62,7 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
 
     const token = jwt.sign(
       { userId: guestId, email: guestEmail, isGuest: true },
-      config.JWT_SECRET,
+      config.JWT_GUEST_SECRET,
       { expiresIn: '7d' },
     );
 
@@ -99,7 +99,7 @@ router.put('/events/migrate', async (req: Request, res: Response, next: NextFunc
       throw new ValidationError('Token de invitado requerido');
     }
 
-    const guestDecoded = jwt.verify(guestToken, config.JWT_SECRET) as any;
+    const guestDecoded = jwt.verify(guestToken, config.JWT_GUEST_SECRET) as any;
     if (!guestDecoded.isGuest) {
       throw new ValidationError('Token de invitado inválido');
     }

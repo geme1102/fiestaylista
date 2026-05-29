@@ -26,7 +26,7 @@ const ES = {
     },
     {
       title: '5. Cookies Específicas',
-      content: 'Utilizamos las siguientes cookies: refreshToken (esencial, persistente, para mantener tu sesión iniciada); theme (preferencia, persistente, almacena tu preferencia de tema oscuro/claro); consent_v1 (esencial, persistente, registra tu consentimiento de cookies); _ga,_gid (analítica, persistente, Google Analytics - solo con consentimiento).',
+      content: 'Utilizamos las siguientes cookies: refreshToken (esencial, persistente, para mantener tu sesión iniciada); theme (preferencia, persistente, almacena tu preferencia de tema oscuro/claro); consent_v1 (esencial, persistente, registra tu consentimiento de cookies).',
     },
     {
       title: '6. Terceros',
@@ -63,7 +63,7 @@ const EN = {
     },
     {
       title: '5. Specific Cookies',
-      content: 'We use the following cookies: refreshToken (essential, persistent, to keep your session logged in); theme (preference, persistent, stores your dark/light theme preference); consent_v1 (essential, persistent, records your cookie consent); _ga,_gid (analytical, persistent, Google Analytics - only with consent).',
+      content: 'We use the following cookies: refreshToken (essential, persistent, to keep your session logged in); theme (preference, persistent, stores your dark/light theme preference); consent_v1 (essential, persistent, records your cookie consent).',
     },
     {
       title: '6. Third Parties',

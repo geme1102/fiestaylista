@@ -25,7 +25,6 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const commission = ownerTier === 'pro' ? 2 : 4;
-  const isBoostNeeded = !isOwner && ownerTier === 'free';
   const canContribute = !isOwner && fund?.isActive;
 
   useEffect(() => {
@@ -117,7 +116,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   }
 
   if (!fund) {
-    if (isOwner && ownerTier === 'free' && !isBoostNeeded) {
+    if (isOwner && ownerTier === 'free') {
       return (
         <div className={`mb-12 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center ${easyRead ? 'p-8' : 'p-6'}`}>
           <p className={`text-gray-500 dark:text-gray-400 mb-4 ${easyRead ? 'text-lg' : ''}`}>Activa la Lluvia de Sobres para recibir aportaciones</p>
@@ -138,7 +137,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
 
   const progressPercent = fund.targetAmount && fund.targetAmount > 0
     ? Math.min((fund.collectedAmount / fund.targetAmount) * 100, 100)
-    : fund.collectedAmount > 0 ? 50 : 0;
+    : 0;
 
   const recentContributions = contributions.slice(-MAX_RECENT_CONTRIBUTIONS).reverse();
 

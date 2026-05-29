@@ -8,6 +8,7 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   tier: text('tier').notNull().default('free'),
 
+  /** @deprecated No longer used in code — kept for migration compatibility */
   lastSequenceCheck: timestamp('last_sequence_check', { mode: 'date' }),
   emailVerified: boolean('email_verified').notNull().default(false),
   verificationToken: text('verification_token'),
@@ -53,7 +54,9 @@ export const photos = pgTable('photos', {
   url: text('url').notNull(),
   caption: text('caption'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  eventIdIdx: index('photos_event_id_idx').on(table.eventId),
+}));
 
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -120,7 +123,9 @@ export const platformFees = pgTable('platform_fees', {
   feeAmount: integer('fee_amount').notNull(),
   netAmount: integer('net_amount').notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  contributionIdIdx: index('platform_fees_contribution_id_idx').on(table.contributionId),
+}));
 
 export const emailTracking = pgTable('email_tracking', {
   id: uuid('id').defaultRandom().primaryKey(),

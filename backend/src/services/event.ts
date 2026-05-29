@@ -68,37 +68,51 @@ export async function getUserEvents(userId: string) {
     .where(eq(eventsTable.userId, userId))
     .orderBy(eventsTable.createdAt);
 
-  const eventsWithCounts = await Promise.all(
-    userEvents.map(async (event) => {
-      const [giftCount] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(gifts)
-        .where(eq(gifts.eventId, event.id));
+  if (userEvents.length === 0) return [];
 
-      const [photoCount] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(photos)
-        .where(eq(photos.eventId, event.id));
+  const eventIds = userEvents.map(e => e.id);
 
-      const [fund] = await db
-        .select({ collectedAmount: cashFunds.collectedAmount, targetAmount: cashFunds.targetAmount })
-        .from(cashFunds)
-        .where(eq(cashFunds.eventId, event.id))
-        .limit(1);
+  const [giftCounts, photoCounts, funds] = await Promise.all([
+    db
+      .select({
+        eventId: gifts.eventId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(gifts)
+      .where(sql`${gifts.eventId} = ANY(${eventIds}::uuid[])`)
+      .groupBy(gifts.eventId),
+    db
+      .select({
+        eventId: photos.eventId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(photos)
+      .where(sql`${photos.eventId} = ANY(${eventIds}::uuid[])`)
+      .groupBy(photos.eventId),
+    db
+      .select({
+        eventId: cashFunds.eventId,
+        collectedAmount: cashFunds.collectedAmount,
+        targetAmount: cashFunds.targetAmount,
+      })
+      .from(cashFunds)
+      .where(sql`${cashFunds.eventId} = ANY(${eventIds}::uuid[])`),
+  ]);
 
-      return {
-        ...event,
-        giftCount: Number(giftCount?.count ?? 0),
-        photoCount: Number(photoCount?.count ?? 0),
-        cashFund: fund || null,
-      };
-    }),
-  );
+  const giftCountMap = new Map(giftCounts.map(g => [g.eventId, g.count]));
+  const photoCountMap = new Map(photoCounts.map(p => [p.eventId, p.count]));
+  const fundMap = new Map(funds.map(f => [f.eventId, f]));
 
-  return eventsWithCounts;
+  return userEvents.map(event => ({
+    ...event,
+    giftCount: giftCountMap.get(event.id) ?? 0,
+    photoCount: photoCountMap.get(event.id) ?? 0,
+    cashFund: fundMap.get(event.id) ?? null,
+  }));
 }
 
 export async function getEvent(eventId: string, _userId?: string) {
+  void _userId;
   const [event] = await db
     .select()
     .from(eventsTable)

@@ -191,10 +191,6 @@ export default function Dashboard() {
     );
   }
 
-  if (!user?.emailVerified && !showVerification) {
-    // Don't show dashboard content if not verified
-  }
-
   const dashboardContent = (
     <div>
       {showVerification && (
@@ -345,7 +341,6 @@ export default function Dashboard() {
             formData={formData}
             setFormData={setFormData}
             creating={creating}
-            setShowCreateModal={setShowCreateModal}
             handleCreate={handleCreate}
           />
         </Modal>
@@ -356,11 +351,10 @@ export default function Dashboard() {
   return dashboardContent;
 }
 
-function CreateForm({ formData, setFormData, creating, setShowCreateModal, handleCreate }: {
+function CreateForm({ formData, setFormData, creating, handleCreate }: {
   formData: { title: string; eventType: EventType; hostPhone: string };
   setFormData: React.Dispatch<React.SetStateAction<{ title: string; eventType: EventType; hostPhone: string }>>;
   creating: boolean;
-  setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleCreate: (e: React.FormEvent) => Promise<void>;
 }) {
   return (

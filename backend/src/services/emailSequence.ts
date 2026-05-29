@@ -30,7 +30,10 @@ async function hasEmailBeenSent(userId: string, type: string): Promise<boolean> 
 }
 
 async function markEmailSent(userId: string, type: string): Promise<void> {
-  await db.insert(emailTracking).values({ userId, type }).onConflictDoNothing();
+  const alreadySent = await hasEmailBeenSent(userId, type);
+  if (!alreadySent) {
+    await db.insert(emailTracking).values({ userId, type });
+  }
 }
 
 export async function processEmailSequence(): Promise<{ processed: number }> {

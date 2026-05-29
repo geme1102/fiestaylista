@@ -21,14 +21,9 @@ export default function LoadingSpinner({ fullScreen, size = 'md', text }: Loadin
   const spinner = (
     <div className="flex flex-col items-center justify-center gap-4">
       <div className={cn('relative', sizeClasses[size])}>
-        <video
-          src="/animations/gift-loading.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-contain"
-        />
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="animate-spin rounded-full border-rose-200 border-t-rose-500" style={{ width: '80%', height: '80%', borderWidth: '3px' }} />
+        </div>
         <div className={cn(
           'absolute -top-1 -right-1 rounded-full border-rose-200 border-t-rose-500 animate-spin',
           ringSizes[size],

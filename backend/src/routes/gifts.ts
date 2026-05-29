@@ -166,10 +166,10 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
   clients.get(eventId)!.add(res);
 
   const keepAlive = setInterval(() => {
-    res.write(':keepalive\n\n');
+    try { res.write(':keepalive\n\n'); } catch { /* ignore */ }
   }, 30000);
 
-  req.on('close', () => {
+  const cleanup = () => {
     clearInterval(keepAlive);
     const eventClients = clients.get(eventId);
     if (eventClients) {
@@ -178,7 +178,11 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
         clients.delete(eventId);
       }
     }
-  });
+  };
+
+  req.on('close', cleanup);
+  req.on('error', cleanup);
+  res.on('error', cleanup);
 }) as any);
 
 export default router;
