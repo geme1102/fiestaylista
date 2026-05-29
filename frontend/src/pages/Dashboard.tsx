@@ -12,26 +12,28 @@ const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BA
 
 function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () => void; onResend: () => void; resending: boolean }) {
   return (
-    <div className="mb-6 p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/10 dark:to-yellow-900/10 backdrop-blur-sm">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <span className="text-2xl">📧</span>
-        <div className="flex-1">
-          <p className="font-semibold text-gray-900 dark:text-white text-sm">Verifica tu correo electrónico</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Revisa tu bandeja de entrada para activar todas las funciones de tu cuenta.
-          </p>
+    <div className="mb-6 p-4 rounded-xl border border-[#FFECB3] bg-[#FFF9E6] dark:bg-amber-900/10 dark:border-amber-800/30">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-amber-100 p-2 rounded-lg text-amber-700">
+            <span className="material-symbols-outlined">mail</span>
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 dark:text-white text-sm">Verifica tu correo</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Confirma tu cuenta para recibir notificaciones de tus regalos.</p>
+          </div>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 w-full md:w-auto">
           <button
             onClick={onResend}
             disabled={resending}
-            className="px-4 py-2 text-xs font-medium text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-xl hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all disabled:opacity-50 min-h-[36px]"
+            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-amber-900 bg-amber-200 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 min-h-[36px]"
           >
             {resending ? 'Enviando...' : 'Reenviar'}
           </button>
           <button
             onClick={onRefresh}
-            className="px-4 py-2 text-xs font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all min-h-[36px]"
+            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-gray-700 bg-white rounded-lg border border-amber-200 shadow-sm hover:bg-gray-50 transition-colors min-h-[36px]"
           >
             Ya lo verifiqué
           </button>
@@ -43,14 +45,18 @@ function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () 
 
 function ConfirmModal({ message, onConfirm, onClose, loading }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-sm bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl text-center animate-zoom-in">
+        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="material-symbols-outlined text-4xl">warning</span>
+        </div>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">¿Estás seguro?</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-fuchsia-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-red-500 hover:opacity-90 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50">
             {loading ? '...' : 'Eliminar'}
           </button>
         </div>
@@ -215,13 +221,9 @@ export default function Dashboard() {
       </div>
 
       {events.length === 0 ? (
-        <div className="text-center py-12">
-          <span className="text-5xl mb-6 block">🎉</span>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 font-outfit">¿Qué evento quieres crear?</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-            Elige el tipo de evento y empieza a armar tu lista de regalos en segundos.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 max-w-2xl mx-auto">
+        <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/20">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-3xl mx-auto">
             {ONBOARDING_TYPES.map((type) => (
               <button
                 key={type}
@@ -229,109 +231,103 @@ export default function Dashboard() {
                   setFormData({ ...formData, eventType: type });
                   setShowCreateModal(true);
                 }}
-                className="flex flex-col items-center gap-2 p-5 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl hover:shadow-md transition-all hover:-translate-y-0.5 min-h-[100px]"
+                className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
                 aria-label={`Crear evento de ${EVENT_LABELS[type]}`}
               >
-                <span className="text-3xl">{EVENT_ICONS[type]}</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{EVENT_LABELS[type]}</span>
+                <span className="text-4xl">{EVENT_ICONS[type]}</span>
+                <span className="font-bold text-sm text-gray-700 dark:text-gray-300">{EVENT_LABELS[type]}</span>
               </button>
             ))}
           </div>
-        </div>
+        </section>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => {
-            const theme = THEME_COLORS[event.eventType];
-            const total = event.giftCount || 0;
-            const progress = limits.maxGiftsPerEvent > 0 ? Math.min((total / limits.maxGiftsPerEvent) * 100, 100) : 0;
-            const fund = event.cashFund;
-            const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => {
+                const theme = THEME_COLORS[event.eventType];
+                const total = event.giftCount || 0;
+                const progress = limits.maxGiftsPerEvent > 0 ? Math.min((total / limits.maxGiftsPerEvent) * 100, 100) : 0;
+                const fund = event.cashFund;
+                const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
-            return (
-              <div
-                key={event.id}
-                className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl hover:shadow-md transition-all"
-              >
-                <div className="h-1.5 rounded-t-2xl" style={{ background: theme.primary }} />
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xl shrink-0">{EVENT_ICONS[event.eventType]}</span>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">{event.title}</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{EVENT_LABELS[event.eventType]}</p>
-                      </div>
-                    </div>
-                    {isBoosted && (
-                      <span className="shrink-0 px-2 py-0.5 text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
-                        BOOST
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    <span>{total} regalos</span>
-                    {event.photoCount !== undefined && <span>• {event.photoCount} fotos</span>}
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      <span>{total}/{limits.maxGiftsPerEvent} regalos</span>
-                      <span>{Math.round(progress)}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${progress}%`, background: theme.primary }}
-                      />
-                    </div>
-                  </div>
-
-                  {fund && (
-                    <div className="mb-3 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-emerald-700 dark:text-emerald-400 font-medium">
-                          💰 {formatCOP(fund.collectedAmount)}
-                        </span>
-                        {fund.targetAmount && (
-                          <span className="text-emerald-600 dark:text-emerald-500">
-                            meta: {formatCOP(fund.targetAmount)}
+                return (
+                  <div
+                    key={event.id}
+                    className="glass rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow group relative"
+                  >
+                    <div className="h-2" style={{ background: theme.primary }} />
+                    <div className="p-6 flex-1">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/20 rounded-2xl flex items-center justify-center text-2xl">
+                          {EVENT_ICONS[event.eventType]}
+                        </div>
+                        {isBoosted && (
+                          <span className="bg-primary/10 text-primary dark:text-primary-fixed-dim px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
+                            BOOST
                           </span>
                         )}
                       </div>
-                    </div>
-                  )}
 
-                  <div className="flex flex-wrap items-center gap-2 mt-auto">
-                    <Link
-                      to={`/event/${event.id}`}
-                      className="flex-1 text-center px-3 py-2 min-h-[44px] text-sm font-medium text-white rounded-lg transition-all"
-                      style={{ background: theme.primary }}
-                      aria-label={`Administrar ${event.title}`}
-                    >
-                      Administrar
-                    </Link>
-                    <button
-                      onClick={() => copyLink(event.slug)}
-                      className="px-3 py-2 min-h-[44px] text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                      aria-label={`Copiar enlace de ${event.title}`}
-                    >
-                      <span aria-hidden="true">🔗</span>
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(event.id)}
-                      disabled={deleting === event.id}
-                      className="px-3 py-2 min-h-[44px] text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-50"
-                      aria-label={`Eliminar ${event.title}`}
-                    >
-                      {deleting === event.id ? '...' : <span aria-hidden="true">🗑️</span>}
-                    </button>
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-2 truncate">{event.title}</h3>
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">{total} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
+                          <span className="font-bold" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%`, background: `linear-gradient(to right, ${theme.primary}, ${theme.dark})` }}
+                          />
+                        </div>
+
+                        {fund ? (
+                          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200/30 dark:border-amber-800/20 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm font-bold text-amber-600 dark:text-amber-400">
+                              <span className="material-symbols-outlined text-sm">savings</span>
+                              Recaudado: {formatCOP(fund.collectedAmount)}
+                            </div>
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">COP</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm font-medium text-gray-400 opacity-60">
+                            <span className="material-symbols-outlined text-sm">payments</span>
+                            Sin fondo configurado
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <Link
+                          to={`/event/${event.id}`}
+                          className="flex-1 text-center px-3 py-2.5 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all hover:opacity-90"
+                          style={{ background: theme.primary }}
+                          aria-label={`Administrar ${event.title}`}
+                        >
+                          Administrar
+                        </Link>
+                        <button
+                          onClick={() => copyLink(event.slug)}
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          aria-label={`Copiar enlace de ${event.title}`}
+                        >
+                          <span className="material-symbols-outlined text-sm">link</span>
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(event.id)}
+                          disabled={deleting === event.id}
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-gray-200 dark:border-gray-700 rounded-xl text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                          aria-label={`Eliminar ${event.title}`}
+                        >
+                          {deleting === event.id ? '...' : <span className="material-symbols-outlined text-sm">delete</span>}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
       )}
 
       {deleteConfirm && (
@@ -368,28 +364,31 @@ function CreateForm({ formData, setFormData, creating, setShowCreateModal, handl
   handleCreate: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
-    <form onSubmit={handleCreate} className="space-y-5">
-      <div className="flex flex-wrap gap-2 mb-4">
-        {ONBOARDING_TYPES.map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => setFormData({ ...formData, eventType: type })}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all',
-              formData.eventType === type
-                ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 ring-2 ring-rose-500'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200',
-            )}
-          >
-            <span>{EVENT_ICONS[type]}</span>
-            {EVENT_LABELS[type]}
-          </button>
-        ))}
+    <form className="space-y-6">
+      <div>
+        <label className="block text-sm font-bold mb-3">Tipo de evento</label>
+        <div className="grid grid-cols-3 gap-3">
+          {ONBOARDING_TYPES.slice(0, 3).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setFormData({ ...formData, eventType: type })}
+              className={cn(
+                'flex flex-col items-center p-4 rounded-2xl border-2 transition-all',
+                formData.eventType === type
+                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/10 text-rose-600'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-700 text-gray-600 dark:text-gray-400',
+              )}
+            >
+              <span className="text-2xl mb-1">{EVENT_ICONS[type]}</span>
+              <span className="text-xs font-bold">{EVENT_LABELS[type]}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        <label htmlFor="title" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
           Nombre del evento
         </label>
         <input
@@ -397,42 +396,34 @@ function CreateForm({ formData, setFormData, creating, setShowCreateModal, handl
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
           placeholder="Ej: Boda de María y Juan"
           autoFocus
         />
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          Teléfono (opcional)
+        <label htmlFor="phone" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+          Celular de contacto (Opcional)
         </label>
         <input
           id="phone"
           type="tel"
           value={formData.hostPhone}
           onChange={(e) => setFormData({ ...formData, hostPhone: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
-          placeholder="+52 555 123 4567"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
+          placeholder="+57 300 000 0000"
         />
       </div>
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(false)}
-          className="flex-1 py-3 px-6 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors min-h-[44px]"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={creating || !formData.title.trim()}
-          className="flex-1 py-3 px-6 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center min-h-[44px]"
-        >
-          {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}
-        </button>
-      </div>
+      <button
+        type="submit"
+        disabled={creating || !formData.title.trim()}
+        onClick={handleCreate}
+        className="w-full bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
+      >
+        {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}
+      </button>
     </form>
   );
 }
@@ -440,18 +431,19 @@ function CreateForm({ formData, setFormData, creating, setShowCreateModal, handl
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full sm:max-w-md sm:rounded-2xl bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-t-2xl sm:rounded-b-2xl max-h-[90vh] overflow-y-auto animate-slide-up shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nuevo Evento</h2>
+      <div className="relative w-full max-w-xl bg-white dark:bg-gray-800 rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white font-outfit">Crear nuevo evento</h2>
           <button
             onClick={onClose}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Cerrar modal"
           >
-            ✕
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
         {children}

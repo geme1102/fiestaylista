@@ -159,7 +159,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                   <li style="margin-bottom:8px">✅ Estadísticas completas</li>
                   <li style="margin-bottom:8px">✅ Sin marca de agua</li>
                 </ul>
-                <p style="color:#6b7280;margin:16px 0">Todo por solo $14.99/mes. Ahorra 33% pagando anual.</p>
+                <p style="color:#6b7280;margin:16px 0">Todo por solo $24.99/mes. Ahorra 33% pagando anual.</p>
                 <div style="text-align:center;margin:24px 0">
                   <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver Planes</a>
                 </div>

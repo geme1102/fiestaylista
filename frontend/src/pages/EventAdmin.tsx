@@ -276,7 +276,7 @@ export default function EventAdmin() {
         <span className="text-gray-900 dark:text-white">{event.title}</span>
       </div>
 
-      <div className="rounded-2xl p-6 sm:p-8 mb-8 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 shadow-sm">
+      <div className="rounded-2xl p-6 sm:p-8 mb-8 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 shadow-[0_10px_25px_-5px_rgba(236,72,153,0.2)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <span className="text-3xl shrink-0">{EVENT_ICONS[event.eventType]}</span>
@@ -343,40 +343,64 @@ export default function EventAdmin() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span
-              className={`px-3 py-1 min-h-[34px] flex items-center text-xs font-medium rounded-full cursor-pointer ${
-                event.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700'
-              }`}
+            <button
               onClick={toggleActive}
+              className={`relative w-11 h-6 rounded-full transition-colors ${
+                event.isActive ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+              aria-label={event.isActive ? 'Desactivar evento' : 'Activar evento'}
             >
+              <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                event.isActive ? 'translate-x-5' : ''
+              }`} />
+            </button>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {event.isActive ? 'Activo' : 'Inactivo'}
             </span>
             {isBoosted && (
-              <span className="px-3 py-1 min-h-[34px] flex items-center text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
+              <span className="ml-2 px-3 py-1 min-h-[22px] flex items-center text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
                 BOOST
               </span>
-            )}
-            {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
-              <button
-                onClick={() => setBoostModal(true)}
-                className="px-3 py-1 min-h-[34px] text-xs font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full hover:bg-emerald-200 transition-colors"
-              >
-                Boost $4.99
-              </button>
             )}
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-3">
-          <ShareButtons slug={event.slug} title={event.title} />
-          <a
-            href={`/e/${event.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+        {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
+          <div className="mt-5 bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-700/30 rounded-xl p-4 flex items-center justify-between overflow-hidden relative">
+            <div className="flex items-center gap-2 relative z-10">
+              <span className="text-amber-600 dark:text-amber-400 text-lg">⚡</span>
+              <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                Aumenta tus regalos con Boost
+              </span>
+            </div>
+            <button onClick={() => setBoostModal(true)} className="relative z-10 bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors min-h-[34px]">
+              Boost $4.99
+            </button>
+          </div>
+        )}
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/e/${event.slug}`;
+              if (navigator.share) {
+                navigator.share({ title: event.title, url });
+              } else {
+                navigator.clipboard.writeText(url);
+                showToast('Enlace copiado', 'success');
+              }
+            }}
+            className="flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3 rounded-xl text-sm font-semibold hover:shadow-lg transition-all min-h-[44px]"
           >
+            🔗 Compartir
+          </button>
+          <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 border border-gray-300/50 dark:border-gray-600/50 text-gray-900 dark:text-white py-3 rounded-xl text-sm font-semibold hover:shadow-lg transition-all min-h-[44px]">
             👁️ Vista previa
           </a>
+        </div>
+
+        <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700/50">
+          <ShareButtons slug={event.slug} title={event.title} />
         </div>
       </div>
 
@@ -417,6 +441,27 @@ export default function EventAdmin() {
                     {s}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {suggestions.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 mt-3">
+                {suggestions
+                  .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
+                  .slice(0, 6)
+                  .map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s })
+                          .then((res) => setGifts((prev) => [...prev, res.gift]))
+                          .catch(() => showToast('Error al agregar regalo', 'error'));
+                      }}
+                      className="whitespace-nowrap bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors shrink-0"
+                    >
+                      + {s}
+                    </button>
+                  ))}
               </div>
             )}
           </div>
@@ -475,7 +520,7 @@ export default function EventAdmin() {
                 className="relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700"
                 style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
               >
-                <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
+                <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
                 {photo.caption && (
                   <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
                     <p className="text-white text-xs truncate">{photo.caption}</p>
@@ -483,7 +528,7 @@ export default function EventAdmin() {
                 )}
                 <button
                   onClick={() => setDeletePhotoConfirm(photo.id)}
-                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 text-white rounded-full text-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/40 backdrop-blur-md text-white rounded-full text-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   aria-label={`Eliminar foto${photo.caption ? `: ${photo.caption}` : ''}`}
                 >
                   ✕
@@ -492,10 +537,12 @@ export default function EventAdmin() {
             ))}
           </div>
 
-          <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-rose-400 dark:hover:border-rose-600 transition-colors min-h-[60px]">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {uploading ? 'Subiendo...' : '📸 Subir foto'}
+          <label className="col-span-2 flex flex-col items-center justify-center w-full py-8 border-2 border-dashed border-rose-300/60 dark:border-rose-700/40 bg-rose-50/30 dark:bg-rose-900/10 rounded-xl cursor-pointer hover:bg-rose-50/60 dark:hover:bg-rose-900/20 transition-colors min-h-[120px]">
+            <span className="text-2xl text-rose-500 mb-2">☁️</span>
+            <span className="text-sm font-semibold text-rose-600 dark:text-rose-400">
+              {uploading ? 'Subiendo...' : 'Subir más fotos'}
             </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG o PNG hasta 5MB</span>
             <input
               type="file"
               accept="image/*"
@@ -516,18 +563,35 @@ export default function EventAdmin() {
       )}
 
       {boostModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}>
-          <div className="w-full sm:max-w-md bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl shadow-xl" style={{ animation: 'slide-up 0.3s ease-out' }}>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Activar Lluvia de Sobres</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Por solo <strong className="text-gray-900 dark:text-white">$4.99</strong> activa el Cash Fund para este evento durante 30 días.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-colors">
-                Cancelar
-              </button>
-              <button onClick={handleBoost} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}>
+          <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative z-10">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-center space-y-2 relative overflow-hidden">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white text-3xl">💵</span>
+              </div>
+              <h3 className="text-lg font-bold text-white">Activar Lluvia de Sobres</h3>
+              <p className="text-white/80 text-sm">Convierte tus regalos en dinero efectivo</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <ul className="space-y-3">
+                <li className="flex gap-3">
+                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Recibe el 100% del valor de tus regalos en tu cuenta bancaria.</p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Tus invitados pueden pagar con cualquier tarjeta o PSE.</p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Habilitado para transferencias internacionales.</p>
+                </li>
+              </ul>
+              <button onClick={handleBoost} disabled={boostLoading} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center min-h-[56px]">
                 {boostLoading ? <LoadingSpinner size="sm" /> : 'Pagar $4.99'}
+              </button>
+              <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="w-full text-sm text-gray-500 dark:text-gray-400 py-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                Tal vez luego
               </button>
             </div>
           </div>

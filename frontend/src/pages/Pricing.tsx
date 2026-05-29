@@ -29,8 +29,8 @@ const PLANS = [
   {
     tier: 'pro' as const,
     name: 'Pro',
-    price: 14.99,
-    yearlyPrice: 119.99,
+    price: 24.99,
+    yearlyPrice: 288.00,
     popular: true,
     badge: 'MÁS ELEGIDO',
     features: [

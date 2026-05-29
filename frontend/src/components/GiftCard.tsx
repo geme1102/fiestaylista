@@ -69,7 +69,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onFree(gift.id)}
-              className="shrink-0 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition-colors min-h-[36px]"
+              className="shrink-0 px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 dark:bg-primary/20 rounded-lg hover:bg-primary/20 transition-colors min-h-[36px]"
             >
               Liberar
             </motion.button>
@@ -79,9 +79,9 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onDelete(gift.id)}
-              className="shrink-0 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 transition-colors min-h-[36px]"
+              className="shrink-0 px-3 py-1.5 text-xs font-medium text-outline-variant hover:text-error transition-colors min-h-[36px]"
             >
-              ✕
+              <span className="material-symbols-outlined text-sm">close</span>
             </motion.button>
           )}
         </div>

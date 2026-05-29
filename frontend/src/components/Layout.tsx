@@ -17,14 +17,16 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors pb-safe sm:pb-0">
-      <nav className="sticky top-0 z-50 glass-card border-b border-gray-200/50 dark:border-gray-700/50">
+    <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] transition-colors pb-safe sm:pb-0">
+      <nav className="sticky top-0 z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-                <span className="text-2xl">🎉</span>
-                <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-rose-500/25">
+                  F
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>
@@ -128,16 +130,16 @@ export default function Layout() {
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-[env(safe-area-inset-bottom,0px)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(236,72,153,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
         <div className="flex items-center justify-around h-16">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-colors',
+                'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
                 pathname === item.path
-                  ? 'text-pink-600 dark:text-pink-400'
+                  ? 'text-pink-600 dark:text-pink-400 after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-pink-500 after:rounded-full'
                   : 'text-gray-500 dark:text-gray-400',
               )}
             >
