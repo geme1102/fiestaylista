@@ -1,4 +1,4 @@
-import { eq, lte } from 'drizzle-orm';
+import { eq, lte, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -133,7 +133,10 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const expired = await db
     .select({ id: subsTable.id, userId: subsTable.userId })
     .from(subsTable)
-    .where(lte(subsTable.currentPeriodEnd, gracePeriodEnd))
+    .where(and(
+      lte(subsTable.currentPeriodEnd, gracePeriodEnd),
+      eq(subsTable.status, 'active'),
+    ))
     .limit(100);
 
   for (const sub of expired) {

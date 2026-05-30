@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
-import { formatCOP } from '../utils/format';
 import type { Gift } from '../types';
 
 interface GiftCardProps {
@@ -30,10 +29,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
   const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = '/icons/gift-generic.svg';
   };
-
-  const progressPercent = gift.targetAmount && gift.targetAmount > 0
-    ? Math.min(((gift.collectedAmount || 0) / gift.targetAmount) * 100, 100)
-    : 0;
 
   if (gift.isClaimed) {
     return (
@@ -81,7 +76,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
               onClick={() => onDelete(gift.id)}
               className="shrink-0 px-3 py-1.5 text-xs font-medium text-outline-variant hover:text-error transition-colors min-h-[36px]"
             >
-              <span className="material-symbols-outlined text-sm">close</span>
+              ✕
             </motion.button>
           )}
         </div>
@@ -128,32 +123,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
             </h3>
           </div>
         </div>
-
-        {gift.isCollective && (
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-rose-600 dark:text-rose-400 font-medium">
-                {formatCOP(gift.collectedAmount || 0)} recaudados
-              </span>
-              <span className="text-gray-400">
-                Meta: {formatCOP(gift.targetAmount || 0)}
-              </span>
-            </div>
-            <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden ring-1 ring-rose-500/10">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(progressPercent, 100)}%` }}
-                transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-rose-400 bg-[length:200%_100%] animate-gift-progress-pulse shadow-lg shadow-rose-500/20"
-              />
-            </div>
-            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-              {gift.targetAmount && gift.collectedAmount !== undefined
-                ? `Faltan ${formatCOP(gift.targetAmount - gift.collectedAmount)} para completar este regalo`
-                : 'Regalo colectivo'}
-            </p>
-          </div>
-        )}
 
         {onClaim && (
           <motion.button

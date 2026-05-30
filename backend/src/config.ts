@@ -27,18 +27,39 @@ function requireConfig(key: string, value: string | undefined): asserts value is
   }
 }
 
-requireConfig('DATABASE_URL', process.env.DATABASE_URL);
-requireConfig('JWT_SECRET', process.env.JWT_SECRET);
-requireConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
-requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
-requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
+const DEFAULT_JWT_SECRETS = [
+  'change-this-to-a-random-secret-at-least-32-chars',
+  'change-this-to-another-random-secret',
+];
+
+function validateConfig(): void {
+  requireConfig('DATABASE_URL', process.env.DATABASE_URL);
+  requireConfig('JWT_SECRET', process.env.JWT_SECRET);
+  requireConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
+
+  if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_SECRET || '')) {
+    throw new Error('Variable de entorno requerida: JWT_SECRET debe cambiarse del valor por defecto');
+  }
+  if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_REFRESH_SECRET || '')) {
+    throw new Error('Variable de entorno requerida: JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
+  }
+
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) {
+    requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+    requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
+  }
+}
+
+validateConfig();
 
 export const config = {
   DATABASE_URL: process.env.DATABASE_URL!,
   JWT_SECRET: process.env.JWT_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (process.env.JWT_SECRET! + '_guest'),
-  MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
+  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (() => { throw new Error('JWT_GUEST_SECRET requerido - debe ser un secreto independiente'); })(),
+  MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
+  MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',
   MERCADO_PAGO_PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID ?? '',
   BACKEND_URL: process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || '3001'}`,
@@ -47,7 +68,7 @@ export const config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
-  RESEND_API_KEY: process.env.RESEND_API_KEY!,
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? '',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',

@@ -13,6 +13,12 @@ export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
+export interface AppRequest extends Request {
+  requestId: string;
+  rawBody?: string;
+  user?: JwtPayload;
+}
+
 export type EventType = 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION';
 export type Tier = 'free' | 'pro';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';

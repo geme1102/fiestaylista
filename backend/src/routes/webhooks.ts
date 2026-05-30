@@ -13,7 +13,10 @@ router.post('/stripe', (_req: Request, res: Response) => {
 
 function verifyMpSignature(req: Request): boolean {
   const signature = req.headers['x-signature'] as string;
-  if (!signature || !config.MERCADO_PAGO_ACCESS_TOKEN) return false;
+  if (!signature) return false;
+
+  const webhookSecret = config.MERCADO_PAGO_WEBHOOK_SECRET || config.MERCADO_PAGO_ACCESS_TOKEN;
+  if (!webhookSecret) return false;
 
   const parts = signature.split(',');
   let ts = '';
@@ -28,16 +31,7 @@ function verifyMpSignature(req: Request): boolean {
   const rawBody = (req as any).rawBody;
   if (!rawBody) return false;
 
-  let dataId = '';
-  try {
-    const parsed = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
-    dataId = parsed?.data?.id || parsed?.id || '';
-  } catch {
-    return false;
-  }
-  if (!dataId) return false;
-
-  const manifest = ts + config.MERCADO_PAGO_ACCESS_TOKEN + dataId;
+  const manifest = ts + '.' + webhookSecret + '.' + (typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody));
   const expected = createHash('sha256').update(manifest).digest('hex');
 
   try {
@@ -61,24 +55,10 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
     } catch {}
   }
 
-  if (!result.topic && Buffer.isBuffer(req.body)) {
-    const raw = req.body.toString('utf-8');
-    try {
-      const parsed = JSON.parse(raw);
-      result.topic = result.topic || parsed.topic || parsed.type;
-      result.id = result.id || parsed.id || parsed.data?.id;
-    } catch {
-      const params = new URLSearchParams(raw);
-      result.topic = result.topic || (params.get('topic') ?? undefined);
-      result.id = result.id || (params.get('id') ?? undefined);
-    }
-  } else if (!result.topic && typeof req.body === 'object' && req.body !== null) {
-    result.topic = result.topic || req.body.topic || req.body.type;
-    result.id = result.id || req.body.id || req.body.data?.id;
+  if (!result.topic) {
+    result.topic = req.query.topic as string;
+    result.id = req.query.id as string;
   }
-
-  result.topic = result.topic || (req.query.topic as string);
-  result.id = result.id || (req.query.id as string);
 
   return result;
 }

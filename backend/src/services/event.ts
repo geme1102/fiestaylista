@@ -199,7 +199,8 @@ export async function deleteEvent(eventId: string, userId: string) {
   await verifyOwnership(eventId, userId);
 
   await db
-    .delete(eventsTable)
+    .update(eventsTable)
+    .set({ deletedAt: new Date(), updatedAt: new Date() })
     .where(eq(eventsTable.id, eventId));
 
   return { success: true };

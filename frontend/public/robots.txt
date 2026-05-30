@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /account
+Disallow: /event/
+Disallow: /onboarding
 Sitemap: https://fiestaylista.com/sitemap.xml

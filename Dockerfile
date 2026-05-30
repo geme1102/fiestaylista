@@ -10,7 +10,7 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/drizzle.config.js ./
-COPY --from=builder /app/src ./src
+COPY --from=builder /app/src/db/migrations ./src/db/migrations
 COPY backend/package*.json ./
 EXPOSE 3001
-CMD ["sh", "-c", "npx drizzle-kit push --config=./drizzle.config.js && node dist/index.js"]
+CMD ["sh", "-c", "npx drizzle-kit migrate --config=./drizzle.config.js && node dist/index.js"]

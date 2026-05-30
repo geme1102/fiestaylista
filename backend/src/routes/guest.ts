@@ -36,8 +36,8 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
     const existingSlugs = new Set(existing.map((e: { slug: string }) => e.slug));
     const slug = generateUniqueSlug(baseSlug, existingSlugs);
 
-    const guestId = `guest_${randomUUID()}`;
-    const guestEmail = `${guestId}@guest.fiestaylista.com`;
+    const guestId = randomUUID();
+    const guestEmail = `guest_${guestId}@guest.fiestaylista.com`;
 
     await db.insert(users).values({
       id: guestId,

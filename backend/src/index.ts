@@ -4,6 +4,7 @@ import cors from 'cors';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
 import { sql } from './db/index.js';
+import type { AppRequest } from './types/index.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { errorHandler } from './middleware/error.js';
 import authRouter from './routes/auth.js';
@@ -28,7 +29,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  (req as any).requestId = randomUUID();
+  (req as AppRequest).requestId = randomUUID();
   next();
 });
 
@@ -56,7 +57,7 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
   xContentTypeOptions: true,
-  xFrameOptions: { action: 'deny' },
+  xFrameOptions: false,
 }));
 
 app.use(cors({
@@ -68,7 +69,7 @@ app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
   const chunks: Buffer[] = [];
   req.on('data', (chunk: Buffer) => chunks.push(chunk));
   req.on('end', () => {
-    (req as any).rawBody = Buffer.concat(chunks).toString('utf-8');
+    (req as AppRequest).rawBody = Buffer.concat(chunks).toString('utf-8');
     next();
   });
   req.on('error', next);

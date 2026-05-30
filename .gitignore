@@ -9,3 +9,9 @@ backend/uploads/*
 coverage/
 test-results/
 playwright-report/
+.opencode/
+*.tsbuildinfo
+frontend/dist/
+backend/dist/
+backend/src/data/
+frontend/src/assets/

@@ -97,3 +97,12 @@ export const paymentLimiter = rateLimit({
   keyGenerator,
   message: { error: 'Demasiados intentos de pago. Intenta de nuevo en un minuto.' },
 });
+
+export const viewLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiadas visitas. Intenta de nuevo en un minuto.' },
+});

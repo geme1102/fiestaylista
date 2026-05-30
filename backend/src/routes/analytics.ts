@@ -3,14 +3,15 @@ import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
+import { viewLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
 const viewSchema = z.object({
-  eventId: z.string().uuid('ID de evento inválido'),
+  eventId: z.string().uuid('ID de evento invalido'),
 });
 
-router.post('/analytics/view', async (req: Request, res: Response) => {
+router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = viewSchema.safeParse(req.body);
     if (!parsed.success) {

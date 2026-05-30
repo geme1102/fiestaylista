@@ -50,7 +50,7 @@ export interface Subscription {
   id: string;
   userId: string;
   tier: Tier;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'incomplete_expired';
+  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
   currentPeriodStart: string;
   currentPeriodEnd: string;
   mpSubscriptionId?: string;

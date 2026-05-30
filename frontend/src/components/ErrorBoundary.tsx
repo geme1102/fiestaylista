@@ -52,7 +52,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               onClick={() => window.location.reload()}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-rose-500/25 transition-all active:scale-95"
             >
-              <span className="material-symbols-outlined text-lg">refresh</span>
+              <span className="text-lg">🔄</span>
               Recargar página
             </button>
             <p className="mt-6 text-xs text-gray-400 font-mono">ID: {errorId}</p>

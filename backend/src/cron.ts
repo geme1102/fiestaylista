@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { failedWebhooks } from './db/schema.js';
+import { failedWebhooks, refreshTokens } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
@@ -108,7 +108,7 @@ export function startCronJobs(): void {
     });
   };
 
-  const cleanupExpiredTokens = async () => {
+  const cleanupExpiredWebhooks = async () => {
     try {
       const result = await db
         .delete(failedWebhooks)
@@ -121,11 +121,25 @@ export function startCronJobs(): void {
     }
   };
 
+  const cleanupExpiredRefreshTokens = async () => {
+    try {
+      await db
+        .delete(refreshTokens)
+        .where(sql`${refreshTokens.expiresAt} < NOW()`);
+    } catch (error) {
+      console.error('[Cron] Error limpiando refresh tokens:', error);
+    }
+  };
+
+  cleanupExpiredRefreshTokens();
+
+  retryFailedWebhooks();
+  cleanupExpiredWebhooks();
   runDaily();
   cronInterval = setInterval(() => {
     runDaily();
     retryFailedWebhooks();
-    cleanupExpiredTokens();
+    cleanupExpiredWebhooks();
   }, DAILY_MS);
 
   console.log('[Cron] Jobs iniciados correctamente');
