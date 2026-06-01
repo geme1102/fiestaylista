@@ -83,7 +83,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         }
       } else {
         clearTokens();
-        window.location.href = '/login';
         throw new Error('Sesión expirada. Inicia sesión nuevamente.');
       }
     }
