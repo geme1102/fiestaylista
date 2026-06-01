@@ -43,7 +43,7 @@ app.use(helmet({
       frameSrc: ["'self'", "https://mpago.la"],
       imgSrc: ["'self'", "https:", "data:", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", config.FRONTEND_URL].filter(Boolean),
+      connectSrc: ["'self'", config.FRONTEND_URL, "https://*.netlify.app"].filter(Boolean),
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
