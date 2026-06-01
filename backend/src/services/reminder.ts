@@ -34,7 +34,7 @@ export async function processReminders(): Promise<ReminderResult> {
             SELECT ${emailTracking.userId}
             FROM ${emailTracking}
             WHERE ${emailTracking.type} = 'reminder'
-            AND ${emailTracking.sentAt} > ${cooldownDate}
+            AND ${emailTracking.sentAt} > ${cooldownDate.toISOString()}
           )`,
       ),
     )
