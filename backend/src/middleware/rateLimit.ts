@@ -14,7 +14,6 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator,
   message: { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
-  skipSuccessfulRequests: true,
 });
 
 export const apiLimiter = rateLimit({

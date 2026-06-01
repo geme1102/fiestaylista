@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
 import { sql } from './db/index.js';
@@ -65,9 +66,20 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(cookieParser());
+
 app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
   const chunks: Buffer[] = [];
-  req.on('data', (chunk: Buffer) => chunks.push(chunk));
+  let totalBytes = 0;
+  const MAX_BYTES = 1024 * 1024;
+  req.on('data', (chunk: Buffer) => {
+    totalBytes += chunk.length;
+    if (totalBytes > MAX_BYTES) {
+      req.destroy(new Error('Payload demasiado grande'));
+      return;
+    }
+    chunks.push(chunk);
+  });
   req.on('end', () => {
     (req as AppRequest).rawBody = Buffer.concat(chunks).toString('utf-8');
     next();

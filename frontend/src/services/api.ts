@@ -1,22 +1,17 @@
 let accessToken: string | null = null;
 const REQUEST_TIMEOUT = 30000;
 
-export function setTokens(access: string, refresh: string): void {
+export function setTokens(access: string, _refresh?: string): void {
   accessToken = access;
-  localStorage.setItem('refreshToken', refresh);
 }
 
 export function clearTokens(): void {
   accessToken = null;
-  localStorage.removeItem('refreshToken');
+  refreshRetries = 0;
 }
 
 export function getAccessToken(): string | null {
   return accessToken;
-}
-
-function getRefreshToken(): string | null {
-  return localStorage.getItem('refreshToken');
 }
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -54,6 +49,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       method,
       headers,
       signal: controller.signal,
+      credentials: 'include',
     };
 
     if (body !== undefined && !(body instanceof FormData)) {
@@ -73,7 +69,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
     }
 
-    if (res.status === 401 && getRefreshToken()) {
+    if (res.status === 401) {
       const refreshed = await tryRefreshToken();
       if (refreshed) {
         headers['Authorization'] = `Bearer ${accessToken}`;
@@ -123,14 +119,12 @@ async function tryRefreshToken(): Promise<boolean> {
   }
 
   refreshPromise = (async () => {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) return false;
-
     try {
       const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
+        body: JSON.stringify({}),
       });
 
       if (!res.ok) {
@@ -144,9 +138,6 @@ async function tryRefreshToken(): Promise<boolean> {
       refreshRetries = 0;
       const data = await res.json();
       accessToken = data.accessToken;
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken);
-      }
       return true;
     } catch {
       return false;

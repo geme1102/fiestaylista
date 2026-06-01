@@ -15,6 +15,7 @@ interface UpdateEventData {
   title?: string;
   eventType?: EventType;
   hostPhone?: string;
+  isActive?: boolean;
 }
 
 async function verifyOwnership(eventId: string, userId: string) {
@@ -65,7 +66,7 @@ export async function getUserEvents(userId: string) {
   const userEvents = await db
     .select()
     .from(eventsTable)
-    .where(eq(eventsTable.userId, userId))
+    .where(and(eq(eventsTable.userId, userId), sql`${eventsTable.deletedAt} IS NULL`))
     .orderBy(eventsTable.createdAt);
 
   if (userEvents.length === 0) return [];
@@ -150,6 +151,7 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
   if (data.title !== undefined) updateData.title = data.title;
   if (data.eventType !== undefined) updateData.eventType = data.eventType;
   if (data.hostPhone !== undefined) updateData.hostPhone = data.hostPhone;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
   updateData.updatedAt = new Date();
 
   const [event] = await db

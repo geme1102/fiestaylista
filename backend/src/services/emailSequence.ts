@@ -41,8 +41,11 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
   const now = new Date();
 
   let minCreatedAt: Date | null = null;
+  let batchCount = 0;
+  const MAX_BATCHES = 10;
 
-  while (true) {
+  while (batchCount < MAX_BATCHES) {
+    batchCount++;
     const condition: any = minCreatedAt
       ? and(eq(users.emailVerified, true), sql`${users.createdAt} > ${minCreatedAt}`)
       : eq(users.emailVerified, true);

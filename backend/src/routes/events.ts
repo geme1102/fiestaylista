@@ -21,6 +21,7 @@ const updateEventSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]]).optional(),
   hostPhone: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
 
 router.get('/', requireAuth, async (req: AuthRequest, res, next) => {

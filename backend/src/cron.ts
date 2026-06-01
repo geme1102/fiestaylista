@@ -140,6 +140,7 @@ export function startCronJobs(): void {
     runDaily();
     retryFailedWebhooks();
     cleanupExpiredWebhooks();
+    cleanupExpiredRefreshTokens();
   }, DAILY_MS);
 
   console.log('[Cron] Jobs iniciados correctamente');

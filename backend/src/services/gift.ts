@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { gifts as giftsTable } from '../db/schema.js';
-import { NotFoundError } from '../utils/errors.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 export async function addGift(eventId: string, name: string) {
   const [gift] = await db
@@ -32,7 +32,11 @@ export async function updateGift(
     }
 
     if (data.isClaimed === true && existing.isClaimed && existing.claimedBy !== data.claimedBy) {
-      throw new NotFoundError('Este regalo ya ha sido reservado por otra persona');
+      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+    }
+
+    if (data.isClaimed === true && !data.claimedBy) {
+      throw new ValidationError('Debes especificar quién reserva el regalo');
     }
 
     const updateData: Record<string, unknown> = {};
@@ -67,7 +71,7 @@ export async function claimGift(giftId: string, claimedBy: string) {
     }
 
     if (gift.isClaimed) {
-      throw new NotFoundError('Este regalo ya ha sido reservado');
+      throw new ValidationError('Este regalo ya ha sido reservado');
     }
 
     const [updated] = await tx

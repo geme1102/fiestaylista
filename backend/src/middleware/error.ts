@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { AppError } from '../utils/errors.js';
 import { config } from '../config.js';
-import { formatZodError } from '../utils/zodErrors.js';
 
 function logError(err: Error, req?: Request): void {
   const errorLog = {
@@ -26,11 +24,6 @@ function logError(err: Error, req?: Request): void {
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
-  if (err instanceof z.ZodError) {
-    res.status(400).json({ error: formatZodError(err) });
-    return;
-  }
-
   if (err instanceof AppError) {
     if (err.statusCode >= 500) {
       logError(err, req);

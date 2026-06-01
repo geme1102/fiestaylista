@@ -70,7 +70,7 @@ function TitleUpdater() {
       <title>{title}</title>
       <meta property="og:title" content={title} />
       <meta name="twitter:title" content={title} />
-      <meta property="og:url" content={`https://fiestaylista.com${path}`} />
+      <meta property="og:url" content={`${window.location.origin}${path}`} />
     </Helmet>
   );
 }

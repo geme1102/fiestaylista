@@ -29,6 +29,29 @@ cd ../frontend && npm install
 1. Copia `backend/.env.example` a `backend/.env` y completa las variables
 2. Copia `frontend/.env.example` a `frontend/.env` y completa las variables
 
+### Variables de Entorno Requeridas
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | URL de conexión a PostgreSQL |
+| `JWT_SECRET` | Secreto para firmar tokens de acceso |
+| `JWT_REFRESH_SECRET` | Secreto para firmar tokens de refresco |
+| `JWT_GUEST_SECRET` | Secreto para firmar tokens de invitados |
+| `FRONTEND_URL` | URL del frontend (para CORS) |
+
+### Variables de Entorno Opcionales
+
+| Variable | Descripción |
+|----------|-------------|
+| `MERCADO_PAGO_ACCESS_TOKEN` | Token de acceso de Mercado Pago |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Secreto para verificar webhooks de MP |
+| `MERCADO_PAGO_PRO_MONTHLY_PLAN_ID` | ID del plan mensual Pro |
+| `MERCADO_PAGO_PRO_YEARLY_PLAN_ID` | ID del plan anual Pro |
+| `RESEND_API_KEY` | API key de Resend para emails |
+| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud de Cloudinary |
+| `CLOUDINARY_API_KEY` | API key de Cloudinary |
+| `CLOUDINARY_API_SECRET` | API secret de Cloudinary |
+
 ## Desarrollo
 
 ```bash

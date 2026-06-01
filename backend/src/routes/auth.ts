@@ -1,12 +1,23 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+import { config } from '../config.js';
 
 const router = Router();
+
+function setRefreshCookie(res: Response, refreshToken: string): void {
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/auth/refresh',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
 
 const registerSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -21,10 +32,6 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
   password: z.string().min(1, 'La contraseña es requerida'),
-});
-
-const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'El token de refresco es requerido'),
 });
 
 const verifyEmailSchema = z.object({
@@ -48,6 +55,7 @@ router.post('/register', authLimiter, async (req, res, next) => {
   try {
     const { email, password, name } = registerSchema.parse(req.body);
     const result = await authService.register(email, password, name);
+    setRefreshCookie(res, result.refreshToken);
     res.status(201).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -62,6 +70,7 @@ router.post('/login', authLimiter, async (req, res, next) => {
   try {
     const data = loginSchema.parse(req.body);
     const result = await authService.login(data.email, data.password);
+    setRefreshCookie(res, result.refreshToken);
     res.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -74,8 +83,12 @@ router.post('/login', authLimiter, async (req, res, next) => {
 
 router.post('/refresh', refreshLimiter, async (req, res, next) => {
   try {
-    const data = refreshSchema.parse(req.body);
-    const result = await authService.refreshToken(data.refreshToken);
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    if (!refreshToken) {
+      throw new ValidationError('Token de refresco requerido');
+    }
+    const result = await authService.refreshToken(refreshToken);
+    setRefreshCookie(res, result.refreshToken);
     res.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -31,11 +31,20 @@ function verifyMpSignature(req: Request): boolean {
   const rawBody = (req as any).rawBody;
   if (!rawBody) return false;
 
-  const manifest = ts + '.' + webhookSecret + '.' + (typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody));
+  let dataId = '';
+  try {
+    const parsed = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    dataId = parsed.data?.id || parsed.id || '';
+  } catch {
+    return false;
+  }
+  if (!dataId) return false;
+
+  const manifest = ts + '.' + dataId + '.' + webhookSecret;
   const expected = createHash('sha256').update(manifest).digest('hex');
 
   try {
-    return timingSafeEqual(Buffer.from(hash), Buffer.from(expected));
+    return timingSafeEqual(Buffer.from(hash.toLowerCase()), Buffer.from(expected.toLowerCase()));
   } catch {
     return false;
   }
@@ -67,7 +76,7 @@ router.post('/mercadopago', async (req: Request, res: Response) => {
   try {
     if (!verifyMpSignature(req)) {
       console.warn('[MP Webhook] Firma inválida, ignorando notificación');
-      res.status(200).json({ received: true });
+      res.status(401).json({ received: false, error: 'Firma inválida' });
       return;
     }
 

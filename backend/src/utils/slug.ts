@@ -11,9 +11,7 @@ export function generateSlug(title: string): string {
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  const suffix = randomBytes(3).toString('hex');
-
-  return `${base}-${suffix}`;
+  return base || 'evento';
 }
 
 export function generateUniqueSlug(
@@ -21,8 +19,9 @@ export function generateUniqueSlug(
   existingSlugs: Set<string>,
   maxAttempts = 10,
 ): string {
+  if (!existingSlugs.has(baseSlug)) return baseSlug;
   for (let i = 0; i < maxAttempts; i++) {
-    const slug = i === 0 ? baseSlug : `${baseSlug}-${randomBytes(2).toString('hex')}`;
+    const slug = `${baseSlug}-${randomBytes(2).toString('hex')}`;
     if (!existingSlugs.has(slug)) return slug;
   }
   return `${baseSlug}-${randomBytes(4).toString('hex')}`;

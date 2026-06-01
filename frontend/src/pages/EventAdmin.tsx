@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { apiClient } from '../services/api';
+import { apiClient, getAccessToken } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
 import ShareButtons from '../components/ShareButtons';
 import GiftCard from '../components/GiftCard';
@@ -11,6 +11,7 @@ import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { validateRedirectUrl } from '../utils/format';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 
 interface AdminEvent {
@@ -74,7 +75,8 @@ export default function EventAdmin() {
   useEffect(() => {
     if (!event?.slug) return;
     const baseUrl = import.meta.env.VITE_API_URL ?? '';
-    const es = new EventSource(`${baseUrl}/api/events/${id}/gifts/subscribe`);
+    const token = getAccessToken();
+    const es = new EventSource(`${baseUrl}/api/events/${id}/gifts/subscribe${token ? `?token=${token}` : ''}`);
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
@@ -202,7 +204,13 @@ export default function EventAdmin() {
     try {
       const res = await boostEvent(id!);
       if (res.url) {
-        window.location.href = res.url;
+        const validatedUrl = validateRedirectUrl(res.url);
+        if (validatedUrl) {
+          window.location.href = validatedUrl;
+        } else {
+          showToast('URL de pago inválida', 'error');
+          setBoostLoading(false);
+        }
       } else {
         showToast('Evento boosteado 🚀', 'success');
         setBoostModal(false);

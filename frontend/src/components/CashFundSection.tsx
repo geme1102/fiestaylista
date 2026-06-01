@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { formatCOP } from '../utils/format';
+import { validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from './LoadingSpinner';
 import type { CashFund, CashContribution } from '../types';
+import { TIER_LIMITS } from '../types';
 
 const SUGGESTED_AMOUNTS = [50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
@@ -24,7 +26,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const commission = ownerTier === 'pro' ? 2 : 4;
+  const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 4;
   const canContribute = !isOwner && fund?.isActive;
 
   useEffect(() => {
@@ -72,7 +74,12 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       });
 
       if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
+        const validatedUrl = validateRedirectUrl(result.redirectUrl);
+        if (validatedUrl) {
+          window.location.href = validatedUrl;
+        } else {
+          showToast('URL de pago inválida', 'error');
+        }
         return;
       }
 
@@ -96,7 +103,12 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
     try {
       const result = await boostEvent(eventId);
       if (result.url) {
-        window.location.href = result.url;
+        const validatedUrl = validateRedirectUrl(result.url);
+        if (validatedUrl) {
+          window.location.href = validatedUrl;
+        } else {
+          showToast('URL de pago inválida', 'error');
+        }
       } else {
         showToast('Evento boosteado 🚀', 'success');
         setBoostModal(false);

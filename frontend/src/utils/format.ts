@@ -1,23 +1,35 @@
-import type { EventType } from '../types';
-import { THEME_COLORS } from '../types';
-
 const MONTHS = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
+const ALLOWED_REDIRECT_DOMAINS = [
+  'mpago.la',
+  'www.mercadopago.com.co',
+  'mercadopago.com.co',
+  'www.mercadopago.com',
+  'mercadopago.com',
+];
+
+export function validateRedirectUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return '';
+    }
+    if (ALLOWED_REDIRECT_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d))) {
+      return url;
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 export function formatDate(date: string): string {
   const d = new Date(date);
   if (isNaN(d.getTime())) return date;
   return `${d.getDate()} de ${MONTHS[d.getMonth()]}, ${d.getFullYear()}`;
-}
-
-export function getEventTypeColor(type: EventType): string {
-  return THEME_COLORS[type]?.primary ?? '#ec4899';
-}
-
-export function getEventTypeGradient(type: EventType): string {
-  return THEME_COLORS[type]?.gradient ?? 'from-pink-400 to-rose-500';
 }
 
 export function formatCOP(amount: number): string {

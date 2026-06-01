@@ -23,11 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      setIsLoading(false);
-      return;
-    }
     auth.getMe()
       .then((res) => setUser(res.user))
       .catch(() => clearTokens())
@@ -36,14 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await auth.login(email, password);
-    setTokens(res.accessToken, res.refreshToken);
+    setTokens(res.accessToken);
     setUser(res.user);
-    navigate('/dashboard');
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    navigate(redirect || '/dashboard');
   }, [navigate]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
     const res = await auth.register(email, password, name);
-    setTokens(res.accessToken, res.refreshToken);
+    setTokens(res.accessToken);
     setUser(res.user);
     navigate('/onboarding');
   }, [navigate]);
@@ -59,7 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await auth.getMe();
       setUser(res.user);
     } catch {
-      // Silently fail
+      clearTokens();
+      setUser(null);
     }
   }, []);
 

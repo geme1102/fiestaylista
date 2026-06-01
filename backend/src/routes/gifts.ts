@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
+import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { giftLimiter } from '../middleware/rateLimit.js';
@@ -7,6 +8,7 @@ import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+import { config } from '../config.js';
 import { emitGiftClaimed } from '../services/notifications.js';
 
 const clients = new Map<string, Set<Response>>();
@@ -148,6 +150,19 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     res.status(400).json({ error: 'ID del evento requerido' });
+    return;
+  }
+
+  const authToken = req.query.token as string || req.headers.authorization?.replace('Bearer ', '');
+  if (!authToken) {
+    res.status(401).json({ error: 'Token requerido para suscripción SSE' });
+    return;
+  }
+
+  try {
+    jwt.verify(authToken, config.JWT_SECRET);
+  } catch {
+    res.status(403).json({ error: 'Token inválido' });
     return;
   }
 

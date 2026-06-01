@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
 import { cn } from '../utils/cn';
+import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
 
 const PLANS = [
@@ -167,7 +168,13 @@ export default function Pricing() {
     try {
       const interval = yearly ? 'year' : 'month';
       const res = await createCheckoutSession(tier as 'pro', undefined, undefined, interval);
-      window.location.href = res.url;
+      const validatedUrl = validateRedirectUrl(res.url);
+      if (validatedUrl) {
+        window.location.href = validatedUrl;
+      } else {
+        showToast('URL de pago inválida', 'error');
+        setLoading(false);
+      }
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear sesión de pago', 'error');
       setLoading(false);

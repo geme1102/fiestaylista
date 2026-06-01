@@ -60,16 +60,22 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
       })
       .returning();
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { userId: guestId, email: guestEmail, isGuest: true },
-      config.JWT_GUEST_SECRET,
-      { expiresIn: '7d' },
+      config.JWT_SECRET,
+      { expiresIn: config.ACCESS_TOKEN_EXPIRY || '15m' } as any,
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: guestId, email: guestEmail, isGuest: true, type: 'refresh' },
+      config.JWT_REFRESH_SECRET,
+      { expiresIn: config.REFRESH_TOKEN_EXPIRY || '7d' } as any,
     );
 
     res.status(201).json({
       event,
-      accessToken: token,
-      refreshToken: token,
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

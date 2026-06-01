@@ -160,11 +160,13 @@ function FloatingOrbs() {
 function SocialProofFloating() {
   const [visible, setVisible] = useState<number[]>([]);
   const idxRef = useRef(0);
+  const animKeyRef = useRef(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const next = (idxRef.current + 1) % SOCIAL_PROOFS.length;
       idxRef.current = next;
+      animKeyRef.current++;
       setVisible((v) => [...v, next].slice(-2));
     }, 3500);
     return () => clearInterval(interval);
@@ -177,7 +179,7 @@ function SocialProofFloating() {
           const proof = SOCIAL_PROOFS[idx];
           return (
             <motion.div
-              key={`${proof.name}-${idx}-${Date.now()}`}
+              key={`${proof.name}-${idx}-${animKeyRef.current}`}
               initial={{ opacity: 0, y: 20, scale: 0.9, x: idx % 2 === 0 ? -20 : 20 }}
               animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}

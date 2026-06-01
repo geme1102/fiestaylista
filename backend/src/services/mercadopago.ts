@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { events, boostPayments } from '../db/schema.js';
+import { events, boostPayments, cashContributions } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
@@ -185,6 +185,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   externalReference: string;
   payerEmail: string;
   reason: string;
+  nextChargeDate: string | null;
 }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');
@@ -198,6 +199,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
     externalReference: info.external_reference ?? '',
     payerEmail: info.payer_email ?? '',
     reason: info.reason ?? '',
+    nextChargeDate: (info as any).next_charge_date || (info as any).scheduled_date || null,
   };
 }
 
@@ -300,12 +302,26 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
 
   if (ref.startsWith('boost_')) {
     if (info.status === 'approved') {
+      if (Math.abs(info.transactionAmount - BOOST_PRICE_CENTS) > 1) {
+        console.error(`[MP] Monto de boost inválido: esperado ${BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
+        return;
+      }
       await handleBoostPayment(paymentId, ref);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
       await revertBoostPayment(paymentId, ref);
     }
   } else {
     if (info.status === 'approved') {
+      const [contribution] = await db
+        .select({ amount: cashContributions.amount })
+        .from(cashContributions)
+        .where(eq(cashContributions.id, ref))
+        .limit(1);
+
+      if (contribution && Math.abs(info.transactionAmount - contribution.amount) > 1) {
+        console.error(`[MP] Monto de contribución inválido: esperado ${contribution.amount}, recibido ${info.transactionAmount}`);
+        return;
+      }
       await cashFundService.completeContribution(ref, paymentId);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
       await cashFundService.revertContribution(ref);
@@ -322,12 +338,15 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   if (info.status === 'authorized' || info.status === 'active') {
     const isYearly = info.reason?.toLowerCase().includes('anual');
     const periodDays = isYearly ? 365 : 30;
+    const currentPeriodEnd = info.nextChargeDate
+      ? new Date(info.nextChargeDate)
+      : new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: preapprovalId,
       tier: 'pro',
       status: 'active',
       currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+      currentPeriodEnd,
     });
   } else if (info.status === 'cancelled' || info.status === 'past_due') {
     await subscriptionService.cancelSubscription(userId);

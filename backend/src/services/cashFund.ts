@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors.js';
 import * as mercadopagoService from './mercadopago.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
+import { randomUUID } from 'node:crypto';
 
 const PLATFORM_FEE_CENTS = 30;
 
@@ -102,36 +103,53 @@ export async function createContribution(
   const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
   const netAmount = amountInCents - feeAmount;
 
-  const [contribution] = await db
-    .insert(cashContributions)
-    .values({
-      cashFundId,
-      contributorName,
-      amount: amountInCents,
-      feeAmount,
-      netAmount,
-      message: message || null,
-      status: 'pending',
-    })
-    .returning();
+  const tempContributionId = randomUUID();
 
-  await db.insert(platformFees).values({
-    contributionId: contribution.id,
-    amount: amountInCents,
-    feeAmount,
-    netAmount,
-  });
+  const [eventForSlug] = await db
+    .select({ slug: events.slug })
+    .from(events)
+    .where(eq(events.id, fund.eventId))
+    .limit(1);
 
-  const backUrl = `${config.FRONTEND_URL}/e/${fund.eventId}`;
+  const backUrl = `${config.FRONTEND_URL}/e/${eventForSlug?.slug || fund.eventId}`;
   const { redirectUrl } = await mercadopagoService.createContributionPreference(
-    contribution.id,
+    tempContributionId,
     contributorName,
     amountInCents,
     fund.title || 'Lluvia de Sobres',
     backUrl,
   );
 
-  return { redirectUrl, contributionId: contribution.id };
+  if (!redirectUrl) {
+    throw new ValidationError('No se pudo generar la URL de pago');
+  }
+
+  const result = await db.transaction(async (tx) => {
+    const [contribution] = await tx
+      .insert(cashContributions)
+      .values({
+        id: tempContributionId,
+        cashFundId,
+        contributorName,
+        amount: amountInCents,
+        feeAmount,
+        netAmount,
+        message: message || null,
+        status: 'pending',
+      })
+      .returning();
+
+    await tx.insert(platformFees).values({
+      contributionId: contribution.id,
+      amount: amountInCents,
+      feeAmount,
+      netAmount,
+    });
+
+    return contribution;
+  });
+
+  return { redirectUrl, contributionId: result.id };
 }
 
 export async function completeContribution(
@@ -197,11 +215,10 @@ export async function revertContribution(contributionId: string): Promise<void> 
 }
 
 export async function cleanupStaleContributions(): Promise<number> {
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const result = await db
     .update(cashContributions)
     .set({ status: 'expired' })
-    .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < ${cutoff}::timestamp`)
+    .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < NOW() - INTERVAL '24 hours'`)
     .returning({ id: cashContributions.id });
 
   return result.length;
