@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../types';
 import * as auth from '../services/auth';
@@ -22,10 +22,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const fetchedRef = useRef(false);
+
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     auth.getMe()
       .then((res) => setUser(res.user))
-      .catch(() => clearTokens())
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
 

@@ -105,27 +105,8 @@ app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
 
 app.use('/api/webhooks', webhooksRouter);
 
-app.use('/api', apiLimiter);
-
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-app.use('/uploads', express.static('uploads'));
-
-app.use('/api/auth', authRouter);
-app.use('/api/events', eventsRouter);
-app.use('/api/events/:eventId/gifts', giftsRouter);
-app.use('/api/events/:eventId/photos', photosRouter);
-app.use('/api/subscriptions', subscriptionsRouter);
-app.use('/api/upload', uploadRouter);
-app.use('/api', guestRouter);
-app.use('/api', plansRouter);
-app.use('/api', analyticsRouter);
+// Rutas públicas (sin rate limit)
 app.use('/api', publicRouter);
-app.use('/api', cashRouter);
-app.use('/api', boostRouter);
-app.use('/api/auth/consent', consentRouter);
-app.use('/api/auth/arco', arcoRouter);
 
 app.get('/api/health', async (_req, res) => {
   try {
@@ -145,6 +126,27 @@ app.get('/api/health', async (_req, res) => {
     });
   }
 });
+
+app.use('/api', apiLimiter);
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+app.use('/uploads', express.static('uploads'));
+
+app.use('/api/auth', authRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/events/:eventId/gifts', giftsRouter);
+app.use('/api/events/:eventId/photos', photosRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/upload', uploadRouter);
+app.use('/api', guestRouter);
+app.use('/api', plansRouter);
+app.use('/api', analyticsRouter);
+app.use('/api', cashRouter);
+app.use('/api', boostRouter);
+app.use('/api/auth/consent', consentRouter);
+app.use('/api/auth/arco', arcoRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
