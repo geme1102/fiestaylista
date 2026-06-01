@@ -12,6 +12,7 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'BIRTHDAY', icon: '🎂', label: 'Cumpleaños' },
   { value: 'BAPTISM', icon: '⛪', label: 'Bautizo' },
   { value: 'COMMUNION', icon: '🕊️', label: 'Primera Comunión' },
+  { value: 'OTHER', icon: '✨', label: 'Otro' },
 ];
 
 export default function Onboarding() {

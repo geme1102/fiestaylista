@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
+import AuthBottomNav from '../components/AuthBottomNav';
 
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
   let score = 0;
@@ -23,7 +24,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
   const pct = (score / 5) * 100;
   return (
     <div className="flex items-center gap-3" aria-label={`Fortaleza de contraseña: ${label}`}>
-      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-surface-container-highest dark:bg-inverse-surface rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-300 ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className={`text-xs font-medium whitespace-nowrap ${color.replace('bg-', 'text-')}`}>{label}</span>
@@ -83,7 +84,7 @@ export default function Register() {
         <meta property="og:title" content="Registrarse - Fiesta y Lista" />
         <meta name="twitter:title" content="Registrarse - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
+      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -96,8 +97,8 @@ export default function Register() {
                   Fiesta y Lista
                 </span>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-outfit">Crear Cuenta</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface font-outfit">Crear Cuenta</h1>
+              <p className="text-on-surface-variant dark:text-surface-variant mt-1">
                 ¿Ya tienes cuenta?{' '}
                 <Link to="/login" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                   Inicia Sesión
@@ -107,7 +108,7 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="name" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Nombre
                 </label>
                 <input
@@ -115,14 +116,14 @@ export default function Register() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Tu nombre"
                   autoComplete="name"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Correo electrónico
                 </label>
                 <input
@@ -130,14 +131,14 @@ export default function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Contraseña
                 </label>
                 <input
@@ -145,7 +146,7 @@ export default function Register() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
                 />
@@ -164,7 +165,7 @@ export default function Register() {
                     onChange={(e) => setAcceptTerms(e.target.checked)}
                     className="mt-1 w-4 h-4 accent-primary"
                   />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                  <span className="text-xs text-on-surface-variant dark:text-surface-variant">
                     Acepto los{' '}
                     <Link to="/terminos-y-condiciones" target="_blank" className="text-primary hover:underline">Términos y Condiciones</Link>
                     {' '}y confirmo que soy mayor de 14 años.
@@ -177,7 +178,7 @@ export default function Register() {
                     onChange={(e) => setAcceptPrivacy(e.target.checked)}
                     className="mt-1 w-4 h-4 accent-primary"
                   />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                  <span className="text-xs text-on-surface-variant dark:text-surface-variant">
                     Acepto la{' '}
                     <Link to="/politica-de-privacidad" target="_blank" className="text-primary hover:underline">Política de Privacidad</Link>
                     {' '}y el tratamiento de mis datos personales según la Ley 1581 de 2012.
@@ -188,7 +189,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading || !acceptTerms || !acceptPrivacy}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Crear Cuenta'}
               </button>
@@ -196,6 +197,7 @@ export default function Register() {
           </div>
         </div>
       </div>
+      <AuthBottomNav />
     </>
   );
 }

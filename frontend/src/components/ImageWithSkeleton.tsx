@@ -15,15 +15,22 @@ export default function ImageWithSkeleton({ src, alt, className, containerClassN
   const [error, setError] = useState(false);
 
   return (
-    <div className={cn('relative overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl', aspectRatio, containerClassName, 'group')}>
+    <div className={cn('relative overflow-hidden bg-surface-container-high dark:bg-inverse-surface rounded-xl', aspectRatio, containerClassName, 'group')}>
       {!loaded && !error && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-600 dark:via-gray-500 dark:to-gray-600 bg-[length:200%_100%]" />
+        <>
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-surface-container-high via-surface-container/50 to-surface-container-high bg-[length:200%_100%]" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="material-symbols-outlined text-outline-variant/30 text-5xl">image</span>
+          </div>
+        </>
       )}
       {error ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl">
-          <div className="text-center">
-            <span className="material-symbols-outlined text-3xl text-gray-400">broken_image</span>
-            <p className="text-xs text-gray-400 mt-1">No se pudo cargar</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface-container-low border-2 border-dashed border-outline-variant/30 rounded-xl">
+          <div className="w-16 h-16 rounded-full bg-error-container/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-error/40 text-4xl">broken_image</span>
+          </div>
+          <div className="text-center px-4">
+            <span className="font-label-md text-label-md text-on-surface-variant/60">No se pudo cargar</span>
           </div>
         </div>
       ) : (
@@ -42,7 +49,7 @@ export default function ImageWithSkeleton({ src, alt, className, containerClassN
             onError={() => { setError(true); setLoaded(true); }}
           />
           {loaded && (
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/20 to-transparent" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary/10" />
           )}
         </>
       )}

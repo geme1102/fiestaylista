@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useScroll, useTransform } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../services/api';
@@ -9,21 +8,13 @@ import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
-import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_LABELS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
 import { getGiftCategory } from '../data/giftEmojis';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
 }
-
-const HERO_BG: Record<string, string> = {
-  BABY_SHOWER: '/backgrounds/hero-babyshower.png',
-  WEDDING: '/backgrounds/hero-wedding.png',
-  BIRTHDAY: '/backgrounds/hero-birthday.png',
-  BAPTISM: '/backgrounds/hero-baptism.png',
-  COMMUNION: '/backgrounds/hero-communion.png',
-};
 
 function PremiumConfetti() {
   return (
@@ -70,29 +61,6 @@ function PremiumConfetti() {
   );
 }
 
-function AccessibilityToggle({ easyRead, onToggle }: { easyRead: boolean; onToggle: () => void }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onToggle}
-          className={`px-4 py-2 rounded-xl text-xs font-medium transition-all backdrop-blur-sm border min-h-[36px] flex items-center gap-2 ${
-        easyRead
-          ? 'bg-primary/10 text-primary border-primary/20 shadow-lg shadow-primary/10'
-          : 'glass-card text-on-surface-variant border-white/20'
-      }`}
-      title={easyRead ? 'Modo normal' : 'Modo Lectura Fácil'}
-    >
-      {easyRead ? (
-        <span className="material-symbols-outlined text-sm">text_fields</span>
-      ) : (
-        <span className="material-symbols-outlined text-sm">accessibility_new</span>
-      )}
-      <span>{easyRead ? 'Normal' : 'Lectura Fácil'}</span>
-    </motion.button>
-  );
-}
-
 function EmptyGiftState() {
   return (
     <motion.div
@@ -103,8 +71,8 @@ function EmptyGiftState() {
       <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
         🎁
       </div>
-      <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">La lista de regalos se está preparando</p>
-      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
+      <p className="text-on-surface-variant dark:text-surface-variant font-medium text-lg">La lista de regalos se está preparando</p>
+      <p className="text-surface-variant dark:text-surface-variant/60 text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
     </motion.div>
   );
 }
@@ -119,6 +87,7 @@ export default function EventGuest() {
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [claimName, setClaimName] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [easyReadMode, setEasyReadMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -164,6 +133,7 @@ export default function EventGuest() {
       });
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
       setShowConfetti(true);
+      setShowSuccessModal(true);
       confettiTimeoutRef.current = setTimeout(() => {
         setShowConfetti(false);
       }, 3000);
@@ -188,7 +158,7 @@ export default function EventGuest() {
           >
             🎁
           </motion.div>
-          <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse font-outfit">Cargando lista de regalos...</p>
+          <p className="text-sm text-surface-variant dark:text-surface-variant/60 animate-pulse font-outfit">Cargando lista de regalos...</p>
         </div>
       </div>
     );
@@ -201,8 +171,8 @@ export default function EventGuest() {
           <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
             😕
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Evento no encontrado</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
+          <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-2">Evento no encontrado</h1>
+          <p className="text-on-surface-variant dark:text-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
           <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
             Ir al inicio
           </a>
@@ -235,9 +205,6 @@ export default function EventGuest() {
     ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
     : '';
 
-  const { scrollY } = useScroll();
-  const parallaxY = useTransform(scrollY, [0, 400], [0, 80]);
-
   return (
     <>
       <Helmet>
@@ -250,65 +217,86 @@ export default function EventGuest() {
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
       </Helmet>
 
-      <div className={`min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] transition-all duration-300 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <div className={`min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         {showConfetti && <PremiumConfetti />}
 
-        {/* Immersive Header */}
-        <div className="relative min-h-[360px] sm:min-h-[420px] overflow-hidden flex items-center">
-          <motion.div
-            className="absolute inset-0 bg-cover bg-center opacity-20 dark:opacity-10 scale-110"
-            style={{ backgroundImage: `url(${HERO_BG[event.eventType] || '/backgrounds/hero-pattern.png'})`, y: parallaxY }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/60 to-white dark:from-gray-900/20 dark:via-gray-900/70 dark:to-gray-900" />
-
-          {/* Gradient orbs overlay */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-20 blur-3xl" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
-            <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full opacity-15 blur-3xl" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
+        {/* Top App Bar */}
+        <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm flex justify-between items-center px-4 h-16">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary">menu</span>
+            <span className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</span>
           </div>
+          <div className="flex items-center gap-4">
+            <span className="material-symbols-outlined text-primary">shopping_bag</span>
+          </div>
+        </header>
 
-          <div className="relative w-full px-4 py-16 text-center">
+        {/* Immersive Header */}
+        <section className="pt-16 w-full overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface -z-10" />
+          <div className="absolute top-20 right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-30" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
+          <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
+            {/* Glass Icon Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
+              className="glass-card w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-xl border-white/40"
             >
-              {/* Event Icon */}
-              <div
-                className={`inline-flex items-center justify-center rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-md mb-5 shadow-lg ${easyReadMode ? 'w-24 h-24 sm:w-28 sm:h-28' : 'w-16 h-16 sm:w-20 sm:h-20'}`}
-                style={{ boxShadow: `0 4px 20px ${THEME_COLORS[event.eventType]?.primary || '#ec4899'}20` }}
+              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+            </motion.div>
+
+            {/* Badge with pulse dot */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-primary/10 text-primary px-4 py-1 rounded-full font-label-md text-label-md mb-4 inline-flex items-center gap-2"
+            >
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              {EVENT_LABELS[event.eventType]}
+            </motion.div>
+
+            {/* Event Title */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-inverse-on-surface mb-2 px-4"
+            >
+              {event.title}
+            </motion.h1>
+
+            {/* Event Date */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant mb-6"
+            >
+              {createdDate}
+            </motion.p>
+
+            {/* Accessibility Toggle (inline glass card) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex items-center gap-3 glass-card px-4 py-2 rounded-full mb-4"
+            >
+              <span className="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant">Lectura Fácil</span>
+              <button
+                onClick={() => setEasyReadMode(!easyReadMode)}
+                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-surface-container-highest dark:bg-inverse-surface'}`}
               >
-                <span className={easyReadMode ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'}>{EVENT_ICONS[event.eventType]}</span>
-              </div>
-
-              {/* Event Title */}
-              <h1 className={`font-black text-gray-900 dark:text-white mb-2 font-outfit leading-tight ${easyReadMode ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'}`}>
-                {event.title}
-              </h1>
-
-              {/* Event Type Badge */}
-              <p className={`text-gray-500 dark:text-gray-400 mb-3 inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-full border border-white/20 dark:border-gray-700/50 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
-                {EVENT_ICONS[event.eventType]} {EVENT_LABELS[event.eventType]}
-              </p>
-
-              {/* Created date */}
-              {createdDate && (
-                <span className="text-gray-400 dark:text-gray-500 inline-flex items-center gap-1.5 text-sm">
-                  <span>📅</span>
-                  <span>Creado el {createdDate}</span>
-                </span>
-              )}
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
+              </button>
             </motion.div>
           </div>
-
-          {/* Accessibility Toggle */}
-          <div className="absolute top-4 right-4 z-20">
-            <AccessibilityToggle easyRead={easyReadMode} onToggle={() => setEasyReadMode(!easyReadMode)} />
-          </div>
-        </div>
+        </section>
 
         {/* Main Content */}
-        <div className={`max-w-4xl mx-auto px-4 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
+        <div className={`max-w-4xl mx-auto px-4 -mt-6 relative z-10 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
           {/* Share */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -335,7 +323,7 @@ export default function EventGuest() {
               transition={{ duration: 0.5, delay: 0.35 }}
               className={easyReadMode ? 'space-y-6' : ''}
             >
-              <h2 className={`font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
+              <h2 className={`font-semibold text-on-surface dark:text-inverse-on-surface mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
                 <span>📸</span> Galería
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -343,7 +331,7 @@ export default function EventGuest() {
                   <motion.div
                     key={photo.id}
                     whileHover={{ scale: 1.03 }}
-                    className="relative overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-700/50 rounded-xl group"
+                    className="relative overflow-hidden bg-surface-container-high dark:bg-inverse-surface ring-1 ring-gray-200/50 dark:ring-gray-700/50 rounded-xl group"
                   >
                     <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
                     {photo.caption && (
@@ -365,14 +353,14 @@ export default function EventGuest() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="flex items-center justify-between mb-6"
             >
-              <h2 className={`font-bold text-gray-900 dark:text-white flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
+              <h2 className={`font-bold text-on-surface dark:text-inverse-on-surface flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
                 🎁 Lista de Regalos
-                <span className={`font-normal text-gray-500 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
+                <span className={`font-normal text-on-surface-variant ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                   ({availableGifts.length} disponibles)
                 </span>
               </h2>
               {gifts.length > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <div className="flex items-center gap-1.5 text-xs text-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span>{claimedGifts.length} apartados</span>
                 </div>
@@ -390,14 +378,14 @@ export default function EventGuest() {
                   value={claimName}
                   onChange={(e) => setClaimName(e.target.value)}
                   placeholder="Escribe tu nombre para apartar un regalo"
-                  className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
+                  className={`w-full rounded-2xl border border-outline-variant bg-surface/80 dark:bg-inverse-surface/80 text-on-surface dark:text-inverse-on-surface outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 />
               </div>
             </div>
 
             {/* Category Filters */}
             {categories.length > 1 && (
-              <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 mb-4 overflow-x-auto scrollbar-hide">
+              <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
                 <div className="flex gap-2 w-max">
                   <button
                     onClick={() => setCategoryFilter(null)}
@@ -453,7 +441,7 @@ export default function EventGuest() {
                 transition={{ delay: 0.5 }}
                 className="mt-10"
               >
-                <h3 className={`font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
+                <h3 className={`font-semibold text-on-surface-variant dark:text-surface-variant mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                   <span>💝</span>
                   Ya apartados ({claimedGifts.length})
                 </h3>
@@ -474,10 +462,49 @@ export default function EventGuest() {
           </div>
 
           {/* Footer */}
-          <div className={`text-center pt-8 border-t border-gray-200 dark:border-gray-700 ${easyReadMode ? 'text-gray-500' : 'text-sm text-gray-500 dark:text-gray-400'}`}>
+          <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant dark:text-surface-variant'}`}>
             <p>Hecho con 🎉 por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
           </div>
         </div>
+
+        {/* Bottom Nav */}
+        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
+          <Link to="/" className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+            <span className="font-label-md text-label-md">Inicio</span>
+          </Link>
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+            <span className="material-symbols-outlined">card_giftcard</span>
+            <span className="font-label-md text-label-md">Lista</span>
+          </a>
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+            <span className="material-symbols-outlined">payments</span>
+            <span className="font-label-md text-label-md">Regalar</span>
+          </a>
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+            <span className="material-symbols-outlined">person</span>
+            <span className="font-label-md text-label-md">Cuenta</span>
+          </a>
+        </nav>
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl">
+            <div className="glass-card w-full max-w-sm rounded-[40px] p-8 text-center shadow-2xl border-white/50">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              </div>
+              <h2 className="font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface mb-2">¡Regalo Apartado!</h2>
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant mb-8">Gracias por ser parte de este momento especial.</p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-primary text-white py-4 rounded-2xl font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

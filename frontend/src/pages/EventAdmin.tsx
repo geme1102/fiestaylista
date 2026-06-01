@@ -22,6 +22,7 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'BIRTHDAY', icon: '🎂', label: 'Cumpleaños' },
   { value: 'BAPTISM', icon: '🕊️', label: 'Bautizo' },
   { value: 'COMMUNION', icon: '✨', label: 'Comunión' },
+  { value: 'OTHER', icon: '🎊', label: 'Otro' },
 ];
 
 export default function EventAdmin() {
@@ -213,20 +214,20 @@ export default function EventAdmin() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6 py-10 px-container-margin">
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-2xl w-1/3" />
+        <div className="h-12 bg-surface-container-high dark:bg-inverse-surface rounded-2xl w-1/3" />
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4" />
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+            <div className="h-6 bg-surface-container-high dark:bg-inverse-surface rounded-lg w-1/4" />
+            <div className="h-12 bg-surface-container-high dark:bg-inverse-surface rounded-xl" />
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-2xl" />
+              <div key={i} className="h-24 bg-surface-container-high dark:bg-inverse-surface rounded-2xl" />
             ))}
           </div>
           <div className="space-y-4">
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4" />
+            <div className="h-6 bg-surface-container-high dark:bg-inverse-surface rounded-lg w-1/4" />
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+                <div key={i} className="h-32 bg-surface-container-high dark:bg-inverse-surface rounded-xl" />
               ))}
             </div>
           </div>
@@ -241,7 +242,7 @@ export default function EventAdmin() {
         <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
           😕
         </div>
-        <p className="text-gray-500 dark:text-gray-400 mb-4">Evento no encontrado</p>
+        <p className="text-on-surface-variant dark:text-surface-variant mb-4">Evento no encontrado</p>
         <Link to="/dashboard" className="text-primary font-medium inline-block">Volver al dashboard</Link>
       </div>
     );
@@ -292,11 +293,11 @@ export default function EventAdmin() {
                         type="text"
                         value={titleDraft}
                         onChange={(e) => setTitleDraft(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-headline-md text-headline-md text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary"
+                        className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface dark:bg-inverse-surface font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface outline-none focus:ring-2 focus:ring-primary"
                         autoFocus
                       />
                       <button onClick={handleUpdateTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">Guardar</button>
-                      <button onClick={() => setEditingTitle(false)} className="px-3 py-1.5 text-sm text-gray-500">Cancelar</button>
+                      <button onClick={() => setEditingTitle(false)} className="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
                     </div>
                   ) : (
                     <>
@@ -317,14 +318,14 @@ export default function EventAdmin() {
                           className={`px-2 py-1 text-xs rounded-lg font-medium transition-all ${
                             typeDraft === t.value
                               ? 'bg-primary-fixed text-primary-fixed-dim dark:bg-primary/30 ring-2 ring-primary'
-                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                              : 'bg-surface-container-high text-on-surface-variant dark:bg-inverse-surface dark:text-surface-variant'
                           }`}
                         >
                           {t.icon} {t.label}
                         </button>
                       ))}
                       <button onClick={handleUpdateType} className="px-3 py-1 text-xs bg-primary text-white rounded-lg font-medium">Guardar</button>
-                      <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-gray-500">Cancelar</button>
+                      <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
                     </div>
                   ) : (
                     <span onClick={() => setEditingType(true)} className="cursor-pointer flex items-center gap-1">
@@ -338,7 +339,7 @@ export default function EventAdmin() {
             <div className="flex flex-col items-end gap-2">
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" checked={event.isActive} onChange={toggleActive} className="sr-only peer" />
-                <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
               </label>
               <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
                 {event.isActive ? 'Activo' : 'Inactivo'}
@@ -601,10 +602,10 @@ export default function EventAdmin() {
 function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar' }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean; confirmLabel?: string }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-sm bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+      <div className="w-full sm:max-w-sm bg-surface dark:bg-inverse-surface p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
+        <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-6">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high dark:bg-inverse-surface dark:text-surface-variant rounded-xl hover:bg-surface-container-highest transition-colors">
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-xl hover:shadow-lg transition-all disabled:opacity-50">

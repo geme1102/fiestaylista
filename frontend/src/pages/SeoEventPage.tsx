@@ -110,10 +110,10 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
               {content.icon}
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white mb-4 font-outfit">
+            <h1 className="text-3xl sm:text-5xl font-black text-on-surface dark:text-inverse-on-surface mb-4 font-outfit">
               {content.title}
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-on-surface-variant dark:text-surface-variant max-w-2xl mx-auto">
               {content.subtitle}
             </p>
             <Link
@@ -126,34 +126,34 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
           </div>
 
           <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center font-outfit">Beneficios</h2>
+            <h2 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-6 text-center font-outfit">Beneficios</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {content.benefits.map((b) => (
                 <div key={b} className="flex items-center gap-3 p-4 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-xl shadow-sm">
                   <span className="text-emerald-500 text-xl shrink-0">✓</span>
-                  <span className="text-gray-700 dark:text-gray-300">{b}</span>
+                  <span className="text-on-surface dark:text-inverse-on-surface">{b}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center font-outfit">Preguntas Frecuentes</h2>
+            <h2 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-6 text-center font-outfit">Preguntas Frecuentes</h2>
             <div className="max-w-2xl mx-auto space-y-3">
               {content.faq.map((faq) => (
                 <details key={faq.q} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl group">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-on-surface dark:text-inverse-on-surface">
                     {faq.q}
                     <span className="ml-2 text-rose-500 group-open:rotate-180 transition-transform">▼</span>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-600 dark:text-gray-400">{faq.a}</div>
+                  <div className="px-4 pb-4 text-sm text-on-surface-variant dark:text-surface-variant">{faq.a}</div>
                 </details>
               ))}
             </div>
           </div>
 
           <div className="text-center">
-            <Link to="/pricing" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
+            <Link to="/pricing" className="text-sm text-on-surface-variant hover:text-on-surface dark:text-surface-variant dark:hover:text-inverse-on-surface transition-colors">
               Ver planes y precios →
             </Link>
           </div>

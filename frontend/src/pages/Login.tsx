@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
+import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function Login() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -38,7 +39,7 @@ export default function Login() {
         <meta property="og:title" content="Iniciar Sesión - Fiesta y Lista" />
         <meta name="twitter:title" content="Iniciar Sesión - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
+      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -51,8 +52,8 @@ export default function Login() {
                   Fiesta y Lista
                 </span>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-outfit">Iniciar Sesión</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface font-outfit">Iniciar Sesión</h1>
+              <p className="text-on-surface-variant dark:text-surface-variant mt-1">
                 ¿No tienes cuenta?{' '}
                 <Link to="/register" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                   Regístrate
@@ -62,7 +63,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Correo electrónico
                 </label>
                 <input
@@ -70,14 +71,14 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Contraseña
                 </label>
                 <input
@@ -85,7 +86,7 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
@@ -99,7 +100,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Iniciar Sesión'}
               </button>
@@ -107,6 +108,7 @@ export default function Login() {
           </div>
         </div>
       </div>
+      <AuthBottomNav />
     </>
   );
 }

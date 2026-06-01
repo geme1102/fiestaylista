@@ -19,8 +19,8 @@ function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () 
             <span className="material-symbols-outlined">mail</span>
           </div>
           <div>
-            <p className="font-bold text-gray-900 dark:text-white text-sm">Verifica tu correo</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Confirma tu cuenta para recibir notificaciones de tus regalos.</p>
+            <p className="font-bold text-on-surface dark:text-inverse-on-surface text-sm">Verifica tu correo</p>
+            <p className="text-xs text-on-surface-variant dark:text-surface-variant">Confirma tu cuenta para recibir notificaciones de tus regalos.</p>
           </div>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
@@ -33,7 +33,7 @@ function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () 
           </button>
           <button
             onClick={onRefresh}
-            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-gray-700 bg-white rounded-lg border border-amber-200 shadow-sm hover:bg-gray-50 transition-colors min-h-[36px]"
+            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-on-surface-variant bg-surface rounded-lg border border-amber-200 shadow-sm hover:bg-surface-container-low transition-colors min-h-[36px]"
           >
             Ya lo verifiqué
           </button>
@@ -46,14 +46,14 @@ function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () 
 function ConfirmModal({ message, onConfirm, onClose, loading }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl text-center animate-zoom-in">
+      <div className="w-full max-w-md bg-surface dark:bg-inverse-surface p-8 rounded-3xl shadow-2xl text-center animate-zoom-in">
         <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="material-symbols-outlined text-4xl">warning</span>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">¿Estás seguro?</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{message}</p>
+        <h2 className="text-lg font-bold text-on-surface dark:text-inverse-on-surface mb-2">¿Estás seguro?</h2>
+        <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-8">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low dark:hover:bg-inverse-surface transition-colors">
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-red-500 hover:opacity-90 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50">
@@ -165,24 +165,24 @@ export default function Dashboard() {
     return (
       <div>
         <div className="flex items-center justify-between mb-8">
-          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-          <div className="h-10 w-40 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-8 w-48 bg-surface-container-highest dark:bg-inverse-surface rounded-lg animate-pulse" />
+          <div className="h-10 w-40 bg-surface-container-highest dark:bg-inverse-surface rounded-xl animate-pulse" />
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl p-6 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                <div className="w-10 h-10 rounded-xl bg-surface-container-highest dark:bg-inverse-surface animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-surface-container-highest dark:bg-inverse-surface rounded animate-pulse" />
+                  <div className="h-3 w-1/2 bg-surface-container-highest dark:bg-inverse-surface rounded animate-pulse" />
                 </div>
               </div>
-              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+              <div className="h-2 bg-surface-container-highest dark:bg-inverse-surface rounded-full animate-pulse" />
               <div className="flex gap-2">
-                <div className="h-10 flex-1 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+                <div className="h-10 flex-1 bg-surface-container-highest dark:bg-inverse-surface rounded-lg animate-pulse" />
+                <div className="h-10 w-10 bg-surface-container-highest dark:bg-inverse-surface rounded-lg animate-pulse" />
+                <div className="h-10 w-10 bg-surface-container-highest dark:bg-inverse-surface rounded-lg animate-pulse" />
               </div>
             </div>
           ))}
@@ -203,24 +203,27 @@ export default function Dashboard() {
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white font-outfit">Mis Eventos</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {eventCount} evento{eventCount !== 1 ? 's' : ''} • {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface dark:text-inverse-on-surface font-outfit">
+            Mis Eventos <span className="text-surface-variant dark:text-on-surface-variant/40 font-normal">({eventCount})</span>
+          </h1>
+          <p className="text-sm text-on-surface-variant dark:text-surface-variant mt-1">
+            Gestiona tus listas de regalos y fondos.
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all text-sm min-h-[44px]"
+          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
         >
-          + Nuevo Evento
+          <span className="material-symbols-outlined text-lg">add</span>
+          <span className="hidden sm:inline">Nuevo Evento</span>
         </button>
       </div>
 
       {events.length === 0 ? (
-        <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/20">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-3xl mx-auto">
-            {ONBOARDING_TYPES.map((type) => (
+        <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest/50 dark:bg-inverse-surface/10">
+          <h2 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-8 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {ONBOARDING_TYPES.slice(0, 3).map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -231,9 +234,17 @@ export default function Dashboard() {
                 aria-label={`Crear evento de ${EVENT_LABELS[type]}`}
               >
                 <span className="text-4xl">{EVENT_ICONS[type]}</span>
-                <span className="font-bold text-sm text-gray-700 dark:text-gray-300">{EVENT_LABELS[type]}</span>
+                <span className="font-bold text-sm text-on-surface-variant dark:text-surface-variant">{EVENT_LABELS[type]}</span>
               </button>
             ))}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
+              aria-label="Crear otro tipo de evento"
+            >
+              <span className="text-4xl">✨</span>
+              <span className="font-bold text-sm text-on-surface-variant dark:text-surface-variant">Otro</span>
+            </button>
           </div>
         </section>
       ) : (
@@ -264,14 +275,14 @@ export default function Dashboard() {
                         )}
                       </div>
 
-                      <h3 className="font-bold text-gray-900 dark:text-white mb-2 truncate">{event.title}</h3>
+                      <h3 className="font-bold text-on-surface dark:text-inverse-on-surface mb-2 truncate">{event.title}</h3>
 
                       <div className="space-y-3 mb-6">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">{total} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
+                          <span className="text-on-surface-variant dark:text-surface-variant">{total} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
                           <span className="font-bold" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
                         </div>
-                        <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${progress}%`, background: `linear-gradient(to right, ${theme.primary}, ${theme.dark})` }}
@@ -287,14 +298,14 @@ export default function Dashboard() {
                             <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">COP</span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 text-sm font-medium text-gray-400 opacity-60">
+                          <div className="flex items-center gap-2 text-sm font-medium text-surface-variant opacity-60">
                             <span className="material-symbols-outlined text-sm">payments</span>
                             Sin fondo configurado
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex items-center gap-2 pt-4 border-t border-outline-variant/30">
                         <Link
                           to={`/event/${event.id}`}
                           className="flex-1 text-center px-3 py-2.5 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all hover:opacity-90"
@@ -305,7 +316,7 @@ export default function Dashboard() {
                         </Link>
                         <button
                           onClick={() => copyLink(event.slug)}
-                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant rounded-xl text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-inverse-surface transition-colors"
                           aria-label={`Copiar enlace de ${event.title}`}
                         >
                           <span className="material-symbols-outlined text-sm">link</span>
@@ -313,7 +324,7 @@ export default function Dashboard() {
                         <button
                           onClick={() => setDeleteConfirm(event.id)}
                           disabled={deleting === event.id}
-                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-gray-200 dark:border-gray-700 rounded-xl text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant rounded-xl text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
                           aria-label={`Eliminar ${event.title}`}
                         >
                           {deleting === event.id ? '...' : <span className="material-symbols-outlined text-sm">delete</span>}
@@ -382,7 +393,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
       </div>
 
       <div>
-        <label htmlFor="title" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor="title" className="block text-sm font-bold text-on-surface-variant dark:text-surface-variant mb-2">
           Nombre del evento
         </label>
         <input
@@ -390,14 +401,14 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          className="w-full rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="Ej: Boda de María y Juan"
           autoFocus
         />
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor="phone" className="block text-sm font-bold text-on-surface-variant dark:text-surface-variant mb-2">
           Celular de contacto (Opcional)
         </label>
         <input
@@ -405,7 +416,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="tel"
           value={formData.hostPhone}
           onChange={(e) => setFormData({ ...formData, hostPhone: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          className="w-full rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="+57 300 000 0000"
         />
       </div>
@@ -428,13 +439,13 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-xl bg-white dark:bg-gray-800 rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
-        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6 sm:hidden" />
+      <div className="relative w-full max-w-xl bg-surface dark:bg-inverse-surface rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div className="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto mb-6 sm:hidden" />
         <div className="flex justify-between items-start mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white font-outfit">Crear nuevo evento</h2>
+          <h2 className="text-xl font-bold text-on-surface dark:text-inverse-on-surface font-outfit">Crear nuevo evento</h2>
           <button
             onClick={onClose}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-surface-variant hover:text-on-surface-variant rounded-full hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors"
             aria-label="Cerrar modal"
           >
             <span className="material-symbols-outlined">close</span>

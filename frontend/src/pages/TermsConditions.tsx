@@ -105,31 +105,31 @@ export default function TermsConditions() {
             <Link to="/" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim text-sm font-medium">
               ← Volver
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{content.title}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{content.subtitle}</p>
+            <h1 className="text-3xl font-bold text-on-surface dark:text-inverse-on-surface mt-2">{content.title}</h1>
+            <p className="text-sm text-on-surface-variant dark:text-surface-variant mt-1">{content.subtitle}</p>
           </div>
           <button
             onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-on-surface-variant dark:text-inverse-on-surface bg-surface dark:bg-inverse-surface border border-outline-variant rounded-xl hover:bg-surface-container-low dark:hover:bg-inverse-surface transition-colors"
           >
             {lang === 'es' ? 'English' : 'Español'}
           </button>
         </div>
 
         <div className="rounded-2xl p-8 sm:p-10 glass-card-premium">
-          <p className="text-gray-600 dark:text-gray-400 mb-8">{content.intro}</p>
+          <p className="text-on-surface-variant dark:text-surface-variant mb-8">{content.intro}</p>
 
           <div className="space-y-8">
             {content.sections.map((section) => (
               <div key={section.title}>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{section.title}</h2>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{section.content}</p>
+                <h2 className="text-xl font-semibold text-on-surface dark:text-inverse-on-surface mb-3">{section.title}</h2>
+                <p className="text-on-surface-variant dark:text-surface-variant leading-relaxed">{section.content}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-10 pt-6 border-t border-outline-variant">
+            <p className="text-sm text-on-surface-variant dark:text-surface-variant">
               {content.footer.replace('{year}', String(new Date().getFullYear()))}
             </p>
           </div>

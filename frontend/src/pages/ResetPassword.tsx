@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -49,19 +50,22 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
-        <div className="w-full max-w-md text-center">
-          <span className="text-5xl mb-4 block">✅</span>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Contraseña actualizada</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">Tu contraseña se ha restablecido correctamente.</p>
-          <Link
-            to="/login"
-            className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-          >
-            Iniciar sesión
-          </Link>
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4 pb-24 sm:pb-0">
+          <div className="w-full max-w-md text-center">
+            <span className="text-5xl mb-4 block">✅</span>
+            <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-2">Contraseña actualizada</h1>
+            <p className="text-on-surface-variant dark:text-surface-variant mb-6">Tu contraseña se ha restablecido correctamente.</p>
+            <Link
+              to="/login"
+              className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px]"
+            >
+              Iniciar sesión
+            </Link>
+          </div>
         </div>
-      </div>
+        <AuthBottomNav />
+      </>
     );
   }
 
@@ -71,7 +75,7 @@ export default function ResetPassword() {
         <title>Nueva Contraseña - Fiesta y Lista</title>
         <meta property="og:title" content="Nueva Contraseña - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4 pb-24 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
@@ -80,13 +84,13 @@ export default function ResetPassword() {
                 Fiesta y Lista
               </span>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nueva Contraseña</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Ingresa tu nueva contraseña</p>
+            <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface">Nueva Contraseña</h1>
+            <p className="text-on-surface-variant dark:text-surface-variant mt-1">Ingresa tu nueva contraseña</p>
           </div>
 
           <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 space-y-5">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                 Nueva contraseña
               </label>
               <input
@@ -94,7 +98,7 @@ export default function ResetPassword() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
                 autoComplete="new-password"
                 autoFocus
@@ -102,7 +106,7 @@ export default function ResetPassword() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                 Confirmar contraseña
               </label>
               <input
@@ -110,7 +114,7 @@ export default function ResetPassword() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Repite la contraseña"
                 autoComplete="new-password"
               />
@@ -119,13 +123,14 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
             >
               {loading ? <LoadingSpinner size="sm" /> : 'Restablecer contraseña'}
             </button>
           </form>
         </div>
       </div>
+      <AuthBottomNav />
     </>
   );
 }

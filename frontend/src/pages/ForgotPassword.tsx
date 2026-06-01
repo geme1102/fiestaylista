@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -33,7 +34,8 @@ export default function ForgotPassword() {
         <title>Recuperar Contraseña - Fiesta y Lista</title>
         <meta property="og:title" content="Recuperar Contraseña - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface pb-24 sm:pb-0">
+        <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
@@ -42,8 +44,8 @@ export default function ForgotPassword() {
                 Fiesta y Lista
               </span>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Recuperar Contraseña</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface">Recuperar Contraseña</h1>
+            <p className="text-on-surface-variant dark:text-surface-variant mt-1">
               Te enviaremos un enlace para restablecer tu contraseña
             </p>
           </div>
@@ -51,14 +53,14 @@ export default function ForgotPassword() {
           {sent ? (
             <div className="glass-card rounded-2xl p-8 text-center">
               <span className="text-5xl mb-4 block">📧</span>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Revisa tu bandeja de entrada</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
-                Si existe una cuenta con <strong className="text-gray-700 dark:text-gray-300">{email}</strong>,
+              <h2 className="text-lg font-bold text-on-surface dark:text-inverse-on-surface mb-2">Revisa tu bandeja de entrada</h2>
+              <p className="text-on-surface-variant dark:text-surface-variant mb-6">
+                Si existe una cuenta con <strong className="text-on-surface-variant dark:text-surface-variant">{email}</strong>,
                 recibirás un enlace para restablecer tu contraseña en unos minutos.
               </p>
               <Link
                 to="/login"
-                className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px]"
               >
                 Volver a iniciar sesión
               </Link>
@@ -66,7 +68,7 @@ export default function ForgotPassword() {
           ) : (
             <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                   Correo electrónico
                 </label>
                 <input
@@ -74,7 +76,7 @@ export default function ForgotPassword() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                   autoFocus
@@ -84,12 +86,12 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Enviar enlace'}
               </button>
 
-              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-center text-sm text-on-surface-variant dark:text-surface-variant">
                 <Link to="/login" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                   Volver a iniciar sesión
                 </Link>
@@ -98,6 +100,8 @@ export default function ForgotPassword() {
           )}
         </div>
       </div>
+      </div>
+      <AuthBottomNav />
     </>
   );
 }

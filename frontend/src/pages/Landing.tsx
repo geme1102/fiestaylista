@@ -105,8 +105,8 @@ function FeatureIcon3D({ icon, title, reaction }: { icon: string; title: string;
           </span>
         ))}
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-fluid-body">{FEATURES.find(f => f.title === title)?.desc}</p>
+      <h3 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-2 group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors">{title}</h3>
+      <p className="text-on-surface-variant dark:text-surface-variant text-fluid-body">{FEATURES.find(f => f.title === title)?.desc}</p>
     </div>
   );
 }
@@ -186,9 +186,9 @@ function SocialProofFloating() {
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
               className="absolute left-1/2 -translate-x-1/2 w-max"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-amber-200/30 dark:border-amber-800/20 shadow-lg shadow-primary/5">
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md border border-amber-200/30 dark:border-amber-800/20 shadow-lg shadow-primary/5">
                 <span className="text-lg">{proof.icon}</span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-on-surface dark:text-inverse-on-surface">
                   <strong className="text-primary dark:text-primary-fixed-dim">{proof.name}</strong> {proof.action}
                 </span>
               </div>
@@ -231,14 +231,14 @@ function CategoryCard3D({ type, index }: { type: typeof EVENT_TYPES[number]; ind
         </div>
 
         <span
-          className="text-base font-bold text-gray-800 dark:text-white font-outfit tracking-tight group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors duration-300"
+          className="text-base font-bold text-on-surface dark:text-inverse-on-surface font-outfit tracking-tight group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors duration-300"
           style={{ transform: 'translateZ(20px)' }}
         >
           {type.label}
         </span>
 
         <span
-          className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-primary/70 transition-colors duration-300"
+          className="text-xs text-surface-variant group-hover:text-primary/70 transition-colors duration-300"
           style={{ transform: 'translateZ(10px)' }}
         >
           Ver más →
@@ -290,7 +290,7 @@ export default function Landing() {
                 <>
                   <Link
                     to="/login"
-                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface dark:text-surface-variant dark:hover:text-inverse-on-surface transition-colors"
                   >
                     Entrar a mi Evento
                   </Link>
@@ -338,8 +338,8 @@ export default function Landing() {
             </motion.div>
 
             {/* Main Headline */}
-            <h1 className="text-fluid-hero font-extrabold tracking-tight text-gray-900 dark:text-white mb-3 font-outfit leading-[1.1]">
-              <span className="text-gray-800 dark:text-white">La forma más hermosa de</span>
+            <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface dark:text-inverse-on-surface mb-3 font-outfit leading-[1.1]">
+              <span className="text-on-surface dark:text-inverse-on-surface">La forma más hermosa de</span>
               <span className="block bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent relative min-h-[1.3em] mt-1">
                 <span className="relative">
                   {typedText}
@@ -349,7 +349,7 @@ export default function Landing() {
             </h1>
 
             {/* Subtitle */}
-            <p className="max-w-2xl mx-auto text-fluid-body text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+            <p className="max-w-2xl mx-auto text-fluid-body text-on-surface-variant dark:text-surface-variant mb-8 leading-relaxed">
               Tan fácil que hasta los abuelos y tíos pueden regalar sin registrarse.
               <br className="hidden sm:block" />
               Bodas, baby showers, cumpleaños y más — en 2 minutos.
@@ -398,7 +398,7 @@ export default function Landing() {
                   </motion.button>
                   <Link
                     to="/pricing"
-                    className="px-8 py-4 text-gray-600 dark:text-gray-300 glass-ghost rounded-full text-sm font-semibold hover:shadow-lg transition-all"
+                    className="px-8 py-4 text-on-surface-variant glass-ghost rounded-full text-sm font-semibold hover:shadow-lg transition-all"
                   >
                     Ver Planes
                   </Link>
@@ -423,15 +423,15 @@ export default function Landing() {
               transition={{ delay: 1, duration: 0.5 }}
               className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-white/60 dark:bg-gray-800/40 text-gray-600 dark:text-gray-400 shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
                 <span className="text-amber-500">🔒</span>
                 Sin tarjeta de crédito
               </span>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-white/60 dark:bg-gray-800/40 text-gray-600 dark:text-gray-400 shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
                 <span className="text-amber-500">🎁</span>
                 Plan gratis disponible
               </span>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-white/60 dark:bg-gray-800/40 text-gray-600 dark:text-gray-400 shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
                 <span className="text-amber-500">⚡</span>
                 Fácil para todos
               </span>
@@ -458,7 +458,7 @@ export default function Landing() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-6 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-start justify-center p-1.5"
+            className="w-6 h-10 rounded-full border-2 border-outline-variant flex items-start justify-center p-1.5"
           >
             <motion.div className="w-1.5 h-1.5 rounded-full bg-primary" />
           </motion.div>
@@ -466,7 +466,7 @@ export default function Landing() {
       </section>
 
       {/* Category Selector 3D */}
-      <section className="space-fluid-section bg-white/50 dark:bg-gray-900/30 backdrop-blur-sm relative z-10">
+      <section className="space-fluid-section bg-surface/50 dark:bg-inverse-surface/30 backdrop-blur-sm relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -474,10 +474,10 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-3 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-3 font-outfit tracking-tight">
               ¿Qué estás celebrando?
             </h2>
-            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto text-fluid-body">
+            <p className="text-center text-on-surface-variant dark:text-surface-variant mb-12 max-w-xl mx-auto text-fluid-body">
               Elige tu evento y empieza a crear tu lista de regalos en segundos
             </p>
           </motion.div>
@@ -491,7 +491,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="space-fluid-section bg-white dark:bg-gray-900 relative z-10">
+      <section className="space-fluid-section bg-surface dark:bg-inverse-surface relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -499,7 +499,7 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-16 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-16 font-outfit tracking-tight">
               Todo lo que necesitas
             </h2>
           </motion.div>
@@ -520,7 +520,7 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="space-fluid-section bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm overflow-hidden relative z-10">
+      <section className="space-fluid-section bg-surface-container-lowest/70 dark:bg-inverse-surface/30 backdrop-blur-sm overflow-hidden relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -528,10 +528,10 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-gray-900 dark:text-white mb-4 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-4 font-outfit tracking-tight">
               Lo que dicen nuestros usuarios
             </h2>
-            <p className="text-center text-gray-600 dark:text-gray-400 mb-10 max-w-xl mx-auto text-fluid-body">
+            <p className="text-center text-on-surface-variant dark:text-surface-variant mb-10 max-w-xl mx-auto text-fluid-body">
               Miles de personas ya organizan sus eventos con Fiesta y Lista.
             </p>
           </motion.div>
@@ -543,19 +543,19 @@ export default function Landing() {
                   className="w-[300px] sm:w-[340px] shrink-0 rounded-2xl p-6 glass-card-premium"
                 >
                   <GoldStars />
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 mt-3">"{t.text}"</p>
+                  <p className="text-on-surface-variant dark:text-surface-variant text-sm mb-4 mt-3">"{t.text}"</p>
                   <div className="flex items-center gap-3">
                     <div className="relative rounded-full animate-avatar-pulse-ring">
                       <img
                         src={t.avatar}
                         alt={`Avatar de ${t.name}`}
                         loading="lazy"
-                        className="w-10 h-10 rounded-full object-cover bg-gray-100 relative z-10"
+                        className="w-10 h-10 rounded-full object-cover bg-surface-container-high relative z-10"
                       />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</p>
-                      <p className="text-xs text-gray-400">{t.role}</p>
+                      <p className="font-semibold text-on-surface dark:text-inverse-on-surface text-sm">{t.name}</p>
+                      <p className="text-xs text-surface-variant">{t.role}</p>
                     </div>
                   </div>
                 </div>
@@ -607,8 +607,8 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200/50 dark:border-gray-700/50 relative z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="py-12 bg-surface-container-lowest dark:bg-inverse-surface/50 border-t border-outline-variant/50 relative z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-on-surface-variant dark:text-surface-variant">
           <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>
           <div className="flex justify-center gap-6 mt-4">
             <Link to="/pricing" className="hover:text-primary transition-colors">Planes</Link>

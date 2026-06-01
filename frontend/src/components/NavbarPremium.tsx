@@ -51,31 +51,36 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
           {!hideCta && (
             <>
               {isAuthenticated ? (
-                <div className="flex items-center gap-4">
-                  <Link
-                    to="/dashboard"
-                    className="relative overflow-hidden bg-gradient-to-r from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200"
+                <div className="hidden md:flex items-center gap-4">
+                  <button
+                    onClick={() => { /* logout handled in Layout */ }}
+                    className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >
-                    <span className="relative z-10">Ir al Dashboard</span>
-                    <div className="absolute inset-0 shimmer" />
-                  </Link>
-                  <div className="hidden md:flex items-center gap-3 pl-4 border-l border-outline/20">
+                    Cerrar Sesión
+                  </button>
+                  <div className="flex items-center gap-3 pl-4 border-l border-outline/20">
                     <div className="w-10 h-10 rounded-full bg-surface-container-highest border-2 border-primary/20 flex items-center justify-center overflow-hidden">
                       <span className="material-symbols-outlined text-primary">person</span>
                     </div>
+                    <Link
+                      to="/dashboard"
+                      className="bg-primary/10 text-primary px-6 py-2.5 rounded-full text-label-md font-label-md hover:bg-primary/20 active:scale-95 transition-all duration-200"
+                    >
+                      Ir al Dashboard
+                    </Link>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-4">
                   <Link
                     to="/login"
-                    className="hidden md:inline-flex text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+                    className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
                   >
                     Entrar a mi Evento
                   </Link>
                   <Link
                     to="/register"
-                    className="relative overflow-hidden bg-gradient-to-r from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200"
+                    className="relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
                     <div className="absolute inset-0 shimmer" />
@@ -84,6 +89,14 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
               )}
             </>
           )}
+
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden p-2 text-on-surface dark:text-inverse-on-surface min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Menú"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
         </div>
       </div>
     </header>

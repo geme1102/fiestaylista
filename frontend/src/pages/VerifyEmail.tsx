@@ -2,6 +2,7 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -35,7 +36,8 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4">
+    <>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4 pb-24 sm:pb-0">
       <div className="text-center max-w-md">
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
           {status === 'verifying' ? (
@@ -68,5 +70,6 @@ export default function VerifyEmail() {
         )}
       </div>
     </div>
-  );
+    <AuthBottomNav />
+  </>);
 }

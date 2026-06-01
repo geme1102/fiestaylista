@@ -178,12 +178,12 @@ export default function ArcoRights() {
             <Link to="/" className="text-primary hover:text-primary-fixed-dim text-sm font-medium">
               ← {lang === 'es' ? 'Volver' : 'Back'}
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{content.title}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{content.subtitle}</p>
+            <h1 className="text-3xl font-bold text-on-surface dark:text-inverse-on-surface mt-2">{content.title}</h1>
+            <p className="text-sm text-on-surface-variant dark:text-surface-variant mt-1">{content.subtitle}</p>
           </div>
           <button
             onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-on-surface-variant dark:text-inverse-on-surface bg-surface dark:bg-inverse-surface border border-outline-variant rounded-xl hover:bg-surface-container-low dark:hover:bg-inverse-surface transition-colors"
           >
             {lang === 'es' ? 'English' : 'Español'}
           </button>
@@ -191,20 +191,20 @@ export default function ArcoRights() {
 
         {!isAuthenticated ? (
           <div className="rounded-2xl p-8 text-center glass-card-premium">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{content.loginRequired}</p>
+            <p className="text-on-surface-variant dark:text-surface-variant mb-4">{content.loginRequired}</p>
             <Link to="/login" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all">
               {lang === 'es' ? 'Iniciar Sesión' : 'Log In'}
             </Link>
           </div>
         ) : (
           <>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">{content.intro}</p>
+            <p className="text-on-surface-variant dark:text-surface-variant mb-8">{content.intro}</p>
 
             <div className="grid sm:grid-cols-2 gap-6 mb-8">
               <button onClick={handleDownloadData} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.access.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.access.desc}</p>
+                <h3 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-2">{content.access.title}</h3>
+                <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">{content.access.desc}</p>
                 <span className="text-primary font-medium text-sm">
                   {loading ? content.access.loading : content.access.btn}
                 </span>
@@ -212,15 +212,15 @@ export default function ArcoRights() {
 
               <button onClick={() => openForm('rectify')}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.rectify.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.rectify.desc}</p>
+                <h3 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-2">{content.rectify.title}</h3>
+                <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">{content.rectify.desc}</p>
                 <span className="text-primary font-medium text-sm">{content.rectify.btn}</span>
               </button>
 
               <button onClick={handleDeleteAccount} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
                 <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">{content.cancel.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.cancel.desc}</p>
+                <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">{content.cancel.desc}</p>
                 <span className="text-red-600 dark:text-red-400 font-medium text-sm">
                   {loading ? content.cancel.deleting : content.cancel.btn}
                 </span>
@@ -228,8 +228,8 @@ export default function ArcoRights() {
 
               <button onClick={() => openForm('oppose')}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.oppose.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.oppose.desc}</p>
+                <h3 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-2">{content.oppose.title}</h3>
+                <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">{content.oppose.desc}</p>
                 <span className="text-primary font-medium text-sm">{content.oppose.btn}</span>
               </button>
             </div>
@@ -238,22 +238,22 @@ export default function ArcoRights() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowForm(false)}>
                 <form
                   onSubmit={handleSubmitRequest}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-8 w-full max-w-md shadow-2xl"
+                  className="bg-surface dark:bg-inverse-surface rounded-2xl p-8 w-full max-w-md shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-bold text-on-surface dark:text-inverse-on-surface mb-4">
                     {formType === 'rectify' ? content.rectify.title : content.oppose.title}
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
                         {content.form.details}
                       </label>
                       <textarea
                         value={formDetails}
                         onChange={(e) => setFormDetails(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary outline-none resize-none"
                         placeholder={content.form.placeholder}
                         required
                       />
@@ -263,7 +263,7 @@ export default function ArcoRights() {
                     <button
                       type="button"
                       onClick={() => setShowForm(false)}
-                      className="flex-1 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      className="flex-1 py-3 text-on-surface-variant dark:text-inverse-on-surface bg-surface-container-high dark:bg-inverse-surface rounded-xl font-medium hover:bg-surface-container-highest dark:hover:bg-inverse-surface/80 transition-colors"
                     >
                       {lang === 'es' ? 'Cancelar' : 'Cancel'}
                     </button>
@@ -284,21 +284,21 @@ export default function ArcoRights() {
                 onClick={() => { setShowRequests(!showRequests); if (!showRequests) loadRequests(); }}
                 className="flex items-center justify-between w-full"
               >
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{content.history}</h2>
+                <h2 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface">{content.history}</h2>
                 <span className="material-symbols-outlined text-primary">{showRequests ? 'expand_less' : 'expand_more'}</span>
               </button>
 
               {showRequests && (
                 <div className="mt-4">
                   {requests.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{content.noHistory}</p>
+                    <p className="text-sm text-on-surface-variant dark:text-surface-variant">{content.noHistory}</p>
                   ) : (
                     <div className="space-y-3">
                       {requests.map((req: any) => (
-                        <div key={req.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div key={req.id} className="flex items-center justify-between p-3 bg-surface-container-lowest dark:bg-inverse-surface rounded-xl">
                           <div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{req.requestType}</span>
-                            {req.details && <p className="text-xs text-gray-500 mt-0.5">{req.details}</p>}
+                            <span className="text-sm font-medium text-on-surface dark:text-inverse-on-surface capitalize">{req.requestType}</span>
+                            {req.details && <p className="text-xs text-on-surface-variant mt-0.5">{req.details}</p>}
                           </div>
                           <div className="text-right">
                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -308,7 +308,7 @@ export default function ArcoRights() {
                             }`}>
                               {req.status}
                             </span>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-surface-variant mt-1">
                               {new Date(req.createdAt).toLocaleDateString()}
                             </p>
                           </div>

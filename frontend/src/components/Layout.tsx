@@ -49,6 +49,12 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                to="/dashboard"
+                className="hidden md:inline-flex bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg transition-all active:scale-95"
+              >
+                Crear Evento
+              </Link>
               <button
                 onClick={toggleDark}
                 className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
