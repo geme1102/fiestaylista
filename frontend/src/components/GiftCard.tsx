@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
+import { formatCOP } from '../utils/format';
 import type { Gift } from '../types';
 
 interface GiftCardProps {
@@ -12,17 +13,7 @@ interface GiftCardProps {
   easyRead?: boolean;
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.95 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0, scale: 1,
-    transition: { delay: i * 0.06, duration: 0.4, ease: [0.23, 1, 0.32, 1] as const }
-  }),
-  hover: { y: -6, scale: 1.02, transition: { duration: 0.25, ease: 'easeOut' as const } },
-  tap: { scale: 0.97, transition: { duration: 0.12 } }
-};
-
-export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin, easyRead }: GiftCardProps) {
+export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin }: GiftCardProps) {
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
 
@@ -30,138 +21,212 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
     e.currentTarget.src = '/icons/gift-generic.svg';
   };
 
+  // State 3: Apartado (claimed)
   if (gift.isClaimed) {
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, x: 30 }}
-        animate={{ opacity: 0.75, x: 0 }}
-        exit={{ opacity: 0, x: -30 }}
-        className={`relative rounded-2xl overflow-hidden border border-pink-200/20 dark:border-pink-900/15 bg-gradient-to-br from-pink-50/60 to-rose-50/60 dark:from-pink-950/20 dark:to-rose-950/20 backdrop-blur-sm ${easyRead ? 'p-5' : 'p-4'}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 0.9, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="glass-card-premium rounded-xl overflow-hidden opacity-90 relative"
       >
-        <div className="absolute top-3 right-3 z-10">
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[11px] font-bold rounded-full shadow-lg shadow-pink-500/25 animate-glow-pulse-soft">
-            <span>💝</span>
-            Apartado con amor por {gift.claimedBy}
-          </span>
-        </div>
-        <div className={`flex items-center gap-4 relative ${easyRead ? 'pt-2' : 'pt-1'}`}>
-          <div className={`relative shrink-0 rounded-xl overflow-hidden opacity-40 saturate-[0.3] blur-[1px] ${easyRead ? 'w-16 h-16' : 'w-14 h-14'}`}>
-            <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" onError={onImgError} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className={`font-medium text-gray-400 dark:text-gray-500 line-through truncate ${easyRead ? 'text-lg' : 'text-sm'}`}>
-              {gift.name}
-            </p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className={`font-semibold text-pink-600 dark:text-pink-400 ${easyRead ? 'text-base' : 'text-xs'}`}>
-                💝 {gift.claimedBy}
+        <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            className="w-full h-full object-cover blur-sm opacity-60"
+            onError={onImgError}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-primary/20 shadow-xl">
+              <span className="text-primary font-label-md text-label-md flex items-center gap-2">
+                💝 Apartado con amor por {gift.claimedBy}
               </span>
             </div>
           </div>
-          {isAdmin && onFree && (
+        </div>
+        <div className="p-5">
+          <h3 className="font-headline-md text-headline-md text-on-surface-variant/60 line-through mb-1">{gift.name}</h3>
+          {gift.targetAmount && (
+            <p className="text-on-surface-variant/50 text-body-md">
+              {formatCOP(gift.targetAmount)}
+            </p>
+          )}
+        </div>
+        {isAdmin && onFree && (
+          <div className="absolute top-2 right-2 z-10">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onFree(gift.id)}
-              className="shrink-0 px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 dark:bg-primary/20 rounded-lg hover:bg-primary/20 transition-colors min-h-[36px]"
+              className="px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 dark:bg-primary/20 rounded-lg hover:bg-primary/20 transition-colors min-h-[36px]"
             >
               Liberar
             </motion.button>
-          )}
-          {isAdmin && onDelete && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onDelete(gift.id)}
-              className="shrink-0 px-3 py-1.5 text-xs font-medium text-outline-variant hover:text-error transition-colors min-h-[36px]"
-            >
-              ✕
-            </motion.button>
-          )}
-        </div>
+          </div>
+        )}
       </motion.div>
     );
   }
 
-  return (
-    <motion.div
-      layout
-      custom={0}
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      whileHover="hover"
-      whileTap="tap"
-      className={`relative rounded-2xl overflow-hidden cursor-default group ${easyRead ? 'p-6' : 'p-5'} glass-card-premium hover:shadow-lg hover:shadow-rose-500/5 transition-all duration-300`}
-    >
-      <div className="absolute inset-0 opacity-[0.02] bg-gradient-to-br from-rose-100/20 to-fuchsia-100/20 dark:from-rose-900/10 dark:to-fuchsia-900/10" />
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="animate-card-shine w-full h-full" />
-      </div>
+  const progressPercent = gift.isCollective && gift.targetAmount && gift.targetAmount > 0
+    ? Math.min((gift.collectedAmount || 0) / gift.targetAmount * 100, 100)
+    : 0;
 
-      <div className="relative flex flex-col gap-4">
-        <div className="flex items-start gap-4">
-          <div className={`relative shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-rose-50 to-fuchsia-50 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300 ring-1 ring-rose-200/50 dark:ring-rose-800/30 ${easyRead ? 'w-20 h-20' : 'w-16 h-16'}`}>
-            <img src={image} alt={gift.name} loading="lazy" className="w-full h-full object-contain" onError={onImgError} />
-          </div>
-
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span
-                className="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
-                style={{
-                  backgroundColor: category.color + '18',
-                  color: category.color,
-                }}
-              >
-                {category.label}
-              </span>
-            </div>
-            <h3 className={`font-semibold text-gray-900 dark:text-white leading-snug font-outfit ${easyRead ? 'text-xl' : 'text-sm'}`}>
-              {gift.name}
-            </h3>
-          </div>
+  const cardContent = (
+    <>
+      {/* Image */}
+      <div className="relative h-56 overflow-hidden">
+        <img
+          src={image}
+          alt={gift.name}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={onImgError}
+        />
+        {/* Category Badge */}
+        <div className="absolute top-4 left-4 bg-primary/90 text-on-primary px-3 py-1 rounded-full text-caption font-label-md flex items-center gap-1 backdrop-blur-md">
+          <span className="material-symbols-outlined text-sm">home</span>
+          {category.label}
         </div>
 
-        {onClaim && (
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: '0 4px 20px rgba(244,63,94,0.35)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
-            disabled={claimingId === gift.id}
-            className={`w-full min-h-[48px] font-bold text-white rounded-xl transition-all disabled:opacity-50 bg-gradient-to-r from-rose-500 to-fuchsia-500 shadow-md shadow-rose-500/20 hover:shadow-lg hover:shadow-rose-500/30 ${easyRead ? 'py-4 text-lg' : 'py-3 text-sm'}`}
-          >
-            {claimingId === gift.id ? (
-              <span className="flex items-center justify-center gap-1.5">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                ...
+        {/* Collective overlay */}
+        {gift.isCollective && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+            <div className="absolute bottom-4 left-4 right-4 text-white">
+              <span className="bg-secondary-container/90 text-on-secondary-container px-3 py-1 rounded-full text-caption font-label-md backdrop-blur-md inline-block mb-2">
+                Regalo Colectivo
               </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <span>🎁</span>
-                Regalar este detalle
-              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Admin overlay */}
+        {isAdmin && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-4 transition-opacity">
+            {onFree && (
+              <button
+                onClick={() => onFree(gift.id)}
+                className="bg-emerald-600 text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-emerald-700 active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined">check_circle</span>
+                <span className="text-[10px] font-bold mt-1">Liberar</span>
+              </button>
             )}
-          </motion.button>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(gift.id)}
+                className="bg-error text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-red-700 active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+                <span className="text-[10px] font-bold mt-1">Eliminar</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Admin badge */}
+        {isAdmin && (
+          <div className="absolute top-4 right-4 z-10 bg-inverse-surface text-inverse-on-surface px-2 py-1 rounded text-[10px] uppercase tracking-wider font-bold">
+            Admin View
+          </div>
         )}
       </div>
 
-      {isAdmin && onDelete && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onDelete(gift.id)}
-            className="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors"
-          >
-            ✕
-          </motion.button>
-        </div>
-      )}
+      {/* Content */}
+      <div className="p-5">
+        {gift.isCollective ? (
+          <>
+            <h3 className="font-headline-md text-headline-md text-on-surface mb-2">{gift.name}</h3>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-caption font-label-md text-on-surface-variant">
+                <span>{gift.collectedAmount ? formatCOP(gift.collectedAmount) : '$0'} recaudados</span>
+                {gift.targetAmount && <span>Meta: {formatCOP(gift.targetAmount)}</span>}
+              </div>
+              <div className="h-3 w-full bg-surface-container-high rounded-full overflow-hidden relative">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-primary-container shimmer-bg"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <p className="text-primary font-label-md text-label-md text-right">{Math.round(progressPercent)}% completado</p>
+            </div>
+            {onClaim && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
+                disabled={claimingId === gift.id}
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-label-md text-label-md rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {claimingId === gift.id ? '...' : 'Contribuir al sueño'}
+              </motion.button>
+            )}
+          </>
+        ) : (
+          <>
+            <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{gift.name}</h3>
+            {gift.targetAmount && (
+              <p className="text-on-surface-variant text-body-md mb-4">{formatCOP(gift.targetAmount)}</p>
+            )}
+            {!gift.targetAmount && (
+              <p className="text-on-surface-variant text-body-md mb-4">Set de regalo ideal para {category.label.toLowerCase()}.</p>
+            )}
+            {onClaim && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
+                disabled={claimingId === gift.id}
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-label-md text-label-md rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined">card_giftcard</span>
+                {claimingId === gift.id ? '...' : '🎁 Regalar este detalle'}
+              </motion.button>
+            )}
+            {isAdmin && onDelete && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={() => onDelete(gift.id)}
+                  className="text-outline-variant hover:text-error transition-colors text-sm"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  // State 4: Admin View (wrapped in glass-card with border)
+  if (isAdmin) {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card-premium rounded-xl overflow-hidden border-2 border-primary/10 shadow-lg relative group"
+      >
+        {cardContent}
+      </motion.div>
+    );
+  }
+
+  // States 1 & 2: Individual / Collective (guest view)
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      className="glass-card-premium rounded-xl overflow-hidden shadow-lg group"
+    >
+      {cardContent}
     </motion.div>
   );
 }

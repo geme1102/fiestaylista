@@ -49,14 +49,14 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
         <div className="w-full max-w-md text-center">
           <span className="text-5xl mb-4 block">✅</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Contraseña actualizada</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">Tu contraseña se ha restablecido correctamente.</p>
           <Link
             to="/login"
-            className="inline-flex px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             Iniciar sesión
           </Link>
@@ -71,12 +71,12 @@ export default function ResetPassword() {
         <title>Nueva Contraseña - Fiesta y Lista</title>
         <meta property="og:title" content="Nueva Contraseña - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
               <span className="text-3xl" aria-hidden="true">🎉</span>
-              <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>
             </Link>
@@ -94,7 +94,7 @@ export default function ResetPassword() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
                 autoComplete="new-password"
                 autoFocus
@@ -110,7 +110,7 @@ export default function ResetPassword() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Repite la contraseña"
                 autoComplete="new-password"
               />
@@ -119,7 +119,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-6 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {loading ? <LoadingSpinner size="sm" /> : 'Restablecer contraseña'}
             </button>

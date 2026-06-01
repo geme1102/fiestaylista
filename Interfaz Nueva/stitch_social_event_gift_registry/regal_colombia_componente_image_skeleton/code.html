@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffdcc3",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#ffb0cd",
+                    "tertiary-container": "#6063ee",
+                    "tertiary": "#4648d4",
+                    "surface-container-low": "#f4f3f2",
+                    "on-secondary-container": "#663500",
+                    "on-primary-fixed": "#3e0022",
+                    "primary-container": "#d23284",
+                    "surface-container-high": "#e9e8e7",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#eeeeed",
+                    "error": "#ba1a1a",
+                    "surface-bright": "#faf9f8",
+                    "on-secondary-fixed": "#2f1500",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "background": "#faf9f8",
+                    "secondary": "#904d00",
+                    "tertiary-fixed": "#e1e0ff",
+                    "outline": "#8b7079",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "on-error": "#ffffff",
+                    "surface": "#faf9f8",
+                    "on-tertiary-fixed": "#07006c",
+                    "secondary-container": "#fe932c",
+                    "surface-variant": "#e3e2e1",
+                    "error-container": "#ffdad6",
+                    "primary": "#b10e6b",
+                    "on-primary-fixed-variant": "#8c0053",
+                    "inverse-primary": "#ffb0cd",
+                    "outline-variant": "#debec8",
+                    "on-surface-variant": "#574048",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "surface-tint": "#b4136d",
+                    "on-surface": "#1a1c1c",
+                    "inverse-on-surface": "#f1f0ef",
+                    "surface-dim": "#dadad9",
+                    "inverse-surface": "#2f3130",
+                    "primary-fixed": "#ffd9e4",
+                    "on-tertiary-container": "#fffbff",
+                    "surface-container-highest": "#e3e2e1",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "on-background": "#1a1c1c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-gap-desktop": "80px",
+                    "section-gap-mobile": "40px",
+                    "container-margin": "20px",
+                    "gutter": "16px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Outfit"],
+                    "display-lg": ["Outfit"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-md": ["Outfit"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Outfit"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "800"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .pearl-bg {
+            background: radial-gradient(circle at top left, #FAF9F8 0%, #F4F3F2 100%);
+        }
+        .aspect-4-3 {
+            aspect-ratio: 4 / 3;
+        }
+        .image-reveal {
+            animation: reveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes reveal {
+            from { opacity: 0; transform: scale(1.02); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="pearl-bg min-h-screen text-on-surface">
+<!-- Top Navigation Bar -->
+<header class="bg-surface/80 backdrop-blur-lg border-b border-white/20 shadow-sm fixed top-0 z-50 flex items-center justify-between px-container-margin h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">Regalí Colombia</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-label-md text-label-md text-on-surface-variant hidden md:block">Componente de Imagen</span>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional studio headshot of a stylish person against a neutral background. The lighting is soft and high-key, maintaining the premium celebratory aesthetic of the brand with subtle rose-tinted reflections." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxnmsiFgjzr1KKtd5T61tFS1ua9fBWT5N2Z88TADbwIDkIR0FtbBmzD-skE4peEJy28Bof2Nv9H5zAMoY_SgkQGMc9eQE2hiLxGFLJEdVm3NlPa2HPmfitdgsFShEg_cU-6pUlLK7KxcPAH2IJwJd2BJ3OSuSYB-aSvI2aAiiheE3jtmuuer5IegYXkOpCaV4w2bwe-0LjIVADRTrCy5B64wOdP9Flt7hOgcUbU0d3WnmkgvN2zuJPHd34s5VQWLVBq9AnmPoGyBY"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-margin max-w-5xl mx-auto">
+<!-- Page Title -->
+<div class="mb-12 text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Estados de Visualización</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Exploración de componentes de imagen con transiciones fluidas y fallbacks elegantes.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- SECTION 1: LOADING STATE -->
+<section class="flex flex-col gap-4">
+<div class="glass-card rounded-xl p-4 shadow-sm">
+<div class="aspect-4-3 w-full bg-surface-container-high rounded-lg overflow-hidden relative">
+<!-- Skeleton Pulse Animation -->
+<div class="absolute inset-0 animate-pulse bg-gradient-to-r from-surface-container-high via-surface-container/50 to-surface-container-high"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline-variant/30 text-5xl" data-icon="image">image</span>
+</div>
+</div>
+<div class="mt-4 space-y-2">
+<div class="h-4 w-3/4 bg-surface-container-highest animate-pulse rounded"></div>
+<div class="h-3 w-1/2 bg-surface-container-highest animate-pulse rounded"></div>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-label-md text-label-md text-primary uppercase tracking-widest">Cargando (Loading)</h3>
+<p class="font-caption text-caption text-on-surface-variant mt-1">Skeleton animado para mantener la estructura visual mientras se descarga el recurso.</p>
+</div>
+</section>
+<!-- SECTION 2: LOADED STATE -->
+<section class="flex flex-col gap-4">
+<div class="glass-card rounded-xl p-4 shadow-sm">
+<div class="aspect-4-3 w-full bg-surface-container rounded-lg overflow-hidden group relative">
+<img class="w-full h-full object-cover image-reveal" data-alt="A luxury gift box wrapped in high-quality textured cream paper with a voluminous metallic rose gold ribbon. The setting is a bright, airy interior with soft natural light catching the edges of the ribbon. The overall atmosphere is sophisticated and celebratory, matching the brand's premium aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF8AEOacW1tUzMNyS8ECwJDu8q2VpdPmSmKUA5YF-Xftxbhk81d6ZpoRJhaDw1HGXRH16pN-BNjvsxM49SnN8M-4kHNShNSomYvsuYTf0wA1555YGEigh9MmyBCCE5dAPHREczMh5l4HJNzzkO8XwE9ZWFysWwCRNlr2sgf6Y5uBCGxI17AWdFIm2eubnDZ_RSV8esb_86OQZ_fFax6tbTC-pcENye-WHrBruxnlgJloH0sEVTkpFhFLmK6zPRvIRxaWaJ0IC0qOI"/>
+<div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+</div>
+<div class="mt-4">
+<h4 class="font-label-md text-label-md text-on-surface">Caja de Regalo Premium</h4>
+<p class="font-caption text-caption text-on-surface-variant">Disponible en lista de bodas</p>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-label-md text-label-md text-primary uppercase tracking-widest">Cargado (Loaded)</h3>
+<p class="font-caption text-caption text-on-surface-variant mt-1">Renderizado final con transición de opacidad suave y efectos de interacción (hover).</p>
+</div>
+</section>
+<!-- SECTION 3: ERROR STATE -->
+<section class="flex flex-col gap-4">
+<div class="glass-card rounded-xl p-4 shadow-sm">
+<div class="aspect-4-3 w-full bg-surface-container-low rounded-lg overflow-hidden flex flex-col items-center justify-center gap-3 border-2 border-dashed border-outline-variant/30">
+<div class="w-16 h-16 rounded-full bg-error-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-error/40 text-4xl" data-icon="broken_image">broken_image</span>
+</div>
+<div class="text-center px-4">
+<span class="font-label-md text-label-md text-on-surface-variant/60">No se pudo cargar</span>
+</div>
+</div>
+<div class="mt-4">
+<h4 class="font-label-md text-label-md text-on-surface-variant/40 italic">Elemento no disponible</h4>
+<p class="font-caption text-caption text-on-surface-variant/40">Error de conexión</p>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-label-md text-label-md text-primary uppercase tracking-widest">Error (Fallback)</h3>
+<p class="font-caption text-caption text-on-surface-variant mt-1">Estado de respaldo cuando la imagen no está disponible o existe un fallo de red.</p>
+</div>
+</section>
+</div>
+<!-- Technical Specs Section (Bonus for UI Showcase) -->
+<div class="mt-16 glass-card rounded-2xl p-8 border-primary/10">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Especificaciones del Componente</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+<div class="p-4 bg-white/40 rounded-xl">
+<span class="block font-label-md text-primary mb-1">Ratio</span>
+<span class="font-body-md font-bold">4:3 Estricto</span>
+</div>
+<div class="p-4 bg-white/40 rounded-xl">
+<span class="block font-label-md text-primary mb-1">Animación</span>
+<span class="font-body-md font-bold">Pulse 1.5s</span>
+</div>
+<div class="p-4 bg-white/40 rounded-xl">
+<span class="block font-label-md text-primary mb-1">Corner</span>
+<span class="font-body-md font-bold">rounded-lg</span>
+</div>
+<div class="p-4 bg-white/40 rounded-xl">
+<span class="block font-label-md text-primary mb-1">Blur</span>
+<span class="font-body-md font-bold">12px Glass</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile only rule) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] flex justify-around items-center h-20 px-4 pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="card_giftcard">card_giftcard</span>
+<span class="font-label-md text-label-md">Registry</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full translate-y-[-2px] transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-md text-label-md">Explore</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Account</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for reloading states (simulated)
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.classList.add('scale-[1.01]');
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('scale-[1.01]');
+                });
+            });
+        });
+    </script>
+</body></html>

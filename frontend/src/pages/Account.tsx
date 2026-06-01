@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription, cancelSubscription } from '../services/mercadopago';
 import { apiClient } from '../services/api';
@@ -24,6 +24,7 @@ function getUserAvatar(email: string): string {
 
 export default function Account() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -69,7 +70,7 @@ export default function Account() {
     try {
       await apiClient.del('/api/auth/arco/my-account');
       showToast('Cuenta eliminada permanentemente', 'success');
-      setTimeout(() => { window.location.href = '/'; }, 2000);
+      setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     }
@@ -87,7 +88,7 @@ export default function Account() {
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
           <div className="flex items-center gap-4 mb-6">
-            <img src={avatarSrc} alt="Avatar del usuario" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-pink-200" />
+            <img src={avatarSrc} alt="Avatar del usuario" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-gray-100 ring-2 ring-primary/20" />
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Información Personal</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">Tus datos de cuenta</p>
@@ -172,7 +173,7 @@ export default function Account() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownloadData}
-            className="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+            className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
           >
             Descargar mis datos
           </button>

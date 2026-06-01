@@ -210,7 +210,7 @@ export default function Dashboard() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-rose-500/25 transition-all text-sm min-h-[44px]"
+          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all text-sm min-h-[44px]"
         >
           + Nuevo Evento
         </button>
@@ -253,7 +253,7 @@ export default function Dashboard() {
                     <div className="h-2" style={{ background: theme.primary }} />
                     <div className="p-6 flex-1">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/20 rounded-2xl flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 bg-primary-fixed dark:bg-primary/20 rounded-2xl flex items-center justify-center text-2xl">
                           {EVENT_ICONS[event.eventType]}
                         </div>
                         {isBoosted && (
@@ -370,8 +370,8 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
               className={cn(
                 'flex flex-col items-center p-4 rounded-2xl border-2 transition-all',
                 formData.eventType === type
-                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/10 text-rose-600'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-700 text-gray-600 dark:text-gray-400',
+                  ? 'border-primary bg-primary-fixed dark:bg-primary/10 text-primary'
+                  : 'border-outline-variant hover:border-primary text-on-surface-variant dark:hover:border-primary',
               )}
             >
               <span className="text-2xl mb-1">{EVENT_ICONS[type]}</span>
@@ -390,7 +390,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="Ej: Boda de María y Juan"
           autoFocus
         />
@@ -405,7 +405,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="tel"
           value={formData.hostPhone}
           onChange={(e) => setFormData({ ...formData, hostPhone: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="+57 300 000 0000"
         />
       </div>
@@ -414,7 +414,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
         type="submit"
         disabled={creating || !formData.title.trim()}
         onClick={handleCreate}
-        className="w-full bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
+        className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
       >
         {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}
       </button>

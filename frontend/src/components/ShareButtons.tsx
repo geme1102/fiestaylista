@@ -14,44 +14,44 @@ export default function ShareButtons({ slug, title }: { slug: string; title: str
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#22c55e] text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all active:scale-95"
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button
+        onClick={() => window.open(whatsappUrl, '_blank')}
+        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#22c55e] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#22c55e]/20"
       >
-        <span className="material-symbols-outlined text-sm">chat</span> WhatsApp
-      </a>
+        <span className="material-symbols-outlined text-3xl">chat</span>
+        <span className="font-label-md text-caption uppercase tracking-wider">WhatsApp</span>
+      </button>
       <button
         onClick={handleCopy}
         className={cn(
-          'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95',
+          'flex flex-col items-center justify-center gap-2 p-4 rounded-xl transition-all active:scale-95 border',
           copied
-            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
+            ? 'bg-green-50 border-green-200 text-green-700'
+            : 'bg-[#f3f4f6] text-on-surface-variant hover:bg-surface-container-high border-outline-variant/30'
         )}
-        aria-label="Copiar enlace del evento"
       >
-        <span className="material-symbols-outlined text-sm">{copied ? 'check_circle' : 'link'}</span>
-        {copied ? 'Copiado' : 'Copiar Link'}
+        <span className={cn('material-symbols-outlined text-3xl', copied ? 'text-green-600' : 'text-primary')}>
+          {copied ? 'check_circle' : 'link'}
+        </span>
+        <span className="font-label-md text-caption uppercase tracking-wider">
+          {copied ? '✅ Copiado' : 'Copiar Link'}
+        </span>
       </button>
-      <a
-        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#60a5fa] text-white rounded-xl text-sm font-medium hover:bg-blue-500 transition-all active:scale-95"
+      <button
+        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')}
+        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#60a5fa] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#60a5fa]/20"
       >
-        <span className="material-symbols-outlined text-sm">flutter_dash</span> Twitter
-      </a>
-      <a
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2563eb] text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-all active:scale-95"
+        <span className="material-symbols-outlined text-3xl">flutter_dash</span>
+        <span className="font-label-md text-caption uppercase tracking-wider">Twitter</span>
+      </button>
+      <button
+        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')}
+        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#2563eb] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#2563eb]/20"
       >
-        <span className="material-symbols-outlined text-sm">social_leaderboard</span> Facebook
-      </a>
+        <span className="material-symbols-outlined text-3xl">social_leaderboard</span>
+        <span className="font-label-md text-caption uppercase tracking-wider">Facebook</span>
+      </button>
     </div>
   );
 }

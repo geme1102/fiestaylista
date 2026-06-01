@@ -76,17 +76,19 @@ function AccessibilityToggle({ easyRead, onToggle }: { easyRead: boolean; onTogg
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onToggle}
-      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all backdrop-blur-sm border min-h-[36px] ${
+          className={`px-4 py-2 rounded-xl text-xs font-medium transition-all backdrop-blur-sm border min-h-[36px] flex items-center gap-2 ${
         easyRead
-          ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-300/40 shadow-lg shadow-rose-500/10'
-          : 'bg-white/60 text-gray-500 border-gray-200/50 dark:bg-gray-800/40 dark:text-gray-400 dark:border-gray-700/50'
+          ? 'bg-primary/10 text-primary border-primary/20 shadow-lg shadow-primary/10'
+          : 'glass-card text-on-surface-variant border-white/20'
       }`}
       title={easyRead ? 'Modo normal' : 'Modo Lectura Fácil'}
     >
-      <span className="flex items-center gap-1.5">
-        {easyRead ? '🔤' : '⚙️'}
-        {easyRead ? 'Normal' : 'Lectura Fácil'}
-      </span>
+      {easyRead ? (
+        <span className="material-symbols-outlined text-sm">text_fields</span>
+      ) : (
+        <span className="material-symbols-outlined text-sm">accessibility_new</span>
+      )}
+      <span>{easyRead ? 'Normal' : 'Lectura Fácil'}</span>
     </motion.button>
   );
 }
@@ -98,7 +100,7 @@ function EmptyGiftState() {
       animate={{ opacity: 1, scale: 1 }}
       className="text-center py-16"
     >
-      <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-4xl">
+      <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
         🎁
       </div>
       <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">La lista de regalos se está preparando</p>
@@ -176,13 +178,13 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface">
         <div className="text-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-400 to-fuchsia-500 flex items-center justify-center text-4xl shadow-xl shadow-rose-500/20 animate-float-slow"
+            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-4xl shadow-xl shadow-primary/20 animate-float-slow"
           >
             🎁
           </motion.div>
@@ -194,14 +196,14 @@ export default function EventGuest() {
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4">
         <div className="text-center max-w-sm">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-4xl">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
             😕
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Evento no encontrado</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
-          <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
+          <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
             Ir al inicio
           </a>
         </div>
@@ -388,7 +390,7 @@ export default function EventGuest() {
                   value={claimName}
                   onChange={(e) => setClaimName(e.target.value)}
                   placeholder="Escribe tu nombre para apartar un regalo"
-                  className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-400 transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
+                  className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 />
               </div>
             </div>
@@ -401,8 +403,8 @@ export default function EventGuest() {
                     onClick={() => setCategoryFilter(null)}
                     className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
                       categoryFilter === null
-                        ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20'
-                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-rose-300'
+  ? 'bg-primary text-on-primary border-primary shadow-md shadow-primary/20'
+  : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary'
                     }`}
                   >
                     🎁 Todos
@@ -414,7 +416,7 @@ export default function EventGuest() {
                       className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
                         categoryFilter === cat.label
                           ? 'text-white shadow-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-rose-300'
+                          : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary'
                       }`}
                       style={{
                         backgroundColor: categoryFilter === cat.label ? cat.color : undefined,
@@ -473,7 +475,7 @@ export default function EventGuest() {
 
           {/* Footer */}
           <div className={`text-center pt-8 border-t border-gray-200 dark:border-gray-700 ${easyReadMode ? 'text-gray-500' : 'text-sm text-gray-500 dark:text-gray-400'}`}>
-            <p>Hecho con 🎉 por <a href="/" className="text-rose-600 hover:text-rose-700 font-medium">Fiesta y Lista</a></p>
+            <p>Hecho con 🎉 por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
           </div>
         </div>
       </div>

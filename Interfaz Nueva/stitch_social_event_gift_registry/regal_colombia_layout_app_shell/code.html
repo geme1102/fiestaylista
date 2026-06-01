@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Regalí Colombia - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1a1c1c",
+                        "inverse-on-surface": "#f1f0ef",
+                        "on-primary-fixed-variant": "#8c0053",
+                        "background": "#faf9f8",
+                        "secondary-container": "#fe932c",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "surface-container": "#eeeeed",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2f3130",
+                        "surface-variant": "#e3e2e1",
+                        "on-primary-fixed": "#3e0022",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "primary": "#b10e6b",
+                        "on-primary-container": "#fffbff",
+                        "on-tertiary-fixed": "#07006c",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "surface-container-low": "#f4f3f2",
+                        "primary-container": "#d23284",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-tint": "#b4136d",
+                        "primary-fixed": "#ffd9e4",
+                        "on-background": "#1a1c1c",
+                        "surface-container-highest": "#e3e2e1",
+                        "surface-dim": "#dadad9",
+                        "on-surface-variant": "#574048",
+                        "surface": "#faf9f8",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#debec8",
+                        "surface-bright": "#faf9f8",
+                        "tertiary-container": "#6063ee",
+                        "secondary": "#904d00",
+                        "outline": "#8b7079",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e9e8e7",
+                        "on-secondary-fixed": "#2f1500",
+                        "primary-fixed-dim": "#ffb0cd",
+                        "tertiary": "#4648d4",
+                        "on-secondary-container": "#663500",
+                        "tertiary-fixed": "#e1e0ff",
+                        "inverse-primary": "#ffb0cd",
+                        "secondary-fixed": "#ffdcc3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "20px",
+                        "base": "4px",
+                        "gutter": "16px",
+                        "section-gap-mobile": "40px",
+                        "section-gap-desktop": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Outfit"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "display-lg": ["Outfit"],
+                        "caption": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Outfit"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Outfit"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #b10e6b 0%, #d23284 100%);
+        }
+        body {
+            background-color: #faf9f8;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .header-anchor {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm shadow-rose-500/10">
+<div class="flex justify-between items-center px-container-margin py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="hidden md:flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="primary-gradient w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20">F</div>
+<span class="font-headline-lg text-headline-lg bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">Regalí Colombia</span>
+</div>
+</div>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex items-center gap-6">
+<a class="bg-primary text-on-primary rounded-full px-4 py-1 font-label-md text-label-md transition-all active:scale-95 transform" href="#">Mis Eventos</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors duration-300" href="#">Planes</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors duration-300" href="#">Mi Cuenta</a>
+</nav>
+<div class="md:hidden">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</div>
+<div class="hidden md:flex items-center gap-4">
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg transition-all active:scale-95">
+                    Crear Evento
+                </button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-24 pb-20 md:pb-12 px-container-margin max-w-7xl mx-auto min-h-screen">
+<header class="mb-10">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">¡Hola, Camilo!</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Bienvenido de nuevo a tu centro de celebraciones.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Active Event Card -->
+<div class="md:col-span-2 glass-card rounded-3xl p-8 relative overflow-hidden group shadow-xl shadow-primary/5">
+<div class="absolute top-0 right-0 w-32 h-32 primary-gradient opacity-10 blur-3xl -mr-16 -mt-16"></div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<div>
+<span class="text-primary font-label-md text-label-md tracking-wider uppercase">Evento Próximo</span>
+<h2 class="font-headline-md text-headline-md mt-1">Boda de Camilo &amp; Elena</h2>
+</div>
+<div class="flex -space-x-3">
+<img alt="Invited User" class="w-10 h-10 rounded-full border-2 border-white" data-alt="A high-quality studio portrait of a smiling woman with warm skin tones and dark hair, set against a clean minimalist background. The lighting is soft and professional, evoking a premium and welcoming brand atmosphere with subtle pink undertones in the highlights to match the Regalí Colombia color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzxpmxaRP1sfrxCrFRSiQhxZAgM-L_7hETU3IBJtdAz08tG-i-SB7BqVRbXOX8vHWaf8d8Kuh4zb1sbaQY2bIjz1QKqH2q325odpzLnI6z0vfupZVEjI1As-YxIv3Aca0R9roNTJNRDdBrwOLVtjpSWFdH1BkJsennQ8SA8w9VpcCRLkMuvlMuaAolcYI04OmGA2fyfBtfHCeaO9ENFlCLDIwfyI-tabjyg0775sW2DfyyDK8hGow8_a_0H4k9RbUNSQiRTyvqjXo"/>
+<img alt="Invited User" class="w-10 h-10 rounded-full border-2 border-white" data-alt="A sharp, professional headshot of a young man with a friendly expression, featuring bright and clear natural lighting. The image maintains a sophisticated corporate modern aesthetic with high-key whites and soft gray shadows, perfectly integrated into a high-end luxury gift registry platform interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEhSpzbNo0-4jBnQDurMI796RnecBMjdaR0yE_Rzz4Kmoz9QNErzIZ_WxVvCBC2ErcZ8LfTGLFBscx5CtgYePz-eUP_wJO9pEde1Fay5vPXCG0OOuaXNn6EYfSw9NXwji4hkSVAqM93IICRRJ4WgOHHsZBsN_5DscANrCWKpr6uolFMgYNTThiRqkavYSRODwHo61WI1tESkRQ7P4k6uDHhaTaYFe_VkWRCQDj2yO_-BJuDeCk9SfBTmUQ7Q6VGx8ahQOHehTCDQE"/>
+<div class="w-10 h-10 rounded-full border-2 border-white bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-xs">+142</div>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+<div class="bg-white/50 p-4 rounded-2xl border border-white/40">
+<span class="text-on-surface-variant text-caption font-caption block">Días restantes</span>
+<span class="text-primary font-headline-md text-headline-md">45</span>
+</div>
+<div class="bg-white/50 p-4 rounded-2xl border border-white/40">
+<span class="text-on-surface-variant text-caption font-caption block">Regalos recibidos</span>
+<span class="text-primary font-headline-md text-headline-md">82%</span>
+</div>
+<div class="bg-white/50 p-4 rounded-2xl border border-white/40">
+<span class="text-on-surface-variant text-caption font-caption block">Invitados confirmados</span>
+<span class="text-primary font-headline-md text-headline-md">128</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-label-md font-label-md">
+<span>Meta de Fondos</span>
+<span class="text-primary">$8.200.000 / $10.000.000</span>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full primary-gradient w-[82%] rounded-full shadow-lg shadow-primary/20"></div>
+</div>
+</div>
+</div>
+<!-- Side Action Card -->
+<div class="flex flex-col gap-6">
+<div class="glass-card rounded-3xl p-6 border-l-4 border-l-secondary shadow-lg shadow-secondary/5">
+<span class="material-symbols-outlined text-secondary mb-4" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="font-headline-md text-headline-md mb-2">Plan Premium</h3>
+<p class="text-body-md text-on-surface-variant mb-4">Desbloquea invitaciones digitales personalizadas y gestión de RSVP avanzada.</p>
+<button class="w-full py-3 rounded-2xl border-2 border-secondary text-secondary font-label-md text-label-md hover:bg-secondary-fixed/20 transition-all">Ver Planes</button>
+</div>
+<div class="glass-card rounded-3xl p-6 bg-surface-container-low/50">
+<h3 class="font-headline-md text-headline-md mb-4">Acciones Rápidas</h3>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform" data-icon="add_circle">add_circle</span>
+<span class="font-body-md">Añadir Regalo</span>
+</li>
+<li class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform" data-icon="share">share</span>
+<span class="font-body-md">Compartir Lista</span>
+</li>
+<li class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform" data-icon="settings">settings</span>
+<span class="font-body-md">Configurar</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Secondary Section -->
+<section class="mt-section-gap-desktop">
+<div class="flex justify-between items-end mb-8">
+<h2 class="font-headline-md text-headline-md">Inspiración para tu Lista</h2>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">Explorar todo</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<!-- Product Card 1 -->
+<div class="glass-card rounded-2xl overflow-hidden group">
+<div class="aspect-square relative overflow-hidden">
+<img alt="Luxury Bedding" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A top-down view of premium, high-thread-count white cotton bedding with soft folds and elegant textures. The lighting is warm and ethereal, suggesting a luxurious and comfortable lifestyle. The background is a clean, neutral bedroom setting that aligns with the sophisticated celebratory aesthetic of a high-end wedding registry." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRyb_RCeykvmraSX4rbPAFvWp6ZqwmpsrF04oDLG72oRcCfF0Grw5QG0ob2jiwaX1vAkTyuqD5HNPNAfJ8aA9a-ci3_VrTBNyBS6vVXy8ciOgoAhtEgwznsqE6X0sCVhE5dNYyA0eYr9FTLY5pS41yX05W3db3yZkCkUgh3SfmZRVKEaSeG5KO-ziXqzEiTa16M7CO8Egj3zCEXfqwOWgdxKRstQxXBy4k43nQE7nou32KQRqbgjx66owZioe8Vl_ZL4ChD7hYs-k"/>
+<button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-primary active:scale-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-4">
+<h4 class="font-body-md font-bold mb-1">Set de Toallas Premium</h4>
+<p class="text-primary font-label-md text-label-md">$320.000</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="glass-card rounded-2xl overflow-hidden group">
+<div class="aspect-square relative overflow-hidden">
+<img alt="Kitchen Mixer" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A stylish, retro-modern stand mixer in a soft cream finish, positioned on a polished marble countertop. The scene is bright and airy with soft focus on a modern kitchen background. The composition is elegant and high-end, evoking the joyful anticipation of setting up a new home for newlyweds." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfecaxBtU_IiehUpPpfPytOVZ_vY7tjooXOFBEiexc84_OlGmZgxQK2lMY0SayF7ctZxuUi2t3ePRMll8px7eH3br8Ha1kQUR6O33FoytC_6BZHOcfXIiWclPCkaAlnLiZi5QULJho-2UmiHmPY5CI-w7IlYkWGPoDHsla4BkgDE2Mr4YiXdrzYdsdOqLlFTS1dXaLHDixLchBySCdy9hrc2c2VSf7lksPsECVmk5Z_My3S960HNWU4r2Gi374r_I3EKh4GXVFXWQ"/>
+<button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-primary active:scale-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-4">
+<h4 class="font-body-md font-bold mb-1">Batidora de Pedestal</h4>
+<p class="text-primary font-label-md text-label-md">$1.450.000</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="glass-card rounded-2xl overflow-hidden group">
+<div class="aspect-square relative overflow-hidden">
+<img alt="Travel Set" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A set of sleek, minimalist hardshell suitcases in a sophisticated champagne gold color, arranged neatly against a modern architectural wall. The lighting is crisp and contemporary, highlighting the premium quality and durability of the travel gear. The aesthetic is aspirational, perfect for a honeymoon gift category." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXXbhsZN0iFI9pLNKvQ7WL7s0xgS3WUerCpaygo4U9jezayzFmAizTQ45kEn-1-Y6-ybpKBQ4OImWpcdWHNynwZYTJGDCUw7r_vc2FFbq145ltlZJrbkv-4lWbMtpovXkmDa1y5_SB12093EdNw5K6FJGSv6RbbhZInuHg2iVlvgmWK__LS_o33emb7VSwP559TJxGC1MBxOaAWmmoJqzeZs1lCWJaY5y2PG_cbX-jSzxyuLwUIo5a7zLi6MSbUcZar1oNIA8KljM"/>
+<button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-primary active:scale-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-4">
+<h4 class="font-body-md font-bold mb-1">Set de Viaje Élite</h4>
+<p class="text-primary font-label-md text-label-md">$2.100.000</p>
+</div>
+</div>
+<!-- Cash Fund Card -->
+<div class="rounded-2xl overflow-hidden group border-2 border-dashed border-secondary/40 flex flex-col items-center justify-center p-6 text-center bg-secondary-fixed/10">
+<div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-white mb-4 animate-pulse">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">Fondo de Luna de Miel</h4>
+<p class="text-caption font-caption text-on-surface-variant mb-4">Permite que tus invitados aporten a tu gran viaje.</p>
+<button class="text-secondary font-label-md text-label-md font-bold hover:underline">Activar Fondo</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-10 mt-section-gap-desktop bg-surface-container-lowest border-t border-outline-variant/30">
+<div class="flex flex-col md:flex-row justify-between items-center px-container-margin gap-6 max-w-7xl mx-auto">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="font-headline-md text-primary header-anchor">Regalí Colombia</span>
+<p class="text-on-surface-variant font-caption text-caption text-center md:text-left">© 2024 Regalí Colombia. Todos los derechos reservados.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-on-surface-variant hover:text-primary transition-all cursor-pointer font-caption text-caption hover:underline" href="#">Términos</a>
+<a class="text-on-surface-variant hover:text-primary transition-all cursor-pointer font-caption text-caption hover:underline" href="#">Privacidad</a>
+<a class="text-on-surface-variant hover:text-primary transition-all cursor-pointer font-caption text-caption hover:underline" href="#">Contacto</a>
+</div>
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-white transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="public">public</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-white transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="mail">mail</span>
+</div>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] flex justify-around items-center pt-3 pb-6 md:hidden">
+<a class="flex flex-col items-center text-primary font-bold after:content-[''] after:w-1 after:h-1 after:bg-primary after:rounded-full after:mt-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="celebration">celebration</span>
+<span class="font-label-md text-label-md">Eventos</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant/70 hover:text-primary active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-md text-label-md">Planes</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant/70 hover:text-primary active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Cuenta</span>
+</a>
+</nav>
+<!-- Floating Action Button for Events (Desktop Only Hint) -->
+<button class="hidden md:flex fixed bottom-8 right-8 primary-gradient text-white w-14 h-14 rounded-full items-center justify-center shadow-2xl shadow-primary/40 active:scale-95 transition-transform z-40 group">
+<span class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300" data-icon="add">add</span>
+</button>
+<script>
+        // Subtle scroll interaction for header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+                header.classList.add('py-2');
+                header.classList.remove('py-4');
+            } else {
+                header.classList.remove('shadow-md');
+                header.classList.add('py-4');
+                header.classList.remove('py-2');
+            }
+        });
+
+        // Add active states to product cards on click
+        document.querySelectorAll('.glass-card button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if (icon.getAttribute('data-icon') === 'favorite') {
+                    icon.style.fontVariationSettings = icon.style.fontVariationSettings.includes('FILL\' 1') ? "'FILL' 0" : "'FILL' 1";
+                    icon.classList.toggle('text-primary');
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,121 +11,48 @@ import NavbarPremium from '../components/NavbarPremium';
 const PLANS = [
   {
     tier: 'free' as const,
-    name: 'Gratis',
+    name: 'Esencial',
     price: 0,
     yearlyPrice: 0,
     popular: false,
     features: [
-      { text: '1 evento', included: true },
-      { text: '20 regalos por evento', included: true },
-      { text: '5 fotos por evento', included: true },
-      { text: 'Enlace público', included: true },
-      { text: 'Cash fund (comisión 4%)', included: true },
-      { text: 'Event Boost ($4.99/evento)', included: true },
-      { text: 'Subida de fotos', included: false },
-      { text: 'Estadísticas', included: false },
-      { text: 'Sin marca de agua', included: false },
+      { text: 'Listas de regalos ilimitadas', included: true },
+      { text: '10% Comisión de retiro', included: true },
+      { text: 'Personalización avanzada', included: false },
     ],
   },
   {
     tier: 'pro' as const,
-    name: 'Pro',
+    name: 'Elite Pro',
     price: 24.99,
     yearlyPrice: 288.00,
     popular: true,
     badge: 'MÁS ELEGIDO',
     features: [
-      { text: 'Hasta 20 eventos', included: true },
-      { text: '500 regalos por evento', included: true },
-      { text: '200 fotos por evento', included: true },
-      { text: 'Cash fund (comisión 2%)', included: true },
-      { text: 'Subida de fotos', included: true },
-      { text: 'Estadísticas', included: true },
-      { text: 'Event Boost incluido', included: true },
-      { text: 'Sin marca de agua', included: true },
-      { text: 'Soporte prioritario', included: true },
+      { text: 'Todo lo del plan Esencial', included: true },
+      { text: '2% Comisión de retiro', included: true },
+      { text: 'Galería de fotos premium', included: true },
+      { text: 'Soporte prioritario 24/7', included: true },
     ],
   },
 ];
 
-function PricingCard({ plan, yearly, onSelect, userTier, loading }: {
-  plan: typeof PLANS[0];
-  yearly: boolean;
-  onSelect: () => void;
-  userTier?: string;
-  loading: boolean;
-}) {
-  const price = yearly ? plan.yearlyPrice : plan.price;
+const ALL_INCLUDED = [
+  { icon: 'redeem', label: 'Listas ilimitadas' },
+  { icon: 'smartphone', label: 'Vista móvil' },
+  { icon: 'link', label: 'Link compartir' },
+  { icon: 'photo_library', label: 'Galería' },
+  { icon: 'notifications_active', label: 'Recordatorios' },
+  { icon: 'verified_user', label: 'Cancelación' },
+];
 
-  return (
-    <div
-      className={cn(
-        'relative flex flex-col rounded-3xl border-2 p-6 sm:p-8 transition-all duration-300',
-        'bg-white dark:bg-gray-800',
-        plan.popular
-          ? 'border-rose-500 shadow-xl shadow-rose-500/10 scale-[1.02] sm:scale-105'
-          : 'border-gray-200 dark:border-gray-700',
-      )}
-      role="article"
-    >
-      {plan.badge && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-          <span className="inline-block px-4 py-1 text-xs font-bold tracking-wider text-white bg-gradient-to-r from-rose-500 to-fuchsia-500 rounded-full uppercase shadow-lg shadow-rose-500/25">
-            {plan.badge}
-          </span>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{plan.name}</h3>
-        <div className="mt-4 flex items-baseline gap-1">
-          <span className="text-4xl font-black text-gray-900 dark:text-white">${price}</span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {plan.price === 0 ? '' : yearly ? '/año' : '/mes'}
-          </span>
-        </div>
-        {yearly && plan.price > 0 && (
-          <p className="mt-1 text-sm text-green-600 dark:text-green-400">
-            Ahorras ${(plan.price * 12 - plan.yearlyPrice).toFixed(2)} al año
-          </p>
-        )}
-      </div>
-
-      <ul className="space-y-3 mb-8 flex-1" role="list">
-        {plan.features.map((feat) => (
-          <li key={feat.text} className="flex items-center gap-3 text-sm">
-            <span className={cn(
-              'flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold',
-              feat.included ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
-            )}>
-              {feat.included ? '✓' : '✕'}
-            </span>
-            <span className={feat.included ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}>{feat.text}</span>
-          </li>
-        ))}
-      </ul>
-
-      {userTier === plan.tier ? (
-        <div className="w-full py-3 text-center text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 rounded-xl border-2 border-rose-200 dark:border-rose-800">
-          Plan Actual
-        </div>
-      ) : (
-        <button
-          onClick={onSelect}
-          disabled={loading}
-          className={cn(
-            'w-full py-3 px-6 rounded-xl font-semibold transition-all disabled:opacity-50',
-            plan.popular
-              ? 'bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white hover:shadow-lg hover:shadow-rose-500/25'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600',
-          )}
-        >
-          {loading ? 'Procesando...' : plan.price === 0 ? 'Empezar Gratis' : 'Actualizar a Pro'}
-        </button>
-      )}
-    </div>
-  );
-}
+const FAQS = [
+  { q: '¿Cómo retiro mi dinero?', a: 'Puedes solicitar el retiro de tus fondos acumulados a cualquier cuenta bancaria nacional en Colombia. El proceso tarda de 24 a 48 horas hábiles.' },
+  { q: '¿Hay límites en la cantidad de regalos?', a: 'No, puedes añadir tantos regalos como desees a tus listas, ya sean productos físicos sugeridos o fondos en efectivo.' },
+  { q: '¿Qué métodos de pago aceptan?', a: 'Tus invitados pueden pagar con tarjetas de crédito, PSE, Nequi o Daviplata a través de nuestra pasarela segura.' },
+  { q: '¿Puedo cambiar de plan después?', a: 'Sí, puedes actualizar a Pro en cualquier momento para disfrutar de comisiones más bajas en tus próximos eventos.' },
+  { q: '¿Es seguro para mis invitados?', a: 'Contamos con certificados de seguridad SSL y protocolos de encriptación bancaria para garantizar que cada transacción sea 100% segura.' },
+];
 
 export default function Pricing() {
   const { user, isAuthenticated } = useAuth();
@@ -133,26 +60,7 @@ export default function Pricing() {
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [scrollIndex, setScrollIndex] = useState(0);
-  const [showMobileHint, setShowMobileHint] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowMobileHint(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const cardWidth = container.querySelector('div')?.clientWidth ?? container.clientWidth;
-    const gap = 16;
-    const scrollPosition = container.scrollLeft;
-    const totalCardWidth = cardWidth + gap;
-    if (totalCardWidth <= 0) return;
-    const idx = Math.round(scrollPosition / totalCardWidth);
-    setScrollIndex(Math.min(idx, PLANS.length - 1));
-  }, []);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const handleSelect = async (tier: string) => {
     if (!isAuthenticated) {
@@ -185,154 +93,194 @@ export default function Pricing() {
     <>
       <Helmet>
         <title>Planes - Fiesta y Lista</title>
-        <meta name="description" content="Elige el plan perfecto para tu evento. Desde gratis hasta Pro con beneficios exclusivos como Cash Fund sin comisiones." />
+        <meta name="description" content="Elige el plan perfecto para tu evento. Desde gratis hasta Pro con beneficios exclusivos." />
         <meta property="og:title" content="Planes - Fiesta y Lista" />
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
+      <div className="min-h-screen bg-surface dark:bg-inverse-surface">
         <NavbarPremium />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-          <div className="text-center mb-8 sm:mb-12">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-rose-600 bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300 rounded-full mb-4">
-              Precios simples, sin sorpresas
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
+          {/* Hero */}
+          <section className="text-center mb-12 max-w-4xl mx-auto">
+            <span className="inline-block bg-primary-fixed text-on-primary-fixed px-4 py-1 rounded-full font-label-md text-label-md mb-4">
+              Precios
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white mb-4 font-outfit">
-              El plan perfecto para tu evento
+            <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-4">
+              Elige el plan perfecto para tu celebración
             </h1>
-            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Empieza gratis y escala cuando lo necesites. Sin compromisos, cancelas cuando quieras.
+            <p className="font-body-lg text-body-lg text-on-surface-variant">
+              Crea listas de regalos inolvidables con opciones flexibles para cada tipo de evento.
             </p>
-          </div>
+          </section>
 
-          <div className="flex items-center justify-center gap-3 mb-8 sm:mb-12">
-            <span className={cn('text-sm font-medium', !yearly ? 'text-gray-900 dark:text-white' : 'text-gray-500')}>Mensual</span>
-            <button
-              onClick={() => setYearly(!yearly)}
-              className={cn(
-                'relative w-14 h-7 rounded-full transition-colors',
-                yearly ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-600',
-              )}
-              role="switch"
-              aria-checked={yearly}
-              aria-label="Alternar facturación anual"
-            >
-              <span className={cn(
-                'absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform',
-                yearly ? 'translate-x-7' : '',
-              )} />
-            </button>
-            <span className={cn('text-sm font-medium', yearly ? 'text-gray-900 dark:text-white' : 'text-gray-500')}>
-              Anual
-              <span className="ml-1 text-xs text-green-600 dark:text-green-400 font-semibold">Ahorra 33%</span>
-            </span>
-          </div>
-
-          <div className="hidden sm:grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {PLANS.map((plan) => (
-              <PricingCard
-                key={plan.tier}
-                plan={plan}
-                yearly={yearly}
-                onSelect={() => handleSelect(plan.tier)}
-                userTier={user?.tier}
-                loading={loading && selectedTier === plan.tier}
+          {/* Toggle */}
+          <div className="flex flex-col items-center mb-12">
+            <div className="bg-surface-container flex p-1 rounded-full relative mb-4">
+              <button
+                onClick={() => setYearly(false)}
+                className={cn(
+                  'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
+                  !yearly ? 'text-on-surface' : 'text-on-surface-variant',
+                )}
+              >
+                Mensual
+              </button>
+              <button
+                onClick={() => setYearly(true)}
+                className={cn(
+                  'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
+                  yearly ? 'text-on-surface' : 'text-on-surface-variant',
+                )}
+              >
+                Anual
+              </button>
+              <div
+                className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-surface-container-lowest rounded-full shadow-sm transition-transform duration-300"
+                style={{ transform: yearly ? 'translateX(100%)' : 'translateX(0)' }}
               />
-            ))}
+            </div>
+            {yearly && (
+              <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-caption text-caption">
+                Ahorra 33%
+              </span>
+            )}
           </div>
 
-          <div className="sm:hidden relative">
-            {showMobileHint && (
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-gray-400 animate-fade-in whitespace-nowrap">
-                ← Desliza para ver planes →
-              </div>
-            )}
-            <div
-              ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-4 px-4"
-              onScroll={handleScroll}
-            >
-              {PLANS.map((plan) => (
-                <div key={plan.tier} className="snap-center shrink-0 w-[85vw]">
-                  <PricingCard
-                    plan={plan}
-                    yearly={yearly}
-                    onSelect={() => handleSelect(plan.tier)}
-                    userTier={user?.tier}
-                    loading={loading && selectedTier === plan.tier}
-                  />
+          {/* Pricing Cards */}
+          <section className="md:max-w-5xl mx-auto px-4">
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-6">
+              {PLANS.map((plan) => {
+                const price = yearly ? plan.yearlyPrice : plan.price;
+                const isCurrent = user?.tier === plan.tier;
+
+                return (
+                  <div key={plan.tier} className={plan.popular ? 'relative' : ''}>
+                    {plan.badge && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-6 py-1 rounded-full font-label-md text-label-md shadow-lg z-20 whitespace-nowrap">
+                        {plan.badge}
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        'glass-card h-full p-8 rounded-3xl flex flex-col items-center text-center',
+                        plan.popular
+                          ? 'border-2 border-primary/40 glow-shadow-pro'
+                          : 'border border-outline-variant',
+                      )}
+                    >
+                      <h3 className={cn(
+                        'font-headline-md text-headline-md mb-4',
+                        plan.popular ? 'text-primary' : 'text-on-surface-variant',
+                      )}>
+                        {plan.name}
+                      </h3>
+                      <div className="mb-6">
+                        <span className="font-display-lg text-display-lg text-on-surface">
+                          ${price.toLocaleString('es-CO')}
+                        </span>
+                        <span className="font-body-md text-body-md text-on-surface-variant">
+                          {plan.price === 0 ? '' : yearly ? '/año' : '/mes'}
+                        </span>
+                      </div>
+                      <ul className="space-y-4 mb-8 text-left w-full">
+                        {plan.features.map((feat) => (
+                          <li key={feat.text} className="flex items-center gap-3 font-body-md text-body-md">
+                            <span className={cn(
+                              'material-symbols-outlined text-xl',
+                              feat.included ? 'text-primary' : 'text-on-surface-variant opacity-50',
+                            )}
+                              style={feat.included ? { fontVariationSettings: "'FILL' 1" } : {}}
+                            >
+                              {feat.included ? 'check_circle' : 'cancel'}
+                            </span>
+                            <span className={feat.included ? 'text-on-surface' : 'text-on-surface-variant opacity-50'}>
+                              {feat.text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {isCurrent ? (
+                        <div className="w-full py-4 text-center font-label-md text-label-md text-primary bg-primary/10 rounded-xl border-2 border-primary/20">
+                          Plan Actual
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSelect(plan.tier)}
+                          disabled={loading}
+                          className={cn(
+                            'mt-auto w-full py-4 font-label-md text-label-md rounded-xl active:scale-95 duration-200',
+                            plan.popular
+                              ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20'
+                              : 'border-2 border-outline text-on-surface-variant hover:bg-surface-variant transition-colors',
+                          )}
+                        >
+                          {loading && selectedTier === plan.tier
+                            ? 'Procesando...'
+                            : plan.price === 0
+                              ? 'Empezar Gratis'
+                              : 'Actualizar a Pro'
+                          }
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Included Features */}
+          <section className="max-w-5xl mx-auto px-4 mt-section-gap-mobile md:mt-section-gap-desktop text-center">
+            <h2 className="font-headline-md text-headline-md mb-10 text-on-surface">Todas las listas incluyen</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {ALL_INCLUDED.map((item) => (
+                <div key={item.label} className="glass-card p-6 rounded-2xl flex flex-col items-center gap-3">
+                  <span className="material-symbols-outlined text-secondary text-3xl">{item.icon}</span>
+                  <span className="font-label-md text-label-md text-on-surface">{item.label}</span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-center gap-2 mt-2">
-              {PLANS.map((_, i) => (
-                <button
-                  key={i}
+          </section>
+
+          {/* FAQ */}
+          <section className="max-w-3xl mx-auto px-4 mt-section-gap-mobile md:mt-section-gap-desktop">
+            <h2 className="font-headline-md text-headline-md text-center mb-10 text-on-surface">Preguntas Frecuentes</h2>
+            <div className="space-y-4">
+              {FAQS.map((faq, idx) => (
+                <div
+                  key={idx}
                   className={cn(
-                    'w-2 h-2 rounded-full transition-all',
-                    scrollIndex === i ? 'bg-rose-500 w-4' : 'bg-gray-300 dark:bg-gray-600',
+                    'glass-card rounded-2xl overflow-hidden cursor-pointer transition-all',
+                    activeFaq === idx ? 'shadow-md' : '',
                   )}
-                  onClick={() => {
-                    const container = scrollContainerRef.current;
-                    if (!container) return;
-                    const card = container.children[i] as HTMLElement;
-                    if (card) {
-                      card.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                    }
-                  }}
-                  aria-label={`Ir al plan ${i + 1}`}
-                />
+                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+                >
+                  <div className="p-6 flex justify-between items-center">
+                    <span className="font-label-md text-label-md text-on-surface">{faq.q}</span>
+                    <span className={cn(
+                      'material-symbols-outlined text-on-surface-variant transition-transform duration-300',
+                      activeFaq === idx ? 'rotate-180' : '',
+                    )}>
+                      expand_more
+                    </span>
+                  </div>
+                  <div className={cn(
+                    'overflow-hidden transition-all duration-300',
+                    activeFaq === idx ? 'max-h-96' : 'max-h-0',
+                  )}>
+                    <div className="px-6 pb-6 font-body-md text-body-md text-on-surface-variant border-t border-outline-variant pt-4">
+                      {faq.a}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="mt-12 sm:mt-16 max-w-3xl mx-auto">
-            <div className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 text-center font-outfit">
-                ¿Necesitas más? Todas las listas incluyen:
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                {[
-                  '🎁 Lista de regalos ilimitada',
-                  '📱 Vista optimizada para móvil',
-                  '🔗 Enlace para compartir',
-                  '📸 Galería de fotos',
-                  '💬 Recordatorios por email',
-                  '🛡️ Cancelación sin multa',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 sm:mt-16 max-w-3xl mx-auto">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center font-outfit">Preguntas Frecuentes</h3>
-            <div className="space-y-3">
-              {[
-                { q: '¿Puedo cancelar cuando quiera?', a: 'Sí. Cancela tu suscripción en cualquier momento desde tu panel de control. Sin multas ni cargos adicionales.' },
-                { q: '¿Qué es el Cash Fund / Lluvia de sobres?', a: 'Tus invitados pueden hacer aportaciones económicas directamente a tu evento. En el plan gratis la comisión es del 4%, en Pro del 2%.' },
-                { q: '¿Qué es Event Boost?', a: 'Si estás en el plan gratis, puedes pagar $4.99 para activar el Cash Fund y estadísticas en un evento específico durante 30 días.' },
-                { q: '¿Qué métodos de pago aceptan?', a: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express, etc.) a través de Mercado Pago. Los pagos son en pesos colombianos (COP).' },
-                { q: '¿Cambiarán los precios después?', a: 'No. El precio que ves es el precio que pagas mientras mantengas tu suscripción activa.' },
-              ].map((faq) => (
-                <details key={faq.q} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl group">
-                  <summary className="flex items-center justify-between p-4 sm:p-5 cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
-                    {faq.q}
-                    <span className="ml-2 text-rose-500 group-open:rotate-180 transition-transform">▼</span>
-                  </summary>
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-gray-600 dark:text-gray-400">
-                    {faq.a}
-                  </div>
-                </details>
-              ))}
-            </div>
-          </div>
-
+          {/* Back link */}
           <div className="mt-12 text-center">
-            <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
+            <Link to="/" className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">
               ← Volver al inicio
             </Link>
           </div>

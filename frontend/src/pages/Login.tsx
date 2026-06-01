@@ -44,17 +44,17 @@ export default function Login() {
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-rose-500/25">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
                   F
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent font-outfit">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-outfit">Iniciar Sesión</h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 ¿No tienes cuenta?{' '}
-                <Link to="/register" className="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium">
+                <Link to="/register" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                   Regístrate
                 </Link>
               </p>
@@ -70,7 +70,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                 />
@@ -85,12 +85,12 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
                 <div className="text-right mt-1">
-                  <Link to="/forgot-password" className="text-sm text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
@@ -99,7 +99,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-rose-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Iniciar Sesión'}
               </button>

@@ -28,26 +28,32 @@ export default function VerifyEmail() {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Error al verificar correo');
       });
-  }, [searchParams, refreshUser]);
+  }, []); // Intencionalmente vacío: solo se ejecuta al montar
 
   const goToDashboard = () => {
     navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 to-white dark:from-gray-900 dark:to-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4">
       <div className="text-center max-w-md">
-        <span className="text-6xl block mb-6">
-          {status === 'verifying' ? '⏳' : status === 'success' ? '✅' : '❌'}
-        </span>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
+          {status === 'verifying' ? (
+            <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+          ) : status === 'success' ? (
+            <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
+          ) : (
+            <span className="material-symbols-outlined text-error">error</span>
+          )}
+        </div>
+        <h1 className="font-headline-md text-headline-md text-on-surface mb-2">
           {status === 'verifying' ? 'Verificando...' : status === 'success' ? '¡Correo Verificado!' : 'Error de Verificación'}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">{message}</p>
+        <p className="text-body-md text-on-surface-variant mb-8">{message}</p>
         {status === 'success' && (
           <button
             onClick={goToDashboard}
-            className="inline-flex px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="inline-flex px-8 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             Ir al Dashboard
           </button>
@@ -55,7 +61,7 @@ export default function VerifyEmail() {
         {status === 'error' && (
           <Link
             to="/"
-            className="inline-flex px-8 py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="inline-flex px-8 py-3 border border-outline text-on-surface-variant rounded-xl font-semibold hover:bg-surface-variant transition-all"
           >
             Volver al inicio
           </Link>

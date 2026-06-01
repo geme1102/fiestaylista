@@ -107,7 +107,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
 
         <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
           <div className="text-center mb-12">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-4xl">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
               {content.icon}
             </div>
             <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white mb-4 font-outfit">
@@ -118,10 +118,10 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             </p>
             <Link
               to="/register"
-              className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-rose-500/30 transition-all shadow-lg shadow-rose-500/20"
+              className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all shadow-lg shadow-primary/20"
             >
               Crear mi lista gratis
-              <span className="text-rose-200">→</span>
+              <span className="text-primary-fixed">→</span>
             </Link>
           </div>
 

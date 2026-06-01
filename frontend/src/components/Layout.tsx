@@ -5,28 +5,28 @@ import { useState } from 'react';
 import { cn } from '../utils/cn';
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Mis Eventos', icon: '🏠' },
-  { path: '/pricing', label: 'Planes', icon: '💎' },
-  { path: '/account', label: 'Mi Cuenta', icon: '👤' },
+  { path: '/dashboard', label: 'Mis Eventos', icon: 'celebration' },
+  { path: '/pricing', label: 'Planes', icon: 'auto_awesome' },
+  { path: '/account', label: 'Mi Cuenta', icon: 'person' },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const { isDark, toggleDark } = useTheme();
+  const { toggleDark } = useTheme();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] transition-colors pb-safe sm:pb-0">
+    <div className="min-h-screen bg-surface dark:bg-inverse-surface transition-colors pb-safe sm:pb-0">
       <nav className="sticky top-0 z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-rose-500/25">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-on-primary text-sm font-bold shadow-lg shadow-primary/25">
                   F
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent font-outfit">
+                <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>
@@ -38,8 +38,8 @@ export default function Layout() {
                     className={cn(
                       'px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center',
                       pathname === item.path
-                        ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800',
+                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim'
+                        : 'text-on-surface-variant hover:text-primary hover:bg-black/5 dark:hover:bg-white/10',
                     )}
                   >
                     {item.label}
@@ -51,60 +51,59 @@ export default function Layout() {
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleDark}
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                 aria-label="Cambiar tema"
               >
-                {isDark ? '☀️' : '🌙'}
+                <span className="material-symbols-outlined block dark:hidden">dark_mode</span>
+                <span className="material-symbols-outlined hidden dark:block text-primary-fixed-dim">light_mode</span>
               </button>
 
-              <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-400">
+              <span className="hidden sm:block text-sm text-on-surface-variant dark:text-inverse-on-surface">
                 {user?.name}
               </span>
 
               <button
                 onClick={logout}
-                className="hidden sm:inline-flex items-center px-4 py-2 min-h-[44px] text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                className="hidden sm:inline-flex items-center px-4 py-2 min-h-[44px] text-sm font-medium text-error hover:bg-error-container/20 rounded-lg transition-colors"
               >
                 Salir
               </button>
 
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5 dark:hover:bg-white/10"
                 aria-label="Menú"
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {mobileOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
+                <span className="material-symbols-outlined">
+                  {mobileOpen ? 'close' : 'menu'}
+                </span>
               </button>
             </div>
           </div>
 
           {mobileOpen && (
-            <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-3 space-y-1">
+            <div className="md:hidden border-t border-outline/20 py-3 space-y-1">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    'block px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
                     pathname === item.path
-                      ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800',
+                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-black/5 dark:hover:bg-white/10',
                   )}
                 >
+                  <span className="material-symbols-outlined text-lg">{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
-                className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm font-medium text-error hover:bg-error-container/20 rounded-lg transition-colors"
               >
+                <span className="material-symbols-outlined text-lg">logout</span>
                 Salir
               </button>
             </div>
@@ -116,22 +115,22 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <footer className="border-t border-outline-variant/30 bg-surface-container-low dark:bg-inverse-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
             <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>
             <div className="flex items-center gap-4">
-              <Link to="/terminos-y-condiciones" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Términos</Link>
-              <Link to="/politica-de-privacidad" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Privacidad</Link>
-              <Link to="/politica-de-cookies" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Cookies</Link>
-              <Link to="/derechos-arco" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors">ARCO</Link>
+              <Link to="/terminos-y-condiciones" className="hover:text-primary transition-colors">Términos</Link>
+              <Link to="/politica-de-privacidad" className="hover:text-primary transition-colors">Privacidad</Link>
+              <Link to="/politica-de-cookies" className="hover:text-primary transition-colors">Cookies</Link>
+              <Link to="/derechos-arco" className="hover:text-primary transition-colors">ARCO</Link>
             </div>
           </div>
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(236,72,153,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
-        <div className="flex items-center justify-around h-16">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
+        <div className="flex items-center justify-around h-16 px-4">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.path}
@@ -139,12 +138,17 @@ export default function Layout() {
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
                 pathname === item.path
-                  ? 'text-pink-600 dark:text-pink-400 after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-pink-500 after:rounded-full'
-                  : 'text-gray-500 dark:text-gray-400',
+                  ? 'text-primary dark:text-primary-fixed-dim after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
+                  : 'text-on-surface-variant/60 hover:text-primary',
               )}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className={cn(
+                'material-symbols-outlined text-lg',
+                pathname === item.path ? 'font-variation-settings: "FILL" 1' : '',
+              )}>
+                {item.icon}
+              </span>
+              <span className="font-label-md text-label-md">{item.label}</span>
             </Link>
           ))}
         </div>

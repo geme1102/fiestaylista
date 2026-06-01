@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Boda de Andrea &amp; Mateo | Regalí Colombia</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        body {
+            background-color: #faf9f8;
+            color: #1a1c1c;
+            overflow-x: hidden;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#fe932c",
+                    "secondary": "#904d00",
+                    "tertiary-container": "#6063ee",
+                    "on-tertiary-container": "#fffbff",
+                    "surface-container-high": "#e9e8e7",
+                    "outline-variant": "#debec8",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#574048",
+                    "on-secondary-fixed": "#2f1500",
+                    "surface-container-highest": "#e3e2e1",
+                    "secondary-fixed": "#ffdcc3",
+                    "inverse-on-surface": "#f1f0ef",
+                    "surface-dim": "#dadad9",
+                    "tertiary-fixed": "#e1e0ff",
+                    "surface-container-low": "#f4f3f2",
+                    "primary-container": "#d23284",
+                    "primary-fixed-dim": "#ffb0cd",
+                    "primary-fixed": "#ffd9e4",
+                    "on-error": "#ffffff",
+                    "surface": "#faf9f8",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#3e0022",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#8b7079",
+                    "on-primary-fixed-variant": "#8c0053",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "surface-bright": "#faf9f8",
+                    "surface-tint": "#b4136d",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e3e2e1",
+                    "on-secondary-container": "#663500",
+                    "primary": "#b10e6b",
+                    "on-background": "#1a1c1c",
+                    "inverse-surface": "#2f3130",
+                    "tertiary": "#4648d4",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "background": "#faf9f8",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "on-tertiary-fixed": "#07006c",
+                    "inverse-primary": "#ffb0cd",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#eeeeed"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-gap-mobile": "40px",
+                    "section-gap-desktop": "80px",
+                    "base": "4px",
+                    "gutter": "16px",
+                    "container-margin": "20px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Outfit"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "headline-md": ["Outfit"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Outfit"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "display-lg": ["Outfit"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "800"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface pb-32">
+<!-- Confetti Overlay -->
+<div class="confetti-canvas" id="confetti-container"></div>
+<!-- Loading State Overlay (Hidden by Default) -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-surface/80 backdrop-blur-md hidden" id="loading-overlay">
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-primary text-6xl animate-bounce" style="font-variation-settings: 'FILL' 1;">card_giftcard</span>
+<p class="font-label-md text-label-md text-primary animate-pulse">Cargando celebración...</p>
+</div>
+</div>
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm flex justify-between items-center px-container-margin h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<span class="font-headline-md text-headline-md-mobile font-black text-primary">Regalí Colombia</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</header>
+<!-- Immersive Header -->
+<section class="pt-16 w-full overflow-hidden relative">
+<!-- Themed Background -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 -z-10"></div>
+<div class="absolute top-20 right-[-10%] w-64 h-64 bg-primary-container/20 rounded-full blur-3xl"></div>
+<div class="px-container-margin pt-10 pb-12 flex flex-col items-center text-center">
+<!-- Glass Icon Card -->
+<div class="glass-card w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-xl border-white/40">
+<span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<!-- Badge -->
+<div class="bg-primary/10 text-primary px-4 py-1 rounded-full font-label-md text-label-md mb-4 inline-flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Boda
+            </div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2 px-4">
+                Boda de Andrea &amp; Mateo
+            </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+                24 de Septiembre, 2024 • Cartagena, Colombia
+            </p>
+<!-- Toggle Switch -->
+<div class="flex items-center gap-3 glass-card px-4 py-2 rounded-full mb-4">
+<span class="font-label-md text-label-md text-on-surface-variant">Lectura Fácil</span>
+<button class="relative w-12 h-6 bg-surface-container-highest rounded-full transition-colors duration-300" id="accessibility-toggle">
+<div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300" id="toggle-thumb"></div>
+</button>
+</div>
+</div>
+</section>
+<!-- Content Area -->
+<main class="max-w-4xl mx-auto px-container-margin -mt-6 relative z-10">
+<!-- Share Buttons -->
+<div class="glass-card rounded-2xl p-4 flex justify-around items-center mb-6 shadow-sm">
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center group-active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#25D366]">share</span>
+</div>
+<span class="text-caption font-caption text-on-surface-variant">WhatsApp</span>
+</button>
+<button class="flex flex-col items-center gap-1 group" onclick="copyLink()">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-primary">link</span>
+</div>
+<span class="text-caption font-caption text-on-surface-variant">Copiar</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-10 h-10 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center group-active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#1DA1F2]">add</span>
+</div>
+<span class="text-caption font-caption text-on-surface-variant">Twitter</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-10 h-10 rounded-full bg-[#4267B2]/10 flex items-center justify-center group-active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[#4267B2]">person</span>
+</div>
+<span class="text-caption font-caption text-on-surface-variant">Facebook</span>
+</button>
+</div>
+<!-- Photo Gallery -->
+<section class="grid grid-cols-2 gap-3 mb-8">
+<div class="aspect-square rounded-2xl overflow-hidden shadow-md">
+<img class="w-full h-full object-cover" data-alt="A candid, high-end photograph of a happy couple laughing together in a sun-drenched colonial courtyard in Cartagena. The lighting is golden and warm, creating a celebratory and aspirational atmosphere. The image uses soft focus backgrounds and high-quality textures, following a luxury wedding aesthetic with pearl and rose gold tones throughout the scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUplDqUa2tT2_d0l_GgyBRiYU4VmF459Hbxim-llaFcJJsBPjf7b4Xvqa1DYiTpODJqLRY5NLAlGb0oLKR2yNiHTlLoGRx5E34iHk3SMcOT-nGhJ1S2GHuVVp063Xv6H1zdYdz21qKMyTi7oNzAu7fPrQkXkwhstjZqATgle62kS1VUVpjK6MenaCWlNtH3iQNZVGlKSRT1Z70tfndkpD-qYMzYz-QyMzQSMk5rGrdnucoqrWw8wzuiGOvlyTwKmAUivcZ15nuF_E"/>
+</div>
+<div class="aspect-square rounded-2xl overflow-hidden shadow-md">
+<img class="w-full h-full object-cover" data-alt="A beautifully set wedding reception table at a premium event in Colombia, featuring delicate floral arrangements in soft rose and cream colors. The lighting is soft and ambient with shimmering glassware and elegant silverware. The visual style is modern corporate luxury, focusing on detail, cleanliness, and a sophisticated glassmorphic depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqCSr0K_WxGOLdZ-OHLZ7C-o2NJBLFN5SRQgqJ0dNzJp5psE2iBqo1k_GF8n54gvQTSl6e9T4KMd8iJ53sV3Jc4j93L_VQHoGYHnbXp2b5D3GWL3UPy3LUp09GnrSVFg_i139fJi6JYw5E1MRRvgAEImWCQCmw1zb7QTz6uNzUcHJYDls9e0W7FcBMgYCdBVsNcSAhhYt_0ONZ7eZ7fHJhNgz98pau_3zEi3KtgoVQn3K5An5wV7Ta8LX2Uj0gMjCGHm9etIa83mo"/>
+</div>
+</section>
+<!-- Lluvia de Sobres (Cash Fund) -->
+<section class="mb-8">
+<div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-[#D97706] to-[#F59E0B] text-white shadow-xl">
+<div class="shimmer absolute inset-0 opacity-20 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="bg-white/20 px-3 py-1 rounded-full text-caption font-caption">Destino: Luna de Miel</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">Lluvia de Sobres</h3>
+<p class="font-body-md text-body-md opacity-90 mb-6">Ayúdanos a cumplir nuestro sueño de recorrer el mundo juntos.</p>
+<button class="w-full bg-white text-[#D97706] py-4 rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+                        Regalar Dinero
+                    </button>
+</div>
+</div>
+</section>
+<!-- Gift List Section -->
+<section class="space-y-6">
+<div class="flex flex-col gap-4 sticky top-16 z-30 bg-surface/90 backdrop-blur-md pt-4 pb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">Lista de Regalos</h2>
+<!-- Name Field -->
+<div class="relative group">
+<input class="w-full bg-surface-container-low border-none rounded-xl py-4 px-12 font-body-md text-body-md focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Escribe tu nombre para apartar un regalo" type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">person</span>
+</div>
+<!-- Category Filters -->
+<div class="flex gap-2 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-2">
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-primary text-white font-label-md text-label-md shadow-md shadow-primary/20">Todos</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition-colors">Hogar</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition-colors">Tecnología</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition-colors">Viajes</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition-colors">Cocina</button>
+</div>
+</div>
+<!-- Gift Grid -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Gift Card 1 -->
+<div class="glass-card rounded-3xl overflow-hidden flex flex-col group transition-all duration-300">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A premium high-end espresso machine on a minimalist white marble kitchen counter. The lighting is bright and clean, reflecting a modern corporate aesthetic with soft rose gold accents. The background is a soft-focus high-end kitchen with natural light. The overall mood is sophisticated and luxury-oriented, fitting a premium wedding gift list." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoKFrUnojCHKL322BQoWVIFtCdyTIOKnEuD_eyJGXFlZmS-gHQkrNSeN7yJR9vlhoPYCf2XNLdkbPBljFRmmwlQN2G5KiV1RQ-pDTfhqFej8IWI_YbX6vVYt9pcQKbyBtTQKMWtnzQpE4AVir5n9BuNTIpSB59yB0cYPEuEToIO4GFzFgtPR5_rfRIaZ1RzI0Elo3H01Q1tompbewEMO3iomx8lpx02NkJh1El2kdWLFVgmL9YnaAYtfEIKMRBmotKjwLSmH_8lHI"/>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-caption font-caption text-primary shadow-sm">
+                            Hogar
+                        </div>
+</div>
+<div class="p-6">
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1">Cafetera Nespresso Vertuo</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">$850.000 COP</p>
+<button class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-label-md text-label-md shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-95 transition-transform" onclick="triggerConfetti(this)">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+                            Apartar Regalo
+                        </button>
+</div>
+</div>
+<!-- Gift Card 2 -->
+<div class="glass-card rounded-3xl overflow-hidden flex flex-col group transition-all duration-300">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A luxury white ceramic dinnerware set beautifully arranged on a minimalist light wood table. The scene is illuminated by soft, diffused morning light creating a serene and premium feel. The aesthetic incorporates subtle glassmorphism and the brand's soft rose color palette, emphasizing a high-end lifestyle and matrimonial joy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXzkyV8GphS9wMsjMBM41UaVvwyqRlx8hlMsBcnIrEVwMg754A9mOfTfM_98VtzIAG9x5F1X5Up127tkPWM_e0k0OvV3yrtVh2jK6ohblQGKKEPJxzufAghljsZZP-0XYEm4fXvExzRtC0lrSx-ADXID92gUcqDIC12g1eKofvF3ef9wzHe_Ap4P0HBEl_XXjA8Y7_PEpYXQ_UIZBxzDfObvI0byqohqdxZg0Sw9Ch8LGFP2oeNo38Ym5kbTaAXhU4lPxDZqTxpHc"/>
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-caption font-caption text-primary shadow-sm">
+                            Cocina
+                        </div>
+</div>
+<div class="p-6">
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1">Set de Vajilla 12 Piezas</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">$1.200.000 COP</p>
+<button class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-label-md text-label-md shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-95 transition-transform" onclick="triggerConfetti(this)">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+                            Apartar Regalo
+                        </button>
+</div>
+</div>
+<!-- Already Reserved Section -->
+<div class="mt-12 opacity-50">
+<div class="flex items-center gap-4 mb-6">
+<div class="h-[1px] flex-1 bg-on-surface-variant/20"></div>
+<h3 class="font-label-md text-label-md text-on-surface-variant">YA APARTADOS</h3>
+<div class="h-[1px] flex-1 bg-on-surface-variant/20"></div>
+</div>
+<div class="grid grid-cols-1 gap-6 grayscale">
+<div class="glass-card rounded-3xl overflow-hidden flex flex-col pointer-events-none">
+<div class="h-48 overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A modern iPad Pro with an Apple Pencil on a clean, organized desk workspace. The lighting is neutral and bright, conveying productivity and modern luxury. The background is slightly blurred with soft grey and pearl white tones. This reserved item is presented in a muted grayscale style to indicate it is no longer available." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDu1MUIC4w6B69KtR3gjcFamlZYMVfOI90bW_t2QaxfZfTM7LgDuWCbc5Fys_Q-edP6K62ZdMBpX9HhhqM7U3K0eb80qNTMTPsd2PfQ4_gnBpsU5K4VrfRRSaC5QOWkHOCEZJDnir8GEHPShaoRq7F4j_jSIP9eq0Kx3wh5yaGmlnvkGqFcyK2yWoCgYDd1AlJOJnX39ogUrJZctzzZXOSjlwEIaoUi9wsFWzFs71FdWLwkI-7mDhkLAAtCuF979mbQLUMC-JsqMY"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<div class="bg-white/90 text-on-surface px-4 py-2 rounded-full font-label-md text-label-md">Regalado por Ana P.</div>
+</div>
+</div>
+<div class="p-4">
+<h4 class="font-body-lg text-body-lg text-on-surface">iPad Pro 11" M2</h4>
+<p class="text-caption font-caption text-on-surface-variant">Tecnología</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Nav -->
+<nav class="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">card_giftcard</span>
+<span class="font-label-md text-label-md">Lista</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Regalar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Cuenta</span>
+</a>
+</nav>
+<!-- Success Modal (Hidden) -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300" id="success-modal">
+<div class="glass-card w-full max-w-sm rounded-[40px] p-8 text-center shadow-2xl border-white/50 scale-90 transition-transform duration-300" id="modal-content">
+<div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">Gracias por ser parte de este momento especial para Andrea &amp; Mateo.</p>
+<button class="w-full bg-primary text-white py-4 rounded-2xl font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 transition-transform" onclick="closeModal()">
+                Continuar
+            </button>
+</div>
+</div>
+<script>
+        // Accessibility Toggle
+        const toggle = document.getElementById('accessibility-toggle');
+        const thumb = document.getElementById('toggle-thumb');
+        let isEasyRead = false;
+
+        toggle.addEventListener('click', () => {
+            isEasyRead = !isEasyRead;
+            if (isEasyRead) {
+                toggle.classList.remove('bg-surface-container-highest');
+                toggle.classList.add('bg-primary');
+                thumb.style.transform = 'translateX(24px)';
+                document.body.classList.add('text-lg');
+                document.querySelectorAll('p').forEach(p => p.classList.add('font-bold'));
+            } else {
+                toggle.classList.add('bg-surface-container-highest');
+                toggle.classList.remove('bg-primary');
+                thumb.style.transform = 'translateX(0)';
+                document.body.classList.remove('text-lg');
+                document.querySelectorAll('p').forEach(p => p.classList.remove('font-bold'));
+            }
+        });
+
+        // Confetti Effect Function
+        function triggerConfetti(button) {
+            // Show Loading State
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('hidden');
+            
+            // Simulate API Call
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                
+                // Show Success Modal
+                const modal = document.getElementById('success-modal');
+                const content = document.getElementById('modal-content');
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('scale-90');
+                
+                // Fire simple confetti particles
+                createConfetti();
+            }, 1000);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('success-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-90');
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#b10e6b', '#d23284', '#fe932c', '#6063ee', '#ffd9e4'];
+            
+            for (let i = 0; i < 60; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'absolute';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.borderRadius = '2px';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                container.appendChild(confetti);
+                
+                const animation = confetti.animate([
+                    { transform: `translate3d(0, 0, 0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate3d(${(Math.random() - 0.5) * 200}px, 100vh, 0) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 2000 + 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+                
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+
+        function copyLink() {
+            const btn = event.currentTarget;
+            navigator.clipboard.writeText(window.location.href);
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const text = btn.querySelector('span:last-child');
+            
+            icon.textContent = 'check';
+            text.textContent = 'Copiado';
+            
+            setTimeout(() => {
+                icon.textContent = 'link';
+                text.textContent = 'Copiar';
+            }, 2000);
+        }
+    </script>
+</body></html>

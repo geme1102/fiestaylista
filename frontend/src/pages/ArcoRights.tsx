@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -93,6 +93,7 @@ const EN = {
 export default function ArcoRights() {
   const [lang, setLang] = useState<Lang>('es');
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [showRequests, setShowRequests] = useState(false);
@@ -127,7 +128,7 @@ export default function ArcoRights() {
     try {
       await apiClient.del('/api/auth/arco/my-account');
       showToast('Cuenta eliminada permanentemente', 'success');
-      setTimeout(() => { window.location.href = '/'; }, 2000);
+      setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
@@ -170,11 +171,11 @@ export default function ArcoRights() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link to="/" className="text-pink-600 hover:text-pink-700 dark:text-pink-400 text-sm font-medium">
+            <Link to="/" className="text-primary hover:text-primary-fixed-dim text-sm font-medium">
               ← {lang === 'es' ? 'Volver' : 'Back'}
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{content.title}</h1>
@@ -191,7 +192,7 @@ export default function ArcoRights() {
         {!isAuthenticated ? (
           <div className="rounded-2xl p-8 text-center glass-card-premium">
             <p className="text-gray-600 dark:text-gray-400 mb-4">{content.loginRequired}</p>
-            <Link to="/login" className="inline-flex px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+            <Link to="/login" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all">
               {lang === 'es' ? 'Iniciar Sesión' : 'Log In'}
             </Link>
           </div>
@@ -204,7 +205,7 @@ export default function ArcoRights() {
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.access.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.access.desc}</p>
-                <span className="text-pink-600 font-medium text-sm">
+                <span className="text-primary font-medium text-sm">
                   {loading ? content.access.loading : content.access.btn}
                 </span>
               </button>
@@ -213,7 +214,7 @@ export default function ArcoRights() {
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.rectify.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.rectify.desc}</p>
-                <span className="text-pink-600 font-medium text-sm">{content.rectify.btn}</span>
+                <span className="text-primary font-medium text-sm">{content.rectify.btn}</span>
               </button>
 
               <button onClick={handleDeleteAccount} disabled={loading}
@@ -229,7 +230,7 @@ export default function ArcoRights() {
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{content.oppose.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{content.oppose.desc}</p>
-                <span className="text-pink-600 font-medium text-sm">{content.oppose.btn}</span>
+                <span className="text-primary font-medium text-sm">{content.oppose.btn}</span>
               </button>
             </div>
 
@@ -252,7 +253,7 @@ export default function ArcoRights() {
                         value={formDetails}
                         onChange={(e) => setFormDetails(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 outline-none resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none resize-none"
                         placeholder={content.form.placeholder}
                         required
                       />
@@ -269,7 +270,7 @@ export default function ArcoRights() {
                     <button
                       type="submit"
                       disabled={loading || !formDetails}
-                      className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center"
+                      className="flex-1 py-3 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center"
                     >
                       {loading ? content.form.submitting : content.form.submit}
                     </button>
@@ -284,7 +285,7 @@ export default function ArcoRights() {
                 className="flex items-center justify-between w-full"
               >
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{content.history}</h2>
-                <span className="text-pink-600 text-sm">{showRequests ? '▲' : '▼'}</span>
+                <span className="material-symbols-outlined text-primary">{showRequests ? 'expand_less' : 'expand_more'}</span>
               </button>
 
               {showRequests && (

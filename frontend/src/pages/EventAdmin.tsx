@@ -4,13 +4,11 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient, getAccessToken } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
-import ShareButtons from '../components/ShareButtons';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
 import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { validateRedirectUrl } from '../utils/format';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 
@@ -25,24 +23,6 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'BAPTISM', icon: '🕊️', label: 'Bautizo' },
   { value: 'COMMUNION', icon: '✨', label: 'Comunión' },
 ];
-
-function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar' }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean; confirmLabel?: string }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-sm bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{message}</p>
-        <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-colors">
-            Cancelar
-          </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-fuchsia-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
-            {loading ? '...' : confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
@@ -166,7 +146,6 @@ export default function EventAdmin() {
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
       showToast('Solo se permiten imágenes', 'error');
       return;
@@ -175,7 +154,6 @@ export default function EventAdmin() {
       showToast('La imagen no debe superar los 5MB', 'error');
       return;
     }
-
     setUploading(true);
     try {
       const { url } = await uploadPhoto(file);
@@ -234,7 +212,7 @@ export default function EventAdmin() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6 py-10">
+      <div className="animate-pulse space-y-6 py-10 px-container-margin">
         <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-2xl w-1/3" />
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
@@ -259,12 +237,12 @@ export default function EventAdmin() {
 
   if (!event) {
     return (
-      <div className="text-center py-20">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-4xl">
+      <div className="text-center py-20 px-container-margin">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
           😕
         </div>
         <p className="text-gray-500 dark:text-gray-400 mb-4">Evento no encontrado</p>
-        <Link to="/dashboard" className="text-rose-600 font-medium inline-block">Volver al dashboard</Link>
+        <Link to="/dashboard" className="text-primary font-medium inline-block">Volver al dashboard</Link>
       </div>
     );
   }
@@ -277,211 +255,201 @@ export default function EventAdmin() {
   const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
   return (
-    <div>
-      <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        <Link to="/dashboard" className="hover:text-gray-700 dark:hover:text-gray-300">Mis Eventos</Link>
-        <span className="mx-2">/</span>
-        <span className="text-gray-900 dark:text-white">{event.title}</span>
-      </div>
+    <div className="font-body-md text-body-md pb-24">
+      {/* Top App Bar */}
+      <nav className="bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm fixed top-0 z-50 flex justify-between items-center px-container-margin h-16 w-full">
+        <div className="flex items-center gap-3">
+          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary dark:text-primary-fixed-dim">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </Link>
+          <h1 className="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim">Administrar Evento</h1>
+        </div>
+        <button className="active:scale-95 duration-200 text-primary dark:text-primary-fixed-dim">
+          <span className="material-symbols-outlined">settings</span>
+        </button>
+      </nav>
 
-      <div className="rounded-2xl p-6 sm:p-8 mb-8 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 shadow-[0_10px_25px_-5px_rgba(236,72,153,0.2)]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <span className="text-3xl shrink-0">{EVENT_ICONS[event.eventType]}</span>
-            <div className="min-w-0 flex-1">
-              {editingTitle ? (
-                <div className="flex gap-2 flex-wrap">
-                  <input
-                    type="text"
-                    value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-lg font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-                    autoFocus
-                  />
-                  <button onClick={handleUpdateTitle} className="px-4 py-2 bg-rose-500 text-white rounded-lg text-sm font-medium min-h-[44px]">Guardar</button>
-                  <button onClick={() => setEditingTitle(false)} className="px-4 py-2 text-sm text-gray-500 min-h-[44px]">Cancelar</button>
-                </div>
-              ) : (
+      <main className="mt-20 px-container-margin space-y-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+          <Link to="/dashboard" className="hover:text-primary transition-colors">Mis Eventos</Link>
+          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          <span className="text-primary font-bold">{event.title}</span>
+        </div>
+
+        {/* Header Glass Card */}
+        <section className="glass rounded-xl p-6 glow-shadow-pro relative overflow-hidden">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex gap-4">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-2xl">
+                {EVENT_ICONS[event.eventType]}
+              </div>
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h1
-                    className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white cursor-pointer hover:text-rose-600 transition-colors truncate font-outfit"
-                    onClick={() => setEditingTitle(true)}
-                    title="Editar título"
-                  >
-                    {event.title}
-                  </h1>
-                  <button
-                    onClick={() => setEditingTitle(true)}
-                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    aria-label="Editar título del evento"
-                  >
-                    ✏️
-                  </button>
-                </div>
-              )}
-              <div className="flex items-center gap-2 mt-1">
-                {editingType ? (
-                  <div className="flex gap-2 flex-wrap items-center">
-                    {EVENT_TYPES.map((t) => (
-                      <button
-                        key={t.value}
-                        onClick={() => setTypeDraft(t.value)}
-                        className={`px-2 py-1 text-xs rounded-lg font-medium transition-all ${
-                          typeDraft === t.value
-                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 ring-2 ring-rose-500'
-                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200'
-                        }`}
-                      >
-                        {t.icon} {t.label}
+                  {editingTitle ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-headline-md text-headline-md text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary"
+                        autoFocus
+                      />
+                      <button onClick={handleUpdateTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">Guardar</button>
+                      <button onClick={() => setEditingTitle(false)} className="px-3 py-1.5 text-sm text-gray-500">Cancelar</button>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="font-headline-md text-headline-md text-on-surface">{event.title}</h2>
+                      <button onClick={() => setEditingTitle(true)} className="text-primary">
+                        <span className="material-symbols-outlined text-sm">edit</span>
                       </button>
-                    ))}
-                    <button onClick={handleUpdateType} className="px-3 py-1 text-xs bg-rose-500 text-white rounded-lg font-medium min-h-[32px]">Guardar</button>
-                    <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-gray-500 min-h-[32px]">Cancelar</button>
-                  </div>
-                ) : (
-                  <span
-                    className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-rose-600 transition-colors flex items-center gap-1"
-                    onClick={() => setEditingType(true)}
-                  >
-                    {EVENT_LABELS[event.eventType]}
-                    <span className="text-xs opacity-50">✏️</span>
-                  </span>
-                )}
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-on-surface-variant font-label-md">
+                  {editingType ? (
+                    <div className="flex gap-2 flex-wrap items-center">
+                      {EVENT_TYPES.map((t) => (
+                        <button
+                          key={t.value}
+                          onClick={() => setTypeDraft(t.value)}
+                          className={`px-2 py-1 text-xs rounded-lg font-medium transition-all ${
+                            typeDraft === t.value
+                              ? 'bg-primary-fixed text-primary-fixed-dim dark:bg-primary/30 ring-2 ring-primary'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                          }`}
+                        >
+                          {t.icon} {t.label}
+                        </button>
+                      ))}
+                      <button onClick={handleUpdateType} className="px-3 py-1 text-xs bg-primary text-white rounded-lg font-medium">Guardar</button>
+                      <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-gray-500">Cancelar</button>
+                    </div>
+                  ) : (
+                    <span onClick={() => setEditingType(true)} className="cursor-pointer flex items-center gap-1">
+                      Tipo: {EVENT_LABELS[event.eventType]}
+                      <span className="material-symbols-outlined text-sm">expand_more</span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={toggleActive}
-              className={`relative w-11 h-6 rounded-full transition-colors ${
-                event.isActive ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-              aria-label={event.isActive ? 'Desactivar evento' : 'Activar evento'}
-            >
-              <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                event.isActive ? 'translate-x-5' : ''
-              }`} />
-            </button>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              {event.isActive ? 'Activo' : 'Inactivo'}
-            </span>
-            {isBoosted && (
-              <span className="ml-2 px-3 py-1 min-h-[22px] flex items-center text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
-                BOOST
-              </span>
-            )}
-          </div>
-        </div>
-
-        {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
-          <div className="mt-5 bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-700/30 rounded-xl p-4 flex items-center justify-between overflow-hidden relative">
-            <div className="flex items-center gap-2 relative z-10">
-              <span className="text-amber-600 dark:text-amber-400 text-lg">⚡</span>
-              <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                Aumenta tus regalos con Boost
+            <div className="flex flex-col items-end gap-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={event.isActive} onChange={toggleActive} className="sr-only peer" />
+                <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+              </label>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                {event.isActive ? 'Activo' : 'Inactivo'}
               </span>
             </div>
-            <button onClick={() => setBoostModal(true)} className="relative z-10 bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors min-h-[34px]">
-              Boost $4.99
+          </div>
+
+          {/* Boost Badge */}
+          {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
+            <div className="bg-secondary-fixed/30 border border-secondary/20 rounded-lg p-3 flex justify-between items-center mb-6 overflow-hidden relative">
+              <div className="shimmer-bg absolute inset-0 pointer-events-none" />
+              <div className="flex items-center gap-2 relative z-10">
+                <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                <span className="font-label-md text-secondary">Aumenta tus regalos con Boost</span>
+              </div>
+              <button onClick={() => setBoostModal(true)} className="bg-secondary text-white px-4 py-1.5 rounded-full font-label-md active:scale-95 transition-transform relative z-10">
+                Boost $4.99
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/e/${event.slug}`;
+                if (navigator.share) {
+                  navigator.share({ title: event.title, url });
+                } else {
+                  navigator.clipboard.writeText(url);
+                  showToast('Enlace copiado', 'success');
+                }
+              }}
+              className="flex items-center justify-center gap-2 bg-on-surface text-surface py-3 rounded-xl font-label-md active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm">share</span> Compartir
+            </button>
+            <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 border border-outline/30 text-on-surface py-3 rounded-xl font-label-md active:scale-95 transition-all">
+              Vista previa <span className="material-symbols-outlined text-sm">visibility</span>
+            </a>
+          </div>
+
+          {/* Social Share Row */}
+          <div className="mt-4 flex gap-4 justify-center">
+            <button
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank')}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#25D366] text-white active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined">chat</span>
+            </button>
+            <button
+              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/e/${event.slug}`); showToast('Enlace copiado', 'success'); }}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-variant text-on-surface active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined">content_copy</span>
             </button>
           </div>
-        )}
+        </section>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button
-            onClick={() => {
-              const url = `${window.location.origin}/e/${event.slug}`;
-              if (navigator.share) {
-                navigator.share({ title: event.title, url });
-              } else {
-                navigator.clipboard.writeText(url);
-                showToast('Enlace copiado', 'success');
-              }
-            }}
-            className="flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3 rounded-xl text-sm font-semibold hover:shadow-lg transition-all min-h-[44px]"
-          >
-            🔗 Compartir
-          </button>
-          <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 border border-gray-300/50 dark:border-gray-600/50 text-gray-900 dark:text-white py-3 rounded-xl text-sm font-semibold hover:shadow-lg transition-all min-h-[44px]">
-            👁️ Vista previa
-          </a>
-        </div>
+        {/* Regalos Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-headline-md text-headline-md flex items-center gap-2">
+              Regalos <span className="text-primary font-bold">({gifts.length})</span>
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant">featured_play_list</span>
+          </div>
 
-        <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700/50">
-          <ShareButtons slug={event.slug} title={event.title} />
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8 mt-8">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 font-outfit">Regalos ({gifts.length})</h2>
-
-          <div className="relative mb-6">
-            <div className="flex gap-2">
+          {/* Add Gift */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
               <input
                 type="text"
                 value={newGiftName}
                 onChange={(e) => { setNewGiftName(e.target.value); setShowSuggestions(true); }}
-                onKeyDown={(e) => { if (e.key === 'Enter') { handleAddGift(); } }}
-                placeholder="Agregar regalo..."
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-rose-500 transition-all min-h-[44px]"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddGift(); }}
+                placeholder="Añadir un regalo..."
+                className="w-full bg-white border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 shadow-sm outline-none text-on-surface"
               />
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleAddGift}
-                disabled={!newGiftName.trim()}
-                className="px-5 py-3 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 min-h-[44px]"
-                aria-label="Agregar regalo"
-              >
-                +
-              </motion.button>
-            </div>
-
-            {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                {filteredSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-rose-50 dark:bg-rose-900/20 transition-colors min-h-[44px]"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {suggestions.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 mt-3">
-                {suggestions
-                  .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
-                  .slice(0, 6)
-                  .map((s) => (
+              {/* Suggestions Dropdown */}
+              {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {filteredSuggestions.map((s) => (
                     <button
                       key={s}
-                      onClick={() => {
-                        apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s })
-                          .then((res) => setGifts((prev) => [...prev, res.gift]))
-                          .catch(() => showToast('Error al agregar regalo', 'error'));
-                      }}
-                      className="whitespace-nowrap bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors shrink-0"
+                      onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-primary-fixed transition-colors"
                     >
                       + {s}
                     </button>
                   ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAddGift}
+              disabled={!newGiftName.trim()}
+              className="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center glow-shadow-pro active:scale-95 transition-all disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined">add</span>
+            </motion.button>
           </div>
 
-          {gifts.length === 0 && (
-            <div className="rounded-2xl p-6 text-center backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 shadow-sm">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-rose-100 to-fuchsia-100 dark:from-rose-900/20 dark:to-fuchsia-900/20 flex items-center justify-center text-2xl">
-                🎁
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">Agrega regalos sugeridos para tu evento</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {suggestions.slice(0, 8).map((s) => (
+          {/* Quick Suggestions */}
+          {suggestions.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 hide-scrollbar">
+              {suggestions
+                .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
+                .slice(0, 6)
+                .map((s) => (
                   <button
                     key={s}
                     onClick={() => {
@@ -489,16 +457,21 @@ export default function EventAdmin() {
                         .then((res) => setGifts((prev) => [...prev, res.gift]))
                         .catch(() => showToast('Error al agregar regalo', 'error'));
                     }}
-                    className="px-3 py-2 min-h-[44px] text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-rose-50 dark:bg-rose-900/20 transition-colors"
+                    className="whitespace-nowrap bg-white border border-outline-variant px-4 py-2 rounded-full font-label-md text-on-surface-variant flex items-center gap-1 active:bg-primary-fixed transition-colors shrink-0"
                   >
-                    + {s}
+                    <span className="material-symbols-outlined text-sm">add</span> {s}
                   </button>
                 ))}
-              </div>
             </div>
           )}
 
-          <div className="space-y-2">
+          {/* Gift List */}
+          {gifts.length === 0 && (
+            <div className="glass p-6 rounded-xl text-center">
+              <p className="text-on-surface-variant">No hay regalos aún. ¡Agrega el primero!</p>
+            </div>
+          )}
+          <div className="space-y-3">
             {gifts.map((gift) => (
               <GiftCard
                 key={gift.id}
@@ -509,59 +482,63 @@ export default function EventAdmin() {
               />
             ))}
           </div>
-        </div>
+        </section>
 
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 font-outfit">Fotos ({photos.length})</h2>
+        {/* Fotos Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-headline-md text-headline-md flex items-center gap-2">
+              Fotos <span className="text-primary font-bold">({photos.length})</span>
+            </h3>
+            <span className="material-symbols-outlined text-on-surface-variant">photo_library</span>
+          </div>
 
           {photos.length === 0 && (
-            <div className="rounded-2xl p-6 text-center mb-4 backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 shadow-sm">
-              <p className="text-gray-500 dark:text-gray-400">Aún no hay fotos. Sube la primera.</p>
+            <div className="glass p-6 rounded-xl text-center">
+              <p className="text-on-surface-variant">Aún no hay fotos. Sube la primera.</p>
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3">
             {photos.map((photo) => (
-              <motion.div
-                key={photo.id}
-                whileHover={{ scale: 1.02 }}
-                className="relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700"
-                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-              >
+              <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden shadow-sm group">
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
-                {photo.caption && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                    <p className="text-white text-xs truncate">{photo.caption}</p>
-                  </div>
-                )}
                 <button
                   onClick={() => setDeletePhotoConfirm(photo.id)}
-                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/40 backdrop-blur-md text-white rounded-full text-sm opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                  aria-label={`Eliminar foto${photo.caption ? `: ${photo.caption}` : ''}`}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
                 >
-                  ✕
+                  <span className="material-symbols-outlined text-sm">close</span>
                 </button>
-              </motion.div>
+              </div>
             ))}
+            {/* Upload Area */}
+            <label className="col-span-2 border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl py-8 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-primary/10 transition-colors">
+              <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+              <p className="font-bold text-primary">{uploading ? 'Subiendo...' : 'Subir más fotos'}</p>
+              <p className="text-caption text-on-surface-variant">JPG o PNG hasta 10MB</p>
+              <input type="file" accept="image/*" onChange={handleUploadPhoto} disabled={uploading} className="hidden" />
+            </label>
           </div>
+        </section>
+      </main>
 
-          <label className="col-span-2 flex flex-col items-center justify-center w-full py-8 border-2 border-dashed border-rose-300/60 dark:border-rose-700/40 bg-rose-50/30 dark:bg-rose-900/10 rounded-xl cursor-pointer hover:bg-rose-50/60 dark:hover:bg-rose-900/20 transition-colors min-h-[120px]">
-            <span className="text-2xl text-rose-500 mb-2">☁️</span>
-            <span className="text-sm font-semibold text-rose-600 dark:text-rose-400">
-              {uploading ? 'Subiendo...' : 'Subir más fotos'}
-            </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG o PNG hasta 5MB</span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleUploadPhoto}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
-        </div>
-      </div>
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
+        <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
+          <span className="font-label-md text-label-md">Eventos</span>
+        </Link>
+        <Link to="/pricing" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
+          <span className="material-symbols-outlined">card_giftcard</span>
+          <span className="font-label-md text-label-md">Planes</span>
+        </Link>
+        <Link to="/account" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
+          <span className="material-symbols-outlined">person</span>
+          <span className="font-label-md text-label-md">Cuenta</span>
+        </Link>
+      </nav>
 
+      {/* Delete Photo Confirmation Modal */}
       {deletePhotoConfirm && (
         <ConfirmModal
           message="¿Eliminar esta foto? Esta acción no se puede deshacer."
@@ -570,41 +547,71 @@ export default function EventAdmin() {
         />
       )}
 
+      {/* Boost Modal */}
       {boostModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}>
-          <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative z-10">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-center space-y-2 relative overflow-hidden">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" id="modalBoost">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setBoostModal(false)} />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-surface w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative z-10"
+          >
+            <div className="bg-secondary p-6 text-center space-y-2 relative overflow-hidden">
+              <div className="shimmer-bg absolute inset-0 opacity-30 pointer-events-none" />
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-white text-3xl">💵</span>
+                <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Activar Lluvia de Sobres</h3>
-              <p className="text-white/80 text-sm">Convierte tus regalos en dinero efectivo</p>
+              <h2 className="font-headline-md text-headline-md text-white">Activar Lluvia de Sobres</h2>
+              <p className="text-white/80 font-label-md">Convierte tus regalos en dinero efectivo</p>
             </div>
             <div className="p-6 space-y-4">
               <ul className="space-y-3">
                 <li className="flex gap-3">
-                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Recibe el 100% del valor de tus regalos en tu cuenta bancaria.</p>
+                  <span className="material-symbols-outlined text-secondary">check_circle</span>
+                  <p className="text-on-surface-variant text-body-md">Recibe el 100% del valor de tus regalos en tu cuenta bancaria.</p>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Tus invitados pueden pagar con cualquier tarjeta o PSE.</p>
+                  <span className="material-symbols-outlined text-secondary">check_circle</span>
+                  <p className="text-on-surface-variant text-body-md">Tus invitados pueden pagar con cualquier tarjeta o PSE.</p>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-amber-500 shrink-0 mt-0.5">✅</span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Habilitado para transferencias internacionales.</p>
+                  <span className="material-symbols-outlined text-secondary">check_circle</span>
+                  <p className="text-on-surface-variant text-body-md">Habilitado para transferencias internacionales.</p>
                 </li>
               </ul>
-              <button onClick={handleBoost} disabled={boostLoading} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center min-h-[56px]">
-                {boostLoading ? <LoadingSpinner size="sm" /> : 'Pagar $4.99'}
+              <button
+                onClick={handleBoost}
+                disabled={boostLoading}
+                className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform disabled:opacity-50"
+              >
+                {boostLoading ? '...' : 'Pagar $4.99'}
               </button>
-              <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="w-full text-sm text-gray-500 dark:text-gray-400 py-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+              <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="w-full text-on-surface-variant font-label-md py-2 hover:text-on-surface transition-colors">
                 Tal vez luego
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar' }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean; confirmLabel?: string }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full sm:max-w-sm bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-colors">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+            {loading ? '...' : confirmLabel}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

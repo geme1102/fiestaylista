@@ -82,11 +82,11 @@ export default function CookiesPolicy() {
   const content = lang === 'es' ? ES : EN;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link to="/" className="text-pink-600 hover:text-pink-700 dark:text-pink-400 text-sm font-medium">
+            <Link to="/" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim text-sm font-medium">
               ← Volver / Back
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{content.title}</h1>

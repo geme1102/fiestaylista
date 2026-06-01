@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode, createRef } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -10,6 +10,8 @@ interface State {
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
+  private panelRef = createRef<HTMLDivElement>();
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -33,31 +35,93 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
   }
 
+  componentDidMount() {
+    this.addParallax();
+  }
+
+  componentWillUnmount() {
+    this.removeParallax();
+  }
+
+  private handleMouseMove = (e: MouseEvent) => {
+    const panel = this.panelRef.current;
+    if (!panel) return;
+    const x = e.clientX / window.innerWidth;
+    const y = e.clientY / window.innerHeight;
+    const intensity = 10;
+    const floatX = (x - 0.5) * intensity;
+    const floatY = (y - 0.5) * intensity;
+    panel.style.transform = `translate3d(${floatX}px, ${floatY}px, 0) rotate3d(${-floatY}, ${floatX}, 0, 5deg)`;
+  };
+
+  private addParallax() {
+    document.addEventListener('mousemove', this.handleMouseMove);
+  }
+
+  private removeParallax() {
+    document.removeEventListener('mousemove', this.handleMouseMove);
+  }
+
   render() {
     if (this.state.hasError) {
-      const errorId = `ERR_${Date.now().toString(36).toUpperCase()}`;
+      const errorId = `ERR_EVENT_FLOW_${Date.now().toString(36).toUpperCase()}`;
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-pink-100 via-white to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 px-4 relative overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl animate-float" />
-            <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-fuchsia-500/5 rounded-full blur-3xl animate-float-slow" />
+        <main
+          className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden"
+          style={{
+            background: 'radial-gradient(circle at top left, #ffffff 0%, #faf9f8 50%, #f4f3f2 100%)',
+          }}
+        >
+          <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary-container/5 rounded-full blur-[120px]" />
+          <div className="relative z-10 w-full max-w-lg text-center space-y-8">
+            <div className="flex justify-center">
+              <div
+                ref={this.panelRef}
+                className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] flex items-center justify-center text-6xl md:text-7xl shadow-xl transition-all duration-500 hover:rotate-3"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.4)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 0 40px rgba(177, 14, 107, 0.15)',
+                  animation: 'float 6s ease-in-out infinite',
+                }}
+              >
+                <span aria-label="Confused face" role="img">😕</span>
+              </div>
+            </div>
+            <div className="space-y-4 px-4">
+              <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface tracking-tight">
+                Algo salió mal
+              </h1>
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                Lo sentimos, ha ocurrido un error inesperado. Por favor, intenta recargar la página para continuar celebrando.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-6 pt-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md text-on-primary active:scale-95 transition-all duration-200 group"
+                style={{
+                  background: 'linear-gradient(135deg, #b10e6b 0%, #d23284 100%)',
+                  boxShadow: '0 8px 20px rgba(177,14,107,0.3)',
+                }}
+              >
+                <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">refresh</span>
+                Recargar página
+              </button>
+              <a href="/" className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors duration-200 border-b border-transparent hover:border-primary pb-1">
+                Volver al inicio
+              </a>
+            </div>
+            <div className="pt-12 opacity-30">
+              <p className="font-caption text-caption uppercase tracking-widest text-on-surface-variant">
+                Error ID: {errorId}
+              </p>
+            </div>
           </div>
-          <div className="text-center max-w-md glass p-10 rounded-2xl relative z-10" style={{ transform: 'perspective(1000px)' }}>
-            <div className="text-6xl mb-4 animate-float">😕</div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Algo salió mal</h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              Ocurrió un error inesperado. Recarga la página para intentar de nuevo.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-rose-500/25 transition-all active:scale-95"
-            >
-              <span className="text-lg">🔄</span>
-              Recargar página
-            </button>
-            <p className="mt-6 text-xs text-gray-400 font-mono">ID: {errorId}</p>
-          </div>
-        </div>
+        </main>
       );
     }
 

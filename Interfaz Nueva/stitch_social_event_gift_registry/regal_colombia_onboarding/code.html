@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Onboarding - Celebrate Life</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#b4136d",
+                    "surface-bright": "#faf9f8",
+                    "surface-container-high": "#e9e8e7",
+                    "inverse-primary": "#ffb0cd",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#e1e0ff",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#4648d4",
+                    "surface-container": "#eeeeed",
+                    "inverse-surface": "#2f3130",
+                    "background": "#faf9f8",
+                    "on-tertiary-fixed": "#07006c",
+                    "on-secondary-fixed": "#2f1500",
+                    "primary-fixed-dim": "#ffb0cd",
+                    "on-secondary": "#ffffff",
+                    "surface": "#faf9f8",
+                    "surface-container-low": "#f4f3f2",
+                    "primary-container": "#d23284",
+                    "on-surface-variant": "#574048",
+                    "outline-variant": "#debec8",
+                    "on-background": "#1a1c1c",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "on-tertiary-container": "#fffbff",
+                    "on-primary-fixed": "#3e0022",
+                    "primary": "#b10e6b",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#ffd9e4",
+                    "surface-variant": "#e3e2e1",
+                    "on-primary-container": "#fffbff",
+                    "secondary-container": "#fe932c",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#8c0053",
+                    "on-surface": "#1a1c1c",
+                    "on-secondary-container": "#663500",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "secondary-fixed": "#ffdcc3",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "tertiary-container": "#6063ee",
+                    "surface-dim": "#dadad9",
+                    "secondary": "#904d00",
+                    "outline": "#8b7079",
+                    "surface-container-highest": "#e3e2e1",
+                    "inverse-on-surface": "#f1f0ef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "gutter": "16px",
+                    "section-gap-mobile": "40px",
+                    "section-gap-desktop": "80px",
+                    "container-margin": "20px"
+            },
+            "fontFamily": {
+                    "label-md": ["Plus Jakarta Sans"],
+                    "display-lg": ["Outfit"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Outfit"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "headline-md": ["Outfit"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Outfit"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .step-transition {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bg-soft-gradient {
+            background: radial-gradient(circle at top left, #fff1f2 0%, #faf9f8 40%, #fdf2f8 100%);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #b10e6b 0%, #d23284 100%);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-soft-gradient min-h-screen font-body-md text-on-surface overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-gutter py-4 bg-transparent no-border flat-no-shadows">
+<div class="flex items-center gap-2">
+<h1 class="font-display-lg text-display-lg text-primary">Celebrate Life</h1>
+</div>
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform">
+            close
+        </button>
+</header>
+<!-- Main Wizard Content -->
+<main class="relative w-full h-screen overflow-hidden" id="wizard-container">
+<!-- Step 1: Event Type -->
+<section class="step-transition absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32" id="step-1">
+<div class="w-full max-w-md">
+<div class="mb-8 text-center">
+<div class="w-full aspect-[4/3] rounded-3xl overflow-hidden mb-6 shadow-2xl shadow-rose-500/10">
+<img alt="Festive Illustration" class="w-full h-full object-cover" data-alt="A festive and elegant celebration scene featuring a beautifully decorated outdoor table with floral arrangements, soft pink napkins, and crystal glassware. The lighting is warm and golden during sunset, creating a joyful and premium atmosphere. The scene is shot with a shallow depth of field to highlight the celebratory details in a high-end, clean style consistent with the brand's sophisticated identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9HzAxEVLiva7iAX3Eab0U-ocAO8e0N4LB3etJBylH80uU9weOwrzKKfYKzP-l7hSbcsWylcwXE2d0iNbnL0flaaLuN5E4GFL2SnFeHgWFyrxXUhl4pYt8uZ6H1hXTuIAP-I5bbf2cL__blx3ZKWRX0kzbWFAGI2qp5a_3sVvS_NKUosV7MNjQxfSi_Uk79Y8tcFLReViB2KD_Fsr4iEK4jCOtX5yibYokYcVyFwkYE1iU245mmzrU9JD1ug4qkQUVQNmVWDWz_VA"/>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile mb-2">¿Qué tipo de evento?</h2>
+<p class="text-on-surface-variant font-body-md">Selecciona la ocasión que vamos a celebrar.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Wedding -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">💍</span>
+<span class="font-label-md text-label-md">Boda</span>
+</button>
+<!-- Baby Shower -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">🍼</span>
+<span class="font-label-md text-label-md">Baby Shower</span>
+</button>
+<!-- Birthday -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">🎂</span>
+<span class="font-label-md text-label-md">Cumpleaños</span>
+</button>
+<!-- Baptism -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">⛪</span>
+<span class="font-label-md text-label-md">Bautizo</span>
+</button>
+<!-- Communion -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">🕊️</span>
+<span class="font-label-md text-label-md">Primera Comunión</span>
+</button>
+<!-- Other -->
+<button class="glass-card p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 border-transparent group" onclick="selectEventType(this)">
+<span class="text-3xl">✨</span>
+<span class="font-label-md text-label-md">Otro</span>
+</button>
+</div>
+<div class="mt-8 flex justify-end">
+<button class="primary-gradient text-on-primary px-8 py-3 rounded-full font-label-md text-label-md shadow-lg shadow-rose-500/20 flex items-center gap-2 hover:opacity-90 transition-all scale-95 active:scale-90" onclick="nextStep(2)">
+                        Continuar
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Step 2: Event Name -->
+<section class="step-transition absolute inset-0 translate-x-full flex flex-col items-center justify-center px-container-margin pt-20 pb-32" id="step-2">
+<div class="w-full max-w-md">
+<div class="text-center mb-12">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile mb-4">¿Cómo se llama tu evento?</h2>
+<p class="text-on-surface-variant font-body-md px-4">Dale un nombre especial a tu lista de regalos.</p>
+</div>
+<div class="relative mb-16">
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors" id="event-name" placeholder="Boda de Ana y Luis" type="text"/>
+</div>
+<div class="flex items-center justify-between gap-4">
+<button class="px-6 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-white/10 rounded-full transition-all" onclick="prevStep(1)">
+                        Atrás
+                    </button>
+<button class="primary-gradient text-on-primary px-10 py-3 rounded-full font-label-md text-label-md shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all scale-95 active:scale-90" onclick="nextStep(3)">
+                        Continuar
+                    </button>
+</div>
+</div>
+</section>
+<!-- Step 3: Success -->
+<section class="step-transition absolute inset-0 translate-x-full flex flex-col items-center justify-center px-container-margin pt-20 pb-32" id="step-3">
+<div class="w-full max-w-md">
+<div class="text-center mb-8">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile mb-2">¡Todo listo!</h2>
+<p class="text-on-surface-variant font-body-md">Estamos listos para empezar esta celebración.</p>
+</div>
+<div class="glass-card rounded-2xl p-8 mb-8 border border-white/40 shadow-xl shadow-rose-500/5 relative overflow-hidden group">
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500"></div>
+<div class="flex flex-col items-center text-center gap-4 relative z-10">
+<div class="w-20 h-20 bg-primary-fixed flex items-center justify-center rounded-full text-4xl shadow-inner mb-2">
+<span id="summary-icon">💍</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-caption text-caption uppercase tracking-widest mb-1" id="summary-type">TU BODA</p>
+<h3 class="font-headline-md text-headline-md text-primary" id="summary-name">Boda de Ana y Luis</h3>
+</div>
+<div class="w-full h-px bg-outline-variant/30 my-2"></div>
+<p class="text-body-md text-on-surface-variant px-2 italic font-light">"Un viaje de mil millas comienza con un solo paso."</p>
+</div>
+</div>
+<div class="space-y-4">
+<button class="w-full primary-gradient text-on-primary py-4 rounded-xl font-label-md text-label-md shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all scale-95 active:scale-90">
+                        Crear mi primer evento
+                    </button>
+<button class="w-full py-3 text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors">
+                        Saltar este paso
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-center gap-4 items-center pb-8 pt-4 bg-surface/10 backdrop-blur-xl border-t border-white/20 shadow-rose-500/20 shadow-lg rounded-t-xl">
+<div class="w-2 h-2 rounded-full transition-all duration-300 bg-primary-container text-on-primary-container p-2 scale-125" id="dot-1"></div>
+<div class="w-2 h-2 rounded-full transition-all duration-300 text-on-surface-variant/50 p-2 bg-on-surface-variant/20" id="dot-2"></div>
+<div class="w-2 h-2 rounded-full transition-all duration-300 text-on-surface-variant/50 p-2 bg-on-surface-variant/20" id="dot-3"></div>
+</nav>
+<script>
+        let currentStep = 1;
+        let selectedIcon = "💍";
+        let selectedLabel = "Boda";
+
+        function selectEventType(element) {
+            // Remove selection from others
+            document.querySelectorAll('#step-1 button').forEach(btn => {
+                btn.classList.remove('border-primary', 'ring-2', 'ring-primary/20', 'bg-white/60');
+                btn.classList.add('border-transparent');
+            });
+            // Apply selection
+            element.classList.remove('border-transparent');
+            element.classList.add('border-primary', 'ring-2', 'ring-primary/20', 'bg-white/60');
+            
+            selectedIcon = element.querySelector('.text-3xl').innerText;
+            selectedLabel = element.querySelector('.font-label-md').innerText;
+            
+            // Update summary
+            document.getElementById('summary-icon').innerText = selectedIcon;
+            document.getElementById('summary-type').innerText = `TU ${selectedLabel.toUpperCase()}`;
+        }
+
+        function updateDots(step) {
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i === step) {
+                    dot.className = "w-2 h-2 rounded-full transition-all duration-300 bg-primary-container text-on-primary-container p-2 scale-125";
+                } else {
+                    dot.className = "w-2 h-2 rounded-full transition-all duration-300 text-on-surface-variant/50 p-2 bg-on-surface-variant/20";
+                }
+            }
+        }
+
+        function nextStep(step) {
+            const currentEl = document.getElementById(`step-${currentStep}`);
+            const nextEl = document.getElementById(`step-${step}`);
+            
+            // Sync values for last step
+            if (step === 3) {
+                const nameInput = document.getElementById('event-name');
+                const finalName = nameInput.value.trim() || nameInput.placeholder;
+                document.getElementById('summary-name').innerText = finalName;
+            }
+
+            currentEl.classList.add('-translate-x-full');
+            currentEl.classList.remove('translate-x-0');
+            
+            nextEl.classList.remove('translate-x-full');
+            nextEl.classList.add('translate-x-0');
+            
+            currentStep = step;
+            updateDots(currentStep);
+        }
+
+        function prevStep(step) {
+            const currentEl = document.getElementById(`step-${currentStep}`);
+            const prevEl = document.getElementById(`step-${step}`);
+            
+            currentEl.classList.add('translate-x-full');
+            currentEl.classList.remove('translate-x-0');
+            
+            prevEl.classList.remove('-translate-x-full');
+            prevEl.classList.add('translate-x-0');
+            
+            currentStep = step;
+            updateDots(currentStep);
+        }
+
+        // Initialize first selection
+        window.onload = () => {
+            selectEventType(document.querySelector('#step-1 button'));
+        };
+    </script>
+</body></html>

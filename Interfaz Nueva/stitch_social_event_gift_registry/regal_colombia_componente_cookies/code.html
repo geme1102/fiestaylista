@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Celebration Luxe - Configuración de Cookies</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#8b7079",
+                    "surface-variant": "#e3e2e1",
+                    "on-background": "#1a1c1c",
+                    "secondary-container": "#fe932c",
+                    "primary-fixed-dim": "#ffb0cd",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#4648d4",
+                    "primary": "#b10e6b",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#2f1500",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2f3130",
+                    "tertiary-container": "#6063ee",
+                    "on-surface": "#1a1c1c",
+                    "surface-bright": "#faf9f8",
+                    "surface": "#faf9f8",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#ffd9e4",
+                    "surface-container-high": "#e9e8e7",
+                    "primary-container": "#d23284",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "on-tertiary-container": "#fffbff",
+                    "background": "#faf9f8",
+                    "inverse-primary": "#ffb0cd",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#f1f0ef",
+                    "on-secondary-container": "#663500",
+                    "on-primary-container": "#fffbff",
+                    "surface-tint": "#b4136d",
+                    "on-tertiary-fixed": "#07006c",
+                    "on-surface-variant": "#574048",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e1e0ff",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "secondary-fixed": "#ffdcc3",
+                    "outline-variant": "#debec8",
+                    "surface-container-highest": "#e3e2e1",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dadad9",
+                    "surface-container": "#eeeeed",
+                    "secondary": "#904d00",
+                    "surface-container-low": "#f4f3f2",
+                    "on-primary-fixed": "#3e0022",
+                    "on-primary-fixed-variant": "#8c0053",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-gap-desktop": "80px",
+                    "section-gap-mobile": "40px",
+                    "gutter": "16px",
+                    "container-margin": "20px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "display-lg": ["Outfit"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-md": ["Outfit"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "headline-lg": ["Outfit"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "800"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass {
+            background: rgba(250, 249, 248, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #b10e6b 0%, #d23284 100%);
+        }
+        .glow-shadow-primary {
+            box-shadow: 0 10px 25px -5px rgba(177, 14, 107, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen font-body-md overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex items-center justify-between px-container-margin h-16 w-full">
+<div class="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="card_giftcard">card_giftcard</span>
+<h1 class="font-display-lg text-headline-md tracking-tighter text-primary">Celebration Luxe</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:opacity-80 transition-opacity" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<!-- Main Content Simulation (To show context) -->
+<main class="pt-24 pb-32 px-container-margin max-w-7xl mx-auto space-y-12">
+<section class="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl">
+<img class="w-full h-full object-cover" data-alt="A luxurious Colombian wedding reception scene set in a historic colonial courtyard at dusk. The space is filled with warm string lights, elegant floral arrangements in shades of white and pink, and sophisticated glass table settings. The lighting is soft and golden, creating a romantic, aspirational atmosphere that reflects the premium Celebration Luxe brand identity. The color palette is dominated by warm neutrals with vibrant rose-colored floral accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcHpuJkEJl6HMKS7P8syHUcEvUdi3RAEeO3yVEdN3Q9-nklyOB0FokGbSJK92ClcPlkjzt6EuK02HsDj3UQ3Vc2CNGzAidAWh5K3vUMAiADYqvSC7zFJMN15H2BM8FZKrUdDH7vx3d9I1sWmYuq3ts03emnLoLgZggsKahU6V5aAaO0n0M0shL4DER62t15G7oc_HVQNXUgOPxtlglUvFc6TQnxDq5gZx-LVjGd0Lg-PFBanN8OyZmlfnsc2y5PILccqrmX3I8yTA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+<div class="text-white space-y-2">
+<h2 class="font-headline-lg text-headline-lg">Crea momentos inolvidables</h2>
+<p class="font-body-lg text-body-lg opacity-90 max-w-xl">La plataforma premium para listas de regalos en Colombia. Bodas, Baby Showers y más.</p>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="glass p-8 rounded-3xl shadow-sm space-y-4">
+<div class="w-12 h-12 rounded-xl gradient-btn flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="redeem">redeem</span>
+</div>
+<h3 class="font-headline-md text-headline-md">Regalos Físicos</h3>
+<p class="text-on-surface-variant">Una selección curada de las mejores marcas y diseñadores locales.</p>
+</div>
+<div class="glass p-8 rounded-3xl shadow-sm space-y-4 border-2 border-secondary/20">
+<div class="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-white shadow-lg shadow-secondary/20">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<h3 class="font-headline-md text-headline-md">Fondos en Efectivo</h3>
+<p class="text-on-surface-variant">Recibe el dinero directamente para tu luna de miel o ahorros.</p>
+</div>
+<div class="glass p-8 rounded-3xl shadow-sm space-y-4">
+<div class="w-12 h-12 rounded-xl gradient-btn flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="celebration">celebration</span>
+</div>
+<h3 class="font-headline-md text-headline-md">Gestión Total</h3>
+<p class="text-on-surface-variant">Panel intuitivo para agradecer y seguir cada detalle de tu evento.</p>
+</div>
+</section>
+</main>
+<!-- 1. COOKIE BANNER (Initial State) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-fit max-w-4xl z-[60] animate-fade-in" id="cookie-banner">
+<div class="glass p-6 md:p-8 rounded-[32px] shadow-2xl flex flex-col md:flex-row items-center gap-6 border-white/40">
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="cookie">cookie</span>
+<span class="font-label-md text-caption uppercase tracking-widest">Privacidad</span>
+</div>
+<p class="font-body-md text-on-surface leading-relaxed">
+                    Usamos cookies para mejorar tu experiencia. <span class="text-on-surface-variant">We use cookies to improve your experience.</span>
+<a class="text-primary font-semibold underline underline-offset-4 ml-1 hover:opacity-80 transition-opacity" href="#">Más información</a>
+</p>
+</div>
+<div class="flex flex-wrap justify-center items-center gap-3 w-full md:w-auto">
+<button class="px-5 py-3 rounded-xl font-label-md text-primary hover:bg-primary/5 active:scale-95 transition-all" onclick="toggleSettings()">
+                    Configurar
+                </button>
+<button class="px-5 py-3 rounded-xl font-label-md text-on-surface-variant bg-surface-container-high hover:bg-surface-variant active:scale-95 transition-all">
+                    Rechazar
+                </button>
+<button class="px-8 py-3 rounded-xl font-label-md text-white gradient-btn glow-shadow-primary active:scale-95 transition-all" onclick="acceptAll()">
+                    Aceptar todas
+                </button>
+</div>
+</div>
+</div>
+<!-- 2. CONFIGURATION PANEL (Overlay State) -->
+<div class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6" id="cookie-settings">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onclick="toggleSettings()"></div>
+<!-- Panel Card -->
+<div class="relative bg-surface p-8 md:p-10 rounded-[40px] shadow-2xl w-full max-w-lg space-y-8 animate-fade-in border border-outline-variant/30">
+<div class="space-y-2 text-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Configuración de Privacidad</h3>
+<p class="font-body-md text-on-surface-variant">Personaliza cómo interactuamos con tus datos para brindarte la mejor experiencia Celebration Luxe.</p>
+</div>
+<!-- Options List -->
+<div class="space-y-4">
+<!-- Esenciales -->
+<label class="flex items-center justify-between p-5 bg-surface-container-low rounded-2xl border border-transparent hover:border-primary/20 transition-all cursor-not-allowed group">
+<div class="space-y-1">
+<span class="font-label-md text-on-surface block">Cookies Esenciales</span>
+<span class="text-caption text-on-surface-variant">(Siempre activas)</span>
+</div>
+<div class="relative inline-flex items-center">
+<input checked="" class="w-6 h-6 rounded-lg text-primary-container border-outline-variant opacity-50 focus:ring-primary pointer-events-none" disabled="" type="checkbox"/>
+</div>
+</label>
+<!-- Analíticas -->
+<label class="flex items-center justify-between p-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl hover:border-primary/50 transition-all cursor-pointer group">
+<div class="space-y-1">
+<span class="font-label-md text-on-surface block">Cookies Analíticas</span>
+<span class="text-caption text-on-surface-variant">Para entender cómo usas nuestra plataforma.</span>
+</div>
+<input class="w-6 h-6 rounded-lg text-primary border-outline-variant focus:ring-primary focus:ring-offset-2 cursor-pointer transition-colors" type="checkbox"/>
+</label>
+<!-- Preferencias -->
+<label class="flex items-center justify-between p-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl hover:border-primary/50 transition-all cursor-pointer group">
+<div class="space-y-1">
+<span class="font-label-md text-on-surface block">Cookies de Preferencia</span>
+<span class="text-caption text-on-surface-variant">Recordamos tus selecciones y listas favoritas.</span>
+</div>
+<input class="w-6 h-6 rounded-lg text-primary border-outline-variant focus:ring-primary focus:ring-offset-2 cursor-pointer transition-colors" type="checkbox"/>
+</label>
+</div>
+<!-- Modal Actions -->
+<div class="flex flex-col gap-3">
+<button class="w-full py-4 rounded-2xl font-label-md text-white gradient-btn glow-shadow-primary hover:opacity-90 active:scale-[0.98] transition-all" onclick="acceptAll()">
+                    Aceptar todas
+                </button>
+<button class="w-full py-4 rounded-2xl font-label-md text-primary border-2 border-primary/20 hover:bg-primary/5 active:scale-[0.98] transition-all" onclick="toggleSettings()">
+                    Guardar configuración
+                </button>
+</div>
+</div>
+</div>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_0_rgba(177,14,107,0.1)] rounded-t-xl h-20 px-4 pb-safe flex justify-around items-center">
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="card_giftcard">card_giftcard</span>
+<span class="font-label-md text-caption">Regalos</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary font-bold">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-caption">Inicio</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-md text-caption">Lista</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-caption">Perfil</span>
+</div>
+</nav>
+<!-- Footer (Desktop) -->
+<footer class="hidden md:flex flex-col items-center gap-base text-center w-full px-container-margin py-section-gap-desktop bg-surface-container-low border-t border-outline-variant mt-20">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="card_giftcard">card_giftcard</span>
+<span class="font-display-lg text-primary text-xl">Celebration Luxe</span>
+</div>
+<div class="flex gap-6 mb-4">
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacidad</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Términos</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Cookies</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Contacto</a>
+</div>
+<p class="font-body-md text-on-surface-variant opacity-60">© 2024 Celebration Luxe. Todos los derechos reservados.</p>
+</footer>
+<script>
+        function toggleSettings() {
+            const settings = document.getElementById('cookie-settings');
+            const banner = document.getElementById('cookie-banner');
+            
+            if (settings.classList.contains('hidden')) {
+                settings.classList.remove('hidden');
+                settings.classList.add('flex');
+                banner.classList.add('hidden');
+            } else {
+                settings.classList.add('hidden');
+                settings.classList.remove('flex');
+                banner.classList.remove('hidden');
+            }
+        }
+
+        function acceptAll() {
+            const banner = document.getElementById('cookie-banner');
+            const settings = document.getElementById('cookie-settings');
+            
+            // Interaction feedback
+            const activeBtn = event.currentTarget;
+            activeBtn.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                banner.style.opacity = '0';
+                banner.style.transform = 'translate(-50%, 20px)';
+                settings.classList.add('hidden');
+                settings.classList.remove('flex');
+                
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 400);
+            }, 100);
+        }
+    </script>
+</body></html>

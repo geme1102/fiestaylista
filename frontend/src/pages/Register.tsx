@@ -89,17 +89,17 @@ export default function Register() {
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-rose-500/25">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
                   F
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent font-outfit">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-outfit">Crear Cuenta</h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 ¿Ya tienes cuenta?{' '}
-                <Link to="/login" className="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium">
+                <Link to="/login" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
                   Inicia Sesión
                 </Link>
               </p>
@@ -115,7 +115,7 @@ export default function Register() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Tu nombre"
                   autoComplete="name"
                 />
@@ -130,7 +130,7 @@ export default function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                 />
@@ -145,7 +145,7 @@ export default function Register() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
                 />
@@ -162,11 +162,11 @@ export default function Register() {
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(e) => setAcceptTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 accent-rose-500"
+                    className="mt-1 w-4 h-4 accent-primary"
                   />
                   <span className="text-xs text-gray-600 dark:text-gray-400">
                     Acepto los{' '}
-                    <Link to="/terminos-y-condiciones" target="_blank" className="text-rose-600 hover:underline">Términos y Condiciones</Link>
+                    <Link to="/terminos-y-condiciones" target="_blank" className="text-primary hover:underline">Términos y Condiciones</Link>
                     {' '}y confirmo que soy mayor de 14 años.
                   </span>
                 </label>
@@ -175,11 +175,11 @@ export default function Register() {
                     type="checkbox"
                     checked={acceptPrivacy}
                     onChange={(e) => setAcceptPrivacy(e.target.checked)}
-                    className="mt-1 w-4 h-4 accent-rose-500"
+                    className="mt-1 w-4 h-4 accent-primary"
                   />
                   <span className="text-xs text-gray-600 dark:text-gray-400">
                     Acepto la{' '}
-                    <Link to="/politica-de-privacidad" target="_blank" className="text-rose-600 hover:underline">Política de Privacidad</Link>
+                    <Link to="/politica-de-privacidad" target="_blank" className="text-primary hover:underline">Política de Privacidad</Link>
                     {' '}y el tratamiento de mis datos personales según la Ley 1581 de 2012.
                   </span>
                 </label>
@@ -188,7 +188,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading || !acceptTerms || !acceptPrivacy}
-                className="w-full py-3 px-6 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-rose-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Crear Cuenta'}
               </button>

@@ -115,7 +115,7 @@ export const EVENT_ICONS: Record<EventType, string> = {
 };
 
 export const THEME_COLORS: Record<EventType, { primary: string; light: string; dark: string; gradient: string }> = {
-  BABY_SHOWER: { primary: '#ec4899', light: '#fdf2f8', dark: '#be185d', gradient: 'from-pink-400 to-rose-500' },
+  BABY_SHOWER: { primary: '#ec4899', light: '#fdf2f8', dark: '#be185d', gradient: 'from-primary to-primary-container' },
   WEDDING: { primary: '#6366f1', light: '#eef2ff', dark: '#4338ca', gradient: 'from-indigo-400 to-violet-500' },
   BIRTHDAY: { primary: '#f59e0b', light: '#fffbeb', dark: '#d97706', gradient: 'from-amber-400 to-orange-500' },
   BAPTISM: { primary: '#0ea5e9', light: '#f0f9ff', dark: '#0284c7', gradient: 'from-sky-400 to-blue-500' },
