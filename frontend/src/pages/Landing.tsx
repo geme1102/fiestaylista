@@ -238,7 +238,7 @@ function CategoryCard3D({ type, index }: { type: typeof EVENT_TYPES[number]; ind
         </span>
 
         <span
-          className="text-xs text-surface-variant group-hover:text-primary/70 transition-colors duration-300"
+          className="text-xs text-on-surface-variant dark:text-surface-variant group-hover:text-primary/70 transition-colors duration-300"
           style={{ transform: 'translateZ(10px)' }}
         >
           Ver más →
@@ -555,7 +555,7 @@ export default function Landing() {
                     </div>
                     <div>
                       <p className="font-semibold text-on-surface dark:text-inverse-on-surface text-sm">{t.name}</p>
-                      <p className="text-xs text-surface-variant">{t.role}</p>
+                      <p className="text-xs text-on-surface-variant dark:text-surface-variant">{t.role}</p>
                     </div>
                   </div>
                 </div>
