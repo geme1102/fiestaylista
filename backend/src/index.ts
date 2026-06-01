@@ -62,7 +62,23 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: config.FRONTEND_URL,
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      config.FRONTEND_URL,
+      ...(config.NODE_ENV === 'production'
+        ? [
+            'https://fiestaylista.com',
+            'https://www.fiestaylista.com',
+            /\.netlify\.app$/,
+          ]
+        : []),
+    ];
+    if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origen no permitido: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 

@@ -32,10 +32,10 @@ const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS]
 const TYPING_PHRASES = ['compartir momentos', 'recibir con amor', 'celebrar en familia'];
 
 const SOCIAL_PROOFS = [
-  { name: 'Tía María', action: 'envió un sobre de', amount: 100, icon: '✉️', delay: 0 },
-  { name: 'Carlos', action: 'apartó', amount: null, icon: '🎁', delay: 1.2 },
-  { name: 'Abuela Rosa', action: 'envió un sobre de', amount: 200, icon: '💌', delay: 2.4 },
-  { name: 'Los primos', action: 'aportaron', amount: 150, icon: '💰', delay: 3.6 },
+  { name: 'Un usuario', action: 'creó su lista de', amount: null, icon: '🎉', delay: 0 },
+  { name: 'Un invitado', action: 'apartó un regalo de', amount: null, icon: '🎁', delay: 1.2 },
+  { name: 'Una organizadora', action: 'compartió su evento', amount: null, icon: '✨', delay: 2.4 },
+  { name: 'Un invitado', action: 'envió una felicitación', amount: null, icon: '💌', delay: 3.6 },
 ];
 
 function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pauseTime = 2500) {
@@ -189,10 +189,7 @@ function SocialProofFloating() {
               <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-amber-200/30 dark:border-amber-800/20 shadow-lg shadow-rose-500/5">
                 <span className="text-lg">{proof.icon}</span>
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  <strong className="text-rose-600 dark:text-rose-400">{proof.name}</strong> {proof.action}{' '}
-                  {proof.amount && (
-                    <strong className="text-amber-600 dark:text-amber-400">${proof.amount}</strong>
-                  )}
+                  <strong className="text-rose-600 dark:text-rose-400">{proof.name}</strong> {proof.action}
                 </span>
               </div>
             </motion.div>

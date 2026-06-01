@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+  }
+}
+
 type CookiePrefs = {
   essential: true;
   analytics: boolean;
@@ -19,6 +26,20 @@ function getStoredPrefs(): CookiePrefs | null {
 
 function storePrefs(prefs: CookiePrefs): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  applyConsent(prefs);
+}
+
+function applyConsent(prefs: CookiePrefs): void {
+  if (typeof window === 'undefined' || !window.gtag) return;
+  window.gtag('consent', 'update', {
+    analytics_storage: prefs.analytics ? 'granted' : 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    functionality_storage: prefs.preferences ? 'granted' : 'denied',
+    personalization_storage: prefs.preferences ? 'granted' : 'denied',
+    security_storage: 'granted',
+  });
 }
 
 export default function CookieBanner() {
@@ -28,7 +49,9 @@ export default function CookieBanner() {
 
   useEffect(() => {
     const existing = getStoredPrefs();
-    if (!existing) {
+    if (existing) {
+      applyConsent(existing);
+    } else {
       setShowBanner(true);
     }
   }, []);
@@ -64,7 +87,6 @@ export default function CookieBanner() {
           <>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
               Usamos cookies esenciales para el funcionamiento de la plataforma y cookies opcionales para mejorar tu experiencia.
-              {/* EN: We use essential cookies for platform functionality and optional cookies to enhance your experience. */}
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <button

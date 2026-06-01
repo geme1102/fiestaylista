@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { apiClient } from '../services/api';
 
 interface LiveStats {
   totalEvents: number;
@@ -36,8 +37,7 @@ export default function LiveCounter() {
   const [stats, setStats] = useState<LiveStats | null>(null);
 
   useEffect(() => {
-    fetch('/api/public/stats')
-      .then(r => r.json())
+    apiClient.get<{ events?: number }>('/api/public/stats')
       .then((data) => {
         if (data.events !== undefined) {
           setStats({ totalEvents: data.events, eventsToday: 0 });
