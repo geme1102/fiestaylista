@@ -12,5 +12,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/drizzle.config.js ./
 COPY --from=builder /app/src/db/migrations ./src/db/migrations
 COPY backend/package*.json ./
+COPY backend/startup.sh ./
+RUN chmod +x startup.sh
 EXPOSE 3001
-CMD ["sh", "-c", "npx drizzle-kit migrate --config=./drizzle.config.js && node dist/index.js"]
+CMD ["./startup.sh"]
