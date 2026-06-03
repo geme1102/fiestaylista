@@ -161,7 +161,9 @@ export default function ArcoRights() {
     try {
       const res = await apiClient.get<{ requests: any[] }>('/api/auth/arco/requests');
       setRequests(res.requests);
-    } catch {}
+    } catch (err) {
+      console.error('[ArcoRights] loadRequests error:', err);
+    }
   };
 
   const openForm = (type: 'rectify' | 'oppose') => {

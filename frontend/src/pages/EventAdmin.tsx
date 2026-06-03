@@ -11,6 +11,7 @@ import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
@@ -151,8 +152,8 @@ export default function EventAdmin() {
       showToast('Solo se permiten imágenes', 'error');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('La imagen no debe superar los 5MB', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('La imagen no debe superar los 10MB', 'error');
       return;
     }
     setUploading(true);
@@ -265,9 +266,7 @@ export default function EventAdmin() {
           </Link>
           <h1 className="font-headline-md text-headline-md text-primary">Administrar Evento</h1>
         </div>
-        <button className="active:scale-95 duration-200 text-primary">
-          <span className="material-symbols-outlined">settings</span>
-        </button>
+        <div className="w-10" />
       </nav>
 
       <main className="mt-20 px-container-margin space-y-6">
@@ -599,20 +598,4 @@ export default function EventAdmin() {
   );
 }
 
-function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar' }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean; confirmLabel?: string }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-sm bg-surface p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
-        <p className="text-sm text-on-surface-variant mb-6">{message}</p>
-        <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
-            Cancelar
-          </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
-            {loading ? '...' : confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+

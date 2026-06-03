@@ -4,6 +4,8 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
+import { requireAuth } from '../middleware/auth.js';
+import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
@@ -37,19 +39,31 @@ router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) 
   }
 });
 
-router.get('/analytics/views/:eventId', async (req: Request, res: Response) => {
+router.get('/analytics/views/:eventId', requireAuth, async (req: AuthRequest, res: Response, next) => {
   try {
     const eventId = req.params.eventId;
+    const userId = req.user!.userId;
+
+    const [event] = await db
+      .select({ ownerId: events.userId })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+
+    if (!event || event.ownerId !== userId) {
+      res.status(404).json({ error: 'Evento no encontrado' });
+      return;
+    }
 
     const [result] = await db
       .select({ views: events.viewCount })
       .from(events)
-      .where(eq(events.id, eventId as string))
+      .where(eq(events.id, eventId))
       .limit(1);
 
     res.json({ eventId, views: result?.views ?? 0 });
-  } catch {
-    res.json({ eventId: req.params.eventId, views: 0 });
+  } catch (err) {
+    next(err);
   }
 });
 

@@ -43,7 +43,10 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
         const contribRes = await getContributions(res.cashFund.id);
         setContributions(contribRes.contributions.filter((c) => c.status === 'completed'));
       }
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar fondo';
+      showToast(message, 'error');
+      console.error('[CashFund] loadFund error:', err);
     } finally {
       setLoading(false);
     }
@@ -451,7 +454,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">
-            {loading ? '...' : 'Pagar $4.99'}
+            {loading ? '...' : 'Pagar $10.000 COP'}
           </button>
         </div>
       </motion.div>

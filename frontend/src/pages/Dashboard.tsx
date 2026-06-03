@@ -7,31 +7,9 @@ import { THEME_COLORS, EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, t
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCOP } from '../utils/format';
 import { cn } from '../utils/cn';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'];
-
-
-function ConfirmModal({ message, onConfirm, onClose, loading }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-md bg-surface p-8 rounded-3xl shadow-2xl text-center animate-zoom-in">
-        <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="material-symbols-outlined text-4xl">warning</span>
-        </div>
-        <h2 className="text-lg font-bold text-on-surface mb-2">¿Estás seguro?</h2>
-        <p className="text-sm text-on-surface-variant mb-8">{message}</p>
-        <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">
-            Cancelar
-          </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-red-500 hover:opacity-90 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50">
-            {loading ? '...' : 'Eliminar'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
   }
 }
 
@@ -20,7 +19,9 @@ function getStoredPrefs(): CookiePrefs | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch (err) {
+    console.warn('[CookieBanner] Error parsing stored prefs:', err);
+  }
   return null;
 }
 

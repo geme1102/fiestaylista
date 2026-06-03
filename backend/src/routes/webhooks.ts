@@ -15,8 +15,11 @@ function verifyMpSignature(req: Request): boolean {
   const signature = req.headers['x-signature'] as string;
   if (!signature) return false;
 
-  const webhookSecret = config.MERCADO_PAGO_WEBHOOK_SECRET || config.MERCADO_PAGO_ACCESS_TOKEN;
-  if (!webhookSecret) return false;
+  const webhookSecret = config.MERCADO_PAGO_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('[MP Webhook] MERCADO_PAGO_WEBHOOK_SECRET no configurado');
+    return false;
+  }
 
   const parts = signature.split(',');
   let ts = '';

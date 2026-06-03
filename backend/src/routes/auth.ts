@@ -5,15 +5,13 @@ import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
-import { config } from '../config.js';
-
 const router = Router();
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'strict',
     path: '/api/auth/refresh',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -83,7 +81,7 @@ router.post('/login', authLimiter, async (req, res, next) => {
 
 router.post('/refresh', refreshLimiter, async (req, res, next) => {
   try {
-    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
       throw new ValidationError('Token de refresco requerido');
     }

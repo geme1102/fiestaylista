@@ -63,11 +63,11 @@ export default function NotFound() {
                 <span className="text-caption text-outline">Descubre lo más pedido en Colombia.</span>
               </div>
             </Link>
-            <Link to="/contacto" className="glass-card p-6 rounded-2xl text-left flex items-start gap-4 hover:bg-white/60 transition-all duration-300 group border border-white/40">
-              <span className="material-symbols-outlined text-secondary p-2 bg-secondary/5 rounded-lg group-hover:scale-110 transition-transform">help</span>
+            <Link to="/" className="glass-card p-6 rounded-2xl text-left flex items-start gap-4 hover:bg-white/60 transition-all duration-300 group border border-white/40">
+              <span className="material-symbols-outlined text-secondary p-2 bg-secondary/5 rounded-lg group-hover:scale-110 transition-transform">home</span>
               <div>
-                <span className="font-label-md text-label-md text-on-surface block">Soporte</span>
-                <span className="text-caption text-outline">¿Necesitas ayuda con tu lista?</span>
+                <span className="font-label-md text-label-md text-on-surface block">Inicio</span>
+                <span className="text-caption text-outline">Volver al inicio de Fiesta y Lista</span>
               </div>
             </Link>
           </div>

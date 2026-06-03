@@ -32,7 +32,11 @@ export default function Account() {
   useEffect(() => {
     getCurrentSubscription()
       .then((res) => setSubscription(res.subscription))
-      .catch(() => {})
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
+        showToast(message, 'error');
+        console.error('[Account] subscription error:', err);
+      })
       .finally(() => setLoadingSub(false));
   }, []);
 

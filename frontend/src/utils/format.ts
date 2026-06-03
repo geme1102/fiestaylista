@@ -32,6 +32,7 @@ export function formatDate(date: string): string {
   return `${d.getDate()} de ${MONTHS[d.getMonth()]}, ${d.getFullYear()}`;
 }
 
-export function formatCOP(amount: number): string {
+export function formatCOP(amount: number | null | undefined): string {
+  if (amount == null || isNaN(amount)) return '$0';
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount);
 }

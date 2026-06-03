@@ -217,8 +217,7 @@
 .animate-marquee-scroll:hover { animation-play-state: paused; }
 .animate-avatar-pulse-ring { animation: avatar-pulse-ring 2.5s ease-in-out infinite; }
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
-.animate-reveal { animation: reveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-.animate-cascade-in { animation: cascadeIn 0.6s ease forwards; }
+
 .animate-zoom-in { animation: zoom-in 0.3s ease-out; }
 
 .shimmer-bg {
@@ -252,10 +251,6 @@
 .space-fluid-section { padding-top: clamp(4rem, 8vw, 8rem); padding-bottom: clamp(4rem, 8vw, 8rem); }
 
 /* Organic clip path for photos */
-.clip-path-organic {
-  clip-path: polygon(0% 5%, 10% 0%, 90% 0%, 100% 5%, 100% 95%, 90% 100%, 10% 100%, 0% 95%);
-}
-
 .glass-card {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(16px);
@@ -282,15 +277,6 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-}
-
-.glass-card-gold {
-  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,240,0.95));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(217, 119, 6, 0.2);
-  position: relative;
-  box-shadow: 0 4px 24px rgba(217, 119, 6, 0.08), 0 1px 4px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255,215,0,0.1);
 }
 
 .primary-gradient {
