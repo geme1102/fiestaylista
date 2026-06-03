@@ -1,9 +1,10 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
+import SplashIntro from './components/SplashIntro';
 
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
@@ -76,6 +77,13 @@ function TitleUpdater() {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+  const handleSplashDone = useCallback(() => setSplashDone(true), []);
+
+  if (!splashDone) {
+    return <SplashIntro onComplete={handleSplashDone} />;
+  }
+
   return (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
       <TitleUpdater />
