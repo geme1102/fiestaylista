@@ -427,7 +427,6 @@ export default function EventGuest() {
                     gift={gift}
                     onClaim={handleClaim}
                     claimingId={claimingId}
-                    easyRead={easyReadMode}
                   />
                 ))}
               </div>
@@ -452,7 +451,6 @@ export default function EventGuest() {
                         key={gift.id}
                         gift={gift}
                         isAdmin={false}
-                        easyRead={easyReadMode}
                       />
                     ))}
                   </div>

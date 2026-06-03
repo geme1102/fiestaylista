@@ -35,7 +35,7 @@ function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () 
             onClick={onRefresh}
             className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-on-surface-variant bg-surface rounded-lg border border-amber-200 shadow-sm hover:bg-surface-container-low transition-colors min-h-[36px]"
           >
-            Ya lo verifiqué
+            Ya lo verifiquÃ©
           </button>
         </div>
       </div>
@@ -50,7 +50,7 @@ function ConfirmModal({ message, onConfirm, onClose, loading }: { message: strin
         <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="material-symbols-outlined text-4xl">warning</span>
         </div>
-        <h2 className="text-lg font-bold text-on-surface mb-2">¿Estás seguro?</h2>
+        <h2 className="text-lg font-bold text-on-surface mb-2">Â¿EstÃ¡s seguro?</h2>
         <p className="text-sm text-on-surface-variant mb-8">{message}</p>
         <div className="flex gap-3">
           <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">
@@ -109,7 +109,7 @@ export default function Dashboard() {
       setEvents((prev) => [res.event, ...prev]);
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '' });
-      showToast('Evento creado ??', 'success');
+      showToast('Evento creado ðŸŽ‰', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
     } finally {
@@ -133,16 +133,16 @@ export default function Dashboard() {
 
   const copyLink = (slug: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
-    showToast('Enlace copiado ??', 'success');
+    showToast('Enlace copiado âœ…', 'success');
   };
 
   const handleRefreshVerification = async () => {
     await refreshUser();
     if (user?.emailVerified) {
       setShowVerification(false);
-      showToast('Correo verificado ?', 'success');
+      showToast('Correo verificado âœ…', 'success');
     } else {
-      showToast('Aún no verificas tu correo. Revisa tu bandeja de entrada.', 'error');
+      showToast('AÃºn no verificas tu correo. Revisa tu bandeja de entrada.', 'error');
     }
   };
 
@@ -150,7 +150,7 @@ export default function Dashboard() {
     try {
       setResending(true);
       await apiClient.post('/api/auth/resend-verification');
-      showToast('Correo reenviado ?? Revisa tu bandeja de entrada', 'success');
+      showToast('Correo reenviado âœ… Revisa tu bandeja de entrada', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al reenviar correo', 'error');
     } finally {
@@ -221,7 +221,7 @@ export default function Dashboard() {
 
       {events.length === 0 ? (
         <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest/50">
-          <h2 className="text-2xl font-bold text-on-surface mb-8 font-outfit">?? ¿Qué evento quieres crear?</h2>
+          <h2 className="text-2xl font-bold text-on-surface mb-8 font-outfit">ðŸŽ‰ Â¿QuÃ© evento quieres crear?</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {ONBOARDING_TYPES.slice(0, 3).map((type) => (
               <button
@@ -242,7 +242,7 @@ export default function Dashboard() {
               className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
               aria-label="Crear otro tipo de evento"
             >
-              <span className="text-4xl">?</span>
+              <span className="text-4xl">âž•</span>
               <span className="font-bold text-sm text-on-surface-variant">Otro</span>
             </button>
           </div>
@@ -279,7 +279,7 @@ export default function Dashboard() {
 
                       <div className="space-y-3 mb-6">
                         <div className="flex justify-between text-sm">
-                          <span className="text-on-surface-variant">{total} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
+                          <span className="text-on-surface-variant">{total} regalos{event.photoCount !== undefined ? ` Â· ${event.photoCount} fotos` : ''}</span>
                           <span className="font-bold" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
@@ -339,7 +339,7 @@ export default function Dashboard() {
 
       {deleteConfirm && (
         <ConfirmModal
-          message="¿Eliminar este evento? Los regalos y fotos también se eliminarán. Esta acción no se puede deshacer."
+          message="Â¿Eliminar este evento? Los regalos y fotos tambiÃ©n se eliminarÃ¡n. Esta acciÃ³n no se puede deshacer."
           onConfirm={() => handleDelete(deleteConfirm)}
           onClose={() => setDeleteConfirm(null)}
           loading={deleting === deleteConfirm}
@@ -402,7 +402,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          placeholder="Ej: Boda de María y Juan"
+          placeholder="Ej: Boda de MarÃ­a y Juan"
           autoFocus
         />
       </div>

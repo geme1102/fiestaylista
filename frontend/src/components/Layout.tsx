@@ -139,8 +139,9 @@ export default function Layout() {
             >
               <span className={cn(
                 'material-symbols-outlined text-lg',
-                pathname === item.path ? 'font-variation-settings: "FILL" 1' : '',
-              )}>
+                pathname === item.path ? '' : '',
+              )}
+                style={pathname === item.path ? { fontVariationSettings: '"FILL" 1' } : undefined}>
                 {item.icon}
               </span>
               <span className="font-label-md text-label-md">{item.label}</span>

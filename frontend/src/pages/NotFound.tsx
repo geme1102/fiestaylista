@@ -75,7 +75,7 @@ export default function NotFound() {
       </main>
 
       <footer className="py-8 text-center text-caption text-outline-variant">
-        © 2024 Fiesta y Lista. Elevando tus celebraciones.
+        © {new Date().getFullYear()} Fiesta y Lista. Elevando tus celebraciones.
       </footer>
     </div>
   );

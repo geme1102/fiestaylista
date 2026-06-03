@@ -10,7 +10,6 @@ interface GiftCardProps {
   onDelete?: (id: string) => void;
   claimingId?: string | null;
   isAdmin?: boolean;
-  easyRead?: boolean;
 }
 
 export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin }: GiftCardProps) {

@@ -7,7 +7,7 @@ interface NavbarPremiumProps {
 }
 
 export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center gap-4">
                   <button
-                    onClick={() => { /* logout handled in Layout */ }}
+                    onClick={logout}
                     className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >
                     Cerrar Sesión
@@ -69,20 +69,12 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     className="relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
-                    <div className="absolute inset-0 shimmer" />
+                    <div className="absolute inset-0 animate-shimmer" />
                   </Link>
                 </div>
               )}
             </>
           )}
-
-          {/* Mobile Hamburger */}
-          <button
-            className="md:hidden p-2 text-on-surface min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Menú"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
         </div>
       </div>
     </header>

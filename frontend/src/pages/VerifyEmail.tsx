@@ -15,7 +15,7 @@ export default function VerifyEmail() {
     const token = searchParams.get('token');
     if (!token) {
       setStatus('error');
-      setMessage('Token de verificación no encontrado');
+      setMessage('Token de verificaciÃ³n no encontrado');
       return;
     }
 
@@ -23,13 +23,13 @@ export default function VerifyEmail() {
       .then(async () => {
         await refreshUser();
         setStatus('success');
-        setMessage('¡Correo verificado exitosamente!');
+        setMessage('Â¡Correo verificado exitosamente!');
       })
       .catch((err) => {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Error al verificar correo');
       });
-  }, []); // Intencionalmente vacío: solo se ejecuta al montar
+  }, []); // Intencionalmente vacÃ­o: solo se ejecuta al montar
 
   const goToDashboard = () => {
     navigate('/dashboard');
@@ -49,7 +49,7 @@ export default function VerifyEmail() {
           )}
         </div>
         <h1 className="font-headline-md text-headline-md text-on-surface mb-2">
-          {status === 'verifying' ? 'Verificando...' : status === 'success' ? '¡Correo Verificado!' : 'Error de Verificación'}
+          {status === 'verifying' ? 'Verificando...' : status === 'success' ? 'Â¡Correo Verificado!' : 'Error de VerificaciÃ³n'}
         </h1>
         <p className="text-body-md text-on-surface-variant mb-8">{message}</p>
         {status === 'success' && (

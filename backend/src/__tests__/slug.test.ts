@@ -4,18 +4,18 @@ import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
 describe('generateSlug', () => {
   it('converts title to lowercase slug', () => {
     const slug = generateSlug('Baby Shower de María');
-    expect(slug).toMatch(/^baby-shower-de-maria-[a-z0-9]{6}$/);
+    expect(slug).toBe('baby-shower-de-maria');
   });
 
   it('removes special characters', () => {
     const slug = generateSlug('¡Fiesta! de cumpleaños #1');
-    expect(slug).toMatch(/^fiesta-de-cumpleanos-1-[a-z0-9]{6}$/);
+    expect(slug).toBe('fiesta-de-cumpleanos-1');
   });
 
-  it('generates unique slugs with random suffix', () => {
+  it('returns base slug without random suffix', () => {
     const slug1 = generateSlug('Mi Evento');
     const slug2 = generateSlug('Mi Evento');
-    expect(slug1).not.toBe(slug2);
+    expect(slug1).toBe(slug2);
   });
 });
 
