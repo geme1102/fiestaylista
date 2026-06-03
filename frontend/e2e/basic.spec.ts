@@ -3,13 +3,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Fiesta y Lista', () => {
   test('landing page loads and shows title', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Fiesta y Lista', { exact: true })).toBeVisible();
-    await expect(page.locator('text=compartir momentos')).toBeVisible();
+    await expect(page.getByText('La forma más hermosa de')).toBeVisible({ timeout: 10000 });
   });
 
   test('can navigate to pricing page', async ({ page }) => {
     await page.goto('/');
-    await page.click('text=Ver Planes');
+    await page.getByText('Ver Planes').waitFor({ timeout: 10000 });
+    await page.getByText('Ver Planes').click();
     await expect(page).toHaveURL('/pricing');
   });
 

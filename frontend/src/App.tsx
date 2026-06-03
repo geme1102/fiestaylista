@@ -1,8 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
-import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
 import SplashIntro from './components/SplashIntro';
 
@@ -80,12 +79,23 @@ export default function App() {
   const [splashDone, setSplashDone] = useState(false);
   const handleSplashDone = useCallback(() => setSplashDone(true), []);
 
+  useEffect(() => {
+    if (splashDone) return;
+    Promise.all([
+      import('./pages/Landing'),
+      import('./pages/Login'),
+      import('./pages/Register'),
+      import('./pages/Pricing'),
+      import('./pages/NotFound'),
+    ]).catch(() => {});
+  }, [splashDone]);
+
   if (!splashDone) {
     return <SplashIntro onComplete={handleSplashDone} />;
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner fullScreen />}>
+    <Suspense fallback={null}>
       <TitleUpdater />
       <Routes>
         <Route path="/" element={<Landing />} />
