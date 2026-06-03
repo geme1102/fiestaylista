@@ -586,7 +586,7 @@ export default function EventAdmin() {
                 disabled={boostLoading}
                 className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform disabled:opacity-50"
               >
-                {boostLoading ? '...' : 'Pagar $4.99'}
+                {boostLoading ? '...' : 'Pagar $10.000 COP'}
               </button>
               <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="w-full text-on-surface-variant font-label-md py-2 hover:text-on-surface transition-colors">
                 Tal vez luego

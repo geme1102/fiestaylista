@@ -16,9 +16,11 @@ const PLANS = [
     yearlyPrice: 0,
     popular: false,
     features: [
-      { text: 'Listas de regalos ilimitadas', included: true },
-      { text: '10% Comisión de retiro', included: true },
-      { text: 'Personalización avanzada', included: false },
+      { text: '2 Eventos', included: true },
+      { text: '10 Regalos por evento', included: true },
+      { text: '3 Fotos por evento', included: true },
+      { text: 'Lluvia de Sobres: requiere Boost', included: true },
+      { text: '5% Comisión de retiro', included: true },
     ],
   },
   {
@@ -29,10 +31,12 @@ const PLANS = [
     popular: true,
     badge: 'MÁS ELEGIDO',
     features: [
-      { text: 'Todo lo del plan Esencial', included: true },
-      { text: '2% Comisión de retiro', included: true },
-      { text: 'Galería de fotos premium', included: true },
-      { text: 'Soporte prioritario 24/7', included: true },
+      { text: '20 Eventos', included: true },
+      { text: '50 Regalos por evento', included: true },
+      { text: '15 Fotos por evento', included: true },
+      { text: 'Lluvia de Sobres incluida', included: true },
+      { text: '5% Comisión de retiro', included: true },
+      { text: 'Notificaciones WhatsApp en tiempo real', included: true },
     ],
   },
 ];

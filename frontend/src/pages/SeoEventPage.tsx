@@ -16,8 +16,8 @@ const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: strin
     ],
     faq: [
       { q: '¿Cómo crear una lista de baby shower?', a: 'Solo ponle nombre a tu evento, elige "Baby Shower" y empieza a agregar regalos. Puedes usar nuestras sugerencias o agregar los tuyos.' },
-      { q: '¿Pueden los invitados aportar dinero?', a: 'Sí, con Lluvia de Sobres los invitados pueden hacer aportaciones económicas directas. La comisión es del 4% en el plan gratis.' },
-      { q: '¿Es gratis?', a: 'Sí, el plan gratis incluye 1 evento, 20 regalos y 5 fotos. Sin tarjeta de crédito.' },
+      { q: '¿Pueden los invitados aportar dinero?', a: 'Sí, con Lluvia de Sobres los invitados pueden hacer aportaciones económicas directas. La comisión es del 5% en el plan gratis.' },
+      { q: '¿Es gratis?', a: 'Sí, el plan gratis incluye 2 eventos, 10 regalos y 3 fotos. Sin tarjeta de crédito.' },
     ],
   },
   boda: {
@@ -82,7 +82,7 @@ const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: strin
     ],
     faq: [
       { q: '¿Qué regalos son típicos para una comunión?', a: 'Relojes, cadenas, joyería, libros, mochilas y, por supuesto, aportaciones económicas.' },
-      { q: '¿Puedo tener múltiples listas?', a: 'En el plan gratis tienes 1 evento. Con Pro puedes tener hasta 20 eventos simultáneos.' },
+      { q: '¿Puedo tener múltiples listas?', a: 'En el plan gratis tienes 2 eventos. Con Pro puedes tener hasta 20 eventos simultáneos.' },
     ],
   },
 };

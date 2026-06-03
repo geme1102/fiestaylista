@@ -8,7 +8,7 @@ import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import type { Tier } from '../types/index.js';
 
-const BOOST_PRICE_CENTS = 49900;
+const BOOST_PRICE_CENTS = 10000;
 let client: MercadoPagoConfig | null = null;
 
 if (config.MERCADO_PAGO_ACCESS_TOKEN) {

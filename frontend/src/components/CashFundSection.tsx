@@ -346,7 +346,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
               </button>
               <div className="pt-4 border-t border-surface-variant flex flex-col items-center gap-3">
                 <p className="text-[10px] text-center text-on-surface-variant max-w-[200px]">
-                  Comisión por servicio: <span className="font-bold">{commission}% Plan Pro</span> / 4% Plan Free. Procesado de forma segura.
+                  Comisión por servicio: <span className="font-bold">{commission}%</span>. Procesado de forma segura.
                 </p>
                 <div className="flex items-center grayscale opacity-60">
                   <span className="text-xs font-bold text-on-surface-variant">Mercado Pago</span>
