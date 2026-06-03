@@ -15,7 +15,7 @@ export default function ImageWithSkeleton({ src, alt, className, containerClassN
   const [error, setError] = useState(false);
 
   return (
-    <div className={cn('relative overflow-hidden bg-surface-container-high dark:bg-inverse-surface rounded-xl', aspectRatio, containerClassName, 'group')}>
+    <div className={cn('relative overflow-hidden bg-surface-container-high rounded-xl', aspectRatio, containerClassName, 'group')}>
       {!loaded && !error && (
         <>
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-surface-container-high via-surface-container/50 to-surface-container-high bg-[length:200%_100%]" />

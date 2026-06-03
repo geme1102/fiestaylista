@@ -214,20 +214,20 @@ export default function EventAdmin() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6 py-10 px-container-margin">
-        <div className="h-12 bg-surface-container-high dark:bg-inverse-surface rounded-2xl w-1/3" />
+        <div className="h-12 bg-surface-container-high rounded-2xl w-1/3" />
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <div className="h-6 bg-surface-container-high dark:bg-inverse-surface rounded-lg w-1/4" />
-            <div className="h-12 bg-surface-container-high dark:bg-inverse-surface rounded-xl" />
+            <div className="h-6 bg-surface-container-high rounded-lg w-1/4" />
+            <div className="h-12 bg-surface-container-high rounded-xl" />
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-surface-container-high dark:bg-inverse-surface rounded-2xl" />
+              <div key={i} className="h-24 bg-surface-container-high rounded-2xl" />
             ))}
           </div>
           <div className="space-y-4">
-            <div className="h-6 bg-surface-container-high dark:bg-inverse-surface rounded-lg w-1/4" />
+            <div className="h-6 bg-surface-container-high rounded-lg w-1/4" />
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-surface-container-high dark:bg-inverse-surface rounded-xl" />
+                <div key={i} className="h-32 bg-surface-container-high rounded-xl" />
               ))}
             </div>
           </div>
@@ -239,10 +239,10 @@ export default function EventAdmin() {
   if (!event) {
     return (
       <div className="text-center py-20 px-container-margin">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
           😕
         </div>
-        <p className="text-on-surface-variant dark:text-surface-variant mb-4">Evento no encontrado</p>
+        <p className="text-on-surface-variant mb-4">Evento no encontrado</p>
         <Link to="/dashboard" className="text-primary font-medium inline-block">Volver al dashboard</Link>
       </div>
     );
@@ -258,14 +258,14 @@ export default function EventAdmin() {
   return (
     <div className="font-body-md text-body-md pb-24">
       {/* Top App Bar */}
-      <nav className="bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm fixed top-0 z-50 flex justify-between items-center px-container-margin h-16 w-full">
+      <nav className="bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm fixed top-0 z-50 flex justify-between items-center px-container-margin h-16 w-full">
         <div className="flex items-center gap-3">
-          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary dark:text-primary-fixed-dim">
+          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
-          <h1 className="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim">Administrar Evento</h1>
+          <h1 className="font-headline-md text-headline-md text-primary">Administrar Evento</h1>
         </div>
-        <button className="active:scale-95 duration-200 text-primary dark:text-primary-fixed-dim">
+        <button className="active:scale-95 duration-200 text-primary">
           <span className="material-symbols-outlined">settings</span>
         </button>
       </nav>
@@ -293,7 +293,7 @@ export default function EventAdmin() {
                         type="text"
                         value={titleDraft}
                         onChange={(e) => setTitleDraft(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface dark:bg-inverse-surface font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface outline-none focus:ring-2 focus:ring-primary"
+                        className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface font-headline-md text-headline-md text-on-surface outline-none focus:ring-2 focus:ring-primary"
                         autoFocus
                       />
                       <button onClick={handleUpdateTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">Guardar</button>
@@ -317,8 +317,8 @@ export default function EventAdmin() {
                           onClick={() => setTypeDraft(t.value)}
                           className={`px-2 py-1 text-xs rounded-lg font-medium transition-all ${
                             typeDraft === t.value
-                              ? 'bg-primary-fixed text-primary-fixed-dim dark:bg-primary/30 ring-2 ring-primary'
-                              : 'bg-surface-container-high text-on-surface-variant dark:bg-inverse-surface dark:text-surface-variant'
+                              ? 'bg-primary-fixed text-primary-fixed-dim ring-2 ring-primary'
+                              : 'bg-surface-container-high text-on-surface-variant'
                           }`}
                         >
                           {t.icon} {t.label}
@@ -524,8 +524,8 @@ export default function EventAdmin() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
-        <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
+        <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>
         </Link>
@@ -602,10 +602,10 @@ export default function EventAdmin() {
 function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar' }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean; confirmLabel?: string }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full sm:max-w-sm bg-surface dark:bg-inverse-surface p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
-        <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-6">{message}</p>
+      <div className="w-full sm:max-w-sm bg-surface p-6 rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-xl">
+        <p className="text-sm text-on-surface-variant mb-6">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high dark:bg-inverse-surface dark:text-surface-variant rounded-xl hover:bg-surface-container-highest transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-xl hover:shadow-lg transition-all disabled:opacity-50">

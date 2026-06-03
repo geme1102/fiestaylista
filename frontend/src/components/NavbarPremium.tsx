@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 
 interface NavbarPremiumProps {
@@ -9,7 +8,6 @@ interface NavbarPremiumProps {
 
 export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
   const { isAuthenticated } = useAuth();
-  const { isDark, toggleDark } = useTheme();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -20,7 +18,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
 
   return (
     <header
-      className={`sticky top-0 w-full z-50 bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-rose-500/10 shadow-lg transition-all duration-300 ${
+      className={`sticky top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-white/20 shadow-rose-500/10 shadow-lg transition-all duration-300 ${
         scrolled ? 'h-16 shadow-md' : 'h-20'
       }`}
     >
@@ -29,26 +27,14 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
           <div className="w-10 h-10 bg-gradient-to-tr from-primary to-secondary-container rounded-xl flex items-center justify-center text-on-primary font-headline-md shadow-lg shadow-primary/20 transform group-hover:scale-110 transition-transform duration-300">
             F
           </div>
-          <span className="font-headline-md text-headline-md font-extrabold text-on-surface dark:text-inverse-on-surface hidden sm:block">
+          <span className="font-headline-md text-headline-md font-extrabold text-on-surface hidden sm:block">
             Fiesta y Lista
           </span>
         </Link>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDark}
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
-          >
-            <span className="material-symbols-outlined block dark:hidden text-on-surface-variant">
-              dark_mode
-            </span>
-            <span className="material-symbols-outlined hidden dark:block text-primary-fixed-dim">
-              light_mode
-            </span>
-          </button>
 
-          {!hideCta && (
+                    {!hideCta && (
             <>
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center gap-4">
@@ -92,7 +78,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden p-2 text-on-surface dark:text-inverse-on-surface min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="md:hidden p-2 text-on-surface min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Menú"
           >
             <span className="material-symbols-outlined">menu</span>

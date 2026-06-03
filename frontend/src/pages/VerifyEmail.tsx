@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +15,7 @@ export default function VerifyEmail() {
     const token = searchParams.get('token');
     if (!token) {
       setStatus('error');
-      setMessage('Token de verificaciÃ³n no encontrado');
+      setMessage('Token de verificación no encontrado');
       return;
     }
 
@@ -23,13 +23,13 @@ export default function VerifyEmail() {
       .then(async () => {
         await refreshUser();
         setStatus('success');
-        setMessage('Â¡Correo verificado exitosamente!');
+        setMessage('¡Correo verificado exitosamente!');
       })
       .catch((err) => {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Error al verificar correo');
       });
-  }, []); // Intencionalmente vacÃ­o: solo se ejecuta al montar
+  }, []); // Intencionalmente vacío: solo se ejecuta al montar
 
   const goToDashboard = () => {
     navigate('/dashboard');
@@ -37,9 +37,9 @@ export default function VerifyEmail() {
 
   return (
     <>
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4 pb-24 sm:pb-0">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
           {status === 'verifying' ? (
             <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
           ) : status === 'success' ? (
@@ -49,7 +49,7 @@ export default function VerifyEmail() {
           )}
         </div>
         <h1 className="font-headline-md text-headline-md text-on-surface mb-2">
-          {status === 'verifying' ? 'Verificando...' : status === 'success' ? 'Â¡Correo Verificado!' : 'Error de VerificaciÃ³n'}
+          {status === 'verifying' ? 'Verificando...' : status === 'success' ? '¡Correo Verificado!' : 'Error de Verificación'}
         </h1>
         <p className="text-body-md text-on-surface-variant mb-8">{message}</p>
         {status === 'success' && (

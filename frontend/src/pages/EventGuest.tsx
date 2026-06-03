@@ -68,11 +68,11 @@ function EmptyGiftState() {
       animate={{ opacity: 1, scale: 1 }}
       className="text-center py-16"
     >
-      <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
+      <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
         🎁
       </div>
-      <p className="text-on-surface-variant dark:text-surface-variant font-medium text-lg">La lista de regalos se está preparando</p>
-      <p className="text-surface-variant dark:text-surface-variant/60 text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
+      <p className="text-on-surface-variant font-medium text-lg">La lista de regalos se está preparando</p>
+      <p className="text-surface-variant text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
     </motion.div>
   );
 }
@@ -148,7 +148,7 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface">
         <div className="text-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -158,7 +158,7 @@ export default function EventGuest() {
           >
             🎁
           </motion.div>
-          <p className="text-sm text-surface-variant dark:text-surface-variant/60 animate-pulse font-outfit">Cargando lista de regalos...</p>
+          <p className="text-sm text-surface-variant animate-pulse font-outfit">Cargando lista de regalos...</p>
         </div>
       </div>
     );
@@ -166,13 +166,13 @@ export default function EventGuest() {
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4">
         <div className="text-center max-w-sm">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-4xl">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
             😕
           </div>
-          <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface mb-2">Evento no encontrado</h1>
-          <p className="text-on-surface-variant dark:text-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
+          <h1 className="text-2xl font-bold text-on-surface mb-2">Evento no encontrado</h1>
+          <p className="text-on-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
           <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
             Ir al inicio
           </a>
@@ -217,11 +217,11 @@ export default function EventGuest() {
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
       </Helmet>
 
-      <div className={`min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         {showConfetti && <PremiumConfetti />}
 
         {/* Top App Bar */}
-        <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm flex justify-between items-center px-4 h-16">
+        <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">menu</span>
             <span className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</span>
@@ -233,7 +233,7 @@ export default function EventGuest() {
 
         {/* Immersive Header */}
         <section className="pt-16 w-full overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 dark:from-inverse-surface dark:via-inverse-surface dark:to-inverse-surface -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 -z-10" />
           <div className="absolute top-20 right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-30" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
             {/* Glass Icon Card */}
@@ -262,7 +262,7 @@ export default function EventGuest() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-inverse-on-surface mb-2 px-4"
+              className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2 px-4"
             >
               {event.title}
             </motion.h1>
@@ -272,7 +272,7 @@ export default function EventGuest() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant mb-6"
+              className="font-body-md text-body-md text-on-surface-variant mb-6"
             >
               {createdDate}
             </motion.p>
@@ -284,10 +284,10 @@ export default function EventGuest() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="flex items-center gap-3 glass-card px-4 py-2 rounded-full mb-4"
             >
-              <span className="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant">Lectura Fácil</span>
+              <span className="font-label-md text-label-md text-on-surface-variant">Lectura Fácil</span>
               <button
                 onClick={() => setEasyReadMode(!easyReadMode)}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-surface-container-highest dark:bg-inverse-surface'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-surface-container-highest'}`}
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
               </button>
@@ -323,7 +323,7 @@ export default function EventGuest() {
               transition={{ duration: 0.5, delay: 0.35 }}
               className={easyReadMode ? 'space-y-6' : ''}
             >
-              <h2 className={`font-semibold text-on-surface dark:text-inverse-on-surface mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
+              <h2 className={`font-semibold text-on-surface mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
                 <span>📸</span> Galería
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -331,7 +331,7 @@ export default function EventGuest() {
                   <motion.div
                     key={photo.id}
                     whileHover={{ scale: 1.03 }}
-                    className="relative overflow-hidden bg-surface-container-high dark:bg-inverse-surface ring-1 ring-gray-200/50 dark:ring-gray-700/50 rounded-xl group"
+                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group"
                   >
                     <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
                     {photo.caption && (
@@ -353,7 +353,7 @@ export default function EventGuest() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="flex items-center justify-between mb-6"
             >
-              <h2 className={`font-bold text-on-surface dark:text-inverse-on-surface flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
+              <h2 className={`font-bold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
                 🎁 Lista de Regalos
                 <span className={`font-normal text-on-surface-variant ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                   ({availableGifts.length} disponibles)
@@ -378,14 +378,14 @@ export default function EventGuest() {
                   value={claimName}
                   onChange={(e) => setClaimName(e.target.value)}
                   placeholder="Escribe tu nombre para apartar un regalo"
-                  className={`w-full rounded-2xl border border-outline-variant bg-surface/80 dark:bg-inverse-surface/80 text-on-surface dark:text-inverse-on-surface outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
+                  className={`w-full rounded-2xl border border-outline-variant bg-surface/80 text-on-surface outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 />
               </div>
             </div>
 
             {/* Category Filters */}
             {categories.length > 1 && (
-              <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
+              <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
                 <div className="flex gap-2 w-max">
                   <button
                     onClick={() => setCategoryFilter(null)}
@@ -441,7 +441,7 @@ export default function EventGuest() {
                 transition={{ delay: 0.5 }}
                 className="mt-10"
               >
-                <h3 className={`font-semibold text-on-surface-variant dark:text-surface-variant mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
+                <h3 className={`font-semibold text-on-surface-variant mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                   <span>💝</span>
                   Ya apartados ({claimedGifts.length})
                 </h3>
@@ -462,26 +462,26 @@ export default function EventGuest() {
           </div>
 
           {/* Footer */}
-          <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant dark:text-surface-variant'}`}>
+          <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
             <p>Hecho con 🎉 por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
           </div>
         </div>
 
         {/* Bottom Nav */}
-        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
-          <Link to="/" className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all">
+        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
+          <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>
           </Link>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
             <span className="material-symbols-outlined">card_giftcard</span>
             <span className="font-label-md text-label-md">Lista</span>
           </a>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
             <span className="material-symbols-outlined">payments</span>
             <span className="font-label-md text-label-md">Regalar</span>
           </a>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
             <span className="material-symbols-outlined">person</span>
             <span className="font-label-md text-label-md">Cuenta</span>
           </a>
@@ -489,13 +489,13 @@ export default function EventGuest() {
 
         {/* Success Modal */}
         {showSuccessModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl">
             <div className="glass-card w-full max-w-sm rounded-[40px] p-8 text-center shadow-2xl border-white/50">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
-              <h2 className="font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface mb-2">¡Regalo Apartado!</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant mb-8">Gracias por ser parte de este momento especial.</p>
+              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-8">Gracias por ser parte de este momento especial.</p>
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full bg-primary text-white py-4 rounded-2xl font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 transition-transform"

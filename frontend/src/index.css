@@ -208,7 +208,6 @@
 .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
 .animate-slide-up { animation: slide-up 0.4s ease-out forwards; }
 .animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-.dark .animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); background-size: 200% 100%; }
 .animate-confetti { animation: confetti-fall 3s linear forwards; }
 .animate-aurora { animation: aurora-drift 15s ease-in-out infinite; }
 .animate-pulse-cta { animation: pulse-cta 2s ease-in-out infinite; }
@@ -263,10 +262,6 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
-.dark .glass-card {
-  background: rgba(30, 30, 40, 0.75);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
 .glass-card-premium {
   background: rgba(255, 255, 255, 0.85);
@@ -288,14 +283,6 @@
   mask-composite: exclude;
   pointer-events: none;
 }
-.dark .glass-card-premium {
-  background: rgba(15, 18, 30, 0.85);
-  border-color: transparent;
-  box-shadow: 0 4px 24px rgba(177, 14, 107, 0.08);
-}
-.dark .glass-card-premium::before {
-  background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
-}
 
 .glass-card-gold {
   background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,240,0.95));
@@ -304,11 +291,6 @@
   border: 1px solid rgba(217, 119, 6, 0.2);
   position: relative;
   box-shadow: 0 4px 24px rgba(217, 119, 6, 0.08), 0 1px 4px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255,215,0,0.1);
-}
-.dark .glass-card-gold {
-  background: linear-gradient(135deg, rgba(15, 18, 30, 0.9), rgba(20, 15, 5, 0.9));
-  border-color: rgba(217, 119, 6, 0.15);
-  box-shadow: 0 4px 24px rgba(217, 119, 6, 0.06);
 }
 
 .primary-gradient {
@@ -352,12 +334,6 @@
   background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);
 }
-.dark .glass-ghost {
-  background: rgba(255, 255, 255, 0.05);
-}
-.dark .glass-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 
 .scrollbar-hide {
   -ms-overflow-style: none;
@@ -370,7 +346,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
@@ -379,13 +355,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #FAF9F8;
 }
-.dark body {
-  background-color: #0B0F19;
-}
-
-/* Dark mode neon elegante — glows más intensos */
-.dark .animate-aurora { opacity: 0.25 !important; }
-.dark .glass-card-premium { box-shadow: 0 4px 24px rgba(217, 119, 6, 0.06); }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', 'Quicksand', sans-serif;
@@ -395,14 +364,11 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
 
 @supports not (backdrop-filter: blur(1px)) {
   .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
-  .dark .glass-card { background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); }
-  .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
-  .dark .glass-card-premium { background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); }
-  .glass-card-premium::before { display: none; }
+    .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+    .glass-card-premium::before { display: none; }
   .glass-ghost::before { display: none; }
 }
 

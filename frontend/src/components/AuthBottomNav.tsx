@@ -11,7 +11,7 @@ export default function AuthBottomNav() {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
       <div className="flex items-center justify-around h-16 px-4">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;
@@ -21,7 +21,7 @@ export default function AuthBottomNav() {
               to={item.path}
               className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative ${
                 isActive
-                  ? 'text-primary dark:text-primary-fixed-dim after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
+                  ? 'text-primary after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
                   : 'text-on-surface-variant/60 hover:text-primary'
               }`}
             >

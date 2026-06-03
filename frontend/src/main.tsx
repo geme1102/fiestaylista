@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import CookieBanner from './components/CookieBanner';
 import App from './App';
@@ -15,8 +14,7 @@ createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <BrowserRouter>
         <ErrorBoundary>
-          <ThemeProvider>
-            <AuthProvider>
+          <AuthProvider>
               <App />
               <CookieBanner />
               <Toaster
@@ -28,7 +26,6 @@ createRoot(document.getElementById('root')!).render(
                 }}
               />
             </AuthProvider>
-          </ThemeProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </HelmetProvider>

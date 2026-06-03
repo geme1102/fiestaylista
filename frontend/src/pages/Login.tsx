@@ -39,7 +39,7 @@ export default function Login() {
         <meta property="og:title" content="Iniciar Sesión - Fiesta y Lista" />
         <meta name="twitter:title" content="Iniciar Sesión - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19] pb-24 sm:pb-0">
+      <div className="min-h-screen bg-[#FAF9F8] pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -52,18 +52,18 @@ export default function Login() {
                   Fiesta y Lista
                 </span>
               </Link>
-              <h1 className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface font-outfit">Iniciar Sesión</h1>
-              <p className="text-on-surface-variant dark:text-surface-variant mt-1">
+              <h1 className="text-2xl font-bold text-on-surface font-outfit">Iniciar Sesión</h1>
+              <p className="text-on-surface-variant mt-1">
                 ¿No tienes cuenta?{' '}
-                <Link to="/register" className="text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
+                <Link to="/register" className="text-primary hover:text-primary-fixed-dim font-medium">
                   Regístrate
                 </Link>
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 dark:bg-[#0B0F19]/60 border border-white/20 dark:border-white/10 rounded-2xl p-8 space-y-5 shadow-sm">
+            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Correo electrónico
                 </label>
                 <input
@@ -71,14 +71,14 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant dark:text-surface-variant mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Contraseña
                 </label>
                 <input
@@ -86,12 +86,12 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
                 <div className="text-right mt-1">
-                  <Link to="/forgot-password" className="text-sm text-primary hover:text-primary-fixed-dim dark:text-primary-fixed-dim font-medium">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:text-primary-fixed-dim font-medium">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>

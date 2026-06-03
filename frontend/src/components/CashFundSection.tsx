@@ -127,7 +127,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
 
   if (loading) {
     return (
-      <div className={`mb-12 rounded-2xl bg-surface-container-high dark:bg-inverse-surface animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
+      <div className={`mb-12 rounded-2xl bg-surface-container-high animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
     );
   }
 
@@ -435,19 +435,19 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-        className="w-full sm:max-w-md bg-surface dark:bg-inverse-surface p-6 rounded-t-2xl sm:rounded-2xl shadow-xl"
+        className="w-full sm:max-w-md bg-surface p-6 rounded-t-2xl sm:rounded-2xl shadow-xl"
       >
-        <h3 className="text-lg font-bold text-on-surface dark:text-inverse-on-surface mb-2">Activar Lluvia de Sobres</h3>
-        <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">
-          Por solo <strong className="text-on-surface dark:text-inverse-on-surface">$4.99</strong> activa el Cash Fund para este evento durante 30 días.
+        <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
+        <p className="text-sm text-on-surface-variant mb-4">
+          Por solo <strong className="text-on-surface">$4.99</strong> activa el Cash Fund para este evento durante 30 días.
         </p>
-        <ul className="space-y-2 text-sm text-on-surface-variant dark:text-surface-variant mb-6">
+        <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
           <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
           <li className="flex items-center gap-2">✅ Estadísticas básicas del evento</li>
           <li className="flex items-center gap-2">✅ Sin necesidad de suscripción mensual</li>
         </ul>
         <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high dark:bg-inverse-surface dark:text-surface-variant rounded-xl hover:bg-surface-container-highest transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">

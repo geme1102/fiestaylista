@@ -97,7 +97,7 @@ export default function Pricing() {
         <meta property="og:title" content="Planes - Fiesta y Lista" />
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
       </Helmet>
-      <div className="min-h-screen bg-surface dark:bg-inverse-surface">
+      <div className="min-h-screen bg-surface">
         <NavbarPremium />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">

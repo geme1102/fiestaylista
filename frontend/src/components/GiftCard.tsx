@@ -62,7 +62,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onFree(gift.id)}
-              className="px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 dark:bg-primary/20 rounded-lg hover:bg-primary/20 transition-colors min-h-[36px]"
+              className="px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors min-h-[36px]"
             >
               Liberar
             </motion.button>

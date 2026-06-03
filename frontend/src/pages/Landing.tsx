@@ -89,7 +89,7 @@ function FeatureIcon3D({ icon, title, reaction }: { icon: string; title: string;
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-            className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/15 transition-all duration-300 ring-1 ring-primary/20 dark:ring-primary/30 cursor-pointer relative"
+            className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-fixed to-primary-fixed/50 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/15 transition-all duration-300 ring-1 ring-primary/20 cursor-pointer relative"
         style={{ transformStyle: 'preserve-3d', transition: 'transform 0.2s cubic-bezier(0.23,1,0.32,1)' }}
       >
         <img
@@ -105,8 +105,8 @@ function FeatureIcon3D({ icon, title, reaction }: { icon: string; title: string;
           </span>
         ))}
       </div>
-      <h3 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-2 group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors">{title}</h3>
-      <p className="text-on-surface-variant dark:text-surface-variant text-fluid-body">{FEATURES.find(f => f.title === title)?.desc}</p>
+      <h3 className="text-lg font-semibold text-on-surface mb-2 group-hover:text-primary transition-colors">{title}</h3>
+      <p className="text-on-surface-variant text-fluid-body">{FEATURES.find(f => f.title === title)?.desc}</p>
     </div>
   );
 }
@@ -121,7 +121,7 @@ function FloatingOrbs() {
           scale: [1, 1.15, 0.9, 1.05, 1],
         }}
         transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.06] dark:opacity-[0.08]"
+        className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.06]"
         style={{
           background: 'radial-gradient(circle, #b10e6b 0%, #d23284 50%, transparent 70%)',
           filter: 'blur(80px)',
@@ -134,7 +134,7 @@ function FloatingOrbs() {
           scale: [1, 0.9, 1.1, 0.95, 1],
         }}
         transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.07]"
+        className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
         style={{
           background: 'radial-gradient(circle, #d23284 0%, #b10e6b 50%, transparent 70%)',
           filter: 'blur(80px)',
@@ -147,7 +147,7 @@ function FloatingOrbs() {
           scale: [1, 1.05, 0.95, 1.1, 1],
         }}
         transition={{ duration: 35, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full opacity-[0.04] dark:opacity-[0.06]"
+        className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full opacity-[0.04]"
         style={{
           background: 'radial-gradient(circle, #d97706 0%, #f59e0b 50%, transparent 70%)',
           filter: 'blur(80px)',
@@ -186,10 +186,10 @@ function SocialProofFloating() {
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
               className="absolute left-1/2 -translate-x-1/2 w-max"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md border border-amber-200/30 dark:border-amber-800/20 shadow-lg shadow-primary/5">
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface/80 backdrop-blur-md border border-amber-200/30 shadow-lg shadow-primary/5">
                 <span className="text-lg">{proof.icon}</span>
-                <span className="text-sm text-on-surface dark:text-inverse-on-surface">
-                  <strong className="text-primary dark:text-primary-fixed-dim">{proof.name}</strong> {proof.action}
+                <span className="text-sm text-on-surface">
+                  <strong className="text-primary">{proof.name}</strong> {proof.action}
                 </span>
               </div>
             </motion.div>
@@ -216,7 +216,7 @@ function CategoryCard3D({ type, index }: { type: typeof EVENT_TYPES[number]; ind
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
-        className="group relative flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:border-primary/50 dark:hover:border-primary/30"
+        className="group relative flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-white/20 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:border-primary/50"
       >
         <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 to-primary-container/10" />
@@ -224,21 +224,21 @@ function CategoryCard3D({ type, index }: { type: typeof EVENT_TYPES[number]; ind
         </div>
 
         <div
-          className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 dark:from-primary/20 dark:to-primary-container/20 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ring-1 ring-primary/20 dark:ring-primary/30"
+          className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ring-1 ring-primary/20"
           style={{ transform: 'translateZ(30px)' }}
         >
           {type.emoji}
         </div>
 
         <span
-          className="text-base font-bold text-on-surface dark:text-inverse-on-surface font-outfit tracking-tight group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors duration-300"
+          className="text-base font-bold text-on-surface font-outfit tracking-tight group-hover:text-primary transition-colors duration-300"
           style={{ transform: 'translateZ(20px)' }}
         >
           {type.label}
         </span>
 
         <span
-          className="text-xs text-on-surface-variant dark:text-surface-variant group-hover:text-primary/70 transition-colors duration-300"
+          className="text-xs text-on-surface-variant group-hover:text-primary/70 transition-colors duration-300"
           style={{ transform: 'translateZ(10px)' }}
         >
           Ver más →
@@ -263,11 +263,11 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F8] dark:bg-[#0B0F19]">
+    <div className="min-h-screen bg-[#FAF9F8]">
       <FloatingOrbs />
 
       {/* Premium Navbar */}
-      <nav className={`sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-[#0B0F19]/60 border-b border-white/20 dark:border-white/10 shadow-sm transition-all duration-300 ${scrolled > 50 ? 'shadow-primary/5' : ''}`}>
+      <nav className={`sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-white/20 shadow-sm transition-all duration-300 ${scrolled > 50 ? 'shadow-primary/5' : ''}`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5 group">
@@ -290,7 +290,7 @@ export default function Landing() {
                 <>
                   <Link
                     to="/login"
-                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface dark:text-surface-variant dark:hover:text-inverse-on-surface transition-colors"
+                    className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors"
                   >
                     Entrar a mi Evento
                   </Link>
@@ -315,7 +315,7 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-28 z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/30 to-white dark:from-gray-900/0 dark:via-gray-900/30 dark:to-gray-900 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/30 to-white pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
@@ -328,7 +328,7 @@ export default function Landing() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-primary-fixed to-primary-fixed/50 dark:from-primary/30 dark:to-primary-container/30 text-primary dark:text-primary-fixed-dim rounded-full text-sm font-medium border border-primary/20 dark:border-primary/30 shadow-sm backdrop-blur-sm"
+              className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-primary-fixed to-primary-fixed/50 text-primary rounded-full text-sm font-medium border border-primary/20 shadow-sm backdrop-blur-sm"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -338,8 +338,8 @@ export default function Landing() {
             </motion.div>
 
             {/* Main Headline */}
-            <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface dark:text-inverse-on-surface mb-3 font-outfit leading-[1.1]">
-              <span className="text-on-surface dark:text-inverse-on-surface">La forma más hermosa de</span>
+            <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface mb-3 font-outfit leading-[1.1]">
+              <span className="text-on-surface">La forma más hermosa de</span>
               <span className="block relative min-h-[1.3em] mt-1">
                 <span className="bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent">
                   {typedText}
@@ -349,7 +349,7 @@ export default function Landing() {
             </h1>
 
             {/* Subtitle */}
-            <p className="max-w-2xl mx-auto text-fluid-body text-on-surface-variant dark:text-surface-variant mb-8 leading-relaxed">
+            <p className="max-w-2xl mx-auto text-fluid-body text-on-surface-variant mb-8 leading-relaxed">
               Tan fácil que hasta los abuelos y tíos pueden regalar sin registrarse.
               <br className="hidden sm:block" />
               Bodas, baby showers, cumpleaños y más — en 2 minutos.
@@ -423,15 +423,15 @@ export default function Landing() {
               transition={{ delay: 1, duration: 0.5 }}
               className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 bg-surface/60 text-on-surface-variant shadow-sm">
                 <span className="text-amber-500">🔒</span>
                 Sin tarjeta de crédito
               </span>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 bg-surface/60 text-on-surface-variant shadow-sm">
                 <span className="text-amber-500">🎁</span>
                 Plan gratis disponible
               </span>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 bg-surface/60 dark:bg-inverse-surface/40 text-on-surface-variant dark:text-surface-variant shadow-sm">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 bg-surface/60 text-on-surface-variant shadow-sm">
                 <span className="text-amber-500">⚡</span>
                 Fácil para todos
               </span>
@@ -466,7 +466,7 @@ export default function Landing() {
       </section>
 
       {/* Category Selector 3D */}
-      <section className="space-fluid-section bg-surface/50 dark:bg-inverse-surface/30 backdrop-blur-sm relative z-10">
+      <section className="space-fluid-section bg-surface/50 backdrop-blur-sm relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -474,10 +474,10 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-3 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-3 font-outfit tracking-tight">
               ¿Qué estás celebrando?
             </h2>
-            <p className="text-center text-on-surface-variant dark:text-surface-variant mb-12 max-w-xl mx-auto text-fluid-body">
+            <p className="text-center text-on-surface-variant mb-12 max-w-xl mx-auto text-fluid-body">
               Elige tu evento y empieza a crear tu lista de regalos en segundos
             </p>
           </motion.div>
@@ -491,7 +491,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="space-fluid-section bg-surface dark:bg-inverse-surface relative z-10">
+      <section className="space-fluid-section bg-surface relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -499,7 +499,7 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-16 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-16 font-outfit tracking-tight">
               Todo lo que necesitas
             </h2>
           </motion.div>
@@ -520,7 +520,7 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="space-fluid-section bg-surface-container-lowest/70 dark:bg-inverse-surface/30 backdrop-blur-sm overflow-hidden relative z-10">
+      <section className="space-fluid-section bg-surface-container-lowest/70 backdrop-blur-sm overflow-hidden relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -528,10 +528,10 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface dark:text-inverse-on-surface mb-4 font-outfit tracking-tight">
+            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-4 font-outfit tracking-tight">
               Lo que dicen nuestros usuarios
             </h2>
-            <p className="text-center text-on-surface-variant dark:text-surface-variant mb-10 max-w-xl mx-auto text-fluid-body">
+            <p className="text-center text-on-surface-variant mb-10 max-w-xl mx-auto text-fluid-body">
               Miles de personas ya organizan sus eventos con Fiesta y Lista.
             </p>
           </motion.div>
@@ -543,7 +543,7 @@ export default function Landing() {
                   className="w-[300px] sm:w-[340px] shrink-0 rounded-2xl p-6 glass-card-premium"
                 >
                   <GoldStars />
-                  <p className="text-on-surface-variant dark:text-surface-variant text-sm mb-4 mt-3">"{t.text}"</p>
+                  <p className="text-on-surface-variant text-sm mb-4 mt-3">"{t.text}"</p>
                   <div className="flex items-center gap-3">
                     <div className="relative rounded-full animate-avatar-pulse-ring">
                       <img
@@ -554,8 +554,8 @@ export default function Landing() {
                       />
                     </div>
                     <div>
-                      <p className="font-semibold text-on-surface dark:text-inverse-on-surface text-sm">{t.name}</p>
-                      <p className="text-xs text-on-surface-variant dark:text-surface-variant">{t.role}</p>
+                      <p className="font-semibold text-on-surface text-sm">{t.name}</p>
+                      <p className="text-xs text-on-surface-variant">{t.role}</p>
                     </div>
                   </div>
                 </div>
@@ -607,8 +607,8 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-surface-container-lowest dark:bg-inverse-surface/50 border-t border-outline-variant/50 relative z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-on-surface-variant dark:text-surface-variant">
+      <footer className="py-12 bg-surface-container-lowest border-t border-outline-variant/50 relative z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-on-surface-variant">
           <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>
           <div className="flex justify-center gap-6 mt-4">
             <Link to="/pricing" className="hover:text-primary transition-colors">Planes</Link>

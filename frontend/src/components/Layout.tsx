@@ -1,6 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useState } from 'react';
 import { cn } from '../utils/cn';
 
@@ -12,13 +11,12 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const { toggleDark } = useTheme();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-inverse-surface transition-colors pb-safe sm:pb-0">
-      <nav className="sticky top-0 z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm">
+    <div className="min-h-screen bg-surface transition-colors pb-safe sm:pb-0">
+      <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
@@ -38,8 +36,8 @@ export default function Layout() {
                     className={cn(
                       'px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center',
                       pathname === item.path
-                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim'
-                        : 'text-on-surface-variant hover:text-primary hover:bg-black/5 dark:hover:bg-white/10',
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-on-surface-variant hover:text-primary hover:bg-black/5'
                     )}
                   >
                     {item.label}
@@ -55,16 +53,7 @@ export default function Layout() {
               >
                 Crear Evento
               </Link>
-              <button
-                onClick={toggleDark}
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                aria-label="Cambiar tema"
-              >
-                <span className="material-symbols-outlined block dark:hidden">dark_mode</span>
-                <span className="material-symbols-outlined hidden dark:block text-primary-fixed-dim">light_mode</span>
-              </button>
-
-              <span className="hidden sm:block text-sm text-on-surface-variant dark:text-inverse-on-surface">
+              <span className="hidden sm:block text-sm text-on-surface-variant">
                 {user?.name}
               </span>
 
@@ -77,7 +66,7 @@ export default function Layout() {
 
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5 dark:hover:bg-white/10"
+                className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5"
                 aria-label="Menú"
               >
                 <span className="material-symbols-outlined">
@@ -97,8 +86,8 @@ export default function Layout() {
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
                     pathname === item.path
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim'
-                      : 'text-on-surface-variant hover:text-primary hover:bg-black/5 dark:hover:bg-white/10',
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-black/5'
                   )}
                 >
                   <span className="material-symbols-outlined text-lg">{item.icon}</span>
@@ -121,7 +110,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-outline-variant/30 bg-surface-container-low dark:bg-inverse-surface">
+      <footer className="border-t border-outline-variant/30 bg-surface-container-low">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
             <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>
@@ -135,7 +124,7 @@ export default function Layout() {
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
         <div className="flex items-center justify-around h-16 px-4">
           {NAV_ITEMS.map((item) => (
             <Link
@@ -144,7 +133,7 @@ export default function Layout() {
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
                 pathname === item.path
-                  ? 'text-primary dark:text-primary-fixed-dim after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
+                  ? 'text-primary after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
                   : 'text-on-surface-variant/60 hover:text-primary',
               )}
             >

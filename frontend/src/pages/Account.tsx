@@ -83,35 +83,35 @@ export default function Account() {
 
   return (
     <div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-on-surface dark:text-inverse-on-surface mb-8">Mi Cuenta</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-on-surface mb-8">Mi Cuenta</h1>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
           <div className="flex items-center gap-4 mb-6">
             <img src={avatarSrc} alt="Avatar del usuario" loading="lazy" className="w-16 h-16 rounded-2xl object-cover bg-surface-container-high ring-2 ring-primary/20" />
             <div>
-              <h2 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface">Información Personal</h2>
-              <p className="text-sm text-on-surface-variant dark:text-surface-variant">Tus datos de cuenta</p>
+              <h2 className="text-lg font-semibold text-on-surface">Información Personal</h2>
+              <p className="text-sm text-on-surface-variant">Tus datos de cuenta</p>
             </div>
           </div>
           <dl className="space-y-4">
             <div>
-              <dt className="text-sm text-on-surface-variant dark:text-surface-variant">Nombre</dt>
-              <dd className="text-on-surface dark:text-inverse-on-surface font-medium">{user.name}</dd>
+              <dt className="text-sm text-on-surface-variant">Nombre</dt>
+              <dd className="text-on-surface font-medium">{user.name}</dd>
             </div>
             <div>
-              <dt className="text-sm text-on-surface-variant dark:text-surface-variant">Correo electrónico</dt>
-              <dd className="text-on-surface dark:text-inverse-on-surface font-medium">{user.email}</dd>
+              <dt className="text-sm text-on-surface-variant">Correo electrónico</dt>
+              <dd className="text-on-surface font-medium">{user.email}</dd>
             </div>
             <div>
-              <dt className="text-sm text-on-surface-variant dark:text-surface-variant">Miembro desde</dt>
-              <dd className="text-on-surface dark:text-inverse-on-surface font-medium">{formatDate(user.createdAt)}</dd>
+              <dt className="text-sm text-on-surface-variant">Miembro desde</dt>
+              <dd className="text-on-surface font-medium">{formatDate(user.createdAt)}</dd>
             </div>
           </dl>
         </div>
 
         <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">
-          <h2 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-6">Suscripción</h2>
+          <h2 className="text-lg font-semibold text-on-surface mb-6">Suscripción</h2>
           {loadingSub ? (
             <div className="flex justify-center py-8">
               <LoadingSpinner />
@@ -119,32 +119,32 @@ export default function Account() {
           ) : (
             <>
               <div className="mb-6">
-                <span className="text-sm text-on-surface-variant dark:text-surface-variant">Plan actual</span>
-                <p className="text-2xl font-bold text-on-surface dark:text-inverse-on-surface capitalize">{user.tier}</p>
+                <span className="text-sm text-on-surface-variant">Plan actual</span>
+                <p className="text-2xl font-bold text-on-surface capitalize">{user.tier}</p>
               </div>
 
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant dark:text-surface-variant">Eventos</span>
-                  <span className="text-on-surface dark:text-inverse-on-surface font-medium">{limits.maxEvents}</span>
+                  <span className="text-on-surface-variant">Eventos</span>
+                  <span className="text-on-surface font-medium">{limits.maxEvents}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant dark:text-surface-variant">Regalos por evento</span>
-                  <span className="text-on-surface dark:text-inverse-on-surface font-medium">{limits.maxGiftsPerEvent}</span>
+                  <span className="text-on-surface-variant">Regalos por evento</span>
+                  <span className="text-on-surface font-medium">{limits.maxGiftsPerEvent}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant dark:text-surface-variant">Fotos por evento</span>
-                  <span className="text-on-surface dark:text-inverse-on-surface font-medium">{limits.maxPhotosPerEvent}</span>
+                  <span className="text-on-surface-variant">Fotos por evento</span>
+                  <span className="text-on-surface font-medium">{limits.maxPhotosPerEvent}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant dark:text-surface-variant">Cash fund comisión</span>
-                  <span className="text-on-surface dark:text-inverse-on-surface font-medium">{limits.cashFundCommission}%</span>
+                  <span className="text-on-surface-variant">Cash fund comisión</span>
+                  <span className="text-on-surface font-medium">{limits.cashFundCommission}%</span>
                 </div>
               </div>
 
               {subscription && (
-                <div className="text-sm text-on-surface-variant dark:text-surface-variant mb-6">
-                  <p>Estado: <span className="capitalize font-medium text-on-surface dark:text-inverse-on-surface">{subscription.status === 'active' ? 'Activo' : subscription.status}</span></p>
+                <div className="text-sm text-on-surface-variant mb-6">
+                  <p>Estado: <span className="capitalize font-medium text-on-surface">{subscription.status === 'active' ? 'Activo' : subscription.status}</span></p>
                   {subscription.currentPeriodEnd && (
                     <p>Próxima factura: {formatDate(subscription.currentPeriodEnd)}</p>
                   )}
@@ -155,7 +155,7 @@ export default function Account() {
                 <button
                   onClick={handleCancelSubscription}
                   disabled={cancelLoading}
-                  className="w-full py-3 bg-surface-container-high dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface rounded-xl font-semibold hover:bg-surface-container-highest dark:hover:bg-inverse-surface/80 transition-all disabled:opacity-50 flex items-center justify-center"
+                  className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
                 >
                   {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción'}
                 </button>
@@ -166,8 +166,8 @@ export default function Account() {
       </div>
 
       <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
-        <h2 className="text-lg font-semibold text-on-surface dark:text-inverse-on-surface mb-4">🔐 Mis Datos Personales</h2>
-        <p className="text-sm text-on-surface-variant dark:text-surface-variant mb-4">
+        <h2 className="text-lg font-semibold text-on-surface mb-4">🔐 Mis Datos Personales</h2>
+        <p className="text-sm text-on-surface-variant mb-4">
           De acuerdo con la Ley 1581 de 2012, puedes ejercer tus derechos ARCO sobre tus datos personales.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -179,13 +179,13 @@ export default function Account() {
           </button>
           <Link
             to="/derechos-arco"
-            className="px-5 py-2.5 text-on-surface-variant dark:text-surface-variant bg-surface-container-high dark:bg-inverse-surface rounded-xl text-sm font-medium hover:bg-surface-container-highest dark:hover:bg-inverse-surface/80 transition-all"
+            className="px-5 py-2.5 text-on-surface-variant bg-surface-container-high rounded-xl text-sm font-medium hover:bg-surface-container-highest transition-all"
           >
             Gestionar solicitudes ARCO
           </Link>
           <button
             onClick={handleDeleteAccount}
-            className="px-5 py-2.5 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+            className="px-5 py-2.5 text-red-600 bg-red-50 rounded-xl text-sm font-medium hover:bg-red-100 transition-all"
           >
             Eliminar mi cuenta
           </button>
