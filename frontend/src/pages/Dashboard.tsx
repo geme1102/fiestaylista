@@ -10,38 +10,6 @@ import { cn } from '../utils/cn';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'];
 
-function VerificationBanner({ onRefresh, onResend, resending }: { onRefresh: () => void; onResend: () => void; resending: boolean }) {
-  return (
-    <div className="mb-6 p-4 rounded-xl border border-[#FFECB3] bg-[#FFF9E6]">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-amber-100 p-2 rounded-lg text-amber-700">
-            <span className="material-symbols-outlined">mail</span>
-          </div>
-          <div>
-            <p className="font-bold text-on-surface text-sm">Verifica tu correo</p>
-            <p className="text-xs text-on-surface-variant">Confirma tu cuenta para recibir notificaciones de tus regalos.</p>
-          </div>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <button
-            onClick={onResend}
-            disabled={resending}
-            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-amber-900 bg-amber-200 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 min-h-[36px]"
-          >
-            {resending ? 'Enviando...' : 'Reenviar'}
-          </button>
-          <button
-            onClick={onRefresh}
-            className="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-on-surface-variant bg-surface rounded-lg border border-amber-200 shadow-sm hover:bg-surface-container-low transition-colors min-h-[36px]"
-          >
-            Ya lo verifiqué
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ConfirmModal({ message, onConfirm, onClose, loading }: { message: string; onConfirm: () => void; onClose: () => void; loading?: boolean }) {
   return (
@@ -66,7 +34,7 @@ function ConfirmModal({ message, onConfirm, onClose, loading }: { message: strin
 }
 
 export default function Dashboard() {
-  const { user, isAuthenticated, refreshUser } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [events, setEvents] = useState<(Event & { giftCount?: number; photoCount?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -74,17 +42,12 @@ export default function Dashboard() {
   const [formData, setFormData] = useState({ title: '', eventType: 'BABY_SHOWER' as EventType, hostPhone: '' });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [resending, setResending] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     loadEvents();
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (user && !user.emailVerified) setShowVerification(true);
-  }, [user]);
 
   async function loadEvents() {
     try {
@@ -136,27 +99,6 @@ export default function Dashboard() {
     showToast('Enlace copiado ✅', 'success');
   };
 
-  const handleRefreshVerification = async () => {
-    await refreshUser();
-    if (user?.emailVerified) {
-      setShowVerification(false);
-      showToast('Correo verificado ✅', 'success');
-    } else {
-      showToast('Aún no verificas tu correo. Revisa tu bandeja de entrada.', 'error');
-    }
-  };
-
-  const handleResendVerification = async () => {
-    try {
-      setResending(true);
-      await apiClient.post('/api/auth/resend-verification');
-      showToast('Correo reenviado ✅ Revisa tu bandeja de entrada', 'success');
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al reenviar correo', 'error');
-    } finally {
-      setResending(false);
-    }
-  };
 
   const limits = TIER_LIMITS[user?.tier ?? 'free'];
   const eventCount = events.length;
@@ -193,13 +135,6 @@ export default function Dashboard() {
 
   const dashboardContent = (
     <div>
-      {showVerification && (
-        <VerificationBanner
-          onRefresh={handleRefreshVerification}
-          onResend={handleResendVerification}
-          resending={resending}
-        />
-      )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
