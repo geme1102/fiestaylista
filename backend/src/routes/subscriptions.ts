@@ -42,7 +42,11 @@ router.post('/create-checkout', requireAuth, paymentLimiter, async (req: AuthReq
 router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
-    if (sub?.mpSubscriptionId) {
+    if (!sub) {
+      res.status(400).json({ error: 'No tienes una suscripción activa' });
+      return;
+    }
+    if (sub.mpSubscriptionId) {
       await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
     }
     await subscriptionService.cancelSubscription(req.user!.userId);

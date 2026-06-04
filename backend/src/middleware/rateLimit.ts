@@ -105,3 +105,12 @@ export const viewLimiter = rateLimit({
   keyGenerator,
   message: { error: 'Demasiadas visitas. Intenta de nuevo en un minuto.' },
 });
+
+export const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiadas solicitudes de webhook' },
+});

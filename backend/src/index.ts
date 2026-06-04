@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
 import { sql } from './db/index.js';
 import type { AppRequest } from './types/index.js';
-import { apiLimiter } from './middleware/rateLimit.js';
+import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { errorHandler } from './middleware/error.js';
 import authRouter from './routes/auth.js';
 import eventsRouter from './routes/events.js';
@@ -103,7 +103,7 @@ app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
   req.on('error', next);
 });
 
-app.use('/api/webhooks', webhooksRouter);
+app.use('/api/webhooks', webhookLimiter, webhooksRouter);
 
 // Rutas públicas (sin rate limit)
 app.use('/api', publicRouter);

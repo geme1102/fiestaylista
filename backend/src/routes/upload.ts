@@ -12,7 +12,7 @@ import { config } from '../config.js';
 const router = Router();
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 10 * 1024 * 1024;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -64,7 +64,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new ValidationError('El archivo excede el tamaño máximo de 5MB'));
+          return next(new ValidationError('El archivo excede el tamaño máximo de 10MB'));
         }
         return next(new ValidationError(err.message));
       }

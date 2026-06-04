@@ -34,7 +34,8 @@ router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) 
       .where(eq(events.id, eventId));
 
     res.status(200).json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error('[Analytics] Error registrando vista:', err);
     res.status(200).json({ ok: true });
   }
 });

@@ -50,6 +50,7 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
         id: gifts.id,
         name: gifts.name,
         isClaimed: gifts.isClaimed,
+        claimedBy: gifts.claimedBy,
         createdAt: gifts.createdAt,
       })
       .from(gifts)
