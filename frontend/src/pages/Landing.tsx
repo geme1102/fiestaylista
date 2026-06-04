@@ -413,7 +413,7 @@ export default function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-tight md:leading-tight font-bold mb-4 drop-shadow-sm"
+            className="font-outfit text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-tight md:leading-tight font-bold mb-4 drop-shadow-sm"
           >
             <span className="text-gradient-premium leading-normal">¿Qué estás</span> <span className="text-gradient-premium italic pr-2 leading-normal">celebrando?</span>
           </motion.h1>
@@ -474,7 +474,7 @@ export default function Landing() {
                   <event.icon strokeWidth={1.5} className="w-10 h-10 md:w-12 md:h-12 text-gray-800 drop-shadow-sm" />
                 </motion.div>
 
-                <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-gray-900 tracking-tight mb-3 md:mb-4">
+                <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 tracking-tight mb-3 md:mb-4">
                   {event.title}
                 </h3>
 
@@ -516,7 +516,7 @@ export default function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.8 }}
-            className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight md:leading-tight font-bold mb-4 md:mb-5"
+            className="font-outfit text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight md:leading-tight font-bold mb-4 md:mb-5"
           >
             <span className="text-gradient-premium leading-normal">Todo lo que necesitas</span>
           </motion.h2>
@@ -550,7 +550,7 @@ export default function Landing() {
               </div>
             </div>
             <div className="relative z-10 text-center sm:text-left flex-1">
-              <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 mb-3 md:mb-4">Listas de Regalos</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Listas de Regalos</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
                 Crea listas personalizadas con una experiencia de unboxing virtual elegante. Perfecto para cualquier evento especial que merezca ser recordado.
               </p>
@@ -592,7 +592,7 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-gray-900 mb-2 md:mb-3">Fotos del Evento</h3>
+            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 mb-2 md:mb-3">Fotos del Evento</h3>
             <p className="relative z-10 text-sm sm:text-base text-gray-700 font-light leading-relaxed">
               Revive cada instante con un muro de recuerdos vivos.
             </p>
@@ -618,7 +618,7 @@ export default function Landing() {
               <Mail className="w-7 h-7 md:w-8 md:h-8 text-white" strokeWidth={1.5} />
             </div>
 
-            <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-white mb-2 md:mb-3">Lluvia de Sobres</h3>
+            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-white mb-2 md:mb-3">Lluvia de Sobres</h3>
             <p className="relative z-10 text-sm sm:text-base text-white/90 font-light leading-relaxed">
               Aportaciones con extrema elegancia.
             </p>
@@ -636,7 +636,7 @@ export default function Landing() {
             <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 
             <div className="relative z-10 text-center sm:text-left flex-1 order-2 sm:order-1">
-              <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 mb-3 md:mb-4">Estadísticas Detalladas</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Estadísticas Detalladas</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
                 Sigue en tiempo real quién ha visto tu invitación, confirma asistencia y gestiona los regalos con un panel intuitivo y moderno.
               </p>
@@ -757,7 +757,7 @@ export default function Landing() {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="relative z-10 flex flex-col items-center max-w-3xl mx-auto bg-white/60 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-14 border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
           >
-            <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 tracking-tight drop-shadow-sm">
+            <h2 className="font-outfit text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 tracking-tight drop-shadow-sm">
               ¿Listo para empezar?
             </h2>
             <p className="text-gray-800 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
