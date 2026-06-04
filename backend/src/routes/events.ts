@@ -36,7 +36,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res, next) => {
 router.post('/', requireAuth, checkEventLimit(), async (req: AuthRequest, res, next) => {
   try {
     const parsed = createEventSchema.parse(req.body);
-    const data = parsed as { title: string; eventType: 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION'; hostPhone?: string };
+    const data = parsed as { title: string; eventType: 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING'; hostPhone?: string };
     const event = await eventService.createEvent(req.user!.userId, data);
     res.status(201).json({ event });
   } catch (error) {
@@ -70,7 +70,7 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res, next) => {
 
 router.put('/:id', requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    const data = updateEventSchema.parse(req.body) as { title?: string; eventType?: 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION'; hostPhone?: string };
+    const data = updateEventSchema.parse(req.body) as { title?: string; eventType?: 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING'; hostPhone?: string };
     const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
     res.json({ event });
   } catch (error) {

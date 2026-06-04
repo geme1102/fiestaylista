@@ -19,6 +19,8 @@ const EVENT_TYPES = [
   { value: 'BIRTHDAY', label: 'Cumpleaños', icon: '/icons/types/type-birthday.svg', emoji: '🎂' },
   { value: 'BAPTISM', label: 'Bautizo', icon: '/icons/types/type-baptism.svg', emoji: '🕊️' },
   { value: 'COMMUNION', label: 'Comunión', icon: '/icons/types/type-communion.svg', emoji: '✨' },
+  { value: 'HOUSE_WARMING', label: 'Casa Shower', icon: '/icons/types/type-housewarming.svg', emoji: '🏠' },
+  { value: 'OTHER', label: 'Otro', icon: '/icons/types/type-other.svg', emoji: '🎊' },
 ] as const;
 
 const TESTIMONIALS = [

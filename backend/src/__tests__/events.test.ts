@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 
-const EVENT_TYPES = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'] as const;
+const EVENT_TYPES = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'OTHER', 'HOUSE_WARMING'] as const;
 
 const createEventSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo'),

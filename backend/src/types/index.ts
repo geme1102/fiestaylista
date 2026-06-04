@@ -19,7 +19,7 @@ export interface AppRequest extends Request {
   user?: JwtPayload;
 }
 
-export type EventType = 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION';
+export type EventType = 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING';
 export type Tier = 'free' | 'pro';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
 
@@ -43,4 +43,4 @@ export const TIER_ORDER: Record<Tier, number> = {
   pro: 1,
 };
 
-export const EVENT_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'];
+export const EVENT_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'OTHER', 'HOUSE_WARMING'];

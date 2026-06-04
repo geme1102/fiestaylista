@@ -9,7 +9,7 @@ import { formatCOP } from '../utils/format';
 import { cn } from '../utils/cn';
 import { ConfirmModal } from '../components/ConfirmModal';
 
-const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'];
+const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING'];
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();

@@ -24,6 +24,7 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'BAPTISM', icon: '🕊️', label: 'Bautizo' },
   { value: 'COMMUNION', icon: '✨', label: 'Comunión' },
   { value: 'OTHER', icon: '🎊', label: 'Otro' },
+  { value: 'HOUSE_WARMING', icon: '🏠', label: 'Casa Shower' },
 ];
 
 export default function EventAdmin() {

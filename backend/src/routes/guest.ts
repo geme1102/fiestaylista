@@ -15,7 +15,7 @@ const router = Router();
 
 const createGuestEventSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo'),
-  eventType: z.enum(['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION'] as const, {
+  eventType: z.enum(['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'OTHER', 'HOUSE_WARMING'] as const, {
     errorMap: () => ({ message: 'Tipo de evento inválido' }),
   }),
   hostPhone: z.string().optional(),
