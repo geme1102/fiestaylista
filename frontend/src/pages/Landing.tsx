@@ -4,24 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import LiveCounter from '../components/LiveCounter';
 import GoldStars from '../components/GoldStars';
-import { use3DTilt } from '../hooks/use3DTilt';
-
-const FEATURES = [
-  { icon: '/icons/feature-gifts.png', title: 'Listas de Regalos', desc: 'Crea listas personalizadas para cualquier evento especial.', reaction: 'wiggle' },
-  { icon: '/icons/feature-photos.png', title: 'Fotos del Evento', desc: 'Comparte recuerdos con todos los invitados.', reaction: 'scale' },
-  { icon: '/icons/feature-cash.png', title: 'Lluvia de Sobres', desc: 'Recibe aportaciones económicas de tus invitados de forma segura.', reaction: 'coin' },
-  { icon: '/icons/feature-stats.png', title: 'Estadísticas', desc: 'Sigue quién ha visto y elegido regalos.', reaction: 'scale' },
-];
-
-const EVENT_TYPES = [
-  { value: 'WEDDING', label: 'Boda', icon: '/icons/types/type-wedding.svg', emoji: '💍' },
-  { value: 'BABY_SHOWER', label: 'Baby Shower', icon: '/icons/types/type-babyshower.svg', emoji: '🍼' },
-  { value: 'BIRTHDAY', label: 'Cumpleaños', icon: '/icons/types/type-birthday.svg', emoji: '🎂' },
-  { value: 'BAPTISM', label: 'Bautizo', icon: '/icons/types/type-baptism.svg', emoji: '🕊️' },
-  { value: 'COMMUNION', label: 'Comunión', icon: '/icons/types/type-communion.svg', emoji: '✨' },
-  { value: 'HOUSE_WARMING', label: 'Casa Shower', icon: '/icons/types/type-housewarming.svg', emoji: '🏠' },
-  { value: 'OTHER', label: 'Otro', icon: '/icons/types/type-other.svg', emoji: '🎊' },
-] as const;
+import {
+  Gem, Baby, Cake, Droplet, Sun, Gift, Camera, Mail, BarChart3,
+  ArrowRight, Home, ChevronLeft, ChevronRight,
+} from 'lucide-react';
 
 const TESTIMONIALS = [
   { name: 'María G.', role: 'Baby Shower', text: 'Invitada a baby shower, pude elegir el regalo perfecto sin repetir. Muy fácil de usar.', avatar: '/illustrations/avatar-1.png' },
@@ -70,47 +56,6 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
   }, [charIdx, deleting, lineIdx, texts, typingSpeed, deletingSpeed, pauseTime]);
 
   return displayed;
-}
-
-function FeatureIcon3D({ icon, title, reaction }: { icon: string; title: string; reaction: string }) {
-  const { ref, handleMouseMove, handleMouseLeave } = use3DTilt(6);
-  const [coins, setCoins] = useState<{ id: number }[]>([]);
-
-  const handleClick = useCallback(() => {
-    navigator.vibrate?.(10);
-    if (reaction === 'coin') {
-      setCoins(Array.from({ length: 6 }, (_, i) => ({ id: Date.now() + i })));
-      setTimeout(() => setCoins([]), 1000);
-    }
-  }, [reaction]);
-
-  return (
-    <div className="text-center group relative">
-      <div
-        ref={ref}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-            className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-fixed to-primary-fixed/50 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/15 transition-all duration-300 ring-1 ring-primary/20 cursor-pointer relative"
-        style={{ transformStyle: 'preserve-3d', transition: 'transform 0.2s cubic-bezier(0.23,1,0.32,1)' }}
-      >
-        <img
-          src={icon}
-          alt={title}
-          loading="lazy"
-          className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-300"
-          style={{ transform: 'translateZ(20px)' }}
-        />
-        {reaction === 'coin' && coins.map((c) => (
-          <span key={c.id} className="absolute text-xs animate-gold-particle" style={{ left: `${30 + Math.random() * 40}%`, top: '40%' }}>
-            ✨
-          </span>
-        ))}
-      </div>
-      <h3 className="text-lg font-semibold text-on-surface mb-2 group-hover:text-primary transition-colors">{title}</h3>
-      <p className="text-on-surface-variant text-fluid-body">{FEATURES.find(f => f.title === title)?.desc}</p>
-    </div>
-  );
 }
 
 function FloatingOrbs() {
@@ -202,61 +147,20 @@ function SocialProofFloating() {
   );
 }
 
-function CategoryCard3D({ type, index }: { type: typeof EVENT_TYPES[number]; index: number }) {
-  const { ref, handleMouseMove, handleMouseLeave } = use3DTilt(10);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: [0.23, 1, 0.32, 1] }}
-      className="relative"
-    >
-      <div
-        ref={ref}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ transformStyle: 'preserve-3d', perspective: '800px' }}
-        className="group relative flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-white/20 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:border-primary/50"
-      >
-        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 to-primary-container/10" />
-          <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/30 via-primary-container/20 to-secondary-container/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ zIndex: -1 }} />
-        </div>
-
-        <div
-          className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ring-1 ring-primary/20"
-          style={{ transform: 'translateZ(30px)' }}
-        >
-          {type.emoji}
-        </div>
-
-        <span
-          className="text-base font-bold text-on-surface font-outfit tracking-tight group-hover:text-primary transition-colors duration-300"
-          style={{ transform: 'translateZ(20px)' }}
-        >
-          {type.label}
-        </span>
-
-        <span
-          className="text-xs text-on-surface-variant group-hover:text-primary/70 transition-colors duration-300"
-          style={{ transform: 'translateZ(10px)' }}
-        >
-          Ver más →
-        </span>
-
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-3/4 h-0.5 bg-gradient-to-r from-primary to-primary-container rounded-full transition-all duration-500 opacity-0 group-hover:opacity-100" />
-      </div>
-    </motion.div>
-  );
-}
-
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const typedText = useTypewriter(TYPING_PHRASES);
   const [scrolled, setScrolled] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = useCallback(() => {
+    carouselRef.current?.scrollBy({ left: -340, behavior: 'smooth' });
+  }, []);
+
+  const scrollRight = useCallback(() => {
+    carouselRef.current?.scrollBy({ left: 340, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY);
@@ -467,57 +371,250 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      {/* Category Selector 3D */}
-      <section className="space-fluid-section bg-surface/50 backdrop-blur-sm relative z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+      {/* Category Selector - Horizontal Carousel */}
+      <section className="pt-16 md:pt-24 pb-12 md:pb-20">
+        <div className="max-w-4xl mx-auto text-center mb-10 md:mb-14 px-4 md:px-8">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-tight md:leading-tight font-bold mb-4 drop-shadow-sm"
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-3 font-outfit tracking-tight">
-              ¿Qué estás celebrando?
-            </h2>
-            <p className="text-center text-on-surface-variant mb-12 max-w-xl mx-auto text-fluid-body">
-              Elige tu evento y empieza a crear tu lista de regalos en segundos
-            </p>
-          </motion.div>
+            <span className="text-gradient-premium leading-normal">¿Qué estás</span> <span className="text-gradient-premium italic pr-2 leading-normal">celebrando?</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
+            className="text-gray-700 text-base sm:text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto"
+          >
+            Elige tu evento y empieza a crear tu lista de regalos en segundos.
+          </motion.p>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
-            {EVENT_TYPES.map((type, idx) => (
-              <CategoryCard3D key={type.value} type={type} index={idx} />
+        {/* Horizontal Snapping Carousel */}
+        <div className="relative w-full">
+          <div className="hidden md:block absolute top-0 left-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-r from-[#fdfbfb] via-[#fdfbfb]/80 to-transparent z-10 pointer-events-none"></div>
+          <div className="hidden md:block absolute top-0 right-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-l from-[#fdfbfb] via-[#fdfbfb]/80 to-transparent z-10 pointer-events-none"></div>
+
+          <motion.div
+            ref={carouselRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3, type: 'spring', bounce: 0.4 }}
+            className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory no-scrollbar px-6 sm:px-10 md:px-16 lg:px-32 xl:px-48 py-8 md:py-12"
+          >
+            {[
+              { title: 'Boda', icon: Gem, color: 'from-brand-peach/50 to-brand-pink/20', glow: 'bg-brand-pink' },
+              { title: 'Baby Shower', icon: Baby, color: 'from-brand-blue/20 to-brand-lavender/50', glow: 'bg-brand-blue' },
+              { title: 'Cumpleaños', icon: Cake, color: 'from-amber-200 to-rose-200', glow: 'bg-amber-400' },
+              { title: 'Bautizo', icon: Droplet, color: 'from-emerald-100 to-teal-200/80', glow: 'bg-teal-400' },
+              { title: 'Comunión', icon: Sun, color: 'from-brand-lavender/40 to-brand-peach/20', glow: 'bg-brand-peach' },
+              { title: 'Casa Shower', icon: Home, color: 'from-orange-100 to-amber-200/60', glow: 'bg-orange-400' },
+            ].map((event, idx) => (
+              <motion.button
+                key={event.title}
+                onClick={() => navigate('/register')}
+                whileTap={{ scale: 0.94, y: 0 }}
+                whileHover={{ y: -12, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                className="relative snap-center shrink-0 w-[80vw] sm:w-[260px] md:w-[320px] flex flex-col items-center p-8 md:p-10
+                           bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-2xl rounded-[2.5rem] md:rounded-[3rem]
+                           shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06),0_4px_10px_-5px_rgba(0,0,0,0.02),inset_0_0_0_1px_rgba(255,255,255,0.7),inset_0_4px_15px_rgba(255,255,255,0.9)]
+                           hover:shadow-[0_40px_60px_-15px_rgba(140,0,83,0.25),0_15px_25px_-10px_rgba(210,50,132,0.15),inset_0_0_0_2px_rgba(255,255,255,1),inset_0_4px_25px_rgba(255,255,255,1)]
+                           active:shadow-[0_15px_25px_-5px_rgba(140,0,83,0.2),inset_0_0_0_2px_rgba(255,255,255,0.9),inset_0_4px_20px_rgba(255,255,255,0.8)]
+                           transition-shadow duration-500 overflow-visible group outline-none"
+              >
+                <div className={`absolute -inset-1 rounded-[2.5rem] md:rounded-[3rem] bg-gradient-to-br ${event.color} blur-[12px] opacity-30 group-hover:opacity-70 transition-opacity duration-500 -z-10 pointer-events-none`}></div>
+                <div className={`absolute inset-0 bg-gradient-to-t ${event.color} opacity-0 group-hover:opacity-15 rounded-[2.5rem] md:rounded-[3rem] transition-opacity duration-500 pointer-events-none`}></div>
+
+                <motion.div
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: idx * 0.2 }}
+                  className={`relative z-10 flex items-center justify-center w-24 h-24 md:w-28 md:h-28 mb-6 md:mb-8 rounded-full bg-gradient-to-br ${event.color} shadow-[0_15px_30px_-10px_rgba(0,0,0,0.15),inset_0_4px_8px_rgba(255,255,255,0.9)] border border-white/60`}
+                >
+                  <div className={`absolute -bottom-2 w-12 h-3 md:w-16 md:h-4 ${event.glow} blur-lg md:blur-xl opacity-40 rounded-full`}></div>
+                  <event.icon strokeWidth={1.5} className="w-10 h-10 md:w-12 md:h-12 text-gray-800 drop-shadow-sm" />
+                </motion.div>
+
+                <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-gray-900 tracking-tight mb-3 md:mb-4">
+                  {event.title}
+                </h3>
+
+                <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 border border-gray-100/50 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-all duration-300">
+                  <span className="text-xs md:text-sm font-semibold tracking-wide transition-colors text-brand-pink group-hover:text-white">Ver más</span>
+                  <ArrowRight strokeWidth={2.5} className="w-4 h-4 text-brand-pink group-hover:text-white group-hover:translate-x-1 transition-transform" />
+                </div>
+              </motion.button>
             ))}
-          </div>
+
+            <div className="shrink-0 w-4 md:w-12 lg:w-24 xl:w-40"></div>
+          </motion.div>
+        </div>
+
+        {/* Navigation Arrows (Desktop) */}
+        <div className="hidden md:flex justify-center items-center gap-6 mt-8">
+          <button
+            onClick={scrollLeft}
+            className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-white hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
+            aria-label="Desplazar a la izquierda"
+          >
+            <ChevronLeft strokeWidth={2.5} className="w-7 h-7 -ml-1" />
+          </button>
+          <button
+            onClick={scrollRight}
+            className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-white hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
+            aria-label="Desplazar a la derecha"
+          >
+            <ChevronRight strokeWidth={2.5} className="w-7 h-7 -mr-1" />
+          </button>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="space-fluid-section bg-surface relative z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Features Section - Bento Grid */}
+      <section className="pt-16 md:pt-24 pb-16 md:pb-24 px-4 md:px-8 max-w-6xl mx-auto">
+        <div className="text-center mb-10 md:mb-16">
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8 }}
+            className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight md:leading-tight font-bold mb-4 md:mb-5"
+          >
+            <span className="text-gradient-premium leading-normal">Todo lo que necesitas</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="text-gray-700 text-base sm:text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto"
+          >
+            Una suite premium diseñada para hacer inolvidable tu celebración.
+          </motion.p>
+        </div>
+
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+
+          {/* Card 1: Gifts */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            whileHover={{ y: -5, scale: 1.01 }}
+            transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
+            className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-16 font-outfit tracking-tight">
-              Todo lo que necesitas
-            </h2>
+            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-bl from-brand-peach/30 via-brand-pink/10 to-transparent opacity-60 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-pink to-brand-peach p-1 shadow-[0_10px_25px_-5px_rgba(210,50,132,0.4)] group-hover:shadow-[0_15px_35px_-5px_rgba(210,50,132,0.5)] transition-shadow">
+              <div className="w-full h-full bg-white rounded-[1rem] md:rounded-[20px] flex items-center justify-center">
+                <Gift className="w-8 h-8 md:w-10 md:h-10 text-brand-pink" strokeWidth={1.5} />
+              </div>
+            </div>
+            <div className="relative z-10 text-center sm:text-left flex-1">
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 mb-3 md:mb-4">Listas de Regalos</h3>
+              <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
+                Crea listas personalizadas con una experiencia de unboxing virtual elegante. Perfecto para cualquier evento especial que merezca ser recordado.
+              </p>
+            </div>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
-            {FEATURES.map((feature, idx) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1, ease: [0.23, 1, 0.32, 1] }}
-              >
-                <FeatureIcon3D icon={feature.icon} title={feature.title} reaction={feature.reaction} />
+
+          {/* Card 2: Photos */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5, scale: 1.02 }}
+            transition={{ duration: 0.5, delay: 0.1, type: 'spring', bounce: 0.3 }}
+            className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 to-brand-lavender/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            {/* Photo Collage */}
+            <div className="relative z-10 w-full h-36 md:h-40 mb-4 md:mb-6 flex items-center justify-center perspective-[1000px]">
+              <motion.div className="absolute z-0 w-20 h-24 md:w-24 md:h-28 bg-white p-1 pb-4 md:pb-5 shadow-md rounded-sm -rotate-12 -ml-20 -mt-4 opacity-70 group-hover:-rotate-[16deg] group-hover:-ml-28 group-hover:opacity-90 transition-all duration-300">
+                <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1525268771113-32d9e9021a97?auto=format&fit=crop&q=80&w=200" alt="Fiesta" className="w-full h-full object-cover" />
+                </div>
               </motion.div>
-            ))}
-          </div>
+              <motion.div className="absolute z-10 w-24 h-28 md:w-28 md:h-32 bg-white p-1.5 pb-5 md:pb-6 shadow-lg rounded-sm rotate-12 ml-16 md:ml-20 mt-4 group-hover:rotate-[16deg] group-hover:ml-24 group-hover:scale-105 transition-all duration-300">
+                <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1530103862676-de8892ebe853?auto=format&fit=crop&q=80&w=200" alt="Celebración" className="w-full h-full object-cover" />
+                </div>
+              </motion.div>
+              <motion.div className="absolute z-20 w-28 h-32 md:w-32 md:h-36 bg-white p-2 pb-6 md:pb-8 shadow-xl rounded-sm -rotate-3 group-hover:rotate-0 group-hover:scale-110 group-hover:-mt-4 transition-all duration-300">
+                <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=200" alt="Evento" className="w-full h-full object-cover" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm flex items-center justify-center shadow-lg transform -translate-y-2">
+                    <Camera className="w-5 h-5 text-gray-900" strokeWidth={2} />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-gray-900 mb-2 md:mb-3">Fotos del Evento</h3>
+            <p className="relative z-10 text-sm sm:text-base text-gray-700 font-light leading-relaxed">
+              Revive cada instante con un muro de recuerdos vivos.
+            </p>
+          </motion.div>
+
+          {/* Card 3: Cash */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5, scale: 1.02 }}
+            transition={{ duration: 0.5, delay: 0.2, type: 'spring', bounce: 0.3 }}
+            className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-brand-berry text-white shadow-[0_15px_40px_-15px_rgba(140,0,83,0.5)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-16 -right-16 w-48 h-48 md:w-64 md:h-64 bg-brand-pink rounded-full blur-[60px] md:blur-[80px]"
+            />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 md:w-40 md:h-40 bg-white opacity-10 rounded-full blur-[40px] group-hover:opacity-20 transition-opacity duration-500"></div>
+
+            <div className="relative z-10 flex-shrink-0 w-16 h-16 md:w-20 md:h-20 mb-5 md:mb-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner group-hover:bg-white/20 transition-colors">
+              <Mail className="w-7 h-7 md:w-8 md:h-8 text-white" strokeWidth={1.5} />
+            </div>
+
+            <h3 className="relative z-10 text-xl md:text-2xl font-serif font-bold text-white mb-2 md:mb-3">Lluvia de Sobres</h3>
+            <p className="relative z-10 text-sm sm:text-base text-white/90 font-light leading-relaxed">
+              Aportaciones con extrema elegancia.
+            </p>
+          </motion.div>
+
+          {/* Card 4: Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5, scale: 1.01 }}
+            transition={{ duration: 0.5, delay: 0.3, type: 'spring', bounce: 0.3 }}
+            className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
+          >
+            <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
+
+            <div className="relative z-10 text-center sm:text-left flex-1 order-2 sm:order-1">
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 mb-3 md:mb-4">Estadísticas Detalladas</h3>
+              <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
+                Sigue en tiempo real quién ha visto tu invitación, confirma asistencia y gestiona los regalos con un panel intuitivo y moderno.
+              </p>
+            </div>
+
+            <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 order-1 sm:order-2 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-blue to-brand-lavender p-1 shadow-[0_10px_25px_-5px_rgba(47,46,190,0.3)] group-hover:shadow-[0_15px_35px_-5px_rgba(47,46,190,0.4)] transition-shadow">
+              <div className="w-full h-full bg-white rounded-[1rem] md:rounded-[20px] flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-brand-blue" strokeWidth={1.5} />
+              </div>
+            </div>
+          </motion.div>
+
         </div>
       </section>
 
