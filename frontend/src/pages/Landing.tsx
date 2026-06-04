@@ -664,44 +664,103 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="relative z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-container to-tertiary opacity-95" />
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-20 w-[600px] h-[600px] rounded-full bg-primary/20 blur-3xl animate-aurora" />
-          <div className="absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full bg-tertiary/20 blur-3xl animate-aurora" style={{ animationDelay: '-7s' }} />
-          <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] rounded-full bg-primary-container/15 blur-3xl animate-aurora" style={{ animationDelay: '-14s' }} />
-        </div>
-        <div className="relative space-fluid-section">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <h2 className="text-fluid-h2 font-bold mb-4 font-outfit tracking-tight text-white">
-                ¿Listo para empezar?
-              </h2>
-              <p className="text-fluid-body mb-8 text-on-primary max-w-xl mx-auto">
-                Crea tu primer evento gratis. No necesitas tarjeta de crédito.
-              </p>
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 px-10 py-4 bg-white text-primary rounded-full text-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-primary/30 hover:scale-105 relative overflow-hidden group"
-              >
-                <span className="relative z-10">Crear mi primera lista</span>
-                <motion.span
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="relative z-10"
-                >
-                  →
-                </motion.span>
-                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-primary-fixed/30 to-transparent bg-[length:200%_100%] animate-card-shine" />
-              </Link>
-            </motion.div>
+      {/* Final CTA — Watercolor Animation */}
+      <section className="relative z-10 w-full py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="relative w-full bg-white rounded-[3rem] px-4 py-20 md:py-28 text-center overflow-hidden border border-gray-100 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
+
+          {/* Watercolor Blob Animation */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+
+            {/* Paper texture overlay */}
+            <div
+              className="absolute inset-0 opacity-[0.06] mix-blend-multiply"
+              style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}
+            ></div>
+
+            {/* Blob layers */}
+            <div className="absolute inset-0 opacity-100 mix-blend-multiply">
+
+              {/* Blob 1: Pink / Berry */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.4, 1],
+                  x: ['-20%', '30%', '-20%'],
+                  y: ['-10%', '20%', '-10%'],
+                }}
+                transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute top-[0%] left-[0%] w-[80vw] h-[80vw] md:w-[40rem] md:h-[40rem] bg-gradient-to-br from-pink-400 via-[#d23284] to-brand-berry rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              />
+
+              {/* Blob 2: Cyan / Blue */}
+              <motion.div
+                animate={{
+                  scale: [1.2, 1, 1.2],
+                  x: ['20%', '-30%', '20%'],
+                  y: ['20%', '-10%', '20%'],
+                }}
+                transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute top-[10%] right-[0%] w-[75vw] h-[75vw] md:w-[35rem] md:h-[35rem] bg-gradient-to-bl from-cyan-300 via-blue-500 to-indigo-500 rounded-full blur-[60px] md:blur-[100px] opacity-[0.85]"
+              />
+
+              {/* Blob 3: Warm Yellow / Orange */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.5, 1],
+                  x: ['-30%', '20%', '-30%'],
+                  y: ['20%', '-30%', '20%'],
+                }}
+                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute bottom-[0%] left-[10%] w-[90vw] h-[90vw] md:w-[45rem] md:h-[45rem] bg-gradient-to-tr from-yellow-300 via-orange-400 to-brand-peach rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              />
+            </div>
           </div>
+
+          {/* Glass card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="relative z-10 flex flex-col items-center max-w-3xl mx-auto bg-white/60 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-14 border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
+          >
+            <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 tracking-tight drop-shadow-sm">
+              ¿Listo para empezar?
+            </h2>
+            <p className="text-gray-800 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
+              Crea tu primer evento gratis. <br className="hidden sm:block" /> No necesitas tarjeta de crédito.
+            </p>
+
+            {/* CTA Button */}
+            <div className="relative group w-full sm:w-auto">
+              <motion.div
+                animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 bg-gray-900 rounded-full blur-[15px] pointer-events-none"
+              ></motion.div>
+
+              <motion.button
+                onClick={() => navigate('/register')}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97, y: 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                className="relative flex items-center justify-center w-full sm:w-auto gap-3 px-10 py-5 rounded-full text-white bg-gray-900 shadow-[0_8px_20px_rgba(0,0,0,0.2)] overflow-hidden cursor-pointer border border-gray-800"
+              >
+                {/* Shine overlay */}
+                <motion.div
+                  className="absolute inset-0 w-full h-full z-0 pointer-events-none flex items-center"
+                  initial={{ x: '-150%' }}
+                  animate={{ x: '150%' }}
+                  transition={{ duration: 2.5, ease: [0.4, 0, 0.2, 1], repeat: Infinity, repeatDelay: 4 }}
+                >
+                  <div className="w-[30%] h-[200%] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"></div>
+                </motion.div>
+
+                <span className="relative z-10 flex items-center gap-2 text-lg tracking-wide font-semibold text-white">
+                  Crear mi primera lista <ArrowRight className="w-5 h-5 ml-1 transition-transform group-hover:translate-x-1.5 duration-300" />
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
