@@ -661,9 +661,15 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           >
-            <h2 className="text-fluid-h2 font-bold text-center text-on-surface mb-4 font-outfit tracking-tight">
-              Lo que dicen nuestros usuarios
-            </h2>
+            <motion.h2
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.8 }}
+              className="font-outfit text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight md:leading-tight font-bold mb-4 md:mb-5 text-center"
+            >
+              <span className="text-gradient-premium leading-normal">Lo que dicen nuestros usuarios</span>
+            </motion.h2>
             <p className="text-center text-on-surface-variant mb-10 max-w-xl mx-auto text-fluid-body">
               Miles de personas ya organizan sus eventos con Fiesta y Lista.
             </p>
