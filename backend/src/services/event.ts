@@ -82,7 +82,7 @@ export async function getUserEvents(userId: string) {
         count: sql<number>`count(*)::int`,
       })
       .from(gifts)
-      .where(sql`${gifts.eventId} = ANY(${eventIdsParam}::uuid[])`)
+      .where(sql`${gifts.eventId} = ANY(${eventIdsParam}::uuid[]) AND ${gifts.deletedAt} IS NULL`)
       .groupBy(gifts.eventId),
     db
       .select({
@@ -129,7 +129,7 @@ export async function getEvent(eventId: string, _userId?: string) {
   const eventGifts = await db
     .select()
     .from(gifts)
-    .where(eq(gifts.eventId, eventId))
+    .where(and(eq(gifts.eventId, eventId), eq(gifts.deletedAt, null)))
     .orderBy(gifts.createdAt);
 
   const eventPhotos = await db
@@ -183,7 +183,7 @@ export async function getEventBySlug(eventSlug: string) {
   const eventGifts = await db
     .select()
     .from(gifts)
-    .where(eq(gifts.eventId, event.id))
+    .where(and(eq(gifts.eventId, event.id), eq(gifts.deletedAt, null)))
     .orderBy(gifts.createdAt);
 
   const eventPhotos = await db

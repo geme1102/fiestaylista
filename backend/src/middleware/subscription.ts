@@ -99,7 +99,7 @@ export function checkGiftLimit(eventId: string) {
       const [countResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(gifts)
-        .where(eq(gifts.eventId, eventId));
+        .where(and(eq(gifts.eventId, eventId), eq(gifts.deletedAt, null)));
 
       const giftCount = Number(countResult?.count ?? 0);
 

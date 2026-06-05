@@ -132,6 +132,7 @@ export async function register(
         email: emailLower,
         passwordHash,
         name,
+        tier: 'free',
         emailVerified: false,
         verificationToken,
         verificationTokenExpires,
