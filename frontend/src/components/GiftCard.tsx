@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
-import { formatCOP } from '../utils/format';
 import type { Gift } from '../types';
 
 interface GiftCardProps {
@@ -49,11 +48,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
         </div>
         <div className="p-5">
           <h3 className="font-headline-md text-headline-md text-on-surface-variant/60 line-through mb-1">{gift.name}</h3>
-          {gift.targetAmount && (
-            <p className="text-on-surface-variant/50 text-body-md">
-              {formatCOP(gift.targetAmount)}
-            </p>
-          )}
         </div>
         {isAdmin && onFree && (
           <div className="absolute top-2 right-2 z-10">
@@ -71,10 +65,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
     );
   }
 
-  const progressPercent = gift.isCollective && gift.targetAmount && gift.targetAmount > 0
-    ? Math.min((gift.collectedAmount || 0) / gift.targetAmount * 100, 100)
-    : 0;
-
   const cardContent = (
     <>
       {/* Image */}
@@ -91,17 +81,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
           <span className="material-symbols-outlined text-sm">home</span>
           {category.label}
         </div>
-
-        {/* Collective overlay */}
-        {gift.isCollective && (
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-              <span className="bg-secondary-container/90 text-on-secondary-container px-3 py-1 rounded-full text-caption font-label-md backdrop-blur-md inline-block mb-2">
-                Regalo Colectivo
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Admin overlay */}
         {isAdmin && (
@@ -137,66 +116,29 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
 
       {/* Content */}
       <div className="p-5">
-        {gift.isCollective ? (
-          <>
-            <h3 className="font-headline-md text-headline-md text-on-surface mb-2">{gift.name}</h3>
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-caption font-label-md text-on-surface-variant">
-                <span>{gift.collectedAmount ? formatCOP(gift.collectedAmount) : '$0'} recaudados</span>
-                {gift.targetAmount && <span>Meta: {formatCOP(gift.targetAmount)}</span>}
-              </div>
-              <div className="h-3 w-full bg-surface-container-high rounded-full overflow-hidden relative">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-primary-container shimmer-bg"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <p className="text-primary font-label-md text-label-md text-right">{Math.round(progressPercent)}% completado</p>
-            </div>
-            {onClaim && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
-                disabled={claimingId === gift.id}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-label-md text-label-md rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {claimingId === gift.id ? '...' : 'Contribuir al sueño'}
-              </motion.button>
-            )}
-          </>
-        ) : (
-          <>
-            <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{gift.name}</h3>
-            {gift.targetAmount && (
-              <p className="text-on-surface-variant text-body-md mb-4">{formatCOP(gift.targetAmount)}</p>
-            )}
-            {!gift.targetAmount && (
-              <p className="text-on-surface-variant text-body-md mb-4">Set de regalo ideal para {category.label.toLowerCase()}.</p>
-            )}
-            {onClaim && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
-                disabled={claimingId === gift.id}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-label-md text-label-md rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined">card_giftcard</span>
-                {claimingId === gift.id ? '...' : '🎁 Regalar este detalle'}
-              </motion.button>
-            )}
-            {isAdmin && onDelete && (
-              <div className="mt-3 flex justify-end">
-                <button
-                  onClick={() => onDelete(gift.id)}
-                  className="text-outline-variant hover:text-error transition-colors text-sm"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-            )}
-          </>
+        <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{gift.name}</h3>
+        <p className="text-on-surface-variant text-body-md mb-4">Set de regalo ideal para {category.label.toLowerCase()}.</p>
+        {onClaim && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
+            disabled={claimingId === gift.id}
+            className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-label-md text-label-md rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined">card_giftcard</span>
+            {claimingId === gift.id ? '...' : '🎁 Regalar este detalle'}
+          </motion.button>
+        )}
+        {isAdmin && onDelete && (
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={() => onDelete(gift.id)}
+              className="text-outline-variant hover:text-error transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
         )}
       </div>
     </>
@@ -216,7 +158,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
     );
   }
 
-  // States 1 & 2: Individual / Collective (guest view)
+  // States 1 & 2: Individual / Available (guest view)
   return (
     <motion.div
       layout

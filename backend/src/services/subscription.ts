@@ -115,7 +115,7 @@ export async function updateSubscriptionStatus(
       throw new NotFoundError('Suscripción no encontrada');
     }
 
-    if (status === 'canceled' || status === 'past_due') {
+    if (status === 'canceled' || status === 'past_due' || status === 'incomplete') {
       await tx
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })

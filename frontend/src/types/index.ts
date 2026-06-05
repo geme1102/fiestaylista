@@ -21,6 +21,7 @@ export interface Event {
   giftCount?: number;
   photoCount?: number;
   boostedUntil?: string;
+  viewCount?: number;
   cashFund?: { collectedAmount: number; targetAmount?: number | null } | null;
   createdAt: string;
   updatedAt: string;
@@ -32,9 +33,6 @@ export interface Gift {
   name: string;
   isClaimed: boolean;
   claimedBy?: string;
-  isCollective?: boolean;
-  targetAmount?: number;
-  collectedAmount?: number;
   createdAt: string;
 }
 
@@ -51,8 +49,8 @@ export interface Subscription {
   userId: string;
   tier: Tier;
   status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
-  currentPeriodStart: string;
-  currentPeriodEnd: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
   mpSubscriptionId?: string;
 }
 

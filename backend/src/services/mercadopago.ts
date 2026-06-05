@@ -253,9 +253,13 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       .set({ boostedUntil, updatedAt: new Date() })
       .where(eq(events.id, eventId));
 
-    await tx
-      .insert(boostPayments)
-      .values({ eventId, mpPaymentId: paymentId, amount: BOOST_PRICE_CENTS });
+    try {
+      await tx
+        .insert(boostPayments)
+        .values({ eventId, mpPaymentId: paymentId, amount: BOOST_PRICE_CENTS });
+    } catch {
+      // UNIQUE violation on mp_payment_id = ya procesado concurrentemente
+    }
   });
 }
 
@@ -291,6 +295,11 @@ async function revertBoostPayment(paymentId: string, ref: string): Promise<void>
       .update(events)
       .set({ boostedUntil: newBoostedUntil, updatedAt: new Date() })
       .where(eq(events.id, eventId));
+
+    await tx
+      .update(boostPayments)
+      .set({ status: 'refunded' })
+      .where(eq(boostPayments.mpPaymentId, paymentId));
   });
 }
 

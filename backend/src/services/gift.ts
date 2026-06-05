@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { gifts as giftsTable } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
@@ -115,7 +115,8 @@ export async function releaseGift(giftId: string) {
 
 export async function deleteGift(giftId: string) {
   const [gift] = await db
-    .delete(giftsTable)
+    .update(giftsTable)
+    .set({ deletedAt: new Date() })
     .where(eq(giftsTable.id, giftId))
     .returning();
 
@@ -130,7 +131,7 @@ export async function getEventGifts(eventId: string) {
   const eventGifts = await db
     .select()
     .from(giftsTable)
-    .where(eq(giftsTable.eventId, eventId))
+    .where(and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt)))
     .orderBy(giftsTable.createdAt);
 
   return eventGifts;

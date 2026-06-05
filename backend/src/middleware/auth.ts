@@ -62,7 +62,12 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
       return;
     }
 
-    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload | GuestJwtPayload;
+
+    if ((decoded as GuestJwtPayload).isGuest) {
+      next();
+      return;
+    }
 
     (req as any).user = {
       userId: decoded.userId,
