@@ -763,10 +763,10 @@ export default function Landing() {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="relative z-10 flex flex-col items-center max-w-3xl mx-auto bg-white/60 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-14 border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
           >
-            <h2 className="font-outfit text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 tracking-tight drop-shadow-sm">
+            <h2 className="font-outfit text-4xl sm:text-5xl md:text-6xl font-bold text-stone-800 mb-4 tracking-tight drop-shadow-sm">
               ¿Listo para empezar?
             </h2>
-            <p className="text-gray-800 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
+            <p className="text-stone-700 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
               Crea tu primer evento gratis. <br className="hidden sm:block" /> No necesitas tarjeta de crédito.
             </p>
 
@@ -775,7 +775,7 @@ export default function Landing() {
               <motion.div
                 animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 bg-gray-900 rounded-full blur-[15px] pointer-events-none"
+                className="absolute inset-0 bg-primary/60 rounded-full blur-[15px] pointer-events-none"
               ></motion.div>
 
               <motion.button
@@ -783,7 +783,7 @@ export default function Landing() {
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97, y: 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                className="relative flex items-center justify-center w-full sm:w-auto gap-3 px-10 py-5 rounded-full text-white bg-gray-900 shadow-[0_8px_20px_rgba(0,0,0,0.2)] overflow-hidden cursor-pointer border border-gray-800"
+                className="relative flex items-center justify-center w-full sm:w-auto gap-3 px-10 py-5 rounded-full text-white bg-gradient-to-r from-primary to-primary-container shadow-lg shadow-primary/20 overflow-hidden cursor-pointer"
               >
                 {/* Shine overlay */}
                 <motion.div
