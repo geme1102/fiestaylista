@@ -127,6 +127,10 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.use('/api', apiLimiter);
 
 app.use(express.json({ limit: '1mb' }));
