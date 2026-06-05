@@ -77,6 +77,7 @@ jobs:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - run: railway login --token $RAILWAY_TOKEN
       - run: railway up --service=fiestaylista
 
 
