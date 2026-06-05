@@ -74,10 +74,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: bervProject/railway-deploy@main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy to Railway
+        run: railway up --service=fiestaylista
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          service: fiestaylista
 
 
