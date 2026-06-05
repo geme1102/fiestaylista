@@ -388,7 +388,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
               onClick={() => setBoostModal(true)}
               className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
             >
-              Activar por $4.99
+              Activar
             </button>
           </div>
         </section>
@@ -442,7 +442,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
       >
         <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
         <p className="text-sm text-on-surface-variant mb-4">
-          Por solo <strong className="text-on-surface">$4.99</strong> activa el Cash Fund para este evento durante 30 días.
+          Activa el Cash Fund para este evento durante 30 días por solo <strong className="text-on-surface">$10.000 COP</strong>.
         </p>
         <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
           <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>

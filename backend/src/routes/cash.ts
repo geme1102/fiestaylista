@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
+import { requireEventOwnership } from '../middleware/ownership.js';
 import { contributeLimiter } from '../middleware/rateLimit.js';
 import * as cashFundService from '../services/cashFund.js';
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
@@ -24,7 +25,7 @@ const contributeSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
-router.put('/events/:eventId/cash-fund', requireAuth, async (req: AuthRequest, res, next) => {
+router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, async (req: AuthRequest, res, next) => {
   try {
     const eventId = req.params.eventId as string;
     if (!eventId) throw new ValidationError('ID del evento requerido');

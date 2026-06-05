@@ -114,8 +114,7 @@ export async function getUserEvents(userId: string) {
   }));
 }
 
-export async function getEvent(eventId: string, _userId?: string) {
-  void _userId;
+export async function getEvent(eventId: string, userId: string) {
   const [event] = await db
     .select()
     .from(eventsTable)
@@ -124,6 +123,10 @@ export async function getEvent(eventId: string, _userId?: string) {
 
   if (!event) {
     throw new NotFoundError('Evento no encontrado');
+  }
+
+  if (event.userId !== userId) {
+    throw new ForbiddenError('No tienes permiso para ver este evento');
   }
 
   const eventGifts = await db

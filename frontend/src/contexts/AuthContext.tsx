@@ -29,7 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchedRef.current = true;
     auth.getMe()
       .then((res) => setUser(res.user))
-      .catch(() => {})
+      .catch((err) => {
+        console.warn('[Auth] No se pudo restaurar la sesión:', err);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 

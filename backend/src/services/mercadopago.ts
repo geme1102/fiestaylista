@@ -216,23 +216,7 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
   const eventId = ref.slice(6);
   if (!eventId) return;
 
-  const [existingPayment] = await db
-    .select({ id: boostPayments.id })
-    .from(boostPayments)
-    .where(eq(boostPayments.mpPaymentId, paymentId))
-    .limit(1);
-
-  if (existingPayment) return;
-
   await db.transaction(async (tx) => {
-    const [existingCheck] = await tx
-    .select({ id: boostPayments.id })
-    .from(boostPayments)
-    .where(eq(boostPayments.mpPaymentId, paymentId))
-    .limit(1);
-
-    if (existingCheck) return;
-
     const [event] = await tx
       .select({ id: events.id, boostedUntil: events.boostedUntil })
       .from(events)
@@ -257,8 +241,12 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       await tx
         .insert(boostPayments)
         .values({ eventId, mpPaymentId: paymentId, amount: BOOST_PRICE_CENTS });
-    } catch {
-      // UNIQUE violation on mp_payment_id = ya procesado concurrentemente
+    } catch (err: any) {
+      if (err?.code === '23505') {
+        console.log(`[MP] Boost payment ${paymentId} already processed (UNIQUE violation)`);
+      } else {
+        throw err;
+      }
     }
   });
 }

@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { events } from '../db/schema.js';
+import { events, gifts, photos } from '../db/schema.js';
 import { ForbiddenError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -38,6 +38,31 @@ export async function requireEventOwnership(
       next(new ForbiddenError('No tienes permiso para modificar este evento'));
       return;
     }
+
+    if (rawParams.giftId) {
+      const [gift] = await db
+        .select({ eventId: gifts.eventId })
+        .from(gifts)
+        .where(eq(gifts.id, rawParams.giftId))
+        .limit(1);
+      if (!gift || gift.eventId !== rawId) {
+        next(new ForbiddenError('El regalo no pertenece a este evento'));
+        return;
+      }
+    }
+
+    if (rawParams.photoId) {
+      const [photo] = await db
+        .select({ eventId: photos.eventId })
+        .from(photos)
+        .where(eq(photos.id, rawParams.photoId))
+        .limit(1);
+      if (!photo || photo.eventId !== rawId) {
+        next(new ForbiddenError('La foto no pertenece a este evento'));
+        return;
+      }
+    }
+
     next();
   } catch (error) {
     next(error);

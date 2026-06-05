@@ -3,7 +3,7 @@ import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { giftLimiter } from '../middleware/rateLimit.js';
+import { giftLimiter, contributeLimiter } from '../middleware/rateLimit.js';
 import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { ValidationError } from '../utils/errors.js';
@@ -83,7 +83,7 @@ router.put('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthRequ
   }
 }) as any);
 
-router.put('/:giftId/claim', (async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:giftId/claim', contributeLimiter, (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventId = req.params.eventId as string | undefined;
     const giftId = req.params.giftId as string | undefined;
@@ -146,6 +146,24 @@ router.delete('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthR
   }
 }) as any);
 
+router.post('/sse-token', requireAuth, (async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const eventId = req.params.eventId as string;
+    if (!eventId) {
+      res.status(400).json({ error: 'ID del evento requerido' });
+      return;
+    }
+    const sseToken = jwt.sign(
+      { eventId, scope: 'sse', userId: req.user!.userId },
+      config.JWT_SECRET,
+      { expiresIn: '2m' },
+    );
+    res.json({ token: sseToken });
+  } catch (error) {
+    next(error);
+  }
+}) as any);
+
 router.get('/subscribe', (async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
@@ -160,7 +178,11 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
   }
 
   try {
-    jwt.verify(authToken, config.JWT_SECRET);
+    const decoded = jwt.verify(authToken, config.JWT_SECRET) as any;
+    if (decoded.scope !== 'sse' || decoded.eventId !== eventId) {
+      res.status(403).json({ error: 'Token SSE inválido para este evento' });
+      return;
+    }
   } catch {
     res.status(403).json({ error: 'Token inválido' });
     return;

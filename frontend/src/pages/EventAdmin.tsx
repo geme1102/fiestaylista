@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { apiClient, getAccessToken } from '../services/api';
+import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
@@ -56,21 +56,36 @@ export default function EventAdmin() {
   }, [id]);
 
   useEffect(() => {
-    if (!event?.slug) return;
-    const baseUrl = import.meta.env.VITE_API_URL ?? '';
-    const token = getAccessToken();
-    const es = new EventSource(`${baseUrl}/api/events/${id}/gifts/subscribe${token ? `?token=${token}` : ''}`);
-    es.onmessage = (e) => {
+    if (!id) return;
+    let es: EventSource | null = null;
+    let cancelled = false;
+
+    async function connectSSE() {
       try {
-        const data = JSON.parse(e.data);
-        if (data.type === 'connected') return;
-        showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
-        loadEvent();
-      } catch {}
+        const { token } = await apiClient.post<{ token: string }>(`/api/events/${id}/gifts/sse-token`);
+        if (cancelled) return;
+        const baseUrl = import.meta.env.VITE_API_URL ?? '';
+        es = new EventSource(`${baseUrl}/api/events/${id}/gifts/subscribe?token=${token}`);
+        es.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'connected') return;
+            showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
+            loadEvent();
+          } catch {}
+        };
+        es.onerror = () => {};
+      } catch {
+        console.warn('[SSE] No se pudo conectar al stream de eventos');
+      }
+    }
+
+    connectSSE();
+    return () => {
+      cancelled = true;
+      if (es) es.close();
     };
-    es.onerror = () => {};
-    return () => es.close();
-  }, [id, event?.slug]);
+  }, [id]);
 
   async function loadEvent() {
     try {
@@ -356,7 +371,7 @@ export default function EventAdmin() {
                 <span className="font-label-md text-secondary">Aumenta tus regalos con Boost</span>
               </div>
               <button onClick={() => setBoostModal(true)} className="bg-secondary text-white px-4 py-1.5 rounded-full font-label-md active:scale-95 transition-transform relative z-10">
-                Boost $4.99
+                Boost
               </button>
             </div>
           )}

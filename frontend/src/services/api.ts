@@ -1,7 +1,7 @@
 let accessToken: string | null = null;
 const REQUEST_TIMEOUT = 30000;
 
-export function setTokens(access: string, _refresh?: string): void {
+export function setTokens(access: string): void {
   accessToken = access;
 }
 

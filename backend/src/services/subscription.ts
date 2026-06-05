@@ -91,11 +91,6 @@ export async function cancelSubscription(userId: string) {
       throw new NotFoundError('Suscripción no encontrada');
     }
 
-    await tx
-      .update(users)
-      .set({ tier: 'free', updatedAt: new Date() })
-      .where(eq(users.id, userId));
-
     return sub;
   });
 }
@@ -131,21 +126,36 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const gracePeriodEnd = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
   const expired = await db
-    .select({ id: subsTable.id, userId: subsTable.userId })
-    .from(subsTable)
+    .update(subsTable)
+    .set({ status: 'canceled', updatedAt: new Date() })
     .where(and(
       lte(subsTable.currentPeriodEnd, gracePeriodEnd),
       eq(subsTable.status, 'active'),
     ))
-    .limit(100);
+    .returning({ id: subsTable.id, userId: subsTable.userId });
 
-  for (const sub of expired) {
+  const canceledPastPeriod = await db
+    .update(subsTable)
+    .set({ tier: 'free', updatedAt: new Date() })
+    .where(and(
+      lte(subsTable.currentPeriodEnd, gracePeriodEnd),
+      eq(subsTable.status, 'canceled'),
+      eq(subsTable.tier, 'pro'),
+    ))
+    .returning({ id: subsTable.id, userId: subsTable.userId });
+
+  const allToDowngrade = [...expired, ...canceledPastPeriod];
+
+  for (const sub of allToDowngrade) {
     try {
-      await cancelSubscription(sub.userId);
+      await db
+        .update(users)
+        .set({ tier: 'free', updatedAt: new Date() })
+        .where(eq(users.id, sub.userId));
     } catch (err) {
-      console.error(`[Subscriptions] Error expirando suscripción ${sub.id}:`, err);
+      console.error(`[Subscriptions] Error downgrading user ${sub.userId}:`, err);
     }
   }
 
-  return expired.length;
+  return allToDowngrade.length;
 }

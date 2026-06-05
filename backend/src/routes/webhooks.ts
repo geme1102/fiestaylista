@@ -64,7 +64,9 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
         topic: parsed.topic || parsed.type,
         id: parsed.id || parsed.data?.id,
       };
-    } catch {}
+    } catch (err) {
+      console.error('[MP Webhook] Error parsing webhook body:', err);
+    }
   }
 
   if (!result.topic) {
