@@ -74,9 +74,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: railwayapp/actions/deploy@v2
+      - uses: bervProject/railway-deploy@main
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
-          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
           service: fiestaylista
 
 
