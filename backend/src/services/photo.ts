@@ -1,4 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
+import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { photos as photosTable, events, users } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
@@ -54,6 +55,19 @@ export async function deletePhoto(photoId: string) {
 
   if (!photo) {
     throw new NotFoundError('Foto no encontrada');
+  }
+
+  if (photo.url.includes('cloudinary.com')) {
+    try {
+      const publicId = photo.url
+        .split('/')
+        .slice(-2)
+        .join('/')
+        .replace(/\.[^.]+$/, '');
+      await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+      console.error('[Photo] Error al eliminar de Cloudinary:', err);
+    }
   }
 
   return { success: true };
