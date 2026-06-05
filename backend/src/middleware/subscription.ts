@@ -1,5 +1,5 @@
 import type { Response, NextFunction } from 'express';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { users, events, gifts } from '../db/schema.js';
 import { ForbiddenError, ValidationError } from '../utils/errors.js';
@@ -99,7 +99,7 @@ export function checkGiftLimit(eventId: string) {
       const [countResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(gifts)
-        .where(and(eq(gifts.eventId, eventId), eq(gifts.deletedAt, null)));
+        .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)));
 
       const giftCount = Number(countResult?.count ?? 0);
 

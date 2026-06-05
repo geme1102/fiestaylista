@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db, sql as pgSql } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
@@ -129,7 +129,7 @@ export async function getEvent(eventId: string, _userId?: string) {
   const eventGifts = await db
     .select()
     .from(gifts)
-    .where(and(eq(gifts.eventId, eventId), eq(gifts.deletedAt, null)))
+    .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
     .orderBy(gifts.createdAt);
 
   const eventPhotos = await db
@@ -183,7 +183,7 @@ export async function getEventBySlug(eventSlug: string) {
   const eventGifts = await db
     .select()
     .from(gifts)
-    .where(and(eq(gifts.eventId, event.id), eq(gifts.deletedAt, null)))
+    .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
     .orderBy(gifts.createdAt);
 
   const eventPhotos = await db
