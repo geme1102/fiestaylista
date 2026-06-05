@@ -9,7 +9,7 @@ import { formatCOP } from '../utils/format';
 import { cn } from '../utils/cn';
 import { ConfirmModal } from '../components/ConfirmModal';
 
-const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING'];
+const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -285,8 +285,8 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
     <form className="space-y-6">
       <div>
         <label className="block text-sm font-bold mb-3">Tipo de evento</label>
-        <div className="grid grid-cols-3 gap-3">
-          {ONBOARDING_TYPES.slice(0, 3).map((type) => (
+        <div className="grid grid-cols-4 gap-3">
+          {ONBOARDING_TYPES.map((type) => (
             <button
               key={type}
               type="button"

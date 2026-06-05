@@ -62,7 +62,7 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const eventId = req.params.id as string;
     const result = await eventService.getEvent(eventId, req.user!.userId);
-    res.json(result);
+    res.json({ event: result });
   } catch (error) {
     next(error);
   }
