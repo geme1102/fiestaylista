@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import SplashIntro from './components/SplashIntro';
-import Landing from './pages/Landing';
+const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -75,8 +75,11 @@ function TitleUpdater() {
 }
 
 export default function App() {
-  const [splashDone, setSplashDone] = useState(false);
-  const handleSplashDone = useCallback(() => setSplashDone(true), []);
+  const [splashDone, setSplashDone] = useState(() => localStorage.getItem('splash_seen') === 'true');
+  const handleSplashDone = useCallback(() => {
+    localStorage.setItem('splash_seen', 'true');
+    setSplashDone(true);
+  }, []);
 
   if (!splashDone) {
     return <SplashIntro onComplete={handleSplashDone} />;

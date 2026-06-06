@@ -64,7 +64,12 @@ export async function deletePhoto(photoId: string) {
         .slice(-2)
         .join('/')
         .replace(/\.[^.]+$/, '');
-      await cloudinary.uploader.destroy(publicId);
+      await Promise.race([
+        cloudinary.uploader.destroy(publicId),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cloudinary request timed out')), 10000),
+        ),
+      ]);
     } catch (err) {
       console.error('[Photo] Error al eliminar de Cloudinary:', err);
     }

@@ -8,7 +8,6 @@ import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import type { Tier } from '../types/index.js';
 
-const BOOST_PRICE_CENTS = 10000;
 let client: MercadoPagoConfig | null = null;
 
 if (config.MERCADO_PAGO_ACCESS_TOKEN) {
@@ -32,7 +31,13 @@ async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      return await fn();
+      const result = await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('MP request timed out')), 15000),
+        ),
+      ]);
+      return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       if (attempt < maxRetries - 1) {
@@ -137,7 +142,7 @@ export async function createBoostPreference(
         id: `boost_${eventId}`,
         title: 'Boost de evento - Fiesta y Lista',
         quantity: 1,
-        unit_price: BOOST_PRICE_CENTS,
+        unit_price: config.BOOST_PRICE_CENTS,
         currency_id: 'COP',
       }],
       back_urls: {
@@ -240,7 +245,7 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
     try {
       await tx
         .insert(boostPayments)
-        .values({ eventId, mpPaymentId: paymentId, amount: BOOST_PRICE_CENTS });
+        .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
     } catch (err: any) {
       if (err?.code === '23505') {
         console.log(`[MP] Boost payment ${paymentId} already processed (UNIQUE violation)`);
@@ -299,8 +304,8 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
 
   if (ref.startsWith('boost_')) {
     if (info.status === 'approved') {
-      if (Math.abs(info.transactionAmount - BOOST_PRICE_CENTS) > 1) {
-        console.error(`[MP] Monto de boost inválido: esperado ${BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
+      if (Math.abs(info.transactionAmount - config.BOOST_PRICE_CENTS) > 1) {
+        console.error(`[MP] Monto de boost inválido: esperado ${config.BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
         return;
       }
       await handleBoostPayment(paymentId, ref);

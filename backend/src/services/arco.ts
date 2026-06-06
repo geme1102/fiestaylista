@@ -1,4 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
+import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -78,6 +79,36 @@ export async function deleteUserAccount(userId: string) {
     .where(eq(users.id, userId))
     .limit(1);
   if (!user) throw new NotFoundError('Usuario no encontrado');
+
+  const userEvents = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(eq(events.userId, userId));
+
+  const eventIds = userEvents.map(e => e.id);
+  if (eventIds.length > 0) {
+    const userPhotos = await db
+      .select({ url: photos.url })
+      .from(photos)
+      .where(inArray(photos.eventId, eventIds));
+
+    for (const photo of userPhotos) {
+      if (photo.url.includes('cloudinary.com')) {
+        try {
+          const publicId = photo.url
+            .split('/').slice(-2).join('/').replace(/\.[^.]+$/, '');
+          await Promise.race([
+            cloudinary.uploader.destroy(publicId),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Cloudinary timeout')), 10000),
+            ),
+          ]);
+        } catch (err) {
+          console.error('[ARCO] Error deleting Cloudinary image:', err);
+        }
+      }
+    }
+  }
 
   await db.delete(users).where(eq(users.id, userId));
 }

@@ -128,7 +128,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                 <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
                   <h1 style="color:#1f2937;font-size:20px">💰 ¿Sabías que puedes recibir dinero de tus invitados?</h1>
                   <p style="color:#6b7280;margin:16px 0">Con Lluvia de Sobres, tus invitados pueden hacer aportaciones económicas directas a tu evento. Es seguro, fácil y transparente.</p>
-                  <p style="color:#6b7280;margin:16px 0">En el plan Gratis la comisión es solo del 4%. En Pro baja al 2%.</p>
+                  <p style="color:#6b7280;margin:16px 0">La comisión del Cash fund es del 5% tanto en plan Gratis como en Pro.</p>
                   <div style="text-align:center;margin:24px 0">
                     <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#10b981,#059669);color:white;text-decoration:none;border-radius:12px;font-weight:600">Activar Lluvia de Sobres</a>
                   </div>
@@ -160,7 +160,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                 <p style="color:#6b7280;margin:16px 0">Con el plan Pro obtienes:</p>
                 <ul style="color:#6b7280;margin:16px 0">
                   <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
-                  <li style="margin-bottom:8px">✅ 500 regalos por evento</li>
+                  <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
                   <li style="margin-bottom:8px">✅ Cash fund con comisión del 2% (mitad que Gratis)</li>
                   <li style="margin-bottom:8px">✅ Estadísticas completas</li>
                   <li style="margin-bottom:8px">✅ Sin marca de agua</li>

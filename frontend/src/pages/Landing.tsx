@@ -163,7 +163,16 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);

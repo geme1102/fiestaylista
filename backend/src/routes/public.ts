@@ -3,8 +3,11 @@ import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
+import { apiLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
+
+router.use(apiLimiter);
 
 router.get('/public/events/:slug', (async (req: Request, res: Response, next: NextFunction) => {
   try {

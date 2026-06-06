@@ -72,9 +72,11 @@ export default function EventAdmin() {
             if (data.type === 'connected') return;
             showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
             loadEvent();
-          } catch {}
+          } catch (err) {
+            console.warn('[SSE] Error parsing message:', err);
+          }
         };
-        es.onerror = () => {};
+        es.onerror = () => console.warn('[SSE] Conexión perdida');
       } catch {
         console.warn('[SSE] No se pudo conectar al stream de eventos');
       }
@@ -89,17 +91,16 @@ export default function EventAdmin() {
 
   async function loadEvent() {
     try {
-      const [eventRes, giftsRes, photosRes, fundRes] = await Promise.all([
-        apiClient.get<{ event: AdminEvent }>(`/api/events/${id}`),
-        apiClient.get<{ gifts: Gift[] }>(`/api/events/${id}/gifts`),
-        apiClient.get<{ photos: Photo[] }>(`/api/events/${id}/photos`),
+      const [eventRes, fundRes] = await Promise.all([
+        apiClient.get<{ event: AdminEvent & { gifts?: Gift[]; photos?: Photo[] } }>(`/api/events/${id}`),
         getCashFund(id!),
       ]);
-      setEvent(eventRes.event);
-      setTitleDraft(eventRes.event.title);
-      setTypeDraft(eventRes.event.eventType);
-      setGifts(giftsRes.gifts || []);
-      setPhotos(photosRes.photos || []);
+      const ev = eventRes.event;
+      setEvent(ev);
+      setTitleDraft(ev.title);
+      setTypeDraft(ev.eventType);
+      setGifts(ev.gifts || []);
+      setPhotos(ev.photos || []);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
     } catch (err) {
       showToast('Error al cargar el evento', 'error');

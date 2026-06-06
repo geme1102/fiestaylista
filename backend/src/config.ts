@@ -47,6 +47,7 @@ function validateConfig(): void {
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd) {
     requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+    requireConfig('MERCADO_PAGO_WEBHOOK_SECRET', process.env.MERCADO_PAGO_WEBHOOK_SECRET);
     requireConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);
     requireConfig('MERCADO_PAGO_PRO_YEARLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID);
     requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
@@ -74,7 +75,8 @@ export const config = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? '',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
-  FROM_EMAIL: process.env.FROM_EMAIL || 'Fiesta y Lista <onboarding@resend.dev>',
+  FROM_EMAIL: process.env.FROM_EMAIL || '',
+  BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
 } as const;
 
 const isProduction = config.NODE_ENV === 'production';

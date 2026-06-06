@@ -3,7 +3,7 @@ import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { giftLimiter, contributeLimiter } from '../middleware/rateLimit.js';
+import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { ValidationError } from '../utils/errors.js';
@@ -22,6 +22,10 @@ const createGiftSchema = z.object({
 const updateGiftSchema = z.object({
   isClaimed: z.boolean().optional(),
   claimedBy: z.string().nullable().optional(),
+});
+
+const claimGiftSchema = z.object({
+  claimedBy: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
 });
 
 router.get('/', giftLimiter, (async (req: Request, res: Response, next: NextFunction) => {
@@ -90,11 +94,8 @@ router.put('/:giftId/claim', contributeLimiter, (async (req: Request, res: Respo
     if (!giftId) {
       throw new ValidationError('ID del regalo requerido');
     }
-    const { claimedBy } = req.body as { claimedBy?: string };
-    if (!claimedBy?.trim()) {
-      throw new ValidationError('El nombre es requerido para apartar el regalo');
-    }
-    const gift = await giftService.claimGift(giftId, claimedBy.trim());
+    const { claimedBy } = claimGiftSchema.parse(req.body);
+    const gift = await giftService.claimGift(giftId, claimedBy);
 
     const data = {
       eventId: eventId || '',
@@ -116,6 +117,10 @@ router.put('/:giftId/claim', contributeLimiter, (async (req: Request, res: Respo
 
     res.json({ gift });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
+      return;
+    }
     next(error);
   }
 }) as any);
@@ -164,7 +169,9 @@ router.post('/sse-token', requireAuth, (async (req: AuthRequest, res: Response, 
   }
 }) as any);
 
-router.get('/subscribe', (async (req: Request, res: Response) => {
+const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
+
+router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     res.status(400).json({ error: 'ID del evento requerido' });
@@ -188,6 +195,12 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
     return;
   }
 
+  const currentConnections = clients.get(eventId);
+  if (currentConnections && currentConnections.size >= SSE_MAX_CONNECTIONS_PER_EVENT) {
+    res.status(429).json({ error: 'Demasiadas conexiones SSE para este evento' });
+    return;
+  }
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -203,7 +216,7 @@ router.get('/subscribe', (async (req: Request, res: Response) => {
   clients.get(eventId)!.add(res);
 
   const keepAlive = setInterval(() => {
-    try { res.write(':keepalive\n\n'); } catch { /* ignore */ }
+    try { res.write(':keepalive\n\n'); } catch { /* cliente desconectado */ }
   }, 30000);
 
   const cleanup = () => {

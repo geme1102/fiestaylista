@@ -17,7 +17,10 @@ export const users = pgTable('users', {
   resetTokenExpires: timestamp('reset_token_expires', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  verificationTokenIdx: index('users_verification_token_idx').on(table.verificationToken),
+  resetTokenIdx: index('users_reset_token_idx').on(table.resetToken),
+}));
 
 export const events = pgTable('events', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -93,7 +96,9 @@ export const cashContributions = pgTable('cash_contributions', {
   mpPaymentId: text('mp_payment_id'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  cashFundIdIdx: index('cash_contributions_cash_fund_id_idx').on(table.cashFundId),
+}));
 
 export const boostPayments = pgTable('boost_payments', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -114,7 +119,9 @@ export const failedWebhooks = pgTable('failed_webhooks', {
   nextRetryAt: timestamp('next_retry_at', { mode: 'date' }),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  statusIdx: index('failed_webhooks_status_idx').on(table.status),
+}));
 
 export const platformFees = pgTable('platform_fees', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -132,7 +139,9 @@ export const emailTracking = pgTable('email_tracking', {
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   type: text('type').notNull(),
   sentAt: timestamp('sent_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdTypeIdx: index('email_tracking_user_id_type_idx').on(table.userId, table.type),
+}));
 
 export const eventViews = pgTable('event_views', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -140,7 +149,9 @@ export const eventViews = pgTable('event_views', {
   referrer: text('referrer'),
   userAgent: text('user_agent'),
   viewedAt: timestamp('viewed_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  eventIdIdx: index('event_views_event_id_idx').on(table.eventId),
+}));
 
 export const refreshTokens = pgTable('refresh_tokens', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -149,7 +160,10 @@ export const refreshTokens = pgTable('refresh_tokens', {
   expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
   revoked: boolean('revoked').notNull().default(false),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  tokenHashIdx: index('refresh_tokens_token_hash_idx').on(table.tokenHash),
+  userIdIdx: index('refresh_tokens_user_id_idx').on(table.userId),
+}));
 
 export const consentRecords = pgTable('consent_records', {
   id: uuid('id').defaultRandom().primaryKey(),

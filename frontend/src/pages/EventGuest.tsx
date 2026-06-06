@@ -97,7 +97,9 @@ export default function EventGuest() {
   useEffect(() => {
     if (!slug) return;
     loadEvent();
+    const poll = setInterval(loadEvent, 15000);
     return () => {
+      clearInterval(poll);
       if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
     };
   }, [slug]);
@@ -128,7 +130,7 @@ export default function EventGuest() {
     }
     setClaimingId(giftId);
     try {
-      const res = await apiClient.put<{ gift: Gift }>(`/api/events/${slug}/gifts/${giftId}/claim`, {
+      const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event!.id}/gifts/${giftId}/claim`, {
         claimedBy: claimName.trim(),
       });
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));

@@ -62,7 +62,7 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
 
     const accessToken = jwt.sign(
       { userId: guestId, email: guestEmail, isGuest: true },
-      config.JWT_SECRET,
+      config.JWT_GUEST_SECRET,
       { expiresIn: config.ACCESS_TOKEN_EXPIRY || '15m' } as any,
     );
 
@@ -86,7 +86,7 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
   }
 });
 
-router.put('/events/migrate', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/events/migrate', guestLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {

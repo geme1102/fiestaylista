@@ -170,7 +170,16 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
 
 export async function getEventBySlug(eventSlug: string) {
   const [event] = await db
-    .select()
+    .select({
+      id: eventsTable.id,
+      title: eventsTable.title,
+      eventType: eventsTable.eventType,
+      slug: eventsTable.slug,
+      isActive: eventsTable.isActive,
+      hostPhone: eventsTable.hostPhone,
+      boostedUntil: eventsTable.boostedUntil,
+      createdAt: eventsTable.createdAt,
+    })
     .from(eventsTable)
     .where(and(eq(eventsTable.slug, eventSlug), sql`${eventsTable.deletedAt} IS NULL`))
     .limit(1);
