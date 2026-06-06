@@ -25,11 +25,11 @@ const PLANS = [
     tier: 'pro',
     name: 'Pro',
     price: 24990,
-    yearlyPrice: 269900,
+    yearlyPrice: 288000,
     currency: 'COP',
     interval: 'month',
     popular: true,
-    prices: { month: 24990, year: 269900 },
+    prices: { month: 24990, year: 288000 },
     features: [
       'Hasta 20 eventos',
       'Hasta 50 regalos por evento',
