@@ -36,8 +36,12 @@ export default function Login() {
     <>
       <Helmet>
         <title>Iniciar Sesión - Fiesta y Lista</title>
+        <meta name="description" content="Inicia sesión en Fiesta y Lista para administrar tus listas de regalos y eventos. Accede a tu cuenta y organiza baby showers, bodas y cumpleaños." />
+        <meta name="keywords" content="fiestaylista, iniciar sesión, lista de regalos, acceder cuenta" />
         <meta property="og:title" content="Iniciar Sesión - Fiesta y Lista" />
+        <meta property="og:description" content="Inicia sesión en Fiesta y Lista para administrar tus listas de regalos." />
         <meta name="twitter:title" content="Iniciar Sesión - Fiesta y Lista" />
+        <meta name="twitter:description" content="Inicia sesión en Fiesta y Lista." />
       </Helmet>
       <div className="min-h-screen bg-[#FAF9F8] pb-24 sm:pb-0">
         <NavbarPremium />

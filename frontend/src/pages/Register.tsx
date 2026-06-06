@@ -81,8 +81,12 @@ export default function Register() {
     <>
       <Helmet>
         <title>Registrarse - Fiesta y Lista</title>
+        <meta name="description" content="Crea tu cuenta gratis en Fiesta y Lista y empieza a organizar listas de regalos para baby showers, bodas y cumpleaños en 2 minutos. Sin tarjeta de crédito." />
+        <meta name="keywords" content="fiestaylista, registrarse, crear cuenta, lista de regalos gratis" />
         <meta property="og:title" content="Registrarse - Fiesta y Lista" />
+        <meta property="og:description" content="Crea tu cuenta gratis en Fiesta y Lista. Organiza listas de regalos en 2 minutos." />
         <meta name="twitter:title" content="Registrarse - Fiesta y Lista" />
+        <meta name="twitter:description" content="Crea tu cuenta gratis en Fiesta y Lista." />
       </Helmet>
       <div className="min-h-screen bg-[#FAF9F8] pb-24 sm:pb-0">
         <NavbarPremium />

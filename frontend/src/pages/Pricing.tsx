@@ -104,6 +104,35 @@ export default function Pricing() {
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
         <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis y Pro desde $24.990/mes." />
         <link rel="canonical" href="https://fiestaylista.com/pricing" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Fiesta y Lista Pro",
+            "description": "Plan Pro de Fiesta y Lista con 20 eventos, 50 regalos por evento y Lluvia de Sobres incluida.",
+            "url": "https://fiestaylista.com/pricing",
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Plan Mensual Pro",
+                "price": "24990",
+                "priceCurrency": "COP",
+                "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                "availability": "https://schema.org/InStock",
+                "url": "https://fiestaylista.com/pricing"
+              },
+              {
+                "@type": "Offer",
+                "name": "Plan Anual Pro",
+                "price": "288000",
+                "priceCurrency": "COP",
+                "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                "availability": "https://schema.org/InStock",
+                "url": "https://fiestaylista.com/pricing"
+              }
+            ]
+          })}
+        </script>
       </Helmet>
       <div className="min-h-screen bg-surface">
         <NavbarPremium />

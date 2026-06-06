@@ -220,6 +220,21 @@ export default function EventGuest() {
         <meta name="twitter:title" content={`${event.title} - Fiesta y Lista`} />
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
         <link rel="canonical" href={`https://fiestaylista.com/e/${event.slug}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": event.title,
+            "description": `Lista de regalos para ${event.title} (${EVENT_LABELS[event.eventType]})`,
+            "url": `https://fiestaylista.com/e/${event.slug}`,
+            "inLanguage": "es-CO",
+            "isAccessibleForFree": true,
+            "organizer": {
+              "@type": "Person",
+              "name": event.title.split(' ')[0] || "Anfitrión"
+            }
+          })}
+        </script>
       </Helmet>
 
       <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>

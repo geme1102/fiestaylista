@@ -158,8 +158,15 @@ function TitleUpdater() {
       <meta name="twitter:description" content={meta.desc} />
       <meta property="og:url" content={`${window.location.origin}${path}`} />
       <meta property="og:locale" content="es_CO" />
+      <meta property="og:image" content="https://fiestaylista.com/og-image.png" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content="Fiesta y Lista — Crea tu lista de regalos para baby showers, bodas, cumpleaños y más" />
+      <meta name="twitter:image" content="https://fiestaylista.com/og-image.png" />
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href={`https://fiestaylista.com${path}`} />
+      <link rel="alternate" href={`https://fiestaylista.com${path}`} hrefLang="es-CO" />
+      <link rel="alternate" href={`https://fiestaylista.com${path}`} hrefLang="es" />
     </Helmet>
   );
 }

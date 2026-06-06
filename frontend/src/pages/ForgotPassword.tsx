@@ -32,7 +32,11 @@ export default function ForgotPassword() {
     <>
       <Helmet>
         <title>Recuperar Contraseña - Fiesta y Lista</title>
+        <meta name="description" content="Recupera tu contraseña de Fiesta y Lista. Recibirás un enlace para restablecer tu contraseña por correo electrónico." />
         <meta property="og:title" content="Recuperar Contraseña - Fiesta y Lista" />
+        <meta property="og:description" content="Recupera tu contraseña de Fiesta y Lista." />
+        <meta name="twitter:title" content="Recuperar Contraseña - Fiesta y Lista" />
+        <meta name="twitter:description" content="Recupera tu contraseña de Fiesta y Lista." />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface pb-24 sm:pb-0">
         <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">

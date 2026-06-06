@@ -73,7 +73,11 @@ export default function ResetPassword() {
     <>
       <Helmet>
         <title>Nueva Contraseña - Fiesta y Lista</title>
+        <meta name="description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista. Ingresa y confirma tu nueva contraseña." />
         <meta property="og:title" content="Nueva Contraseña - Fiesta y Lista" />
+        <meta property="og:description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista." />
+        <meta name="twitter:title" content="Nueva Contraseña - Fiesta y Lista" />
+        <meta name="twitter:description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista." />
       </Helmet>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
         <div className="w-full max-w-md">

@@ -66,4 +66,39 @@
     <changefreq>monthly</changefreq>
     <priority>0.2</priority>
   </url>
+  <url>
+    <loc>https://fiestaylista.com/forgot-password</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/reset-password</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/verify-email</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/terms-and-conditions</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/privacy-policy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/cookies-policy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/arco-rights</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
 </urlset>

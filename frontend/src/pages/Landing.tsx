@@ -181,14 +181,6 @@ export default function Landing() {
   return (
     <>
       <Helmet>
-        <title>Fiesta y Lista - Crea tu lista de regalos</title>
-        <meta name="description" content="Fiesta y Lista — la app colombiana #1 para crear listas de regalos. Baby showers, bodas, cumpleaños, bautizos y comuniones. Tus invitados apartan regalos sin registrarse." />
-        <meta name="keywords" content="fiestaylista, fiesta y lista, lista de regalos, baby shower, boda, cumpleaños, Colombia, app de regalos, lluvia de sobres" />
-        <meta property="og:title" content="Fiesta y Lista - Crea tu lista de regalos" />
-        <meta property="og:description" content="Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños. Tus invitados apartan sin registrarse." />
-        <meta name="twitter:title" content="Fiesta y Lista - Crea tu lista de regalos" />
-        <meta name="twitter:description" content="Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños." />
-        <link rel="canonical" href="https://fiestaylista.com" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -198,6 +190,11 @@ export default function Landing() {
             "url": "https://fiestaylista.com",
             "inLanguage": "es-CO",
             "isFamilyFriendly": true,
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "Fiesta y Lista",
+              "url": "https://fiestaylista.com"
+            },
             "about": {
               "@type": "Thing",
               "name": "Listas de regalos"
