@@ -97,9 +97,13 @@ export default function Pricing() {
     <>
       <Helmet>
         <title>Planes - Fiesta y Lista</title>
-        <meta name="description" content="Elige el plan perfecto para tu evento. Desde gratis hasta Pro con beneficios exclusivos." />
+        <meta name="description" content="Planes de Fiesta y Lista: plan gratis y Pro desde $24.990/mes. Sin tarjeta de crédito para empezar. Crea listas de regalos ilimitadas." />
+        <meta name="keywords" content="fiestaylista planes, lista de regalos precios, plan pro, suscripción, lista de regalos Colombia" />
         <meta property="og:title" content="Planes - Fiesta y Lista" />
+        <meta property="og:description" content="Planes de Fiesta y Lista: gratis y Pro desde $24.990/mes. Crea listas de regalos para baby showers, bodas y cumpleaños." />
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
+        <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis y Pro desde $24.990/mes." />
+        <link rel="canonical" href="https://fiestaylista.com/pricing" />
       </Helmet>
       <div className="min-h-screen bg-surface">
         <NavbarPremium />

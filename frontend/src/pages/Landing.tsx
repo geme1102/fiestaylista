@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import LiveCounter from '../components/LiveCounter';
@@ -178,7 +179,33 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F8]">
+    <>
+      <Helmet>
+        <title>Fiesta y Lista - Crea tu lista de regalos</title>
+        <meta name="description" content="Fiesta y Lista — la app colombiana #1 para crear listas de regalos. Baby showers, bodas, cumpleaños, bautizos y comuniones. Tus invitados apartan regalos sin registrarse." />
+        <meta name="keywords" content="fiestaylista, fiesta y lista, lista de regalos, baby shower, boda, cumpleaños, Colombia, app de regalos, lluvia de sobres" />
+        <meta property="og:title" content="Fiesta y Lista - Crea tu lista de regalos" />
+        <meta property="og:description" content="Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños. Tus invitados apartan sin registrarse." />
+        <meta name="twitter:title" content="Fiesta y Lista - Crea tu lista de regalos" />
+        <meta name="twitter:description" content="Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños." />
+        <link rel="canonical" href="https://fiestaylista.com" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Fiesta y Lista - Listas de Regalos",
+            "description": "App colombiana para crear listas de regalos para cualquier evento.",
+            "url": "https://fiestaylista.com",
+            "inLanguage": "es-CO",
+            "isFamilyFriendly": true,
+            "about": {
+              "@type": "Thing",
+              "name": "Listas de regalos"
+            }
+          })}
+        </script>
+      </Helmet>
+      <div className="min-h-screen bg-[#FAF9F8]">
       <FloatingOrbs />
 
       {/* Premium Navbar */}
@@ -827,5 +854,6 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

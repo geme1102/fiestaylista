@@ -1,74 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  SITEMAP — Fiesta y Lista
-  Dominio actual: fiestaylista.netlify.app
-  Cuando tengas el dominio personalizado, cambia TODAS las URLs
-  de netlify.app a tudominio.com
--->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://fiestaylista.netlify.app/</loc>
+    <loc>https://fiestaylista.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/login</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://fiestaylista.netlify.app/register</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://fiestaylista.netlify.app/pricing</loc>
+    <loc>https://fiestaylista.com/pricing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/baby-shower</loc>
+    <loc>https://fiestaylista.com/baby-shower</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/boda</loc>
+    <loc>https://fiestaylista.com/boda</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/cumpleanos</loc>
+    <loc>https://fiestaylista.com/cumpleanos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/bautizo</loc>
+    <loc>https://fiestaylista.com/bautizo</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/comunion</loc>
+    <loc>https://fiestaylista.com/comunion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/terminos-y-condiciones</loc>
+    <loc>https://fiestaylista.com/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/politica-de-privacidad</loc>
+    <loc>https://fiestaylista.com/register</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/politica-de-cookies</loc>
+    <loc>https://fiestaylista.com/terminos-y-condiciones</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://fiestaylista.netlify.app/derechos-arco</loc>
+    <loc>https://fiestaylista.com/politica-de-privacidad</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/politica-de-cookies</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fiestaylista.com/derechos-arco</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.2</priority>
   </url>
 </urlset>

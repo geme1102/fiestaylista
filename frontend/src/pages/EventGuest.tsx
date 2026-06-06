@@ -211,12 +211,15 @@ export default function EventGuest() {
     <>
       <Helmet>
         <title>{event.title} - Fiesta y Lista</title>
-        <meta name="description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}. Elige y aparta tu regalo para celebrar con ellos.`} />
+        <meta name="description" content={`Lista de regalos para ${event.title} (${EVENT_LABELS[event.eventType]}). Aparta tu regalo y celebra con ellos. Fiesta y Lista — la app de listas de regalos.`} />
+        <meta name="keywords" content={`fiestaylista, lista de regalos, ${EVENT_LABELS[event.eventType]}, ${event.title}, apartar regalo`} />
         <meta property="og:title" content={`${event.title} - Fiesta y Lista`} />
-        <meta property="og:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
+        <meta property="og:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}. Aparta tu regalo en Fiesta y Lista.`} />
         <meta property="og:url" content={`https://fiestaylista.com/e/${event.slug}`} />
+        <meta property="og:locale" content="es_CO" />
         <meta name="twitter:title" content={`${event.title} - Fiesta y Lista`} />
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
+        <link rel="canonical" href={`https://fiestaylista.com/e/${event.slug}`} />
       </Helmet>
 
       <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>

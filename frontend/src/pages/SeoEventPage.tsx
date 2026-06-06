@@ -96,11 +96,29 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
       <Helmet>
         <title>{content.title}</title>
         <meta name="description" content={content.subtitle} />
+        <meta name="keywords" content={`fiestaylista ${eventKey.replace('-', ' ')}, lista de regalos ${eventKey.replace('-', ' ')}, ${eventKey.replace('-', ' ')} Colombia`} />
         <meta property="og:title" content={content.title} />
         <meta property="og:description" content={content.subtitle} />
         <meta property="og:url" content={`https://fiestaylista.com/${eventKey}`} />
+        <meta property="og:locale" content="es_CO" />
         <meta name="twitter:title" content={content.title} />
         <meta name="twitter:description" content={content.subtitle} />
+        <link rel="canonical" href={`https://fiestaylista.com/${eventKey}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": content.title,
+            "description": content.subtitle,
+            "url": `https://fiestaylista.com/${eventKey}`,
+            "inLanguage": "es-CO",
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "Fiesta y Lista",
+              "url": "https://fiestaylista.com"
+            }
+          })}
+        </script>
       </Helmet>
       <div className="min-h-screen bg-[#FAF9F8]">
         <NavbarPremium />
