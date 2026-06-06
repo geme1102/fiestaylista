@@ -54,6 +54,7 @@ router.get('/slug/:slug', (async (req: Request, res: Response, next: NextFunctio
     const result = await eventService.getEventBySlug(eventSlug);
     res.json(result);
   } catch (error) {
+    console.error(`[Events] Error al cargar evento por slug "${req.params.slug}":`, error);
     next(error);
   }
 }) as any);

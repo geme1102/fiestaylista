@@ -24,7 +24,7 @@ function getPlanId(tier: Tier, interval: 'month' | 'year'): string {
   const plans = PLAN_MAP[tier];
   if (!plans) throw new NotFoundError('Plan no encontrado');
   const planId = plans[interval];
-  if (!planId) throw new NotFoundError('El plan gratuito no requiere suscripción');
+  if (!planId) throw new NotFoundError(`Plan ID de Mercado Pago no configurado para ${tier} ${interval}. Verifica MERCADO_PAGO_PRO_${interval.toUpperCase()}_PLAN_ID en las variables de entorno`);
   return planId;
 }
 

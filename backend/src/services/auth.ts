@@ -312,14 +312,15 @@ export async function forgotPassword(email: string): Promise<void> {
     .where(eq(users.id, user.id));
 
   if (!isEmailConfigured()) {
-    console.warn('[Auth] Email service not configured — password reset email not sent');
-    return;
+    console.error('[Auth] No se puede enviar email de restablecimiento: RESEND_API_KEY no configurada');
+    throw new Error('El servicio de correo no está configurado. Contacta al administrador.');
   }
 
   try {
     await sendPasswordResetEmail(user.email, resetToken);
   } catch (err) {
     console.error('[Auth] Error al enviar email de restablecimiento:', err);
+    throw new Error('No se pudo enviar el correo de restablecimiento. Intenta de nuevo más tarde.');
   }
 }
 
