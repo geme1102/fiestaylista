@@ -11,14 +11,14 @@ import {
 } from 'lucide-react';
 
 const TESTIMONIALS = [
-  { name: 'María G.', role: 'Baby Shower', text: 'Invitada a baby shower, pude elegir el regalo perfecto sin repetir. Muy fácil de usar.', avatar: '/illustrations/avatar-1.png' },
-  { name: 'Carlos R.', role: 'Boda', text: 'Organizamos nuestra lista de bodas aquí. Los invitados lo encontraron súper intuitivo.', avatar: '/illustrations/avatar-2.png' },
-  { name: 'Ana L.', role: 'Cumpleaños', text: 'Creé la lista en 2 minutos. Mis amigos preguntaron qué app usaba. Muy recomendada.', avatar: '/illustrations/avatar-3.png' },
+  { name: 'María G.', role: 'Baby Shower', text: 'Llegaron 7 invitados y los 7 regalos distintos. Nadie repitió y todos preguntaron cómo lo hicimos. Súper fácil.', avatar: '/illustrations/avatar-1.png' },
+  { name: 'Carlos R.', role: 'Boda', text: 'Nadie se confundió con los regalos. Cada invitado apartó el suyo y hasta recibimos plata para la luna de miel.', avatar: '/illustrations/avatar-2.png' },
+  { name: 'Ana L.', role: 'Cumpleaños', text: 'En 2 minutos tenía la lista lista. Lo compartí por WhatsApp y los abuelos apartaron sin necesidad de registro.', avatar: '/illustrations/avatar-3.png' },
 ];
 
 const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
 
-const TYPING_PHRASES = ['compartir momentos', 'recibir con amor', 'celebrar en familia'];
+const TYPING_PHRASES = ['organizar tus regalos', 'recibir lo que soñaste', 'evitar regalos repetidos'];
 
 const SOCIAL_PROOFS = [
   { name: 'Un usuario', action: 'creó su lista de', amount: null, icon: '🎉', delay: 0 },
@@ -296,7 +296,7 @@ export default function Landing() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              Crea tu lista de regalos en segundos
+              Crea tu lista de regalos gratis en 2 minutos
             </motion.div>
 
             {/* Main Headline */}
@@ -312,9 +312,9 @@ export default function Landing() {
 
             {/* Subtitle */}
             <p className="max-w-2xl mx-auto text-fluid-body text-on-surface-variant mb-8 leading-relaxed">
-              Tan fácil que hasta los abuelos y tíos pueden regalar sin registrarse.
+              Crea tu lista de regalos en 2 minutos y comparte el enlace.
               <br className="hidden sm:block" />
-              Bodas, baby showers, cumpleaños y más — en 2 minutos.
+              Tus invitados apartan lo que van a regalar — sin registrarse, sin duplicados, sin estrés.
             </p>
 
             {/* CTAs */}
@@ -560,7 +560,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.15 }}
             className="text-gray-700 text-base sm:text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto"
           >
-            Una suite premium diseñada para hacer inolvidable tu celebración.
+            Tu organizador de regalos para cualquier celebración. Sin complicaciones, sin duplicados, sin estrés.
           </motion.p>
         </div>
 
@@ -583,9 +583,9 @@ export default function Landing() {
               </div>
             </div>
             <div className="relative z-10 text-center sm:text-left flex-1">
-              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Listas de Regalos</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Lista de Regalos</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
-                Crea listas personalizadas con una experiencia de unboxing virtual elegante. Perfecto para cualquier evento especial que merezca ser recordado.
+                Agrega los regalos que quieres recibir y comparte el enlace con tus invitados. Ellos ven lo disponible, apartan el suyo y listo — nada de regalos repetidos ni confusiones.
               </p>
             </div>
           </motion.div>
@@ -625,9 +625,9 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 mb-2 md:mb-3">Fotos del Evento</h3>
+            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 mb-2 md:mb-3">Galería de Fotos</h3>
             <p className="relative z-10 text-sm sm:text-base text-gray-700 font-light leading-relaxed">
-              Revive cada instante con un muro de recuerdos vivos.
+              Sube las fotos de tu evento para que todos las vean. Los invitados también pueden aportar sus fotos desde el celular, sin necesidad de descargar nada.
             </p>
           </motion.div>
 
@@ -653,7 +653,7 @@ export default function Landing() {
 
             <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-white mb-2 md:mb-3">Lluvia de Sobres</h3>
             <p className="relative z-10 text-sm sm:text-base text-white/90 font-light leading-relaxed">
-              Aportaciones con extrema elegancia.
+              Tus invitados te pueden hacer aportaciones en dinero directo a tu cuenta. Ideal para luna de miel, viajes o lo que prefieras. Seguro y sin complicaciones.
             </p>
           </motion.div>
 
@@ -669,9 +669,9 @@ export default function Landing() {
             <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 
             <div className="relative z-10 text-center sm:text-left flex-1 order-2 sm:order-1">
-              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Estadísticas Detalladas</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Control Total</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
-                Sigue en tiempo real quién ha visto tu invitación, confirma asistencia y gestiona los regalos con un panel intuitivo y moderno.
+                Mira cuántas personas han visto tu lista, qué regalos están apartados, quién los apartó y cuándo. Todo desde un panel sencillo, sin complicaciones.
               </p>
             </div>
 
@@ -800,7 +800,7 @@ export default function Landing() {
               ¿Listo para empezar?
             </h2>
             <p className="text-stone-700 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
-              Crea tu primer evento gratis. <br className="hidden sm:block" /> No necesitas tarjeta de crédito.
+              Crea tu primer evento gratis. <br className="hidden sm:block" /> Sin tarjeta de crédito, sin compromiso.
             </p>
 
             {/* CTA Button */}

@@ -124,7 +124,7 @@ export default function EventGuest() {
 
   const handleClaim = async (giftId: string, giftName: string) => {
     if (!claimName.trim()) {
-      showToast('Escribe tu nombre para apartar el regalo', 'error');
+      showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');
       inputRef.current?.focus();
       return;
     }
@@ -160,7 +160,7 @@ export default function EventGuest() {
           >
             🎁
           </motion.div>
-          <p className="text-sm text-surface-variant animate-pulse font-outfit">Cargando lista de regalos...</p>
+          <p className="text-sm text-surface-variant animate-pulse font-outfit">Preparando la lista de regalos...</p>
         </div>
       </div>
     );
@@ -513,7 +513,7 @@ export default function EventGuest() {
                 <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
               <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-8">Gracias por ser parte de este momento especial.</p>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-8">El organizador ya sabe qué vas a regalar. Gracias por ser parte de este momento especial.</p>
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full bg-primary text-white py-4 rounded-2xl font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 transition-transform"

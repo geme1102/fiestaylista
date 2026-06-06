@@ -11,51 +11,51 @@ import NavbarPremium from '../components/NavbarPremium';
 const PLANS = [
   {
     tier: 'free' as const,
-    name: 'Esencial',
+    name: 'Gratis',
     price: 0,
     yearlyPrice: 0,
     popular: false,
     features: [
-      { text: '2 Eventos', included: true },
-      { text: '10 Regalos por evento', included: true },
-      { text: '3 Fotos por evento', included: true },
-      { text: 'Lluvia de Sobres: requiere Boost', included: true },
-      { text: '5% Comisión de retiro', included: true },
+      { text: '2 eventos', included: true },
+      { text: '10 regalos por evento', included: true },
+      { text: '3 fotos por evento', included: true },
+      { text: 'Lluvia de Sobres disponible', included: true },
+      { text: '5% comisión al retirar dinero', included: true },
     ],
   },
   {
     tier: 'pro' as const,
-    name: 'Elite Pro',
+    name: 'Pro',
     price: 24990,
     yearlyPrice: 288000,
     popular: true,
     badge: 'MÁS ELEGIDO',
     features: [
-      { text: '20 Eventos', included: true },
-      { text: '50 Regalos por evento', included: true },
-      { text: '15 Fotos por evento', included: true },
-      { text: 'Lluvia de Sobres incluida', included: true },
-      { text: '5% Comisión de retiro', included: true },
-      { text: 'Notificaciones WhatsApp en tiempo real', included: true },
+      { text: '20 eventos', included: true },
+      { text: '50 regalos por evento', included: true },
+      { text: '15 fotos por evento', included: true },
+      { text: 'Lluvia de Sobres incluida sin costo extra', included: true },
+      { text: '5% comisión al retirar dinero', included: true },
+      { text: 'Notificaciones por WhatsApp en tiempo real', included: true },
     ],
   },
 ];
 
 const ALL_INCLUDED = [
-  { icon: 'redeem', label: 'Listas ilimitadas' },
-  { icon: 'smartphone', label: 'Vista móvil' },
-  { icon: 'link', label: 'Link compartir' },
-  { icon: 'photo_library', label: 'Galería' },
-  { icon: 'notifications_active', label: 'Recordatorios' },
-  { icon: 'verified_user', label: 'Cancelación' },
+  { icon: 'redeem', label: 'Listas de regalos online' },
+  { icon: 'smartphone', label: 'Funciona en celular y computador' },
+  { icon: 'link', label: 'Enlace para compartir por WhatsApp' },
+  { icon: 'photo_library', label: 'Galería de fotos del evento' },
+  { icon: 'notifications_active', label: 'Recordatorios a invitados' },
+  { icon: 'verified_user', label: 'Cancelación en cualquier momento' },
 ];
 
 const FAQS = [
-  { q: '¿Cómo retiro mi dinero?', a: 'Puedes solicitar el retiro de tus fondos acumulados a cualquier cuenta bancaria nacional en Colombia. El proceso tarda de 24 a 48 horas hábiles.' },
-  { q: '¿Hay límites en la cantidad de regalos?', a: 'No, puedes añadir tantos regalos como desees a tus listas, ya sean productos físicos sugeridos o fondos en efectivo.' },
-  { q: '¿Qué métodos de pago aceptan?', a: 'Tus invitados pueden pagar con tarjetas de crédito, PSE, Nequi o Daviplata a través de nuestra pasarela segura.' },
-  { q: '¿Puedo cambiar de plan después?', a: 'Sí, puedes actualizar a Pro en cualquier momento para disfrutar de comisiones más bajas en tus próximos eventos.' },
-  { q: '¿Es seguro para mis invitados?', a: 'Contamos con certificados de seguridad SSL y protocolos de encriptación bancaria para garantizar que cada transacción sea 100% segura.' },
+  { q: '¿Cómo retiro el dinero que me den los invitados?', a: 'Solicitas el retiro desde tu panel y lo recibes en tu cuenta bancaria en Colombia. El proceso tarda de 24 a 48 horas hábiles.' },
+  { q: '¿Cuántos regalos puedo agregar?', a: 'En el plan Gratis puedes agregar hasta 10 regalos por evento. En el plan Pro son hasta 50 regalos por evento. Si necesitas más, el Pro te da bastante espacio.' },
+  { q: '¿Con qué pueden pagar mis invitados?', a: 'Tus invitados pueden pagar con tarjeta de crédito, PSE, Nequi o Daviplata. Todo a través de Mercado Pago, la plataforma más usada en Colombia.' },
+  { q: '¿Puedo empezar gratis y luego actualizar?', a: 'Sí, empiezas sin pagar nada. Cuando quieras más eventos o regalos, actualizas a Pro y listo. Sin contratos ni permanencia.' },
+  { q: '¿Es seguro para mis invitados?', a: 'Sí, usamos Mercado Pago con encriptación bancaria. Tus invitados pueden pagar tranquilos, sus datos están protegidos.' },
 ];
 
 export default function Pricing() {
@@ -147,7 +147,7 @@ export default function Pricing() {
               Elige el plan perfecto para tu celebración
             </h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant">
-              Crea listas de regalos inolvidables con opciones flexibles para cada tipo de evento.
+              Empieza gratis, actualiza cuando lo necesites. Sin letra pequeña ni costos ocultos.
             </p>
           </section>
 
