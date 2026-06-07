@@ -23,7 +23,7 @@ const runWithLock = async (name: string, fn: () => Promise<void>) => {
     try {
       await fn();
     } finally {
-      await db.execute(sql`SELECT pg_advisory_unlock(${lockId})`);
+      await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${name}))`);
     }
   } catch (error) {
     console.error(`[Cron] Error en lock para ${name}:`, error);
