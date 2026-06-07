@@ -54,13 +54,16 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
     .where(eq(refreshTokens.tokenHash, tokenHash))
     .limit(1);
 
-  if (!stored || stored.revoked) {
-    if (stored?.revoked) {
-      await db
-        .update(refreshTokens)
-        .set({ revoked: true })
-        .where(eq(refreshTokens.userId, stored.userId));
-    }
+  if (!stored) {
+    throw new UnauthorizedError('Token de refresco inválido');
+  }
+
+  if (stored.revoked) {
+    console.warn(`[Security] Intento de reuso de refresh token para usuario ${stored.userId}. Revocando todas las sesiones.`);
+    await db
+      .update(refreshTokens)
+      .set({ revoked: true })
+      .where(eq(refreshTokens.userId, stored.userId));
     throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
   }
 
@@ -110,8 +113,12 @@ export async function register(
   name: string,
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string; emailSent: boolean }> {
   const emailLower = email.toLowerCase();
+  const verificationToken = randomBytes(32).toString('hex');
 
-  return await db.transaction(async (tx) => {
+  let user: typeof users.$inferSelect = null!;
+  let tokens: TokenPair = null!;
+
+  await db.transaction(async (tx) => {
     const [existing] = await tx
       .select({ id: users.id })
       .from(users)
@@ -123,10 +130,9 @@ export async function register(
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const verificationToken = randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const [user] = await tx
+    const [newUser] = await tx
       .insert(users)
       .values({
         email: emailLower,
@@ -139,26 +145,27 @@ export async function register(
       })
       .returning();
 
-    let emailSent = false;
+    user = newUser;
+    tokens = await issueTokenPair(user.id, user.email, tx);
+  });
+
+  let emailSent = false;
+  try {
     if (isEmailConfigured()) {
-      try {
-        await sendVerificationEmail(user.email, verificationToken);
-        emailSent = true;
-      } catch (err) {
-        console.error('[Auth] Error al enviar email de verificación:', err);
-      }
+      await sendVerificationEmail(user.email, verificationToken);
+      emailSent = true;
     } else {
       console.warn('[Auth] Email service not configured — verification email not sent');
     }
+  } catch (err) {
+    console.error('[Auth] Error al enviar email de verificación:', err);
+  }
 
-    const tokens = await issueTokenPair(user.id, user.email, tx);
-
-    return {
-      user: toUserResponse(user),
-      ...tokens,
-      emailSent,
-    };
-  });
+  return {
+    user: toUserResponse(user),
+    ...tokens,
+    emailSent,
+  };
 }
 
 export async function login(

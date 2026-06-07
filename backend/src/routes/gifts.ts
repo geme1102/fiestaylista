@@ -111,7 +111,7 @@ router.put('/:giftId/claim', contributeLimiter, (async (req: Request, res: Respo
     if (eventClients) {
       const payload = `data: ${JSON.stringify(data)}\n\n`;
       for (const client of eventClients) {
-        client.write(payload);
+        try { client.write(payload); } catch { /* cliente desconectado */ }
       }
     }
 
@@ -170,6 +170,9 @@ router.post('/sse-token', requireAuth, (async (req: AuthRequest, res: Response, 
 }) as any);
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
+const SSE_MAX_PER_IP = 3;
+const SSE_CONNECTION_TIMEOUT_MS = 30 * 60 * 1000;
+const sseIpCount = new Map<string, number>();
 
 router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
@@ -195,6 +198,13 @@ router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
     return;
   }
 
+  const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+  const ipConnections = sseIpCount.get(clientIp) ?? 0;
+  if (ipConnections >= SSE_MAX_PER_IP) {
+    res.status(429).json({ error: 'Demasiadas conexiones SSE desde esta IP' });
+    return;
+  }
+
   const currentConnections = clients.get(eventId);
   if (currentConnections && currentConnections.size >= SSE_MAX_CONNECTIONS_PER_EVENT) {
     res.status(429).json({ error: 'Demasiadas conexiones SSE para este evento' });
@@ -214,19 +224,31 @@ router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
     clients.set(eventId, new Set());
   }
   clients.get(eventId)!.add(res);
+  sseIpCount.set(clientIp, ipConnections + 1);
 
   const keepAlive = setInterval(() => {
     try { res.write(':keepalive\n\n'); } catch { /* cliente desconectado */ }
   }, 30000);
 
+  const connectionTimeout = setTimeout(() => {
+    try { res.end(); } catch { /* ya desconectado */ }
+  }, SSE_CONNECTION_TIMEOUT_MS);
+
   const cleanup = () => {
     clearInterval(keepAlive);
+    clearTimeout(connectionTimeout);
     const eventClients = clients.get(eventId);
     if (eventClients) {
       eventClients.delete(res);
       if (eventClients.size === 0) {
         clients.delete(eventId);
       }
+    }
+    const current = sseIpCount.get(clientIp) ?? 0;
+    if (current <= 1) {
+      sseIpCount.delete(clientIp);
+    } else {
+      sseIpCount.set(clientIp, current - 1);
     }
   };
 

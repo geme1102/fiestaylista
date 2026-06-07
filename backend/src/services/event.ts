@@ -2,7 +2,7 @@ import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
-import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
+import { generateSlug } from '../utils/slug.js';
 import type { EventType } from '../types/index.js';
 
 interface CreateEventData {
@@ -39,27 +39,24 @@ async function verifyOwnership(eventId: string, userId: string) {
 export async function createEvent(userId: string, data: CreateEventData) {
   const baseSlug = generateSlug(data.title);
 
-  const existing = await db
-    .select({ slug: eventsTable.slug })
-    .from(eventsTable)
-    .where(sql`${eventsTable.slug} LIKE ${`${baseSlug}%`}`)
-    .limit(50);
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
+    const [event] = await db
+      .insert(eventsTable)
+      .values({
+        userId,
+        title: data.title,
+        eventType: data.eventType,
+        hostPhone: data.hostPhone || null,
+        slug,
+      })
+      .onConflictDoNothing({ target: eventsTable.slug })
+      .returning();
 
-  const existingSlugs = new Set(existing.map((e) => e.slug));
-  const slug = generateUniqueSlug(baseSlug, existingSlugs);
+    if (event) return event;
+  }
 
-  const [event] = await db
-    .insert(eventsTable)
-    .values({
-      userId,
-      title: data.title,
-      eventType: data.eventType,
-      hostPhone: data.hostPhone || null,
-      slug,
-    })
-    .returning();
-
-  return event;
+  throw new Error('No se pudo generar un slug único después de varios intentos');
 }
 
 export async function getUserEvents(userId: string) {

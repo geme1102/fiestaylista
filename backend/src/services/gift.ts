@@ -3,12 +3,24 @@ import { db } from '../db/index.js';
 import { gifts as giftsTable } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
+function sanitize(input: string): string {
+  return input
+    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .trim();
+}
+
 export async function addGift(eventId: string, name: string) {
+  const cleaned = sanitize(name);
+  if (!cleaned) {
+    throw new ValidationError('El nombre del regalo es requerido');
+  }
+
   const [gift] = await db
     .insert(giftsTable)
     .values({
       eventId,
-      name,
+      name: cleaned,
     })
     .returning();
 
@@ -58,6 +70,11 @@ export async function updateGift(
 }
 
 export async function claimGift(giftId: string, claimedBy: string) {
+  const cleanedName = sanitize(claimedBy);
+  if (!cleanedName) {
+    throw new ValidationError('El nombre es requerido');
+  }
+
   return await db.transaction(async (tx) => {
     const [gift] = await tx
       .select()
@@ -78,7 +95,7 @@ export async function claimGift(giftId: string, claimedBy: string) {
       .update(giftsTable)
       .set({
         isClaimed: true,
-        claimedBy,
+        claimedBy: cleanedName,
       })
       .where(eq(giftsTable.id, giftId))
       .returning();

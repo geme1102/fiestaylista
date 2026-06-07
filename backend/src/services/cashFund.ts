@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
 import { config } from '../config.js';
@@ -85,6 +85,11 @@ export async function createContribution(
   amountInCents: number,
   message?: string,
 ): Promise<{ redirectUrl: string; contributionId: string }> {
+  const cleanedName = contributorName.replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '').trim();
+  if (!cleanedName) {
+    throw new ValidationError('El nombre es requerido');
+  }
+
   const [fund] = await db
     .select()
     .from(cashFunds)
@@ -103,7 +108,20 @@ export async function createContribution(
   const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
   const netAmount = amountInCents - feeAmount;
 
-  const tempContributionId = randomUUID();
+  const [existingPending] = await db
+    .select({ id: cashContributions.id })
+    .from(cashContributions)
+    .where(and(
+      eq(cashContributions.cashFundId, cashFundId),
+      eq(cashContributions.contributorName, cleanedName),
+      eq(cashContributions.amount, amountInCents),
+      eq(cashContributions.status, 'pending'),
+    ))
+    .limit(1);
+
+  if (existingPending) {
+    throw new ValidationError('Ya tienes una contribución pendiente para este fondo');
+  }
 
   const [eventForSlug] = await db
     .select({ slug: events.slug })
@@ -112,25 +130,15 @@ export async function createContribution(
     .limit(1);
 
   const backUrl = `${config.FRONTEND_URL}/e/${eventForSlug?.slug || fund.eventId}`;
-  const { redirectUrl } = await mercadopagoService.createContributionPreference(
-    tempContributionId,
-    contributorName,
-    amountInCents,
-    fund.title || 'Lluvia de Sobres',
-    backUrl,
-  );
-
-  if (!redirectUrl) {
-    throw new ValidationError('No se pudo generar la URL de pago');
-  }
 
   const result = await db.transaction(async (tx) => {
+    const contributionId = randomUUID();
     const [contribution] = await tx
       .insert(cashContributions)
       .values({
-        id: tempContributionId,
+        id: contributionId,
         cashFundId,
-        contributorName,
+        contributorName: cleanedName,
         amount: amountInCents,
         feeAmount,
         netAmount,
@@ -148,6 +156,32 @@ export async function createContribution(
 
     return contribution;
   });
+
+  let redirectUrl: string;
+  try {
+    const mpResult = await mercadopagoService.createContributionPreference(
+      result.id,
+      cleanedName,
+      amountInCents,
+      fund.title || 'Lluvia de Sobres',
+      backUrl,
+    );
+    redirectUrl = mpResult.redirectUrl;
+  } catch (err) {
+    await db
+      .update(cashContributions)
+      .set({ status: 'failed' })
+      .where(eq(cashContributions.id, result.id));
+    throw err;
+  }
+
+  if (!redirectUrl) {
+    await db
+      .update(cashContributions)
+      .set({ status: 'failed' })
+      .where(eq(cashContributions.id, result.id));
+    throw new ValidationError('No se pudo generar la URL de pago');
+  }
 
   return { redirectUrl, contributionId: result.id };
 }

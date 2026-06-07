@@ -92,19 +92,26 @@ export async function deleteUserAccount(userId: string) {
       .from(photos)
       .where(inArray(photos.eventId, eventIds));
 
-    for (const photo of userPhotos) {
-      if (photo.url.includes('cloudinary.com')) {
-        try {
-          const publicId = photo.url
-            .split('/').slice(-2).join('/').replace(/\.[^.]+$/, '');
-          await Promise.race([
+    const cloudinaryDeletes = userPhotos
+      .filter(p => p.url.includes('cloudinary.com'))
+      .map(p => p.url.split('/').slice(-2).join('/').replace(/\.[^.]+$/, ''));
+
+    const CONCURRENCY = 5;
+    for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
+      const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
+      const results = await Promise.allSettled(
+        batch.map(publicId =>
+          Promise.race([
             cloudinary.uploader.destroy(publicId),
             new Promise<never>((_, reject) =>
               setTimeout(() => reject(new Error('Cloudinary timeout')), 10000),
             ),
-          ]);
-        } catch (err) {
-          console.error('[ARCO] Error deleting Cloudinary image:', err);
+          ]),
+        ),
+      );
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.error('[ARCO] Error deleting Cloudinary image:', result.reason);
         }
       }
     }
