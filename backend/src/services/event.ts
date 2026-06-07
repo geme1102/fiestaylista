@@ -1,5 +1,5 @@
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
-import { db, sql as pgSql } from '../db/index.js';
+import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
