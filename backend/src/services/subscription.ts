@@ -1,4 +1,4 @@
-import { eq, lte, and, sql } from 'drizzle-orm';
+import { eq, lte, and, sql, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -153,11 +153,10 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const userIds = allToDowngrade.map(s => s.userId).filter(Boolean);
 
   if (userIds.length > 0) {
-    const userIdsParam = sql`${userIds}`;
     await db
       .update(users)
       .set({ tier: 'free', updatedAt: new Date() })
-      .where(sql`${users.id} = ANY(${userIdsParam}::uuid[])`);
+      .where(inArray(users.id, userIds));
   }
 
   return allToDowngrade.length;
