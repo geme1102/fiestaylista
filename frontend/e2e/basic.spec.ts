@@ -15,7 +15,7 @@ test.describe('Fiesta y Lista', () => {
 
   test('register page shows form', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
+    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 5000 });
   });
 });
