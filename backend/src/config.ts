@@ -36,6 +36,7 @@ function validateConfig(): void {
   requireConfig('DATABASE_URL', process.env.DATABASE_URL);
   requireConfig('JWT_SECRET', process.env.JWT_SECRET);
   requireConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
+  requireConfig('JWT_GUEST_SECRET', process.env.JWT_GUEST_SECRET);
 
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_SECRET || '')) {
     throw new Error('Variable de entorno requerida: JWT_SECRET debe cambiarse del valor por defecto');
@@ -60,7 +61,7 @@ export const config = {
   DATABASE_URL: process.env.DATABASE_URL!,
   JWT_SECRET: process.env.JWT_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || (() => { throw new Error('JWT_GUEST_SECRET requerido - debe ser un secreto independiente'); })(),
+  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET!,
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',

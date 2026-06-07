@@ -1,8 +1,9 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
+import { cancelPreapproval } from './mercadopago.js';
 
 export async function getUserData(userId: string) {
   const [user] = await db
@@ -79,6 +80,21 @@ export async function deleteUserAccount(userId: string) {
     .where(eq(users.id, userId))
     .limit(1);
   if (!user) throw new NotFoundError('Usuario no encontrado');
+
+  const [activeSubscription] = await db
+    .select({ id: subscriptions.id, mpSubscriptionId: subscriptions.mpSubscriptionId })
+    .from(subscriptions)
+    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
+    .limit(1);
+
+  if (activeSubscription?.mpSubscriptionId) {
+    try {
+      await cancelPreapproval(activeSubscription.mpSubscriptionId);
+      console.log(`[ARCO] Subscripción MP cancelada: ${activeSubscription.mpSubscriptionId}`);
+    } catch (err) {
+      console.error('[ARCO] Error cancelando subscripción MP:', err);
+    }
+  }
 
   const userEvents = await db
     .select({ id: events.id })

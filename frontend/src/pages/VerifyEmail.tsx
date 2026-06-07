@@ -12,7 +12,21 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const statusParam = searchParams.get('status');
     const token = searchParams.get('token');
+
+    if (statusParam === 'success') {
+      setStatus('success');
+      setMessage('¡Correo verificado exitosamente!');
+      return;
+    }
+
+    if (statusParam === 'error') {
+      setStatus('error');
+      setMessage(searchParams.get('message') || 'Error al verificar correo');
+      return;
+    }
+
     if (!token) {
       setStatus('error');
       setMessage('Token de verificación no encontrado');

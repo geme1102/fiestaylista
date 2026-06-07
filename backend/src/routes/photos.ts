@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { uploadLimiter } from '../middleware/rateLimit.js';
+import { guestUploadLimiter } from '../middleware/rateLimit.js';
 import * as photoService from '../services/photo.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
@@ -48,7 +48,7 @@ router.post('/', requireAuth, requireEventOwnership, (async (req: AuthRequest, r
   }
 }) as any);
 
-router.post('/guest', uploadLimiter, (async (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest', guestUploadLimiter, (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventId = req.params.eventId as string | undefined;
     if (!eventId) {

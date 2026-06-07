@@ -32,7 +32,7 @@ async function sendEmail(options: { from: string; to: string; subject: string; h
 }
 
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
-  const url = `${getBaseUrl()}/verify-email?token=${token}`;
+  const url = `${config.BACKEND_URL}/api/auth/verify-email?token=${token}`;
 
   await sendEmail({
     from: FROM,

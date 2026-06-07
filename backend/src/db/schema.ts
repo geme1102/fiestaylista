@@ -180,7 +180,9 @@ export const consentRecords = pgTable('consent_records', {
   userAgent: text('user_agent'),
   granted: boolean('granted').notNull().default(true),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index('consent_records_user_id_idx').on(table.userId),
+}));
 
 export const arcoRequests = pgTable('arco_requests', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -190,7 +192,9 @@ export const arcoRequests = pgTable('arco_requests', {
   status: text('status').notNull().default('pending'),
   completedAt: timestamp('completed_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index('arco_requests_user_id_idx').on(table.userId),
+}));
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').defaultRandom().primaryKey(),

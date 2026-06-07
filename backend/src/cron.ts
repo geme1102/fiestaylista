@@ -9,19 +9,9 @@ import * as mercadopagoService from './services/mercadopago.js';
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 
-function hashLockName(name: string): number {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = ((hash << 5) - hash) + name.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash >>> 0;
-}
-
 const runWithLock = async (name: string, fn: () => Promise<void>) => {
-  const lockId = hashLockName(name);
   try {
-    const [result] = await db.execute(sql`SELECT pg_try_advisory_lock(${lockId}) as acquired`);
+    const [result] = await db.execute(sql`SELECT pg_try_advisory_lock(hashtext(${name})) as acquired`);
     const acquired = typeof result === 'object' && result !== null && (
       (result as any).acquired === true ||
       Array.isArray(result) && result[0] === true

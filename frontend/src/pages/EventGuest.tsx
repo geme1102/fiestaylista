@@ -16,6 +16,10 @@ interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
 }
 
+function sanitizeForJSON(str: string): string {
+  return str.replace(/<\/script>/gi, '<\\/script>');
+}
+
 function PremiumConfetti() {
   return (
     <div className="fixed inset-0 pointer-events-none z-50">
@@ -302,14 +306,14 @@ export default function EventGuest() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Event",
-            "name": event.title,
-            "description": `Lista de regalos para ${event.title} (${EVENT_LABELS[event.eventType]})`,
+            "name": sanitizeForJSON(event.title),
+            "description": sanitizeForJSON(`Lista de regalos para ${event.title} (${EVENT_LABELS[event.eventType]})`),
             "url": `https://fiestaylista.com/e/${event.slug}`,
             "inLanguage": "es-CO",
             "isAccessibleForFree": true,
             "organizer": {
               "@type": "Person",
-              "name": event.title.split(' ')[0] || "Anfitrión"
+              "name": sanitizeForJSON(event.title.split(' ')[0] || "Anfitrión")
             }
           })}
         </script>

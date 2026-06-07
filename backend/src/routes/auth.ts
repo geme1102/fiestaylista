@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
+import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
 import { db } from '../db/index.js';
@@ -126,6 +127,20 @@ router.post('/verify-email', authLimiter, async (req, res, next) => {
       return;
     }
     next(error);
+  }
+});
+
+router.get('/verify-email', async (req, res) => {
+  try {
+    const token = req.query.token as string;
+    if (!token || typeof token !== 'string') {
+      res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido')}`);
+      return;
+    }
+    await authService.verifyEmail(token);
+    res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=success`);
+  } catch {
+    res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido o expirado')}`);
   }
 });
 

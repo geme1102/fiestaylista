@@ -78,6 +78,9 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (body instanceof FormData && attempt > 0) {
+        throw lastError ?? new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
+      }
       if (attempt > 0) {
         await delay(Math.min(1000 * Math.pow(2, attempt - 1), 4000));
       }

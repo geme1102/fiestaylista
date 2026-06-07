@@ -35,8 +35,12 @@ async function markEmailSentBatch(records: { userId: string; type: string }[]): 
   if (records.length === 0) return;
   try {
     await db.insert(emailTracking).values(records.map(r => ({ userId: r.userId, type: r.type })));
-  } catch {
-    // Unique constraint violation is safe to ignore
+  } catch (err: unknown) {
+    const pgErr = err as { code?: string } | null;
+    if (pgErr?.code !== '23505') {
+      console.error('[EmailSeq] Error marcando email como enviado:', err);
+      throw err;
+    }
   }
 }
 

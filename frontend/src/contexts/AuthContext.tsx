@@ -47,8 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokens(res.accessToken);
     setUser(res.user);
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
-    navigate(redirect || '/dashboard');
+      const redirect = params.get('redirect');
+      const target = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
+      navigate(target);
   }, [navigate]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {

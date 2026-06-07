@@ -5,7 +5,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../middleware/auth.js';
-import { uploadLimiter } from '../middleware/rateLimit.js';
+import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
 import { ValidationError } from '../utils/errors.js';
 import { config } from '../config.js';
 
@@ -112,7 +112,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
-router.post('/guest', uploadLimiter, (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest', guestUploadLimiter, (req: Request, res: Response, next: NextFunction) => {
   upload.single('file')(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {

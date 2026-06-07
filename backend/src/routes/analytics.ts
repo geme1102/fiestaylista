@@ -22,16 +22,18 @@ router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) 
     }
     const { eventId } = parsed.data;
 
-    await db.insert(eventViews).values({
-      eventId,
-      referrer: (req.headers.referer || req.headers.referrer || 'direct') as string,
-      userAgent: (req.headers['user-agent'] || 'unknown') as string,
-    });
+    await db.transaction(async (tx) => {
+      await tx.insert(eventViews).values({
+        eventId,
+        referrer: (req.headers.referer || req.headers.referrer || 'direct') as string,
+        userAgent: (req.headers['user-agent'] || 'unknown') as string,
+      });
 
-    await db
-      .update(events)
-      .set({ viewCount: sql`${events.viewCount} + 1` })
-      .where(eq(events.id, eventId));
+      await tx
+        .update(events)
+        .set({ viewCount: sql`${events.viewCount} + 1` })
+        .where(eq(events.id, eventId));
+    });
 
     res.status(200).json({ ok: true });
   } catch (err) {

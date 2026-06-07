@@ -34,6 +34,15 @@ export const uploadLimiter = rateLimit({
   message: { error: 'Demasiadas subidas de archivos. Intenta de nuevo en un minuto.' },
 });
 
+export const guestUploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' },
+});
+
 export const giftLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
