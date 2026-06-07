@@ -1,4 +1,5 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { type PaginationParams, type PaginatedResult, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
 import { config } from '../config.js';
@@ -258,10 +259,30 @@ export async function cleanupStaleContributions(): Promise<number> {
   return result.length;
 }
 
-export async function getContributions(cashFundId: string) {
-  return db
+export async function getContributions(
+  cashFundId: string,
+  params: PaginationParams = {},
+): Promise<PaginatedResult<typeof cashContributions.$inferSelect>> {
+  const { limit, cursorCondition } = buildPaginationConditions(
+    cashContributions.createdAt,
+    params,
+    50,
+  );
+
+  const conditions = cursorCondition
+    ? and(eq(cashContributions.cashFundId, cashFundId), cursorCondition)
+    : eq(cashContributions.cashFundId, cashFundId);
+
+  const rows = await db
     .select()
     .from(cashContributions)
-    .where(eq(cashContributions.cashFundId, cashFundId))
-    .orderBy(cashContributions.createdAt);
+    .where(conditions)
+    .orderBy(desc(cashContributions.createdAt))
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore ? data[data.length - 1].createdAt.toISOString() : null;
+
+  return { data, nextCursor };
 }

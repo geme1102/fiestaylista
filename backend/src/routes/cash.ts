@@ -100,8 +100,11 @@ router.get('/cash-fund/:cashFundId/contributions', requireAuth, async (req: Auth
       throw new ForbiddenError('No tienes permiso para ver estas contribuciones');
     }
 
-    const contributions = await cashFundService.getContributions(cashFundId);
-    res.json({ contributions });
+    const result = await cashFundService.getContributions(cashFundId, {
+      limit: req.query.limit ? Number(req.query.limit) : undefined,
+      cursor: req.query.cursor as string | undefined,
+    });
+    res.json(result);
   } catch (error) {
     next(error);
   }

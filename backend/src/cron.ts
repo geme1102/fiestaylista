@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { failedWebhooks, refreshTokens } from './db/schema.js';
+import { failedWebhooks, refreshTokens, eventViews, auditLogs } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
@@ -8,25 +8,43 @@ import { cleanupStaleContributions } from './services/cashFund.js';
 import * as mercadopagoService from './services/mercadopago.js';
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
-const locks = new Map<string, boolean>();
+
+function hashLockName(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash >>> 0;
+}
+
+const runWithLock = async (name: string, fn: () => Promise<void>) => {
+  const lockId = hashLockName(name);
+  try {
+    const [result] = await db.execute(sql`SELECT pg_try_advisory_lock(${lockId}) as acquired`);
+    const acquired = typeof result === 'object' && result !== null && (
+      (result as any).acquired === true ||
+      Array.isArray(result) && result[0] === true ||
+      result === true
+    );
+    if (!acquired) {
+      console.log(`[Cron] Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
+      return;
+    }
+    try {
+      await fn();
+    } finally {
+      await db.execute(sql`SELECT pg_advisory_unlock(${lockId})`);
+    }
+  } catch (error) {
+    console.error(`[Cron] Error en lock para ${name}:`, error);
+  }
+};
 
 export function startCronJobs(): void {
   console.log('[Cron] Iniciando jobs programados...');
 
   const DAILY_MS = 24 * 60 * 60 * 1000;
-
-  const runWithLock = async (name: string, fn: () => Promise<void>) => {
-    if (locks.get(name)) {
-      console.log(`[Cron] Saltando ${name} - ejecución anterior aún en progreso`);
-      return;
-    }
-    locks.set(name, true);
-    try {
-      await fn();
-    } finally {
-      locks.set(name, false);
-    }
-  };
 
   const runDaily = async () => {
     await runWithLock('daily', async () => {
@@ -131,7 +149,35 @@ export function startCronJobs(): void {
     }
   };
 
+  const cleanupEventViews = async () => {
+    try {
+      const result = await db
+        .delete(eventViews)
+        .where(sql`${eventViews.viewedAt} < NOW() - INTERVAL '90 days'`);
+      if (result.length > 0) {
+        console.log(`[Cron] Viejas vistas de eventos limpiadas: ${result.length}`);
+      }
+    } catch (error) {
+      console.error('[Cron] Error limpiando event_views:', error);
+    }
+  };
+
+  const cleanupAuditLogs = async () => {
+    try {
+      const result = await db
+        .delete(auditLogs)
+        .where(sql`${auditLogs.createdAt} < NOW() - INTERVAL '180 days'`);
+      if (result.length > 0) {
+        console.log(`[Cron] Audit logs viejos limpiados: ${result.length}`);
+      }
+    } catch (error) {
+      console.error('[Cron] Error limpiando audit_logs:', error);
+    }
+  };
+
   cleanupExpiredRefreshTokens();
+  cleanupEventViews();
+  cleanupAuditLogs();
 
   retryFailedWebhooks();
   cleanupExpiredWebhooks();
@@ -141,6 +187,8 @@ export function startCronJobs(): void {
     retryFailedWebhooks();
     cleanupExpiredWebhooks();
     cleanupExpiredRefreshTokens();
+    cleanupEventViews();
+    cleanupAuditLogs();
   }, DAILY_MS);
 
   console.log('[Cron] Jobs iniciados correctamente');

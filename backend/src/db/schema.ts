@@ -1,5 +1,5 @@
-import { pgTable, uuid, text, boolean, timestamp, integer, index } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -37,6 +37,7 @@ export const events = pgTable('events', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   userIdIdx: index('events_user_id_idx').on(table.userId),
+  userIdDeletedAtIdx: index('events_user_id_deleted_at_idx').on(table.userId, table.deletedAt),
 }));
 
 export const gifts = pgTable('gifts', {
@@ -49,6 +50,8 @@ export const gifts = pgTable('gifts', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   eventIdIdx: index('gifts_event_id_idx').on(table.eventId),
+  eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
+  eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${gifts.isClaimed} = false`),
 }));
 
 export const photos = pgTable('photos', {
@@ -98,6 +101,7 @@ export const cashContributions = pgTable('cash_contributions', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   cashFundIdIdx: index('cash_contributions_cash_fund_id_idx').on(table.cashFundId),
+  statusCreatedAtIdx: index('cash_contributions_status_created_at_idx').on(table.status, table.createdAt),
 }));
 
 export const boostPayments = pgTable('boost_payments', {
@@ -140,7 +144,8 @@ export const emailTracking = pgTable('email_tracking', {
   type: text('type').notNull(),
   sentAt: timestamp('sent_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
-  userIdTypeIdx: index('email_tracking_user_id_type_idx').on(table.userId, table.type),
+  userIdTypeIdx: uniqueIndex('email_tracking_user_id_type_unique_idx').on(table.userId, table.type),
+  sentAtIdx: index('email_tracking_sent_at_idx').on(table.sentAt),
 }));
 
 export const eventViews = pgTable('event_views', {
@@ -151,6 +156,7 @@ export const eventViews = pgTable('event_views', {
   viewedAt: timestamp('viewed_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   eventIdIdx: index('event_views_event_id_idx').on(table.eventId),
+  eventIdViewedAtIdx: index('event_views_event_id_viewed_at_idx').on(table.eventId, table.viewedAt),
 }));
 
 export const refreshTokens = pgTable('refresh_tokens', {

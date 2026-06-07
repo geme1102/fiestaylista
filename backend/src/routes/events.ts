@@ -52,7 +52,13 @@ router.post('/', requireAuth, checkEventLimit(), async (req: AuthRequest, res, n
 router.get('/slug/:slug', (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventSlug = req.params.slug as string;
-    const result = await eventService.getEventBySlug(eventSlug);
+    const result = await eventService.getEventBySlug(eventSlug, {
+      limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,
+      cursor: req.query.giftCursor as string | undefined,
+    }, {
+      limit: req.query.photoLimit ? Number(req.query.photoLimit) : undefined,
+      cursor: req.query.photoCursor as string | undefined,
+    });
     res.json(result);
   } catch (error) {
     console.error(`[Events] Error al cargar evento por slug "${req.params.slug}":`, error);

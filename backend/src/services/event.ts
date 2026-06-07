@@ -1,4 +1,5 @@
-import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
+import { eq, and, sql, isNull, inArray, desc } from 'drizzle-orm';
+import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
@@ -165,7 +166,7 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
   return event;
 }
 
-export async function getEventBySlug(eventSlug: string) {
+export async function getEventBySlug(eventSlug: string, giftParams: PaginationParams = {}, photoParams: PaginationParams = {}) {
   const [event] = await db
     .select({
       id: eventsTable.id,
@@ -189,17 +190,37 @@ export async function getEventBySlug(eventSlug: string) {
     throw new NotFoundError('Este evento no está disponible');
   }
 
+  const { limit: giftLimit, cursorCondition: giftCursor } = buildPaginationConditions(
+    gifts.createdAt,
+    giftParams,
+    50,
+  );
+  const giftConditions = giftCursor
+    ? and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt), giftCursor)
+    : and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt));
+
   const eventGifts = await db
     .select()
     .from(gifts)
-    .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
-    .orderBy(gifts.createdAt);
+    .where(giftConditions)
+    .orderBy(desc(gifts.createdAt))
+    .limit(giftLimit);
+
+  const { limit: photoLimit, cursorCondition: photoCursor } = buildPaginationConditions(
+    photos.createdAt,
+    photoParams,
+    15,
+  );
+  const photoConditions = photoCursor
+    ? and(eq(photos.eventId, event.id), photoCursor)
+    : eq(photos.eventId, event.id);
 
   const eventPhotos = await db
     .select()
     .from(photos)
-    .where(eq(photos.eventId, event.id))
-    .orderBy(photos.createdAt);
+    .where(photoConditions)
+    .orderBy(desc(photos.createdAt))
+    .limit(photoLimit);
 
   return {
     event,
