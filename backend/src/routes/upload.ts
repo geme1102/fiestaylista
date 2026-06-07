@@ -84,4 +84,27 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
+router.post('/guest', uploadLimiter, (req: Request, res: Response, next: NextFunction) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(new ValidationError('El archivo excede el tamaño máximo de 10MB'));
+        }
+        return next(new ValidationError(err.message));
+      }
+      return next(err);
+    }
+    try {
+      if (!req.file) {
+        throw new ValidationError('No se proporcionó ningún archivo');
+      }
+      const url = await cloudinaryUpload(req.file.buffer, req.file.mimetype);
+      res.status(201).json({ url });
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
 export default router;

@@ -8,10 +8,11 @@ import type { AuthRequest } from '../types/index.js';
 const router = Router();
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
     path: '/api/auth/refresh',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -153,6 +154,20 @@ router.post('/reset-password', authLimiter, async (req, res, next) => {
       next(new ValidationError(error.errors.map(e => e.message).join(', ')));
       return;
     }
+    next(error);
+  }
+});
+
+router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (refreshToken) {
+      // Idealmente revocaríamos el token en DB aquí si hubiera lógica,
+      // pero por ahora limpiar la cookie es un avance.
+    }
+    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    res.json({ success: true });
+  } catch (error) {
     next(error);
   }
 });

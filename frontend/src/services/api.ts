@@ -1,16 +1,21 @@
-let accessToken: string | null = null;
+let accessToken: string | null = sessionStorage.getItem('_at');
 const REQUEST_TIMEOUT = 30000;
 
 export function setTokens(access: string): void {
   accessToken = access;
+  sessionStorage.setItem('_at', access);
 }
 
 export function clearTokens(): void {
   accessToken = null;
+  sessionStorage.removeItem('_at');
   refreshRetries = 0;
 }
 
 export function getAccessToken(): string | null {
+  if (!accessToken) {
+    accessToken = sessionStorage.getItem('_at');
+  }
   return accessToken;
 }
 

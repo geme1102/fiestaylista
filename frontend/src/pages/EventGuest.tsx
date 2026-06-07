@@ -93,11 +93,13 @@ export default function EventGuest() {
   const inputRef = useRef<HTMLInputElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!slug) return;
     loadEvent();
-    const poll = setInterval(loadEvent, 15000);
+    const poll = setInterval(loadEvent, 60000);
     return () => {
       clearInterval(poll);
       if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
@@ -145,6 +147,34 @@ export default function EventGuest() {
       showToast('Error al apartar el regalo', 'error');
     } finally {
       setClaimingId(null);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !event) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('La foto no puede superar los 10MB', 'error');
+      return;
+    }
+    
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const uploadRes = await apiClient.post<{ url: string }>('/api/upload/guest', formData);
+      const res = await apiClient.post<{ photo: Photo }>(`/api/events/${event.id}/photos/guest`, {
+        url: uploadRes.url,
+      });
+      
+      setPhotos((prev) => [res.photo, ...prev]);
+      showToast('¡Foto subida con éxito! 📸', 'success');
+    } catch {
+      showToast('Error al subir la foto', 'error');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -336,16 +366,28 @@ export default function EventGuest() {
           </motion.div>
 
           {/* Photos Gallery */}
-          {photos.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.35 }}
-              className={easyReadMode ? 'space-y-6' : ''}
-            >
-              <h2 className={`font-semibold text-on-surface mb-4 flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className={easyReadMode ? 'space-y-6' : ''}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`font-semibold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
                 <span>📸</span> Galería
               </h2>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={uploadingPhoto}
+                className="px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-xl flex items-center gap-2 hover:bg-primary/20 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">{uploadingPhoto ? 'hourglass_empty' : 'upload'}</span>
+                {uploadingPhoto ? 'Subiendo...' : photos.length === 0 ? 'Sube la primera foto' : 'Subir foto'}
+              </button>
+            </div>
+            
+            {photos.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {photos.map((photo) => (
                   <motion.div
@@ -359,11 +401,21 @@ export default function EventGuest() {
                         <p className="text-white text-xs">{photo.caption}</p>
                       </div>
                     )}
+                    <a
+                      href={photo.url}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
+                      aria-label="Descargar foto"
+                    >
+                      <span className="material-symbols-outlined text-sm">download</span>
+                    </a>
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
 
           {/* Gift List Section */}
           <div className={easyReadMode ? 'space-y-8' : ''}>

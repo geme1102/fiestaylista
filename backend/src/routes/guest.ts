@@ -42,7 +42,7 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
     await db.insert(users).values({
       id: guestId,
       email: guestEmail,
-      passwordHash: await bcrypt.hash(guestId, 12),
+      passwordHash: await bcrypt.hash(randomUUID() + guestId, 12),
       name: data.hostName,
       tier: 'free',
       emailVerified: false,

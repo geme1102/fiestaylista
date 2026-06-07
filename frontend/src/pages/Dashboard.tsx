@@ -282,7 +282,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
   handleCreate: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
-    <form className="space-y-6">
+    <form className="space-y-6" onSubmit={handleCreate}>
       <div>
         <label className="block text-sm font-bold mb-3">Tipo de evento</label>
         <div className="grid grid-cols-4 gap-3">
@@ -337,7 +337,6 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
       <button
         type="submit"
         disabled={creating || !formData.title.trim()}
-        onClick={handleCreate}
         className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
       >
         {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}

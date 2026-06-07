@@ -18,10 +18,15 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
       throw new UnauthorizedError('Token de acceso requerido');
     }
 
-    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload | GuestJwtPayload;
-
-    if ((decoded as GuestJwtPayload).isGuest) {
-      throw new UnauthorizedError('Los tokens de invitado no tienen acceso a esta función');
+    let decoded: JwtPayload | GuestJwtPayload;
+    try {
+      decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+    } catch {
+      try {
+        decoded = jwt.verify(token, config.JWT_GUEST_SECRET) as GuestJwtPayload;
+      } catch {
+        throw new UnauthorizedError('Token inválido');
+      }
     }
 
     (req as any).user = {
@@ -62,11 +67,16 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
       return;
     }
 
-    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload | GuestJwtPayload;
-
-    if ((decoded as GuestJwtPayload).isGuest) {
-      next();
-      return;
+    let decoded: JwtPayload | GuestJwtPayload;
+    try {
+      decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+    } catch {
+      try {
+        decoded = jwt.verify(token, config.JWT_GUEST_SECRET) as GuestJwtPayload;
+      } catch {
+        next();
+        return;
+      }
     }
 
     (req as any).user = {

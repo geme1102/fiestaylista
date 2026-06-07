@@ -86,10 +86,12 @@ export default function Pricing() {
       } else {
         showToast('URL de pago inválida', 'error');
         setLoading(false);
+        setSelectedTier(null);
       }
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear sesión de pago', 'error');
       setLoading(false);
+      setSelectedTier(null);
     }
   };
 

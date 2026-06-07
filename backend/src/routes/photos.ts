@@ -45,6 +45,24 @@ router.post('/', requireAuth, requireEventOwnership, (async (req: AuthRequest, r
   }
 }) as any);
 
+router.post('/guest', (async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const eventId = req.params.eventId as string | undefined;
+    if (!eventId) {
+      throw new ValidationError('ID del evento requerido');
+    }
+    const data = createPhotoSchema.parse(req.body);
+    const photo = await photoService.addPhoto(eventId, data.url, data.caption);
+    res.status(201).json({ photo });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
+      return;
+    }
+    next(error);
+  }
+}) as any);
+
 router.delete('/:photoId', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const photoId = req.params.photoId as string | undefined;

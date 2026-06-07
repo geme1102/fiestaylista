@@ -84,16 +84,7 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
 
         {/* Admin overlay */}
         {isAdmin && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-4 transition-opacity">
-            {onFree && (
-              <button
-                onClick={() => onFree(gift.id)}
-                className="bg-emerald-600 text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-emerald-700 active:scale-90 transition-all"
-              >
-                <span className="material-symbols-outlined">check_circle</span>
-                <span className="text-[10px] font-bold mt-1">Liberar</span>
-              </button>
-            )}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
             {onDelete && (
               <button
                 onClick={() => onDelete(gift.id)}

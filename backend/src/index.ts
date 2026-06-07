@@ -105,6 +105,9 @@ app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
 
 app.use('/api/webhooks', webhookLimiter, webhooksRouter);
 
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
 // Rutas públicas (sin rate limit)
 app.use('/api', publicRouter);
 
@@ -132,9 +135,6 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api', apiLimiter);
-
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use('/uploads', express.static('uploads'));
 

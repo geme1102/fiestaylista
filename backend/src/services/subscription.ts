@@ -91,6 +91,11 @@ export async function cancelSubscription(userId: string) {
       throw new NotFoundError('Suscripción no encontrada');
     }
 
+    await tx
+      .update(users)
+      .set({ tier: 'free', updatedAt: new Date() })
+      .where(eq(users.id, userId));
+
     return sub;
   });
 }

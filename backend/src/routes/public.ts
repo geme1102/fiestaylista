@@ -57,7 +57,7 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
         createdAt: gifts.createdAt,
       })
       .from(gifts)
-      .where(eq(gifts.eventId, event.id))
+      .where(and(eq(gifts.eventId, event.id), sql`${gifts.deletedAt} IS NULL`))
       .orderBy(gifts.createdAt);
 
     res.json({ gifts: eventGifts });
