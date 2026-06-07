@@ -1,4 +1,4 @@
-import { eq, and, sql, isNull } from 'drizzle-orm';
+import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
 import { db, sql as pgSql } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
@@ -73,7 +73,7 @@ export async function getUserEvents(userId: string) {
 
   const eventIds = userEvents.map(e => e.id);
 
-  const eventIdsParam = pgSql(eventIds);
+  // const { inArray } = await import('drizzle-orm');
 
   const [giftCounts, photoCounts, funds] = await Promise.all([
     db
@@ -82,7 +82,7 @@ export async function getUserEvents(userId: string) {
         count: sql<number>`count(*)::int`,
       })
       .from(gifts)
-      .where(sql`${gifts.eventId} = ANY(${eventIdsParam}::uuid[]) AND ${gifts.deletedAt} IS NULL`)
+      .where(and(inArray(gifts.eventId, eventIds), isNull(gifts.deletedAt)))
       .groupBy(gifts.eventId),
     db
       .select({
@@ -90,7 +90,7 @@ export async function getUserEvents(userId: string) {
         count: sql<number>`count(*)::int`,
       })
       .from(photos)
-      .where(sql`${photos.eventId} = ANY(${eventIdsParam}::uuid[])`)
+      .where(inArray(photos.eventId, eventIds))
       .groupBy(photos.eventId),
     db
       .select({
@@ -99,7 +99,7 @@ export async function getUserEvents(userId: string) {
         targetAmount: cashFunds.targetAmount,
       })
       .from(cashFunds)
-      .where(sql`${cashFunds.eventId} = ANY(${eventIdsParam}::uuid[])`),
+      .where(inArray(cashFunds.eventId, eventIds)),
   ]);
 
   const giftCountMap = new Map(giftCounts.map(g => [g.eventId, g.count]));
