@@ -76,7 +76,7 @@ export default function Account() {
 
   const handleDeleteAccount = async () => {
     try {
-      await apiClient.del('/api/auth/arco/my-account', { password: confirmPassword });
+      await apiClient.post('/api/auth/arco/delete-account', { password: confirmPassword });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setConfirmPassword('');

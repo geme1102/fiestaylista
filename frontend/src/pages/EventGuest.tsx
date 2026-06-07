@@ -117,8 +117,10 @@ export default function EventGuest() {
       setEvent(data.event);
       setGifts(data.gifts || []);
       setPhotos(data.photos || []);
-    } catch {
-      setError('Evento no encontrado');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Evento no encontrado';
+      console.error('[EventGuest] loadEvent error:', err);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -153,6 +155,10 @@ export default function EventGuest() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !event) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Solo se permiten imágenes', 'error');
+      return;
+    }
     if (file.size > 10 * 1024 * 1024) {
       showToast('La foto no puede superar los 10MB', 'error');
       return;
@@ -170,8 +176,9 @@ export default function EventGuest() {
       
       setPhotos((prev) => [res.photo, ...prev]);
       showToast('¡Foto subida con éxito! 📸', 'success');
-    } catch {
-      showToast('Error al subir la foto', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al subir la foto';
+      showToast(msg, 'error');
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

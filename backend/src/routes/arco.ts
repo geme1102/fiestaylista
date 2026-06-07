@@ -30,7 +30,7 @@ const confirmDeleteSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para eliminar la cuenta'),
 });
 
-router.delete('/my-account', requireAuth, arcoLimiter, async (req: AuthRequest, res, next) => {
+router.post('/delete-account', requireAuth, arcoLimiter, async (req: AuthRequest, res, next) => {
   try {
     const { password } = confirmDeleteSchema.parse(req.body);
 

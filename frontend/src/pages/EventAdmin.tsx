@@ -203,7 +203,8 @@ export default function EventAdmin() {
       const res = await addPhoto(id!, url);
       setPhotos((prev) => [...prev, res.photo]);
     } catch (err) {
-      showToast('Error al subir foto', 'error');
+      const msg = err instanceof Error ? err.message : 'Error al subir foto';
+      showToast(msg, 'error');
     } finally {
       setUploading(false);
     }
