@@ -1,4 +1,4 @@
-import { eq, lte, and, sql, inArray } from 'drizzle-orm';
+import { eq, lte, and, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
