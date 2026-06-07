@@ -1,5 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -22,7 +22,7 @@ router.get('/public/events/:slug', (async (req: Request, res: Response, next: Ne
         createdAt: events.createdAt,
       })
       .from(events)
-      .where(and(eq(events.slug, eventSlug), sql`${events.deletedAt} IS NULL`))
+      .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
       .limit(1);
 
     if (!event || !event.isActive) {
@@ -41,7 +41,7 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
     const [event] = await db
       .select({ id: events.id, isActive: events.isActive })
       .from(events)
-      .where(and(eq(events.slug, eventSlug), sql`${events.deletedAt} IS NULL`))
+      .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
       .limit(1);
 
     if (!event || !event.isActive) {
@@ -57,7 +57,7 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
         createdAt: gifts.createdAt,
       })
       .from(gifts)
-      .where(and(eq(gifts.eventId, event.id), sql`${gifts.deletedAt} IS NULL`))
+      .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
       .orderBy(gifts.createdAt);
 
     res.json({ gifts: eventGifts });

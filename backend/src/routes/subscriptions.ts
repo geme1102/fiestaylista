@@ -47,7 +47,11 @@ router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
       return;
     }
     if (sub.mpSubscriptionId) {
-      await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
+      try {
+        await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
+      } catch (err) {
+        console.error('Error al cancelar en MercadoPago:', err);
+      }
     }
     await subscriptionService.cancelSubscription(req.user!.userId);
     res.json({ message: 'Suscripción cancelada exitosamente' });

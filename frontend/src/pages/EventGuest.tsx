@@ -99,7 +99,7 @@ export default function EventGuest() {
   useEffect(() => {
     if (!slug) return;
     loadEvent();
-    const poll = setInterval(loadEvent, 60000);
+    const poll = setInterval(loadEvent, 5000);
     return () => {
       clearInterval(poll);
       if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
