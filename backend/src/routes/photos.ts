@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
+import { uploadLimiter } from '../middleware/rateLimit.js';
 import * as photoService from '../services/photo.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
@@ -9,7 +10,9 @@ import type { AuthRequest } from '../types/index.js';
 const router = Router({ mergeParams: true });
 
 const createPhotoSchema = z.object({
-  url: z.string().url('La URL de la foto es inválida'),
+  url: z.string().url('La URL de la foto es inválida').refine((u) => {
+    try { const p = new URL(u); return p.protocol === 'https:' || p.protocol === 'http:'; } catch { return false; }
+  }, 'La URL debe ser una imagen HTTPS válida'),
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
 
@@ -45,7 +48,7 @@ router.post('/', requireAuth, requireEventOwnership, (async (req: AuthRequest, r
   }
 }) as any);
 
-router.post('/guest', (async (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest', uploadLimiter, (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const eventId = req.params.eventId as string | undefined;
     if (!eventId) {

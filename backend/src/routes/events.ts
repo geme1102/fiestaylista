@@ -1,6 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
+import { requireEventOwnership } from '../middleware/ownership.js';
 import { checkEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
 import { ValidationError } from '../utils/errors.js';
@@ -69,7 +70,7 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res, next) => {
   }
 });
 
-router.put('/:id', requireAuth, async (req: AuthRequest, res, next) => {
+router.put('/:id', requireAuth, requireEventOwnership, async (req: AuthRequest, res, next) => {
   try {
     const data = updateEventSchema.parse(req.body) as { title?: string; eventType?: 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING'; hostPhone?: string };
     const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
@@ -83,7 +84,7 @@ router.put('/:id', requireAuth, async (req: AuthRequest, res, next) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req: AuthRequest, res, next) => {
+router.delete('/:id', requireAuth, requireEventOwnership, async (req: AuthRequest, res, next) => {
   try {
     const result = await eventService.deleteEvent(req.params.id as string, req.user!.userId);
     res.json(result);

@@ -161,7 +161,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                 <ul style="color:#6b7280;margin:16px 0">
                   <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
                   <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
-                  <li style="margin-bottom:8px">✅ Cash fund con comisión del 2% (mitad que Gratis)</li>
+                  <li style="margin-bottom:8px">✅ Cash fund con comisión reducida</li>
                   <li style="margin-bottom:8px">✅ Estadísticas completas</li>
                   <li style="margin-bottom:8px">✅ Sin marca de agua</li>
                 </ul>

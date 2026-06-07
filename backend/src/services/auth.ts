@@ -175,6 +175,10 @@ export async function login(
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
+  if (user.email.endsWith('@guest.fiestaylista.com')) {
+    throw new UnauthorizedError('Las cuentas de invitado no pueden iniciar sesión');
+  }
+
   const isValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValid) {

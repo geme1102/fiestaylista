@@ -57,26 +57,50 @@ export default function EventAdmin() {
 
   useEffect(() => {
     if (!id) return;
-    let es: EventSource | null = null;
     let cancelled = false;
+    let abortController: AbortController | null = null;
 
     async function connectSSE() {
       try {
         const { token } = await apiClient.post<{ token: string }>(`/api/events/${id}/gifts/sse-token`);
         if (cancelled) return;
+
         const baseUrl = import.meta.env.VITE_API_URL ?? '';
-        es = new EventSource(`${baseUrl}/api/events/${id}/gifts/subscribe?token=${token}`);
-        es.onmessage = (e) => {
-          try {
-            const data = JSON.parse(e.data);
-            if (data.type === 'connected') return;
-            showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
-            loadEvent();
-          } catch (err) {
-            console.warn('[SSE] Error parsing message:', err);
+        abortController = new AbortController();
+
+        const response = await fetch(`${baseUrl}/api/events/${id}/gifts/subscribe`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: abortController.signal,
+        });
+
+        if (!response.ok || !response.body) {
+          console.warn('[SSE] No se pudo conectar al stream de eventos');
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (!cancelled) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'connected') continue;
+                showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
+                loadEvent();
+              } catch (err) {
+                console.warn('[SSE] Error parsing message:', err);
+              }
+            }
           }
-        };
-        es.onerror = () => console.warn('[SSE] Conexión perdida');
+        }
       } catch {
         console.warn('[SSE] No se pudo conectar al stream de eventos');
       }
@@ -85,7 +109,7 @@ export default function EventAdmin() {
     connectSSE();
     return () => {
       cancelled = true;
-      if (es) es.close();
+      if (abortController) abortController.abort();
     };
   }, [id]);
 

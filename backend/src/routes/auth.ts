@@ -1,9 +1,13 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import { createHash } from 'node:crypto';
 import { requireAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
+import { db } from '../db/index.js';
+import { refreshTokens } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 const router = Router();
 
@@ -162,8 +166,11 @@ router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (refreshToken) {
-      // Idealmente revocaríamos el token en DB aquí si hubiera lógica,
-      // pero por ahora limpiar la cookie es un avance.
+      const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+      await db
+        .update(refreshTokens)
+        .set({ revoked: true })
+        .where(eq(refreshTokens.tokenHash, tokenHash));
     }
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.json({ success: true });

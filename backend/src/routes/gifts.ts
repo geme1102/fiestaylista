@@ -178,7 +178,7 @@ router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
     return;
   }
 
-  const authToken = req.query.token as string || req.headers.authorization?.replace('Bearer ', '');
+  const authToken = req.headers.authorization?.replace('Bearer ', '') || req.query.token as string;
   if (!authToken) {
     res.status(401).json({ error: 'Token requerido para suscripción SSE' });
     return;

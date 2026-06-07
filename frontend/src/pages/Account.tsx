@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getCurrentSubscription, cancelSubscription } from '../services/mercadopago';
+import { getCurrentSubscription } from '../services/mercadopago';
 import { apiClient } from '../services/api';
 import { TIER_LIMITS, type Subscription } from '../types';
 import { showToast } from '../hooks/useToast';
@@ -28,6 +28,9 @@ export default function Account() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     getCurrentSubscription()
@@ -41,14 +44,16 @@ export default function Account() {
   }, []);
 
   const handleCancelSubscription = async () => {
-    if (!window.confirm('¿Estás seguro de cancelar tu suscripción? Perderás acceso a funciones Pro al final del período actual.')) return;
     setCancelLoading(true);
     try {
-      await cancelSubscription();
+      await apiClient.post('/api/subscriptions/cancel', { password: confirmPassword });
       showToast('Suscripción cancelada', 'success');
       setSubscription(null);
+      setShowCancelConfirm(false);
+      setConfirmPassword('');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al cancelar suscripción', 'error');
+    } finally {
       setCancelLoading(false);
     }
   };
@@ -70,10 +75,11 @@ export default function Account() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('¿Estás seguro? Esta acción eliminará permanentemente tu cuenta, eventos, listas de regalos y todos los datos asociados. No se puede deshacer.')) return;
     try {
-      await apiClient.del('/api/auth/arco/my-account');
+      await apiClient.del('/api/auth/arco/my-account', { password: confirmPassword });
       showToast('Cuenta eliminada permanentemente', 'success');
+      setShowDeleteConfirm(false);
+      setConfirmPassword('');
       setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
@@ -157,7 +163,7 @@ export default function Account() {
 
               {subscription?.status === 'active' && (
                 <button
-                  onClick={handleCancelSubscription}
+                  onClick={() => setShowCancelConfirm(true)}
                   disabled={cancelLoading}
                   className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
                 >
@@ -188,13 +194,61 @@ export default function Account() {
             Gestionar solicitudes ARCO
           </Link>
           <button
-            onClick={handleDeleteAccount}
+            onClick={() => setShowDeleteConfirm(true)}
             className="px-5 py-2.5 text-red-600 bg-red-50 rounded-xl text-sm font-medium hover:bg-red-100 transition-all"
           >
             Eliminar mi cuenta
           </button>
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+            <h3 className="font-semibold text-lg text-on-surface">Cancelar Suscripción</h3>
+            <p className="text-sm text-on-surface-variant">Ingresa tu contraseña para confirmar la cancelación. Perderás acceso a funciones Pro al final del período actual.</p>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Tu contraseña"
+              className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowCancelConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+                Cancelar
+              </button>
+              <button onClick={handleCancelSubscription} disabled={!confirmPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
+                {cancelLoading ? '...' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+            <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
+            <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer. Ingresa tu contraseña para confirmar.</p>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Tu contraseña"
+              className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+                Cancelar
+              </button>
+              <button onClick={handleDeleteAccount} disabled={!confirmPassword} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

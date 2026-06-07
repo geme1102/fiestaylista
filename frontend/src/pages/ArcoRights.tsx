@@ -122,12 +122,16 @@ export default function ArcoRights() {
     }
   };
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+
   const handleDeleteAccount = async () => {
-    if (!window.confirm(content.cancel.confirm)) return;
     setLoading(true);
     try {
-      await apiClient.del('/api/auth/arco/my-account');
+      await apiClient.del('/api/auth/arco/my-account', { password: deletePassword });
       showToast('Cuenta eliminada permanentemente', 'success');
+      setShowDeleteModal(false);
+      setDeletePassword('');
       setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
@@ -219,7 +223,7 @@ export default function ArcoRights() {
                 <span className="text-primary font-medium text-sm">{content.rectify.btn}</span>
               </button>
 
-              <button onClick={handleDeleteAccount} disabled={loading}
+              <button onClick={() => setShowDeleteModal(true)} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
                 <h3 className="text-lg font-semibold text-red-600 mb-2">{content.cancel.title}</h3>
                 <p className="text-sm text-on-surface-variant mb-4">{content.cancel.desc}</p>
@@ -324,6 +328,30 @@ export default function ArcoRights() {
           </>
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+            <h3 className="font-semibold text-lg text-red-600">{content.cancel.title}</h3>
+            <p className="text-sm text-on-surface-variant">{content.cancel.confirm}</p>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Tu contraseña"
+              className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+                Cancelar
+              </button>
+              <button onClick={handleDeleteAccount} disabled={!deletePassword || loading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
+                {loading ? '...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

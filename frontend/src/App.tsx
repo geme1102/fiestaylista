@@ -142,6 +142,11 @@ function TitleUpdater() {
         title: 'Administrar Evento - Fiesta y Lista',
         desc: 'Administra tu evento y lista de regalos en Fiesta y Lista.',
       };
+    } else {
+      meta = {
+        title: 'Página no encontrada - Fiesta y Lista',
+        desc: 'La página que buscas no existe en Fiesta y Lista. Vuelve al inicio para descubrir listas de regalos.',
+      };
     }
   }
 
@@ -164,9 +169,9 @@ function TitleUpdater() {
       <meta property="og:image:alt" content="Fiesta y Lista — Crea tu lista de regalos para baby showers, bodas, cumpleaños y más" />
       <meta name="twitter:image" content="https://fiestaylista.com/og-image.png" />
       <meta name="robots" content="index, follow" />
-      <link rel="canonical" href={`https://fiestaylista.com${path}`} />
-      <link rel="alternate" href={`https://fiestaylista.com${path}`} hrefLang="es-CO" />
-      <link rel="alternate" href={`https://fiestaylista.com${path}`} hrefLang="es" />
+      <link rel="canonical" href={`${window.location.origin}${path}`} />
+      <link rel="alternate" href={`${window.location.origin}${path}`} hrefLang="es-CO" />
+      <link rel="alternate" href={`${window.location.origin}${path}`} hrefLang="es" />
     </Helmet>
   );
 }

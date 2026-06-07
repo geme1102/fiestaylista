@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter } from '../middleware/rateLimit.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
-import { ValidationError } from '../utils/errors.js';
+import { ValidationError, UnauthorizedError } from '../utils/errors.js';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
@@ -39,8 +43,24 @@ router.post('/create-checkout', requireAuth, paymentLimiter, async (req: AuthReq
   }
 });
 
+const confirmPasswordSchema = z.object({
+  password: z.string().min(1, 'Contraseña requerida para confirmar'),
+});
+
 router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
   try {
+    const { password } = confirmPasswordSchema.parse(req.body);
+
+    const [user] = await db
+      .select({ passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, req.user!.userId))
+      .limit(1);
+
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      throw new UnauthorizedError('Contraseña incorrecta');
+    }
+
     const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
     if (!sub) {
       res.status(400).json({ error: 'No tienes una suscripción activa' });
@@ -56,6 +76,10 @@ router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
     await subscriptionService.cancelSubscription(req.user!.userId);
     res.json({ message: 'Suscripción cancelada exitosamente' });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
+      return;
+    }
     next(error);
   }
 });

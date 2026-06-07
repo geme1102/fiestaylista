@@ -34,16 +34,9 @@ function verifyMpSignature(req: Request): boolean {
   const rawBody = (req as any).rawBody;
   if (!rawBody) return false;
 
-  let dataId = '';
-  try {
-    const parsed = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
-    dataId = parsed.data?.id || parsed.id || '';
-  } catch {
-    return false;
-  }
-  if (!dataId) return false;
+  const bodyStr = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody);
 
-  const manifest = ts + '.' + dataId + '.' + webhookSecret;
+  const manifest = 'id:' + ts + ';' + bodyStr + ';' + webhookSecret;
   const expected = createHash('sha256').update(manifest).digest('hex');
 
   try {

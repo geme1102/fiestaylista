@@ -8,7 +8,7 @@ import { ValidationError } from '../utils/errors.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes } from 'node:crypto';
 import { guestLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
@@ -42,7 +42,7 @@ router.post('/events/guest', guestLimiter, async (req: Request, res: Response, n
     await db.insert(users).values({
       id: guestId,
       email: guestEmail,
-      passwordHash: await bcrypt.hash(randomUUID() + guestId, 12),
+      passwordHash: await bcrypt.hash(randomBytes(48).toString('hex'), 12),
       name: data.hostName,
       tier: 'free',
       emailVerified: false,

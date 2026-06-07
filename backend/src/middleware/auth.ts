@@ -29,6 +29,10 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
       }
     }
 
+    if ('isGuest' in decoded && (decoded as GuestJwtPayload).isGuest) {
+      throw new UnauthorizedError('Los tokens de invitado no tienen acceso a esta funcionalidad');
+    }
+
     (req as any).user = {
       userId: decoded.userId,
       email: decoded.email,

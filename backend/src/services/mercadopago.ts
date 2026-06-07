@@ -222,6 +222,17 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
   if (!eventId) return;
 
   await db.transaction(async (tx) => {
+    const [existingPayment] = await tx
+      .select({ id: boostPayments.id })
+      .from(boostPayments)
+      .where(eq(boostPayments.mpPaymentId, paymentId))
+      .limit(1);
+
+    if (existingPayment) {
+      console.log(`[MP] Boost payment ${paymentId} already processed`);
+      return;
+    }
+
     const [event] = await tx
       .select({ id: events.id, boostedUntil: events.boostedUntil })
       .from(events)
@@ -230,6 +241,10 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       .limit(1);
 
     if (!event) return;
+
+    await tx
+      .insert(boostPayments)
+      .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
 
     const now = Date.now();
     const currentBoost = event.boostedUntil?.getTime() ?? 0;
@@ -241,18 +256,6 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       .update(events)
       .set({ boostedUntil, updatedAt: new Date() })
       .where(eq(events.id, eventId));
-
-    try {
-      await tx
-        .insert(boostPayments)
-        .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
-    } catch (err: any) {
-      if (err?.code === '23505') {
-        console.log(`[MP] Boost payment ${paymentId} already processed (UNIQUE violation)`);
-      } else {
-        throw err;
-      }
-    }
   });
 }
 
