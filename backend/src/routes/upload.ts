@@ -74,6 +74,15 @@ function cloudinaryUpload(buffer: Buffer, mimeType: string): Promise<string> {
   });
 }
 
+async function cloudinaryUploadWithTimeout(buffer: Buffer, mimeType: string): Promise<string> {
+  return Promise.race([
+    cloudinaryUpload(buffer, mimeType),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Cloudinary upload timed out after 30s')), 30000),
+    ),
+  ]);
+}
+
 router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next: NextFunction) => {
   upload.single('file')(req, res, async (err) => {
     if (err) {
@@ -95,7 +104,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
         throw new ValidationError('El archivo no es una imagen válida');
       }
 
-      const url = await cloudinaryUpload(req.file.buffer, req.file.mimetype);
+      const url = await cloudinaryUploadWithTimeout(req.file.buffer, req.file.mimetype);
       res.status(201).json({ url });
     } catch (error) {
       next(error);
@@ -123,7 +132,7 @@ router.post('/guest', uploadLimiter, (req: Request, res: Response, next: NextFun
         throw new ValidationError('El archivo no es una imagen válida');
       }
 
-      const url = await cloudinaryUpload(req.file.buffer, req.file.mimetype);
+      const url = await cloudinaryUploadWithTimeout(req.file.buffer, req.file.mimetype);
       res.status(201).json({ url });
     } catch (error) {
       next(error);

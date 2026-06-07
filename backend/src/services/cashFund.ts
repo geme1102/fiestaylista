@@ -17,46 +17,50 @@ interface CashFundData {
 }
 
 export async function createOrUpdateCashFund(eventId: string, userId: string, data: CashFundData) {
-  const [event] = await db
-    .select({ id: events.id, userId: events.userId })
-    .from(events)
-    .where(eq(events.id, eventId))
-    .limit(1);
+  return await db.transaction(async (tx) => {
+    const [event] = await tx
+      .select({ id: events.id, userId: events.userId })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
 
-  if (!event) throw new NotFoundError('Evento no encontrado');
-  if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
+    if (!event) throw new NotFoundError('Evento no encontrado');
+    if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
 
-  const existing = await db
-    .select({ id: cashFunds.id })
-    .from(cashFunds)
-    .where(eq(cashFunds.eventId, eventId))
-    .limit(1);
+    const existing = await tx
+      .select({ id: cashFunds.id })
+      .from(cashFunds)
+      .where(eq(cashFunds.eventId, eventId))
+      .limit(1);
 
-  if (existing.length > 0) {
-    const [fund] = await db
-      .update(cashFunds)
-      .set({
-        title: data.title,
-        description: data.description,
-        targetAmount: data.targetAmount,
-        updatedAt: new Date(),
+    if (existing.length > 0) {
+      const [fund] = await tx
+        .update(cashFunds)
+        .set({
+          title: data.title,
+          description: data.description,
+          targetAmount: data.targetAmount,
+          updatedAt: new Date(),
+        })
+        .where(eq(cashFunds.id, existing[0].id))
+        .returning();
+      return fund;
+    }
+
+    const [fund] = await tx
+      .insert(cashFunds)
+      .values({
+        eventId,
+        title: data.title || 'Lluvia de sobres',
+        description: data.description || null,
+        targetAmount: data.targetAmount || null,
       })
-      .where(eq(cashFunds.id, existing[0].id))
+      .onConflictDoNothing({ target: cashFunds.eventId })
       .returning();
+
+    if (!fund) throw new ValidationError('El fondo monetario ya existe para este evento');
     return fund;
-  }
-
-  const [fund] = await db
-    .insert(cashFunds)
-    .values({
-      eventId,
-      title: data.title || 'Lluvia de sobres',
-      description: data.description || null,
-      targetAmount: data.targetAmount || null,
-    })
-    .returning();
-
-  return fund;
+  });
 }
 
 export async function getCashFund(eventId: string) {
@@ -253,7 +257,7 @@ export async function cleanupStaleContributions(): Promise<number> {
   const result = await db
     .update(cashContributions)
     .set({ status: 'expired' })
-    .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < NOW() - INTERVAL '24 hours'`)
+    .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < NOW() - (${config.CONTRIBUTION_EXPIRY_HOURS} * INTERVAL '1 hour')`)
     .returning({ id: cashContributions.id });
 
   return result.length;

@@ -130,34 +130,38 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const now = new Date();
   const gracePeriodEnd = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-  const expired = await db
-    .update(subsTable)
-    .set({ status: 'canceled', updatedAt: new Date() })
-    .where(and(
-      lte(subsTable.currentPeriodEnd, gracePeriodEnd),
-      eq(subsTable.status, 'active'),
-    ))
-    .returning({ id: subsTable.id, userId: subsTable.userId });
+  const result = await db.transaction(async (tx) => {
+    const expired = await tx
+      .update(subsTable)
+      .set({ status: 'canceled', updatedAt: new Date() })
+      .where(and(
+        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
+        eq(subsTable.status, 'active'),
+      ))
+      .returning({ id: subsTable.id, userId: subsTable.userId });
 
-  const canceledPastPeriod = await db
-    .update(subsTable)
-    .set({ tier: 'free', updatedAt: new Date() })
-    .where(and(
-      lte(subsTable.currentPeriodEnd, gracePeriodEnd),
-      eq(subsTable.status, 'canceled'),
-      eq(subsTable.tier, 'pro'),
-    ))
-    .returning({ id: subsTable.id, userId: subsTable.userId });
-
-  const allToDowngrade = [...expired, ...canceledPastPeriod];
-  const userIds = allToDowngrade.map(s => s.userId).filter(Boolean);
-
-  if (userIds.length > 0) {
-    await db
-      .update(users)
+    const canceledPastPeriod = await tx
+      .update(subsTable)
       .set({ tier: 'free', updatedAt: new Date() })
-      .where(inArray(users.id, userIds));
-  }
+      .where(and(
+        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
+        eq(subsTable.status, 'canceled'),
+        eq(subsTable.tier, 'pro'),
+      ))
+      .returning({ id: subsTable.id, userId: subsTable.userId });
 
-  return allToDowngrade.length;
+    const allToDowngrade = [...expired, ...canceledPastPeriod];
+    const userIds = allToDowngrade.map(s => s.userId).filter(Boolean);
+
+    if (userIds.length > 0) {
+      await tx
+        .update(users)
+        .set({ tier: 'free', updatedAt: new Date() })
+        .where(inArray(users.id, userIds));
+    }
+
+    return allToDowngrade.length;
+  });
+
+  return result;
 }

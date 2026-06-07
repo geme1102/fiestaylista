@@ -99,9 +99,33 @@ export default function EventGuest() {
   useEffect(() => {
     if (!slug) return;
     loadEvent();
-    const poll = setInterval(loadEvent, 5000);
+
+    const POLL_FAST = 10000;
+    const POLL_SLOW = 30000;
+
+    let pollInterval = POLL_FAST;
+    let pollTimer: ReturnType<typeof setInterval>;
+
+    function schedulePoll(interval: number) {
+      clearInterval(pollTimer);
+      pollInterval = interval;
+      pollTimer = setInterval(loadEvent, interval);
+    }
+
+    schedulePoll(POLL_FAST);
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearInterval(pollTimer);
+      } else {
+        schedulePoll(POLL_FAST);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
-      clearInterval(poll);
+      clearInterval(pollTimer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
     };
   }, [slug]);

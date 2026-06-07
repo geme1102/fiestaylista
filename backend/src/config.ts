@@ -77,6 +77,7 @@ export const config = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
   FROM_EMAIL: process.env.FROM_EMAIL || '',
   BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
+  CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
 } as const;
 
 const isProduction = config.NODE_ENV === 'production';

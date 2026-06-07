@@ -27,12 +27,17 @@ interface RequestOptions {
   headers?: Record<string, string>;
   params?: Record<string, string>;
   timeout?: number;
+  signal?: AbortSignal;
 }
 
 async function request<T>(method: HttpMethod, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
   const timeout = options?.timeout ?? REQUEST_TIMEOUT;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  if (options?.signal) {
+    options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
 
   try {
     const url = new URL(`${BASE_URL}${path}`, window.location.origin);
@@ -124,18 +129,21 @@ async function tryRefreshToken(): Promise<boolean> {
 
   refreshPromise = (async () => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({}),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         refreshRetries++;
-        if (refreshRetries >= MAX_REFRESH_RETRIES) {
-          return false;
-        }
         return false;
       }
 
@@ -144,6 +152,7 @@ async function tryRefreshToken(): Promise<boolean> {
       accessToken = data.accessToken;
       return true;
     } catch {
+      refreshRetries++;
       return false;
     } finally {
       refreshPromise = null;
