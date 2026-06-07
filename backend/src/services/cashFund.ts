@@ -1,4 +1,4 @@
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, type PaginatedResult, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
@@ -268,7 +268,7 @@ export async function getContributions(
   params: PaginationParams = {},
 ): Promise<PaginatedResult<typeof cashContributions.$inferSelect>> {
   const { limit, cursorCondition } = buildPaginationConditions(
-    cashContributions.createdAt,
+    cashContributions.createdAt as unknown as SQL,
     params,
     50,
   );

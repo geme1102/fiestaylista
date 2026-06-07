@@ -1,4 +1,4 @@
-import { eq, and, sql, inArray } from 'drizzle-orm';
+import { eq, and, sql, inArray, type SQL } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';
@@ -55,11 +55,11 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
     }
 
     batchCount++;
-    const condition = minCreatedAt
+    const condition: SQL | undefined = minCreatedAt
       ? and(eq(users.emailVerified, true), sql`${users.createdAt} > ${minCreatedAt}`)
       : eq(users.emailVerified, true);
 
-    const rows = await db
+    const rows: { id: string; email: string; name: string; tier: string; createdAt: Date }[] = await db
       .select({ id: users.id, email: users.email, name: users.name, tier: users.tier, createdAt: users.createdAt })
       .from(users)
       .where(condition)

@@ -101,14 +101,11 @@ export default function EventGuest() {
     loadEvent();
 
     const POLL_FAST = 10000;
-    const POLL_SLOW = 30000;
 
-    let pollInterval = POLL_FAST;
     let pollTimer: ReturnType<typeof setInterval>;
 
     function schedulePoll(interval: number) {
       clearInterval(pollTimer);
-      pollInterval = interval;
       pollTimer = setInterval(loadEvent, interval);
     }
 

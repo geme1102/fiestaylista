@@ -24,8 +24,7 @@ const runWithLock = async (name: string, fn: () => Promise<void>) => {
     const [result] = await db.execute(sql`SELECT pg_try_advisory_lock(${lockId}) as acquired`);
     const acquired = typeof result === 'object' && result !== null && (
       (result as any).acquired === true ||
-      Array.isArray(result) && result[0] === true ||
-      result === true
+      Array.isArray(result) && result[0] === true
     );
     if (!acquired) {
       console.log(`[Cron] Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);

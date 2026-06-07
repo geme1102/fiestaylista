@@ -51,7 +51,7 @@ export const gifts = pgTable('gifts', {
 }, (table) => ({
   eventIdIdx: index('gifts_event_id_idx').on(table.eventId),
   eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
-  eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${gifts.isClaimed} = false`),
+  eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${table.isClaimed} = false`),
 }));
 
 export const photos = pgTable('photos', {

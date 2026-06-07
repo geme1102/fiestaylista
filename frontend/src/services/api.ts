@@ -144,7 +144,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
 
 let refreshPromise: Promise<boolean> | null = null;
 let refreshRetries = 0;
-const MAX_REFRESH_RETRIES = 2;
 
 async function tryRefreshToken(): Promise<boolean> {
   if (refreshPromise) {

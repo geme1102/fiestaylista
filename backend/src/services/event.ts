@@ -1,4 +1,4 @@
-import { eq, and, sql, isNull, inArray, desc } from 'drizzle-orm';
+import { eq, and, sql, isNull, inArray, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
@@ -207,7 +207,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     .limit(giftLimit);
 
   const { limit: photoLimit, cursorCondition: photoCursor } = buildPaginationConditions(
-    photos.createdAt,
+    photos.createdAt as unknown as SQL,
     photoParams,
     15,
   );
