@@ -9,7 +9,7 @@ describe('formatCOP', () => {
   });
 
   it('handles zero', () => {
-    expect(formatCOP(0)).toBe('$0');
+    expect(formatCOP(0)).toBe('$ 0');
   });
 
   it('handles null', () => {

@@ -191,7 +191,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
   }
 
   const { limit: giftLimit, cursorCondition: giftCursor } = buildPaginationConditions(
-    gifts.createdAt,
+    gifts.createdAt as unknown as SQL,
     giftParams,
     50,
   );
