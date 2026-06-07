@@ -1,5 +1,10 @@
 let accessToken: string | null = sessionStorage.getItem('_at');
 const REQUEST_TIMEOUT = 30000;
+const MAX_RETRIES = 3;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function setTokens(access: string): void {
   accessToken = access;
@@ -70,49 +75,68 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
     }
 
     let res: Response;
-    try {
-      res = await fetch(url.toString(), fetchOptions);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
-      }
-      throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
-    }
+    let lastError: Error | null = null;
 
-    if (res.status === 401) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-        try {
-          res = await fetch(url.toString(), { ...fetchOptions, headers, signal: controller.signal });
-        } catch (error) {
-          if (error instanceof DOMException && error.name === 'AbortError') {
-            throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
-          }
-          throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
-        }
-      } else {
-        clearTokens();
-        throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await delay(Math.min(1000 * Math.pow(2, attempt - 1), 4000));
       }
-    }
 
-    if (!res.ok) {
-      let errorMsg = `Error ${res.status}`;
       try {
-        const err = await res.json();
-        errorMsg = err.message ?? err.error ?? errorMsg;
-      } catch {
-        console.warn('[API] Error parsing error response body');
+        res = await fetch(url.toString(), fetchOptions);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
+        }
+        if (attempt < MAX_RETRIES) {
+          lastError = new Error('Error de conexión. Reintentando...');
+          continue;
+        }
+        throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
       }
-      throw new Error(errorMsg);
+
+      if (res.status === 401) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+          try {
+            res = await fetch(url.toString(), { ...fetchOptions, headers, signal: controller.signal });
+          } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+              throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
+            }
+            throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
+          }
+        } else {
+          clearTokens();
+          throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+        }
+      }
+
+      if (res.status >= 500 && attempt < MAX_RETRIES) {
+        lastError = new Error(`Error ${res.status}. Reintentando...`);
+        continue;
+      }
+
+      if (!res.ok) {
+        let errorMsg = `Error ${res.status}`;
+        try {
+          const err = await res.json();
+          errorMsg = err.message ?? err.error ?? errorMsg;
+        } catch {
+          console.warn('[API] Error parsing error response body');
+        }
+        throw new Error(errorMsg);
+      }
+
+      if (res.status === 204) {
+        return undefined as T;
+      }
+
+      return res.json();
     }
 
-    if (res.status === 204) {
-      return undefined as T;
-    }
-
-    return res.json();
+    throw lastError ?? new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
   } finally {
     clearTimeout(timeoutId);
   }

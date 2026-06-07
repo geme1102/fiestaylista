@@ -211,17 +211,31 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-4xl shadow-xl shadow-primary/20 animate-float-slow"
-          >
-            🎁
-          </motion.div>
-          <p className="text-sm text-surface-variant animate-pulse font-outfit">Preparando la lista de regalos...</p>
+      <div className="min-h-screen bg-[#FAF9F8] animate-pulse">
+        <div className="pt-16 w-full overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
+          <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
+            <div className="w-24 h-24 rounded-full bg-surface-container-highest mb-6" />
+            <div className="h-6 w-32 bg-surface-container-highest rounded-full mb-4" />
+            <div className="h-10 w-64 bg-surface-container-highest rounded-xl mb-2" />
+            <div className="h-5 w-40 bg-surface-container-highest rounded-lg mb-6" />
+            <div className="h-8 w-36 bg-surface-container-highest rounded-full" />
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 -mt-6 relative z-10 space-y-8 py-12">
+          <div className="flex gap-4 justify-center">
+            <div className="h-10 w-24 bg-surface-container-highest rounded-xl" />
+            <div className="h-10 w-24 bg-surface-container-highest rounded-xl" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-8 w-48 bg-surface-container-highest rounded-lg" />
+            <div className="h-12 w-full bg-surface-container-highest rounded-2xl" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-40 bg-surface-container-highest rounded-2xl" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -278,8 +292,14 @@ export default function EventGuest() {
         <meta property="og:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}. Aparta tu regalo en Fiesta y Lista.`} />
         <meta property="og:url" content={`https://fiestaylista.com/e/${event.slug}`} />
         <meta property="og:locale" content="es_CO" />
+        {photos.length > 0 && (
+          <meta property="og:image" content={photos[0].url} />
+        )}
         <meta name="twitter:title" content={`${event.title} - Fiesta y Lista`} />
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
+        {photos.length > 0 && (
+          <meta name="twitter:image" content={photos[0].url} />
+        )}
         <link rel="canonical" href={`https://fiestaylista.com/e/${event.slug}`} />
         <script type="application/ld+json">
           {JSON.stringify({
