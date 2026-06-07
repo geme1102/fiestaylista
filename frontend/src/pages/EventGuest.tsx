@@ -238,23 +238,6 @@ export default function EventGuest() {
     );
   }
 
-  if (error || !event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4">
-        <div className="text-center max-w-sm">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
-            😕
-          </div>
-          <h1 className="text-2xl font-bold text-on-surface mb-2">Evento no encontrado</h1>
-          <p className="text-on-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
-          <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
-            Ir al inicio
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   const availableGifts = gifts.filter((g) => !g.isClaimed);
   const claimedGifts = gifts.filter((g) => g.isClaimed);
 
@@ -275,9 +258,26 @@ export default function EventGuest() {
     ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
     : availableGifts;
 
-  const createdDate = event.createdAt
+  const createdDate = event?.createdAt
     ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
     : '';
+
+  if (error || !event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4">
+        <div className="text-center max-w-sm">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
+            😕
+          </div>
+          <h1 className="text-2xl font-bold text-on-surface mb-2">Evento no encontrado</h1>
+          <p className="text-on-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
+          <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
+            Ir al inicio
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
