@@ -2,7 +2,7 @@ import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
@@ -102,8 +102,12 @@ router.post('/refresh', refreshLimiter, async (req, res, next) => {
   }
 });
 
-router.get('/me', requireAuth, async (req: AuthRequest, res, next) => {
+router.get('/me', requireAnyAuth, async (req: AuthRequest, res, next) => {
   try {
+    if ((req.user as any)?.isGuest) {
+      res.json({ user: null, isGuest: true });
+      return;
+    }
     const user = await authService.getUser(req.user!.userId);
     res.json({ user });
   } catch (error) {

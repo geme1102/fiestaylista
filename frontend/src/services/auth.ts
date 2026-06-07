@@ -9,6 +9,6 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   return apiClient.post<AuthResponse>('/api/auth/login', { email, password });
 }
 
-export function getMe(): Promise<{ user: User }> {
-  return apiClient.get<{ user: User }>('/api/auth/me');
+export function getMe(): Promise<{ user: User | null; isGuest?: boolean }> {
+  return apiClient.get<{ user: User | null; isGuest?: boolean }>('/api/auth/me');
 }

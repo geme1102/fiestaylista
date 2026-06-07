@@ -28,7 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     auth.getMe()
-      .then((res) => setUser(res.user))
+      .then((res) => {
+        if (res.isGuest) {
+          clearTokens();
+          setUser(null);
+        } else {
+          setUser(res.user);
+        }
+      })
       .catch((err) => {
         console.warn('[Auth] No se pudo restaurar la sesión:', err);
       })
