@@ -181,7 +181,7 @@ export async function getEventBySlug(eventSlug: string) {
       createdAt: eventsTable.createdAt,
     })
     .from(eventsTable)
-    .where(and(eq(eventsTable.slug, eventSlug), sql`${eventsTable.deletedAt} IS NULL`))
+    .where(and(eq(eventsTable.slug, eventSlug), isNull(eventsTable.deletedAt)))
     .limit(1);
 
   if (!event) {
