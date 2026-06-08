@@ -58,7 +58,8 @@ router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, ne
       })
       .from(gifts)
       .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
-      .orderBy(gifts.createdAt);
+      .orderBy(gifts.createdAt)
+      .limit(101);
 
     res.json({ gifts: eventGifts });
   } catch (error) {

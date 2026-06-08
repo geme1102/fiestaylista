@@ -149,7 +149,8 @@ export async function getEventGifts(eventId: string) {
     .select()
     .from(giftsTable)
     .where(and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt)))
-    .orderBy(giftsTable.createdAt);
+    .orderBy(giftsTable.createdAt)
+    .limit(101);
 
   return eventGifts;
 }

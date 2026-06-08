@@ -99,7 +99,8 @@ export async function getEventPhotos(eventId: string) {
     .select()
     .from(photosTable)
     .where(eq(photosTable.eventId, eventId))
-    .orderBy(photosTable.createdAt);
+    .orderBy(photosTable.createdAt)
+    .limit(101);
 
   return eventPhotos;
 }

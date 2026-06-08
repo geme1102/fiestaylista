@@ -131,13 +131,15 @@ export async function getEvent(eventId: string, userId: string) {
     .select()
     .from(gifts)
     .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
-    .orderBy(gifts.createdAt);
+    .orderBy(gifts.createdAt)
+    .limit(101);
 
   const eventPhotos = await db
     .select()
     .from(photos)
     .where(eq(photos.eventId, eventId))
-    .orderBy(photos.createdAt);
+    .orderBy(photos.createdAt)
+    .limit(101);
 
   return {
     ...event,
