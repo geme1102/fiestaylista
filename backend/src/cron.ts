@@ -11,19 +11,19 @@ let cronInterval: ReturnType<typeof setInterval> | null = null;
 
 const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
-    const [result] = await db.execute(sql`SELECT pg_try_advisory_lock(hashtext(${name})) as acquired`);
-    const acquired = typeof result === 'object' && result !== null && (
-      (result as any).acquired === true ||
-      Array.isArray(result) && result[0] === true
-    );
+    const acquired = await db.transaction(async (tx) => {
+      const [result] = await tx.execute(sql`SELECT pg_try_advisory_lock(hashtext(${name})) as acquired`);
+      const locked = typeof result === 'object' && result !== null && (
+        (result as any).acquired === true ||
+        Array.isArray(result) && result[0] === true
+      );
+      if (!locked) return false;
+      await fn();
+      await tx.execute(sql`SELECT pg_advisory_unlock(hashtext(${name}))`);
+      return true;
+    });
     if (!acquired) {
       console.log(`[Cron] Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
-      return;
-    }
-    try {
-      await fn();
-    } finally {
-      await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${name}))`);
     }
   } catch (error) {
     console.error(`[Cron] Error en lock para ${name}:`, error);
