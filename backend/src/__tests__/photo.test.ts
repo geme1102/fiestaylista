@@ -196,7 +196,8 @@ describe('getEventPhotos', () => {
     (db as any).select.mockReturnThis();
     (db as any).from.mockReturnThis();
     (db as any).where.mockReturnThis();
-    (db as any).orderBy.mockResolvedValueOnce(mockPhotos);
+    (db as any).orderBy.mockReturnThis();
+    (db as any).limit.mockResolvedValueOnce(mockPhotos);
 
     const photos = await getEventPhotos('evt-1');
     expect(photos).toEqual(mockPhotos);
