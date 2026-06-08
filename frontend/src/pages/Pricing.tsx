@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
+import { useTurnstile } from '../hooks/useTurnstile';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
@@ -65,6 +66,7 @@ export default function Pricing() {
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
 
   const handleSelect = async (tier: string) => {
     if (authLoading) {
@@ -79,6 +81,20 @@ export default function Pricing() {
       navigate('/dashboard');
       return;
     }
+    let token = turnstileToken;
+    if (!token) {
+      if (!turnstileReady) {
+        showToast('Verificando que no eres un robot...', 'info');
+      }
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileToken) { token = turnstileToken; break; }
+      }
+      if (!token) {
+        showToast('No se pudo verificar que no eres un robot. Recarga e intenta de nuevo.', 'error');
+        return;
+      }
+    }
     setSelectedTier(tier);
     setLoading(true);
 
@@ -90,7 +106,7 @@ export default function Pricing() {
 
     try {
       const interval = yearly ? 'year' : 'month';
-      const res = await createCheckoutSession(tier as 'pro', undefined, undefined, interval);
+      const res = await createCheckoutSession(tier as 'pro', undefined, undefined, interval, token);
       clearTimeout(safetyTimer);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
@@ -198,6 +214,9 @@ export default function Pricing() {
               </span>
             )}
           </div>
+
+          {/* Turnstile (invisible) */}
+          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
 
           {/* Pricing Cards */}
           <section className="md:max-w-5xl mx-auto px-4">

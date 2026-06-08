@@ -61,6 +61,7 @@ function validateConfig(): void {
     requireConfig('MERCADO_PAGO_PRO_YEARLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID);
     requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
     requireConfig('FROM_EMAIL', process.env.FROM_EMAIL);
+    requireConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
   }
 }
 
@@ -88,6 +89,7 @@ export const config = {
   FROM_EMAIL: process.env.FROM_EMAIL || '',
   BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
   CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
+  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
 } as const;
 
 const isProduction = config.NODE_ENV === 'production';
