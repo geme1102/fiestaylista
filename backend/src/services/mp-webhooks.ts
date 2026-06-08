@@ -6,6 +6,17 @@ import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 
+async function handleProPayment(userId: string, interval: string): Promise<void> {
+  const periodDays = interval === 'year' ? 365 : 30;
+  await subscriptionService.createOrUpdateSubscription(userId, {
+    mpSubscriptionId: '',
+    tier: 'pro',
+    status: 'active',
+    currentPeriodStart: new Date(),
+    currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+  });
+}
+
 async function handleBoostPayment(paymentId: string, ref: string): Promise<void> {
   const eventId = ref.slice(6);
   if (!eventId) return;
@@ -103,6 +114,14 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       await handleBoostPayment(paymentId, ref);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
       await revertBoostPayment(paymentId, ref);
+    }
+  } else if (ref.startsWith('pro_')) {
+    if (info.status === 'approved') {
+      const parts = ref.split('_');
+      const userId = parts[1];
+      const interval = parts[2] || 'month';
+      if (!userId) return;
+      await handleProPayment(userId, interval);
     }
   } else {
     if (info.status === 'approved') {

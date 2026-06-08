@@ -33,10 +33,8 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
       throw new ValidationError('URL de redirección no permitida');
     }
 
-    const result = await mercadopagoService.createCheckoutSession(
+    const result = await mercadopagoService.createProPreference(
       req.user!.userId,
-      req.user!.email,
-      data.tier,
       data.interval,
       data.successUrl,
       data.cancelUrl,

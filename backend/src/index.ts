@@ -168,7 +168,8 @@ const server = app.listen(config.PORT, () => {
   console.log(`  Puerto:   ${config.PORT}`);
   console.log(`  URL:      http://localhost:${config.PORT}`);
   console.log(`  Frontend: ${config.FRONTEND_URL}`);
-  console.log(`  Backend:  ${config.BACKEND_URL}\n`);
+  console.log(`  Backend:  ${config.BACKEND_URL}`);
+  console.log(`  MP Notif: ${config.BACKEND_URL}/api/webhooks/mercadopago\n`);
 
   startCronJobs();
 });

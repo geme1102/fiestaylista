@@ -15,6 +15,14 @@ function getPrice(tier: Tier, interval: 'month' | 'year'): number {
   return 0;
 }
 
+function mpNotificationUrl(): string {
+  const base = config.BACKEND_URL
+    .replace(/\/+$/, '')
+    .replace(/^([a-zA-Z]+:\/\/)?/, (_, proto) => proto || 'https://');
+  const url = `${base}/api/webhooks/mercadopago`;
+  return url;
+}
+
 export function serializeError(error: unknown): Error {
   if (error instanceof Error) return error;
   if (typeof error === 'object' && error !== null) {
@@ -55,37 +63,36 @@ export async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promis
   throw lastError!;
 }
 
-export async function createCheckoutSession(
+export async function createProPreference(
   userId: string,
-  email: string,
-  tier: Tier,
   interval: 'month' | 'year',
   successUrl: string,
-  _cancelUrl: string,
+  cancelUrl: string,
 ): Promise<{ url: string }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
   }
 
-  const amount = getPrice(tier, interval);
-  const reason = `Pro ${interval === 'month' ? 'Mensual' : 'Anual'} - Fiesta y Lista`;
-
-  const preapproval = new PreApproval(client);
-  const result = await retryable(() => preapproval.create({
+  const amount = getPrice('pro', interval);
+  const preference = new Preference(client);
+  const result = await retryable(() => preference.create({
     body: {
-      payer_email: email,
-      back_url: successUrl,
-      external_reference: userId,
-      reason,
-      notification_url: `${config.BACKEND_URL}/api/webhooks/mercadopago`,
-      auto_recurring: {
-        frequency: 1,
-        frequency_type: interval === 'month' ? 'months' : 'years',
-        transaction_amount: amount,
+      items: [{
+        id: `pro_${userId}_${interval}`,
+        title: `Pro ${interval === 'month' ? 'Mensual' : 'Anual'} - Fiesta y Lista`,
+        quantity: 1,
+        unit_price: amount,
         currency_id: 'COP',
+      }],
+      back_urls: {
+        success: successUrl,
+        failure: cancelUrl,
+        pending: cancelUrl,
       },
-      status: 'pending',
-    } as any,
+      auto_return: 'approved',
+      notification_url: mpNotificationUrl(),
+      external_reference: `pro_${userId}_${interval}`,
+    },
   }));
 
   const initPoint = result.init_point;
@@ -124,7 +131,7 @@ export async function createContributionPreference(
         pending: backUrl,
       },
       auto_return: 'approved',
-      notification_url: `${config.BACKEND_URL}/api/webhooks/mercadopago`,
+      notification_url: mpNotificationUrl(),
       external_reference: contributionId,
     },
   }));
@@ -162,7 +169,7 @@ export async function createBoostPreference(
         pending: successUrl,
       },
       auto_return: 'approved',
-      notification_url: `${config.BACKEND_URL}/api/webhooks/mercadopago`,
+      notification_url: mpNotificationUrl(),
       external_reference: `boost_${eventId}`,
     },
   }));
