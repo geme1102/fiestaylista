@@ -53,10 +53,7 @@ import {
   serializeError,
   retryable,
   createCheckoutSession,
-  createContributionPreference,
-  createBoostPreference,
   fetchPaymentInfo,
-  fetchPreapprovalInfo,
   cancelPreapproval,
 } from '../services/mercadopago.js';
 
@@ -150,7 +147,7 @@ describe('createCheckoutSession', () => {
 
     const result = await createCheckoutSession(
       'user-1', 'test@example.com', 'pro', 'month',
-      'http://localhost:5173/success',
+      'http://localhost:5173/success', 'http://localhost:5173/cancel',
     );
 
     expect(result).toEqual({ url: 'https://mp.com/pay/123' });
@@ -166,7 +163,7 @@ describe('createCheckoutSession', () => {
 
     await expect(createCheckoutSession(
       'user-1', 'test@example.com', 'pro', 'month',
-      'http://localhost:5173/success',
+      'http://localhost:5173/success', 'http://localhost:5173/cancel',
     )).rejects.toThrow('No se pudo generar la URL de pago');
   });
 });

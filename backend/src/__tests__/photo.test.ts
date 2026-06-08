@@ -193,10 +193,10 @@ describe('getEventPhotos', () => {
       { id: 'p1', eventId: 'evt-1', url: 'https://example.com/1.jpg' },
       { id: 'p2', eventId: 'evt-1', url: 'https://example.com/2.jpg' },
     ];
-    (db.select as any).mockReturnThis();
-    (db.from as any).mockReturnThis();
-    (db.where as any).mockReturnThis();
-    (db.orderBy as any).mockResolvedValueOnce(mockPhotos);
+    (db as any).select.mockReturnThis();
+    (db as any).from.mockReturnThis();
+    (db as any).where.mockReturnThis();
+    (db as any).orderBy.mockResolvedValueOnce(mockPhotos);
 
     const photos = await getEventPhotos('evt-1');
     expect(photos).toEqual(mockPhotos);
