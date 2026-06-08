@@ -36,11 +36,20 @@ export const uploadLimiter = rateLimit({
 
 export const guestUploadLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
   message: { error: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' },
+});
+
+export const resetLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
 });
 
 export const giftLimiter = rateLimit({

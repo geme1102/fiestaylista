@@ -292,14 +292,14 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
     .where(eq(users.id, userId));
 
   if (!isEmailConfigured()) {
-    throw new Error('Email service not configured');
+    throw new ValidationError('Email service not configured');
   }
 
   try {
     await sendVerificationEmail(user.email, verificationToken);
   } catch (err) {
     console.error('[Auth] Error al reenviar email de verificación:', err);
-    throw new Error('No se pudo enviar el correo de verificación. Intenta de nuevo más tarde.');
+    throw new ValidationError('No se pudo enviar el correo de verificación. Intenta de nuevo más tarde.');
   }
 }
 
@@ -314,6 +314,11 @@ export async function forgotPassword(email: string): Promise<void> {
     return;
   }
 
+  if (!isEmailConfigured()) {
+    console.error('[Auth] No se puede enviar email de restablecimiento: RESEND_API_KEY no configurada');
+    throw new ValidationError('El servicio de correo no está configurado. Contacta al administrador.');
+  }
+
   const resetToken = randomBytes(32).toString('hex');
   const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
 
@@ -322,16 +327,15 @@ export async function forgotPassword(email: string): Promise<void> {
     .set({ resetToken, resetTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  if (!isEmailConfigured()) {
-    console.error('[Auth] No se puede enviar email de restablecimiento: RESEND_API_KEY no configurada');
-    throw new Error('El servicio de correo no está configurado. Contacta al administrador.');
-  }
-
   try {
     await sendPasswordResetEmail(user.email, resetToken);
   } catch (err) {
+    await db
+      .update(users)
+      .set({ resetToken: null, resetTokenExpires: null, updatedAt: new Date() })
+      .where(eq(users.id, user.id));
     console.error('[Auth] Error al enviar email de restablecimiento:', err);
-    throw new Error('No se pudo enviar el correo de restablecimiento. Intenta de nuevo más tarde.');
+    throw new ValidationError('No se pudo enviar el correo de restablecimiento. Intenta de nuevo más tarde.');
   }
 }
 

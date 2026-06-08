@@ -99,8 +99,10 @@ export default function EventGuest() {
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     if (!slug) return;
     loadEvent();
 
@@ -125,6 +127,7 @@ export default function EventGuest() {
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
+      mountedRef.current = false;
       clearInterval(pollTimer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
@@ -134,6 +137,7 @@ export default function EventGuest() {
   async function loadEvent() {
     try {
       const data = await getEventBySlug(slug!);
+      if (!mountedRef.current) return;
       if (!data.event.isActive) {
         setError('Este evento no está disponible');
         setLoading(false);
@@ -143,11 +147,17 @@ export default function EventGuest() {
       setGifts(data.gifts || []);
       setPhotos(data.photos || []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Evento no encontrado';
+      if (!mountedRef.current) return;
+      let msg = err instanceof Error ? err.message : 'Evento no encontrado';
+      if (msg.includes('Sesión expirada') || msg.includes('No autorizado')) {
+        msg = 'Evento no encontrado';
+      }
       console.error('[EventGuest] loadEvent error:', err);
       setError(msg);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -207,6 +217,23 @@ export default function EventGuest() {
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = url.split('/').pop() || 'photo.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      showToast('Error al descargar la foto', 'error');
     }
   };
 
@@ -453,16 +480,13 @@ export default function EventGuest() {
                         <p className="text-white text-xs">{photo.caption}</p>
                       </div>
                     )}
-                    <a
-                      href={photo.url}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => handleDownload(photo.url)}
                       className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
                       aria-label="Descargar foto"
                     >
                       <span className="material-symbols-outlined text-sm">download</span>
-                    </a>
+                    </button>
                   </motion.div>
                 ))}
               </div>

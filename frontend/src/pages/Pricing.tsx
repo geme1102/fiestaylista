@@ -59,7 +59,7 @@ const FAQS = [
 ];
 
 export default function Pricing() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,6 +67,10 @@ export default function Pricing() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const handleSelect = async (tier: string) => {
+    if (authLoading) {
+      showToast('Verificando sesión...', 'info');
+      return;
+    }
     if (!isAuthenticated) {
       navigate('/register');
       return;
@@ -77,9 +81,17 @@ export default function Pricing() {
     }
     setSelectedTier(tier);
     setLoading(true);
+
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+      setSelectedTier(null);
+      showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+    }, 15000);
+
     try {
       const interval = yearly ? 'year' : 'month';
       const res = await createCheckoutSession(tier as 'pro', undefined, undefined, interval);
+      clearTimeout(safetyTimer);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
         window.location.href = validatedUrl;
@@ -89,6 +101,7 @@ export default function Pricing() {
         setSelectedTier(null);
       }
     } catch (err) {
+      clearTimeout(safetyTimer);
       showToast(err instanceof Error ? err.message : 'Error al crear sesión de pago', 'error');
       setLoading(false);
       setSelectedTier(null);

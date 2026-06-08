@@ -99,11 +99,22 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       }
 
       if (res.status === 401) {
+        const currentToken = getAccessToken();
+        if (!currentToken) {
+          throw new Error(res.status === 401 ? 'No autorizado' : `Error ${res.status}`);
+        }
         const refreshed = await tryRefreshToken();
         if (refreshed) {
           headers['Authorization'] = `Bearer ${accessToken}`;
+          const retryInit: RequestInit = {
+            method,
+            headers: { ...headers },
+            signal: controller.signal,
+            credentials: 'include',
+            body: fetchOptions.body,
+          };
           try {
-            res = await fetch(url.toString(), { ...fetchOptions, headers, signal: controller.signal });
+            res = await fetch(url.toString(), retryInit);
           } catch (error) {
             if (error instanceof DOMException && error.name === 'AbortError') {
               throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');

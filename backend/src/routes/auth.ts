@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
-import { authLimiter, refreshLimiter } from '../middleware/rateLimit.js';
+import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
@@ -153,7 +153,7 @@ router.post('/resend-verification', requireAuth, authLimiter, async (req: AuthRe
   }
 });
 
-router.post('/forgot-password', authLimiter, async (req, res, next) => {
+router.post('/forgot-password', resetLimiter, async (req, res, next) => {
   try {
     const data = forgotPasswordSchema.parse(req.body);
     await authService.forgotPassword(data.email);
@@ -167,7 +167,7 @@ router.post('/forgot-password', authLimiter, async (req, res, next) => {
   }
 });
 
-router.post('/reset-password', authLimiter, async (req, res, next) => {
+router.post('/reset-password', resetLimiter, async (req, res, next) => {
   try {
     const data = resetPasswordSchema.parse(req.body);
     await authService.resetPassword(data.token, data.password);

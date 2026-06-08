@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, us
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../types';
 import * as auth from '../services/auth';
-import { setTokens, clearTokens, apiClient } from '../services/api';
+import { setTokens, clearTokens, getAccessToken, apiClient } from '../services/api';
 
 interface AuthContextValue {
   user: User | null;
@@ -27,6 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
+
+    if (!getAccessToken()) {
+      setIsLoading(false);
+      return;
+    }
+
     auth.getMe()
       .then((res) => {
         if (res.isGuest) {

@@ -52,6 +52,7 @@ function validateConfig(): void {
     requireConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);
     requireConfig('MERCADO_PAGO_PRO_YEARLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID);
     requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
+    requireConfig('FROM_EMAIL', process.env.FROM_EMAIL);
   }
 }
 

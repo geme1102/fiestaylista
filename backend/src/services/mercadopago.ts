@@ -40,6 +40,10 @@ async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+      const status = (error as any)?.status;
+      if (status !== undefined && status < 500) {
+        throw lastError;
+      }
       if (attempt < maxRetries - 1) {
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise(r => setTimeout(r, delay));

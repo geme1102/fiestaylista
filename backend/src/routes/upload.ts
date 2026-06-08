@@ -55,7 +55,7 @@ function cloudinaryUpload(buffer: Buffer, mimeType: string): Promise<string> {
       const uploadDir = join(process.cwd(), 'uploads');
       mkdir(uploadDir, { recursive: true }).then(() =>
         writeFile(join(uploadDir, name), buffer)
-      ).then(() => resolve(`/uploads/${name}`)).catch(reject);
+      ).then(() => resolve(`${config.BACKEND_URL}/uploads/${name}`)).catch(reject);
       return;
     }
 
