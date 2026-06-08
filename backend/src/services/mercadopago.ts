@@ -27,6 +27,20 @@ function getPlanId(tier: Tier, interval: 'month' | 'year'): string {
   return planId;
 }
 
+function serializeError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  if (typeof error === 'object' && error !== null) {
+    const obj = error as Record<string, unknown>;
+    const message = obj.message ?? JSON.stringify(obj);
+    const err = new Error(String(message));
+    if (typeof obj.status === 'number') (err as any).status = obj.status;
+    if (typeof obj.cause !== 'undefined') (err as any).cause = obj.cause;
+    try { (err as any).raw = JSON.stringify(obj); } catch { /* ignore */ }
+    return err;
+  }
+  return new Error(String(error));
+}
+
 async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -39,7 +53,7 @@ async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       ]);
       return result;
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      lastError = serializeError(error);
       const status = (error as any)?.status;
       if (status !== undefined && status < 500) {
         throw lastError;

@@ -3,14 +3,29 @@ import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors.js';
 import { config } from '../config.js';
 
-function logError(err: Error, errorId: string, req?: Request): void {
+function toSerializable(err: unknown): Record<string, unknown> {
+  if (err instanceof Error) {
+    const obj: Record<string, unknown> = { message: err.message, name: err.name };
+    if (config.NODE_ENV === 'development') obj.stack = err.stack;
+    for (const key of Object.keys(err as any)) {
+      if (!['message', 'name', 'stack'].includes(key)) {
+        try { obj[key] = JSON.parse(JSON.stringify((err as any)[key])); } catch { obj[key] = String((err as any)[key]); }
+      }
+    }
+    return obj;
+  }
+  if (typeof err === 'object' && err !== null) {
+    try { return JSON.parse(JSON.stringify(err)); } catch { return { value: String(err) }; }
+  }
+  return { value: String(err) };
+}
+
+function logError(err: unknown, errorId: string, req?: Request): void {
   const errorLog: Record<string, unknown> = {
     errorId,
     timestamp: new Date().toISOString(),
     environment: config.NODE_ENV,
-    error: err.message,
-    stack: config.NODE_ENV === 'development' ? err.stack : undefined,
-    name: err.name,
+    error: toSerializable(err),
   };
 
   if (req) {
