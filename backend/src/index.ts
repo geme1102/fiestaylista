@@ -167,7 +167,8 @@ const server = app.listen(config.PORT, () => {
   console.log(`  Ambiente: ${config.NODE_ENV}`);
   console.log(`  Puerto:   ${config.PORT}`);
   console.log(`  URL:      http://localhost:${config.PORT}`);
-  console.log(`  Frontend: ${config.FRONTEND_URL}\n`);
+  console.log(`  Frontend: ${config.FRONTEND_URL}`);
+  console.log(`  Backend:  ${config.BACKEND_URL}\n`);
 
   startCronJobs();
 });

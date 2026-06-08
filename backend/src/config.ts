@@ -84,7 +84,7 @@ export const config = {
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',
   MERCADO_PAGO_PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID ?? '',
-  BACKEND_URL: process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`),
+  BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, ''),
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   PORT: parseInt(process.env.PORT || '3001', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
