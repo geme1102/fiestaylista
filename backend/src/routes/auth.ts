@@ -1,6 +1,5 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
 import { config } from '../config.js';
@@ -180,7 +179,7 @@ router.post('/reset-password', resetLimiter, async (req, res, next) => {
 
 router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    await authService.revokeAllUserTokens(req.user.id);
+    await authService.revokeAllUserTokens(req.user!.userId);
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.json({ success: true });
   } catch (error) {

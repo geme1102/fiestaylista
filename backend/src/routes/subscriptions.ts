@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter } from '../middleware/rateLimit.js';
+import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';

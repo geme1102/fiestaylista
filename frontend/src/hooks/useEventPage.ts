@@ -28,7 +28,7 @@ export function useEventPage() {
   const filterBarRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
-  const loadEventRef = useRef<() => Promise<void>>();
+  const loadEventRef = useRef<() => Promise<void>>(undefined);
 
   const loadEvent = useCallback(async () => {
     try {

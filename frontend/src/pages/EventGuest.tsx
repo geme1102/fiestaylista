@@ -75,7 +75,7 @@ function EmptyGiftState() {
 
 export default function EventGuest() {
   const {
-    event, photos, loading, error,
+    event, gifts, photos, loading, error,
     claimingId, claimName, setClaimName,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,

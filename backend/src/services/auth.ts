@@ -369,3 +369,10 @@ export async function resetPassword(token: string, newPassword: string): Promise
     })
     .where(eq(users.id, user.id));
 }
+
+export async function revokeAllUserTokens(userId: string): Promise<void> {
+  await db
+    .update(refreshTokens)
+    .set({ revoked: true })
+    .where(eq(refreshTokens.userId, userId));
+}
