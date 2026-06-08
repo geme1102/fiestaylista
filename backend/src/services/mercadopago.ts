@@ -91,7 +91,6 @@ export async function createCheckoutSession(
       back_url: successUrl,
       external_reference: userId,
       reason,
-      status: 'authorized',
       notification_url: `${config.BACKEND_URL}/api/webhooks/mercadopago`,
     } as any,
   }));
