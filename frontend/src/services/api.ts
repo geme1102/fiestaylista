@@ -93,10 +93,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       }
 
       if (res.status === 401) {
-        const currentToken = getAccessToken();
-        if (!currentToken) {
-          throw new Error(res.status === 401 ? 'No autorizado' : `Error ${res.status}`);
-        }
         const refreshed = await tryRefreshToken();
         if (refreshed) {
           headers['Authorization'] = `Bearer ${accessToken}`;
@@ -116,7 +112,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
           }
         } else {
-          clearTokens();
           throw new Error('Sesión expirada. Inicia sesión nuevamente.');
         }
       }

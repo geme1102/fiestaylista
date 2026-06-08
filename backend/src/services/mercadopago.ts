@@ -15,12 +15,11 @@ function getPrice(tier: Tier, interval: 'month' | 'year'): number {
   return 0;
 }
 
-function mpNotificationUrl(): string {
+export function mpNotificationUrl(): string {
   const base = config.BACKEND_URL
     .replace(/\/+$/, '')
     .replace(/^([a-zA-Z]+:\/\/)?/, (_, proto) => proto || 'https://');
-  const url = `${base}/api/webhooks/mercadopago`;
-  return url;
+  return `${base}/api/webhooks/mercadopago`;
 }
 
 export function serializeError(error: unknown): Error {
@@ -90,7 +89,6 @@ export async function createProPreference(
         pending: cancelUrl,
       },
       auto_return: 'approved',
-      notification_url: mpNotificationUrl(),
       external_reference: `pro_${userId}_${interval}`,
     },
   }));
@@ -131,7 +129,6 @@ export async function createContributionPreference(
         pending: backUrl,
       },
       auto_return: 'approved',
-      notification_url: mpNotificationUrl(),
       external_reference: contributionId,
     },
   }));
@@ -169,7 +166,6 @@ export async function createBoostPreference(
         pending: successUrl,
       },
       auto_return: 'approved',
-      notification_url: mpNotificationUrl(),
       external_reference: `boost_${eventId}`,
     },
   }));

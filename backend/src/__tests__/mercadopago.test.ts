@@ -155,7 +155,6 @@ describe('createProPreference', () => {
     const body = mockPreferenceCreate.mock.calls[0][0].body;
     expect(body.external_reference).toBe('pro_user-1_month');
     expect(body.items[0].unit_price).toBe(24990);
-    expect(body.notification_url).toBe('https://api.test.com/api/webhooks/mercadopago');
   });
 
   it('uses yearly price for year interval', async () => {

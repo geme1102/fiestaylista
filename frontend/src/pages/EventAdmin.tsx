@@ -59,13 +59,15 @@ export default function EventAdmin() {
     if (!id) return;
     let cancelled = false;
     let abortController: AbortController | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryDelay = 1000;
 
     async function connectSSE() {
       try {
         const { token } = await apiClient.post<{ token: string }>(`/api/events/${id}/gifts/sse-token`);
         if (cancelled) return;
 
-        const baseUrl = import.meta.env.VITE_API_URL ?? '';
+        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
         abortController = new AbortController();
 
         const response = await fetch(`${baseUrl}/api/events/${id}/gifts/subscribe`, {
@@ -74,9 +76,10 @@ export default function EventAdmin() {
         });
 
         if (!response.ok || !response.body) {
-          console.warn('[SSE] No se pudo conectar al stream de eventos');
-          return;
+          throw new Error('SSE connection failed');
         }
+
+        retryDelay = 1000;
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -96,7 +99,7 @@ export default function EventAdmin() {
                 showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
                 loadEvent();
               } catch (err) {
-                console.warn('[SSE] Error parsing message:', err);
+                console.warn('[SSE] Error al procesar mensaje:', err);
               }
             }
           }
@@ -104,12 +107,18 @@ export default function EventAdmin() {
       } catch {
         console.warn('[SSE] No se pudo conectar al stream de eventos');
       }
+
+      if (!cancelled) {
+        reconnectTimeout = setTimeout(connectSSE, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 30000);
+      }
     }
 
     connectSSE();
     return () => {
       cancelled = true;
       if (abortController) abortController.abort();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
   }, [id]);
 
