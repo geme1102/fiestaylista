@@ -9,10 +9,10 @@ const mockPreApprovalUpdate = vi.fn();
 vi.mock('../config.js', () => ({
   config: {
     MERCADO_PAGO_ACCESS_TOKEN: 'test-token',
-    MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: 'plan_monthly',
-    MERCADO_PAGO_PRO_YEARLY_PLAN_ID: 'plan_yearly',
     BACKEND_URL: 'https://api.test.com',
     FRONTEND_URL: 'http://localhost:5173',
+    PRO_MONTHLY_PRICE_CENTS: 24990,
+    PRO_YEARLY_PRICE_CENTS: 288000,
     BOOST_PRICE_CENTS: 10000,
     NODE_ENV: 'test',
   },
@@ -153,9 +153,15 @@ describe('createCheckoutSession', () => {
     expect(result).toEqual({ url: 'https://mp.com/pay/123' });
     expect(mockPreApprovalCreate).toHaveBeenCalledTimes(1);
     const body = mockPreApprovalCreate.mock.calls[0][0].body;
-    expect(body.preapproval_plan_id).toBe('plan_monthly');
+    expect(body.auto_recurring).toEqual({
+      frequency: 1,
+      frequency_type: 'months',
+      transaction_amount: 24990,
+      currency_id: 'COP',
+    });
     expect(body.payer_email).toBe('test@example.com');
     expect(body.external_reference).toBe('user-1');
+    expect(body.status).toBe('pending');
   });
 
   it('throws if no init_point returned', async () => {

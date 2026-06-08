@@ -1,6 +1,5 @@
 import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago';
 import { config } from '../config.js';
-import { NotFoundError } from '../utils/errors.js';
 import type { Tier } from '../types/index.js';
 
 let client: MercadoPagoConfig | null = null;
@@ -9,17 +8,11 @@ if (config.MERCADO_PAGO_ACCESS_TOKEN) {
   client = new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
 }
 
-const PLAN_MAP: Record<Tier, { month: string; year: string }> = {
-  free: { month: '', year: '' },
-  pro: { month: config.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID, year: config.MERCADO_PAGO_PRO_YEARLY_PLAN_ID },
-};
-
-function getPlanId(tier: Tier, interval: 'month' | 'year'): string {
-  const plans = PLAN_MAP[tier];
-  if (!plans) throw new NotFoundError('Plan no encontrado');
-  const planId = plans[interval];
-  if (!planId) throw new NotFoundError(`Plan ID de Mercado Pago no configurado para ${tier} ${interval}. Verifica MERCADO_PAGO_PRO_${interval.toUpperCase()}_PLAN_ID en las variables de entorno`);
-  return planId;
+function getPrice(tier: Tier, interval: 'month' | 'year'): number {
+  if (tier === 'pro') {
+    return interval === 'month' ? config.PRO_MONTHLY_PRICE_CENTS : config.PRO_YEARLY_PRICE_CENTS;
+  }
+  return 0;
 }
 
 export function serializeError(error: unknown): Error {
@@ -74,20 +67,25 @@ export async function createCheckoutSession(
     throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
   }
 
-  const planId = getPlanId(tier, interval);
-  const label = tier === 'pro' ? 'Pro' : 'Free';
-  const reason = `${label} ${interval === 'month' ? 'Mensual' : 'Anual'} - Fiesta y Lista`;
+  const amount = getPrice(tier, interval);
+  const reason = `Pro ${interval === 'month' ? 'Mensual' : 'Anual'} - Fiesta y Lista`;
 
   const preapproval = new PreApproval(client);
   const result = await retryable(() => preapproval.create({
     body: {
-      preapproval_plan_id: planId,
       payer_email: email,
       back_url: successUrl,
       external_reference: userId,
       reason,
       notification_url: `${config.BACKEND_URL}/api/webhooks/mercadopago`,
-    } as any,
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: interval === 'month' ? 'months' : 'years',
+        transaction_amount: amount,
+        currency_id: 'COP',
+      },
+      status: 'pending',
+    },
   }));
 
   const initPoint = result.init_point;

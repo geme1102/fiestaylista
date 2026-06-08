@@ -45,13 +45,13 @@ cd ../frontend && npm install
 | `TURNSTILE_SECRET_KEY` | Prod | Secret key de Cloudflare Turnstile |
 | `MERCADO_PAGO_ACCESS_TOKEN` | Prod | Token de acceso de Mercado Pago |
 | `MERCADO_PAGO_WEBHOOK_SECRET` | Prod | Secreto para verificar webhooks de MP |
-| `MERCADO_PAGO_PRO_MONTHLY_PLAN_ID` | Prod | ID del plan mensual Pro en MP |
-| `MERCADO_PAGO_PRO_YEARLY_PLAN_ID` | Prod | ID del plan anual Pro en MP |
 | `RESEND_API_KEY` | Prod | API key de Resend para emails |
 | `BACKEND_URL` | Prod | URL pública del backend (para webhooks MP) |
 | `CLOUDINARY_CLOUD_NAME` | No | Nombre del cloud de Cloudinary |
 | `CLOUDINARY_API_KEY` | No | API key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | No | API secret de Cloudinary |
+| `PRO_MONTHLY_PRICE_CENTS` | No | Precio mensual Pro en centavos (default: 24990) |
+| `PRO_YEARLY_PRICE_CENTS` | No | Precio anual Pro en centavos (default: 288000) |
 | `BOOST_PRICE_CENTS` | No | Precio del boost en centavos (default: 10000) |
 | `CONTRIBUTION_EXPIRY_HOURS` | No | Horas antes de expirar contribuciones (default: 24) |
 

@@ -65,8 +65,6 @@ function validateConfig(): void {
   if (isProd) {
     requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
     requireConfig('MERCADO_PAGO_WEBHOOK_SECRET', process.env.MERCADO_PAGO_WEBHOOK_SECRET);
-    requireConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);
-    requireConfig('MERCADO_PAGO_PRO_YEARLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID);
     requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
     requireConfig('FROM_EMAIL', process.env.FROM_EMAIL);
     requireConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
@@ -82,8 +80,6 @@ export const config = {
   JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET!,
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
-  MERCADO_PAGO_PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID ?? '',
-  MERCADO_PAGO_PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID ?? '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, ''),
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   PORT: parseInt(process.env.PORT || '3001', 10),
@@ -95,6 +91,8 @@ export const config = {
   CLOUDINARY_API_KEY: env('CLOUDINARY_API_KEY', 'CLAVE_API_CLOUDINARIA') ?? '',
   CLOUDINARY_API_SECRET: env('CLOUDINARY_API_SECRET', 'CLAVE_SECRETA_CLOUDINARIA') ?? '',
   FROM_EMAIL: process.env.FROM_EMAIL || '',
+  PRO_MONTHLY_PRICE_CENTS: parseInt(process.env.PRO_MONTHLY_PRICE_CENTS || '24990', 10),
+  PRO_YEARLY_PRICE_CENTS: parseInt(process.env.PRO_YEARLY_PRICE_CENTS || '288000', 10),
   BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
   CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
