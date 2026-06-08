@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { unlink, rename, readFile } from 'node:fs/promises';
+import { unlink, rename, readFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { v2 as cloudinary } from 'cloudinary';
