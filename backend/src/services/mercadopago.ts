@@ -85,7 +85,7 @@ export async function createCheckoutSession(
         currency_id: 'COP',
       },
       status: 'pending',
-    },
+    } as any,
   }));
 
   const initPoint = result.init_point;
