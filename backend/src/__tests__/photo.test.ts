@@ -30,11 +30,10 @@ vi.mock('../db/schema.js', () => ({
   users: { id: 'users.id', tier: 'users.tier' },
 }));
 
-const mockCloudinaryDestroy = vi.fn();
 vi.mock('cloudinary', () => ({
   v2: {
     uploader: {
-      destroy: mockCloudinaryDestroy,
+      destroy: vi.fn(),
     },
   },
 }));
@@ -181,9 +180,10 @@ describe('deletePhoto', () => {
       url: 'https://res.cloudinary.com/demo/image/upload/v1/event/abc123.jpg',
     }]);
 
+    const { v2: cloudinary } = await import('cloudinary');
     const result = await deletePhoto('photo-1');
     expect(result).toEqual({ success: true });
-    expect(mockCloudinaryDestroy).toHaveBeenCalledWith('event/abc123');
+    expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('event/abc123');
   });
 });
 
