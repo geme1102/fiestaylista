@@ -24,6 +24,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
       .select({ userId: events.userId })
       .from(events)
       .where(eq(events.id, eventId))
+      .for('update')
       .limit(1);
 
     if (!event) throw new NotFoundError('Evento no encontrado');

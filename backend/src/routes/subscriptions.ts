@@ -25,6 +25,12 @@ const checkoutSchema = z.object({
 router.post('/create-checkout', requireAuth, paymentLimiter, async (req: AuthRequest, res, next) => {
   try {
     const data = checkoutSchema.parse(req.body);
+
+    const allowedOrigin = config.FRONTEND_URL.replace(/\/+$/, '');
+    if (!data.successUrl.startsWith(allowedOrigin) || !data.cancelUrl.startsWith(allowedOrigin)) {
+      throw new ValidationError('URL de redirección no permitida');
+    }
+
     const result = await mercadopagoService.createCheckoutSession(
       req.user!.userId,
       req.user!.email,

@@ -1,8 +1,10 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { unlink, writeFile, mkdir, rename, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../middleware/auth.js';
 import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
@@ -14,23 +16,30 @@ const router = Router();
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 10 * 1024 * 1024;
 
-const MAGIC_BYTES: Record<string, Uint8Array[]> = {
-  'image/jpeg': [new Uint8Array([0xFF, 0xD8, 0xFF])],
-  'image/png': [new Uint8Array([0x89, 0x50, 0x4E, 0x47])],
-  'image/webp': [new Uint8Array([0x52, 0x49, 0x46, 0x46])],
-  'image/gif': [new Uint8Array([0x47, 0x49, 0x46, 0x38])],
-};
+const MAGIC_BYTES: { sig: Uint8Array; mime: string }[] = [
+  { sig: new Uint8Array([0xFF, 0xD8, 0xFF]), mime: 'image/jpeg' },
+  { sig: new Uint8Array([0x89, 0x50, 0x4E, 0x47]), mime: 'image/png' },
+  { sig: new Uint8Array([0x52, 0x49, 0x46, 0x46]), mime: 'image/webp' },
+  { sig: new Uint8Array([0x47, 0x49, 0x46, 0x38]), mime: 'image/gif' },
+];
 
-function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
-  const signatures = MAGIC_BYTES[mimeType];
-  if (!signatures) return false;
-  return signatures.some(sig =>
-    sig.length <= buffer.length && sig.every((byte, i) => buffer[i] === byte)
-  );
+function validateMagicBytes(buffer: Buffer): { valid: boolean; detectedMime: string | null } {
+  for (const entry of MAGIC_BYTES) {
+    if (entry.sig.length <= buffer.length && entry.sig.every((byte, i) => buffer[i] === byte)) {
+      return { valid: true, detectedMime: entry.mime };
+    }
+  }
+  return { valid: false, detectedMime: null };
 }
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: tmpdir(),
+    filename: (_req, file, cb) => {
+      const ext = file.mimetype === 'image/png' ? '.png' : file.mimetype === 'image/webp' ? '.webp' : '.jpg';
+      cb(null, `upload_${randomUUID()}${ext}`);
+    },
+  }),
   limits: { fileSize: MAX_SIZE },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_TYPES.includes(file.mimetype)) {
@@ -47,15 +56,20 @@ cloudinary.config({
   api_secret: config.CLOUDINARY_API_SECRET || undefined,
 });
 
-function cloudinaryUpload(buffer: Buffer, mimeType: string): Promise<string> {
+async function cleanupFile(filePath: string): Promise<void> {
+  try { await unlink(filePath); } catch { /* ignore cleanup errors */ }
+}
+
+function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!config.CLOUDINARY_CLOUD_NAME) {
       const ext = mimeType === 'image/png' ? '.png' : mimeType === 'image/webp' ? '.webp' : '.jpg';
       const name = `${randomUUID()}${ext}`;
       const uploadDir = join(process.cwd(), 'uploads');
-      mkdir(uploadDir, { recursive: true }).then(() =>
-        writeFile(join(uploadDir, name), buffer)
-      ).then(() => resolve(`${config.BACKEND_URL}/uploads/${name}`)).catch(reject);
+      mkdir(uploadDir, { recursive: true })
+        .then(() => rename(filePath, join(uploadDir, name)))
+        .then(() => resolve(`${config.BACKEND_URL}/uploads/${name}`))
+        .catch(reject);
       return;
     }
 
@@ -70,13 +84,13 @@ function cloudinaryUpload(buffer: Buffer, mimeType: string): Promise<string> {
         else resolve(result!.secure_url);
       },
     );
-    uploadStream.end(buffer);
+    createReadStream(filePath).pipe(uploadStream);
   });
 }
 
-async function cloudinaryUploadWithTimeout(buffer: Buffer, mimeType: string): Promise<string> {
+async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): Promise<string> {
   return Promise.race([
-    cloudinaryUpload(buffer, mimeType),
+    cloudinaryUpload(filePath, mimeType),
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Cloudinary upload timed out after 30s')), 30000),
     ),
@@ -100,13 +114,19 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
         throw new ValidationError('No se proporcionó ningún archivo');
       }
 
-      if (!validateMagicBytes(req.file.buffer, req.file.mimetype)) {
+      const filePath = req.file.path;
+      const rawBuffer = await readFile(filePath);
+      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
+      if (!valid) {
+        await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');
       }
 
-      const url = await cloudinaryUploadWithTimeout(req.file.buffer, req.file.mimetype);
+      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
+      await cleanupFile(filePath);
       res.status(201).json({ url });
     } catch (error) {
+      if (req.file) cleanupFile(req.file.path);
       next(error);
     }
   });
@@ -128,13 +148,19 @@ router.post('/guest', guestUploadLimiter, (req: Request, res: Response, next: Ne
         throw new ValidationError('No se proporcionó ningún archivo');
       }
 
-      if (!validateMagicBytes(req.file.buffer, req.file.mimetype)) {
+      const filePath = req.file.path;
+      const rawBuffer = await readFile(filePath);
+      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
+      if (!valid) {
+        await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');
       }
 
-      const url = await cloudinaryUploadWithTimeout(req.file.buffer, req.file.mimetype);
+      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
+      await cleanupFile(filePath);
       res.status(201).json({ url });
     } catch (error) {
+      if (req.file) cleanupFile(req.file.path);
       next(error);
     }
   });

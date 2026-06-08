@@ -31,6 +31,12 @@ function verifyMpSignature(req: Request): boolean {
   }
   if (!ts || !hash) return false;
 
+  const tsNumber = parseInt(ts, 10);
+  if (isNaN(tsNumber) || Date.now() - tsNumber > 5 * 60 * 1000) {
+    console.warn('[MP Webhook] Firma con timestamp expirado o inválido, ignorando notificación');
+    return false;
+  }
+
   const rawBody = (req as any).rawBody;
   if (!rawBody) return false;
 

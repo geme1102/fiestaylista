@@ -23,7 +23,7 @@ interface UserResponse {
   createdAt: Date;
 }
 
-function hashToken(token: string): string {
+export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
@@ -48,33 +48,32 @@ async function persistRefreshToken(userId: string, token: string, client: DbClie
 async function consumeRefreshToken(token: string): Promise<JwtPayload> {
   const tokenHash = hashToken(token);
 
-  const [stored] = await db
-    .select()
-    .from(refreshTokens)
-    .where(eq(refreshTokens.tokenHash, tokenHash))
-    .limit(1);
-
-  if (!stored) {
-    throw new UnauthorizedError('Token de refresco inválido');
-  }
-
-  if (stored.revoked) {
-    console.warn(`[Security] Intento de reuso de refresh token para usuario ${stored.userId}. Revocando todas las sesiones.`);
-    await db
-      .update(refreshTokens)
-      .set({ revoked: true })
-      .where(eq(refreshTokens.userId, stored.userId));
-    throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
-  }
-
-  if (stored.expiresAt < new Date()) {
-    throw new UnauthorizedError('Token de refresco expirado');
-  }
-
-  await db
+  const [revoked] = await db
     .update(refreshTokens)
     .set({ revoked: true })
-    .where(eq(refreshTokens.id, stored.id));
+    .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.revoked, false)))
+    .returning({ id: refreshTokens.id, userId: refreshTokens.userId, expiresAt: refreshTokens.expiresAt });
+
+  if (!revoked) {
+    const [existing] = await db
+      .select({ revoked: refreshTokens.revoked, userId: refreshTokens.userId, expiresAt: refreshTokens.expiresAt })
+      .from(refreshTokens)
+      .where(eq(refreshTokens.tokenHash, tokenHash))
+      .limit(1);
+
+    if (!existing) {
+      throw new UnauthorizedError('Token de refresco inválido');
+    }
+    if (existing.revoked) {
+      console.warn(`[Security] Intento de reuso de refresh token para usuario ${existing.userId}. Revocando todas las sesiones.`);
+      await db
+        .update(refreshTokens)
+        .set({ revoked: true })
+        .where(eq(refreshTokens.userId, existing.userId));
+      throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
+    }
+    throw new UnauthorizedError('Token de refresco expirado');
+  }
 
   const decoded = jwt.verify(token, config.JWT_REFRESH_SECRET) as JwtPayload;
   return decoded;
@@ -115,6 +114,13 @@ export async function register(
   const emailLower = email.toLowerCase();
   const verificationToken = randomBytes(32).toString('hex');
 
+  if (emailLower.endsWith('@guest.fiestaylista.com')) {
+    throw new ValidationError('Este dominio de correo no está disponible para registro');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
   let user: typeof users.$inferSelect = null!;
   let tokens: TokenPair = null!;
 
@@ -128,9 +134,6 @@ export async function register(
     if (existing) {
       throw new ValidationError('El correo electrónico ya está registrado');
     }
-
-    const passwordHash = await bcrypt.hash(password, 12);
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const [newUser] = await tx
       .insert(users)

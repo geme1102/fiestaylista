@@ -21,6 +21,7 @@ export async function createOrUpdateSubscription(
       .select({ id: subsTable.id })
       .from(subsTable)
       .where(eq(subsTable.userId, userId))
+      .for('update')
       .limit(1);
 
     if (existing) {

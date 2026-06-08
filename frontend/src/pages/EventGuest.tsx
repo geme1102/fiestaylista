@@ -1,20 +1,12 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiClient } from '../services/api';
-import { getEventBySlug } from '../services/events';
 import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
-import { showToast } from '../hooks/useToast';
-import { EVENT_LABELS, THEME_COLORS, type EventType, type Gift, type Photo } from '../types';
-import { getGiftCategory } from '../data/giftEmojis';
+import { useEventPage } from '../hooks/useEventPage';
+import { EVENT_LABELS, THEME_COLORS } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
-
-interface GuestEvent {
-  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
-}
 
 function sanitizeForJSON(str: string): string {
   return str.replace(/<\/script>/gi, '<\\/script>');
@@ -82,184 +74,17 @@ function EmptyGiftState() {
 }
 
 export default function EventGuest() {
-  const { slug } = useParams<{ slug: string }>();
-  const [event, setEvent] = useState<GuestEvent | null>(null);
-  const [gifts, setGifts] = useState<Gift[]>([]);
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
-  const [claimName, setClaimName] = useState('');
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [easyReadMode, setEasyReadMode] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const filterBarRef = useRef<HTMLDivElement>(null);
-  const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    if (!slug) return;
-    loadEvent();
-
-    const POLL_FAST = 10000;
-
-    let pollTimer: ReturnType<typeof setInterval>;
-
-    function schedulePoll(interval: number) {
-      clearInterval(pollTimer);
-      pollTimer = setInterval(loadEvent, interval);
-    }
-
-    schedulePoll(POLL_FAST);
-
-    function onVisibilityChange() {
-      if (document.hidden) {
-        clearInterval(pollTimer);
-      } else {
-        schedulePoll(POLL_FAST);
-      }
-    }
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      mountedRef.current = false;
-      clearInterval(pollTimer);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
-    };
-  }, [slug]);
-
-  async function loadEvent() {
-    try {
-      const data = await getEventBySlug(slug!);
-      if (!mountedRef.current) return;
-      if (!data.event.isActive) {
-        setError('Este evento no está disponible');
-        setLoading(false);
-        return;
-      }
-      setEvent(data.event);
-      setGifts(data.gifts || []);
-      setPhotos(data.photos || []);
-    } catch (err) {
-      if (!mountedRef.current) return;
-      let msg = err instanceof Error ? err.message : 'Evento no encontrado';
-      if (msg.includes('Sesión expirada') || msg.includes('No autorizado')) {
-        msg = 'Evento no encontrado';
-      }
-      console.error('[EventGuest] loadEvent error:', err);
-      setError(msg);
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }
-
-  const handleClaim = async (giftId: string, giftName: string) => {
-    if (!claimName.trim()) {
-      showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');
-      inputRef.current?.focus();
-      return;
-    }
-    setClaimingId(giftId);
-    try {
-      const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event!.id}/gifts/${giftId}/claim`, {
-        claimedBy: claimName.trim(),
-      });
-      setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
-      setShowConfetti(true);
-      setShowSuccessModal(true);
-      confettiTimeoutRef.current = setTimeout(() => {
-        setShowConfetti(false);
-      }, 3000);
-      setClaimName('');
-      showToast(`¡${giftName} apartado! 🎉`, 'success');
-    } catch {
-      showToast('Error al apartar el regalo', 'error');
-    } finally {
-      setClaimingId(null);
-    }
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !event) return;
-    if (!file.type.startsWith('image/')) {
-      showToast('Solo se permiten imágenes', 'error');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('La foto no puede superar los 10MB', 'error');
-      return;
-    }
-    
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const uploadRes = await apiClient.post<{ url: string }>('/api/upload/guest', formData);
-      const res = await apiClient.post<{ photo: Photo }>(`/api/events/${event.id}/photos/guest`, {
-        url: uploadRes.url,
-      });
-      
-      setPhotos((prev) => [res.photo, ...prev]);
-      showToast('¡Foto subida con éxito! 📸', 'success');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir la foto';
-      showToast(msg, 'error');
-    } finally {
-      setUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDownload = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = url.split('/').pop() || 'photo.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      showToast('Error al descargar la foto', 'error');
-    }
-  };
-
-  const availableGifts = gifts.filter((g) => !g.isClaimed);
-  const claimedGifts = gifts.filter((g) => g.isClaimed);
-
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    const cats: { label: string; color: string }[] = [];
-    availableGifts.forEach((g) => {
-      const c = getGiftCategory(g.name);
-      if (!seen.has(c.label)) {
-        seen.add(c.label);
-        cats.push(c);
-      }
-    });
-    return cats;
-  }, [gifts]);
-
-  const filteredGifts = categoryFilter
-    ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
-    : availableGifts;
-
-  const createdDate = event?.createdAt
-    ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '';
+  const {
+    event, photos, loading, error,
+    claimingId, claimName, setClaimName,
+    showConfetti, showSuccessModal, setShowSuccessModal,
+    easyReadMode, setEasyReadMode,
+    categoryFilter, setCategoryFilter,
+    uploadingPhoto,
+    inputRef, filterBarRef, fileInputRef,
+    availableGifts, claimedGifts, categories, filteredGifts, createdDate,
+    handleClaim, handlePhotoUpload, handleDownload,
+  } = useEventPage();
 
   if (loading) {
     return (
@@ -349,7 +174,6 @@ export default function EventGuest() {
       <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         {showConfetti && <PremiumConfetti />}
 
-        {/* Top App Bar */}
         <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">menu</span>
@@ -360,12 +184,10 @@ export default function EventGuest() {
           </div>
         </header>
 
-        {/* Immersive Header */}
         <section className="pt-16 w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 -z-10" />
           <div className="absolute top-20 right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-30" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
-            {/* Glass Icon Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -375,7 +197,6 @@ export default function EventGuest() {
               <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
             </motion.div>
 
-            {/* Badge with pulse dot */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -386,7 +207,6 @@ export default function EventGuest() {
               {EVENT_LABELS[event.eventType]}
             </motion.div>
 
-            {/* Event Title */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -396,7 +216,6 @@ export default function EventGuest() {
               {event.title}
             </motion.h1>
 
-            {/* Event Date */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -406,7 +225,6 @@ export default function EventGuest() {
               {createdDate}
             </motion.p>
 
-            {/* Accessibility Toggle (inline glass card) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -424,9 +242,7 @@ export default function EventGuest() {
           </div>
         </section>
 
-        {/* Main Content */}
         <div className={`max-w-4xl mx-auto px-4 -mt-6 relative z-10 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
-          {/* Share */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -435,7 +251,6 @@ export default function EventGuest() {
             <ShareButtons slug={event.slug} title={event.title} />
           </motion.div>
 
-          {/* Cash Fund */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -444,7 +259,6 @@ export default function EventGuest() {
             <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} />
           </motion.div>
 
-          {/* Photos Gallery */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -465,7 +279,7 @@ export default function EventGuest() {
                 {uploadingPhoto ? 'Subiendo...' : photos.length === 0 ? 'Sube la primera foto' : 'Subir foto'}
               </button>
             </div>
-            
+
             {photos.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {photos.map((photo) => (
@@ -493,7 +307,6 @@ export default function EventGuest() {
             )}
           </motion.div>
 
-          {/* Gift List Section */}
           <div className={easyReadMode ? 'space-y-8' : ''}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -517,7 +330,6 @@ export default function EventGuest() {
 
             {gifts.length === 0 && <EmptyGiftState />}
 
-            {/* Name Input */}
             <div className="mb-6">
               <div className="relative">
                 <input
@@ -531,7 +343,6 @@ export default function EventGuest() {
               </div>
             </div>
 
-            {/* Category Filters */}
             {categories.length > 1 && (
               <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
                 <div className="flex gap-2 w-max">
@@ -566,7 +377,6 @@ export default function EventGuest() {
               </div>
             )}
 
-            {/* Available Gifts Grid */}
             <AnimatePresence mode="popLayout">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredGifts.map((gift) => (
@@ -580,7 +390,6 @@ export default function EventGuest() {
               </div>
             </AnimatePresence>
 
-            {/* Claimed Gifts */}
             {claimedGifts.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -607,13 +416,11 @@ export default function EventGuest() {
             )}
           </div>
 
-          {/* Footer */}
           <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
             <p>Hecho con 🎉 por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
           </div>
         </div>
 
-        {/* Bottom Nav */}
         <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
           <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
@@ -633,7 +440,6 @@ export default function EventGuest() {
           </a>
         </nav>
 
-        {/* Success Modal */}
         {showSuccessModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl">
             <div className="glass-card w-full max-w-sm rounded-[40px] p-8 text-center shadow-2xl border-white/50">

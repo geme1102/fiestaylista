@@ -1,14 +1,11 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { createHash } from 'node:crypto';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { ValidationError } from '../utils/errors.js';
-import { db } from '../db/index.js';
-import { refreshTokens } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 const router = Router();
 
@@ -17,7 +14,7 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'strict',
     path: '/api/auth/refresh',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -183,14 +180,7 @@ router.post('/reset-password', resetLimiter, async (req, res, next) => {
 
 router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
-    if (refreshToken) {
-      const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
-      await db
-        .update(refreshTokens)
-        .set({ revoked: true })
-        .where(eq(refreshTokens.tokenHash, tokenHash));
-    }
+    await authService.revokeAllUserTokens(req.user.id);
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.json({ success: true });
   } catch (error) {

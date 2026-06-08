@@ -1,4 +1,4 @@
-let accessToken: string | null = sessionStorage.getItem('_at');
+let accessToken: string | null = null;
 const REQUEST_TIMEOUT = 30000;
 const MAX_RETRIES = 3;
 
@@ -8,19 +8,13 @@ function delay(ms: number): Promise<void> {
 
 export function setTokens(access: string): void {
   accessToken = access;
-  sessionStorage.setItem('_at', access);
 }
 
 export function clearTokens(): void {
   accessToken = null;
-  sessionStorage.removeItem('_at');
-  refreshRetries = 0;
 }
 
 export function getAccessToken(): string | null {
-  if (!accessToken) {
-    accessToken = sessionStorage.getItem('_at');
-  }
   return accessToken;
 }
 
@@ -157,7 +151,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
 }
 
 let refreshPromise: Promise<boolean> | null = null;
-let refreshRetries = 0;
 
 async function tryRefreshToken(): Promise<boolean> {
   if (refreshPromise) {
@@ -180,16 +173,13 @@ async function tryRefreshToken(): Promise<boolean> {
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        refreshRetries++;
         return false;
       }
 
-      refreshRetries = 0;
       const data = await res.json();
       accessToken = data.accessToken;
       return true;
     } catch {
-      refreshRetries++;
       return false;
     } finally {
       refreshPromise = null;
