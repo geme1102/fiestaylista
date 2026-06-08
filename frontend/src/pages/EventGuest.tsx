@@ -210,6 +210,30 @@ export default function EventGuest() {
     }
   };
 
+  const availableGifts = gifts.filter((g) => !g.isClaimed);
+  const claimedGifts = gifts.filter((g) => g.isClaimed);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    const cats: { label: string; color: string }[] = [];
+    availableGifts.forEach((g) => {
+      const c = getGiftCategory(g.name);
+      if (!seen.has(c.label)) {
+        seen.add(c.label);
+        cats.push(c);
+      }
+    });
+    return cats;
+  }, [gifts]);
+
+  const filteredGifts = categoryFilter
+    ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
+    : availableGifts;
+
+  const createdDate = event?.createdAt
+    ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF9F8] animate-pulse">
@@ -241,30 +265,6 @@ export default function EventGuest() {
       </div>
     );
   }
-
-  const availableGifts = gifts.filter((g) => !g.isClaimed);
-  const claimedGifts = gifts.filter((g) => g.isClaimed);
-
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    const cats: { label: string; color: string }[] = [];
-    availableGifts.forEach((g) => {
-      const c = getGiftCategory(g.name);
-      if (!seen.has(c.label)) {
-        seen.add(c.label);
-        cats.push(c);
-      }
-    });
-    return cats;
-  }, [gifts]);
-
-  const filteredGifts = categoryFilter
-    ? availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter)
-    : availableGifts;
-
-  const createdDate = event?.createdAt
-    ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '';
 
   if (error || !event) {
     return (
