@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -10,8 +10,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  backend-lint-typecheck:
-    name: Backend - Lint & TypeCheck
+  backend-check:
+    name: Backend - Lint, TypeCheck & Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,10 +25,11 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npx tsc --noEmit
+      - run: npm run build
       - run: npm test
 
-  frontend-lint-typecheck:
-    name: Frontend - Lint & TypeCheck
+  frontend-check:
+    name: Frontend - Lint, TypeCheck & Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,7 +48,8 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    needs: [backend-lint-typecheck, frontend-lint-typecheck]
+    if: github.event_name == 'pull_request'
+    needs: [backend-check, frontend-check]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -60,19 +62,26 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - name: Install Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - name: Build frontend
         run: npm run build
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --timeout 30000
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || '' }}
 
   deploy-backend:
     name: Deploy Backend to Railway
-    if: github.ref == 'refs/heads/main'
-    needs: [e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [backend-check, frontend-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,5 +94,3 @@ jobs:
         run: railway up --service=fiestaylista
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-
