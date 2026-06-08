@@ -31,7 +31,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
       body: formData,
     });
 
-    const data: TurnstileResponse = await res.json();
+    const data = await res.json() as TurnstileResponse;
 
     if (!data.success) {
       console.warn('[Turnstile] Verificación fallida:', data['error-codes']);
