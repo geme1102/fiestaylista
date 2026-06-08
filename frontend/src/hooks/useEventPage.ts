@@ -65,7 +65,7 @@ export function useEventPage() {
     if (!slug) return;
     loadEvent();
 
-    const POLL_FAST = 10000;
+    const POLL_FAST = 30000;
 
     let pollTimer: ReturnType<typeof setInterval>;
 
@@ -92,7 +92,7 @@ export function useEventPage() {
     };
   }, [slug, loadEvent]);
 
-  const handleClaim = async (giftId: string, giftName: string) => {
+  const handleClaim = useCallback(async (giftId: string, giftName: string) => {
     if (!claimName.trim()) {
       showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');
       inputRef.current?.focus();
@@ -114,9 +114,9 @@ export function useEventPage() {
     } finally {
       setClaimingId(null);
     }
-  };
+  }, [event, claimName]);
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !event) return;
     if (!file.type.startsWith('image/')) {
@@ -147,9 +147,9 @@ export function useEventPage() {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
+  }, [event]);
 
-  const handleDownload = async (url: string) => {
+  const handleDownload = useCallback(async (url: string) => {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
@@ -164,7 +164,7 @@ export function useEventPage() {
     } catch {
       showToast('Error al descargar la foto', 'error');
     }
-  };
+  }, []);
 
   const availableGifts = useMemo(() => gifts.filter((g) => !g.isClaimed), [gifts]);
   const claimedGifts = useMemo(() => gifts.filter((g) => g.isClaimed), [gifts]);

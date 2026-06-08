@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
-import { paymentLimiter } from '../middleware/rateLimit.js';
+import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
@@ -55,7 +55,7 @@ const confirmPasswordSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para confirmar'),
 });
 
-router.post('/cancel', requireAuth, async (req: AuthRequest, res, next) => {
+router.post('/cancel', requireAuth, cancelLimiter, async (req: AuthRequest, res, next) => {
   try {
     const { password } = confirmPasswordSchema.parse(req.body);
 

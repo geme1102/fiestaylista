@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import * as mercadopagoService from '../services/mercadopago.js';
+import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
@@ -92,9 +92,9 @@ router.post('/mercadopago', async (req: Request, res: Response) => {
     }
 
     if (topic === 'payment') {
-      await mercadopagoService.handlePaymentNotification(id);
+      await mpWebhooks.handlePaymentNotification(id);
     } else if (topic === 'preapproval' || topic === 'subscription') {
-      await mercadopagoService.handleSubscriptionNotification(id);
+      await mpWebhooks.handleSubscriptionNotification(id);
     }
 
     res.status(200).json({ received: true });

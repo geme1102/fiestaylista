@@ -115,6 +115,15 @@ export const paymentLimiter = rateLimit({
   message: { error: 'Demasiados intentos de pago. Intenta de nuevo en un minuto.' },
 });
 
+export const cancelLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiados intentos de cancelación. Intenta de nuevo en un minuto.' },
+});
+
 export const viewLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
 import type { Gift } from '../types';
@@ -11,7 +12,7 @@ interface GiftCardProps {
   isAdmin?: boolean;
 }
 
-export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin }: GiftCardProps) {
+const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin }: GiftCardProps) {
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
 
@@ -161,4 +162,6 @@ export default function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, 
       {cardContent}
     </motion.div>
   );
-}
+});
+
+export default GiftCard;

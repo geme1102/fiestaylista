@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { cn } from '../utils/cn';
 
 interface ImageWithSkeletonProps {
@@ -10,7 +10,7 @@ interface ImageWithSkeletonProps {
   fallback?: string;
 }
 
-export default function ImageWithSkeleton({ src, alt, className, containerClassName, aspectRatio = 'aspect-[4/3]' }: ImageWithSkeletonProps) {
+const ImageWithSkeleton = memo(function ImageWithSkeleton({ src, alt, className, containerClassName, aspectRatio = 'aspect-[4/3]' }: ImageWithSkeletonProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -55,4 +55,6 @@ export default function ImageWithSkeleton({ src, alt, className, containerClassN
       )}
     </div>
   );
-}
+});
+
+export default ImageWithSkeleton;

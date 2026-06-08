@@ -5,7 +5,7 @@ import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
 import { cleanupStaleContributions } from './services/cashFund.js';
-import * as mercadopagoService from './services/mercadopago.js';
+import * as mpWebhooks from './services/mp-webhooks.js';
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -87,9 +87,9 @@ export function startCronJobs(): void {
         for (const webhook of failed) {
           try {
             if (webhook.topic === 'payment') {
-              await mercadopagoService.handlePaymentNotification(webhook.resourceId);
+              await mpWebhooks.handlePaymentNotification(webhook.resourceId);
             } else if (webhook.topic === 'preapproval' || webhook.topic === 'subscription') {
-              await mercadopagoService.handleSubscriptionNotification(webhook.resourceId);
+              await mpWebhooks.handleSubscriptionNotification(webhook.resourceId);
             }
 
             await db
