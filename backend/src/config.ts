@@ -21,6 +21,14 @@ function loadEnv(): void {
 
 loadEnv();
 
+function env(...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function requireConfig(key: string, value: string | undefined): asserts value is string {
   if (!value) {
     throw new Error(`Variable de entorno requerida: ${key}`);
@@ -83,9 +91,9 @@ export const config = {
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',
-  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
-  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? '',
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
+  CLOUDINARY_CLOUD_NAME: env('CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_NOMBRE_NUBE') ?? '',
+  CLOUDINARY_API_KEY: env('CLOUDINARY_API_KEY', 'CLAVE_API_CLOUDINARIA') ?? '',
+  CLOUDINARY_API_SECRET: env('CLOUDINARY_API_SECRET', 'CLAVE_SECRETA_CLOUDINARIA') ?? '',
   FROM_EMAIL: process.env.FROM_EMAIL || '',
   BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
   CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
