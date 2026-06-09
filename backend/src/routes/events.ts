@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { checkEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
+import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
@@ -31,7 +32,7 @@ router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
 }));
 
 router.post('/', requireAuth, checkEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const data = createEventSchema.parse(req.body);
+  const data = createEventSchema.parse(req.body) as CreateEventData;
   const event = await eventService.createEvent(req.user!.userId, data);
   res.status(201).json({ event });
 }));
@@ -55,7 +56,7 @@ router.get('/:id', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
 }));
 
 router.put('/:id', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const data = updateEventSchema.parse(req.body);
+  const data = updateEventSchema.parse(req.body) as UpdateEventData;
   const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
   res.json({ event });
 }));

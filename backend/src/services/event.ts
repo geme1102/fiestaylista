@@ -6,13 +6,13 @@ import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { generateSlug } from '../utils/slug.js';
 import type { EventType } from '../types/index.js';
 
-interface CreateEventData {
+export interface CreateEventData {
   title: string;
   eventType: EventType;
   hostPhone?: string;
 }
 
-interface UpdateEventData {
+export interface UpdateEventData {
   title?: string;
   eventType?: EventType;
   hostPhone?: string;

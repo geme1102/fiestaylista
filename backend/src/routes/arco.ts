@@ -6,7 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { arcoLimiter } from '../middleware/rateLimit.js';
 import * as arcoService from '../services/arco.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ValidationError, UnauthorizedError } from '../utils/errors.js';
+import { UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';

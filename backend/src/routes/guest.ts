@@ -68,18 +68,16 @@ router.post('/events/guest', guestLimiter, asyncHandlerWithValidation(async (req
     })
     .returning();
 
-  const opts: SignOptions = { expiresIn: config.ACCESS_TOKEN_EXPIRY || '15m' };
   const accessToken = jwt.sign(
     { userId: guestId, email: guestEmail, isGuest: true },
     config.JWT_GUEST_SECRET,
-    opts,
+    { expiresIn: config.ACCESS_TOKEN_EXPIRY || '15m' } as SignOptions,
   );
 
-  const refreshOpts: SignOptions = { expiresIn: config.REFRESH_TOKEN_EXPIRY || '7d' };
   const refreshToken = jwt.sign(
     { userId: guestId, email: guestEmail, isGuest: true, type: 'refresh' },
     config.JWT_REFRESH_SECRET,
-    refreshOpts,
+    { expiresIn: config.REFRESH_TOKEN_EXPIRY || '7d' } as SignOptions,
   );
 
   res.status(201).json({

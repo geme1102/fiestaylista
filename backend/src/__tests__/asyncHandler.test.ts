@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Request, Response, NextFunction } from 'express';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ZodError, z } from 'zod';
+import { z } from 'zod';
 
 function mockReqRes() {
   const req = {} as Request;
@@ -55,7 +55,7 @@ describe('asyncHandlerWithValidation', () => {
     });
     await handler(req, res, next);
     expect(next).toHaveBeenCalled();
-    const error = next.mock.calls[0][0];
+    const error = vi.mocked(next).mock.calls[0][0];
     expect(error.statusCode).toBe(400);
     expect(error.message).toContain('String must contain at least 1 character');
   });
