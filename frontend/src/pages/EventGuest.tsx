@@ -219,7 +219,7 @@ export default function EventGuest() {
                 {EVENT_LABELS[event.eventType]}
               </span>
 
-              <h1 className="font-serif-elegant font-black text-gray-900 tracking-tight leading-none uppercase filter drop-shadow-xs max-w-2xl text-3xl md:text-4xl">
+              <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2 px-4">
                 <span className="gold-metallic-gradient-text">{event.title}</span>
               </h1>
 
@@ -237,7 +237,7 @@ export default function EventGuest() {
                 </span>
               </div>
 
-              <p className="font-cursive-romance italic font-bold md:text-lg tracking-wide max-w-lg mb-4 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+              <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-4 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
                 &ldquo;{CURSIVE_TEXTS[event.eventType]}&rdquo;
               </p>
 

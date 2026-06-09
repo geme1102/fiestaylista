@@ -56,7 +56,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           )}
         </div>
         <div className="p-5 opacity-30 select-none">
-          <h3 className="font-serif-elegant font-bold text-gray-900">{gift.name}</h3>
+          <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{gift.name}</h3>
         </div>
       </motion.div>
     );
@@ -121,7 +121,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <span className="text-[9px] text-gray-400">Verificado</span>
           </div>
 
-          <h3 className="font-serif-elegant font-black text-gray-900 tracking-tight capitalize text-base">
+          <h3 className="font-headline-md text-headline-md text-on-surface capitalize">
             {gift.name}
           </h3>
           <p className="text-gray-500 font-medium mt-1 leading-relaxed text-xs">

@@ -26,7 +26,7 @@ export default function ShareButtons({ slug, title }: { slug: string; title: str
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 gap-3">
       <button
         onClick={() => window.open(whatsappUrl, '_blank')}
         className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#22c55e] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#22c55e]/20"
@@ -49,20 +49,6 @@ export default function ShareButtons({ slug, title }: { slug: string; title: str
         <span className="font-label-md text-caption uppercase tracking-wider">
           {copied ? '✅ Copiado' : 'Copiar Link'}
         </span>
-      </button>
-      <button
-        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')}
-        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#60a5fa] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#60a5fa]/20"
-      >
-        <span className="material-symbols-outlined text-3xl">flutter_dash</span>
-        <span className="font-label-md text-caption uppercase tracking-wider">Twitter</span>
-      </button>
-      <button
-        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')}
-        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#2563eb] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#2563eb]/20"
-      >
-        <span className="material-symbols-outlined text-3xl">social_leaderboard</span>
-        <span className="font-label-md text-caption uppercase tracking-wider">Facebook</span>
       </button>
     </div>
   );
