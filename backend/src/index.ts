@@ -7,6 +7,7 @@ import { config } from './config.js';
 import { sql } from './db/index.js';
 import type { AppRequest } from './types/index.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
+import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/error.js';
 import authRouter from './routes/auth.js';
 import eventsRouter from './routes/events.js';
@@ -33,6 +34,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   (req as AppRequest).requestId = randomUUID();
   next();
 });
+
+app.use(requestLogger);
 
 app.use(helmet({
   contentSecurityPolicy: {

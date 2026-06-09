@@ -1,7 +1,8 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts } from '../db/schema.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { NotFoundError } from '../utils/errors.js';
 import { apiLimiter } from '../middleware/rateLimit.js';
 
@@ -9,82 +10,70 @@ const router = Router();
 
 router.use(apiLimiter);
 
-router.get('/public/events/:slug', (async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const eventSlug = req.params.slug as string;
-    const [event] = await db
-      .select({
-        id: events.id,
-        title: events.title,
-        eventType: events.eventType,
-        slug: events.slug,
-        isActive: events.isActive,
-        createdAt: events.createdAt,
-      })
-      .from(events)
-      .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
-      .limit(1);
+router.get('/public/events/:slug', asyncHandler(async (req, res) => {
+  const eventSlug = req.params.slug as string;
+  const [event] = await db
+    .select({
+      id: events.id,
+      title: events.title,
+      eventType: events.eventType,
+      slug: events.slug,
+      isActive: events.isActive,
+      createdAt: events.createdAt,
+    })
+    .from(events)
+    .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
+    .limit(1);
 
-    if (!event || !event.isActive) {
-      throw new NotFoundError('Evento no encontrado');
-    }
-
-    res.json({ event });
-  } catch (error) {
-    next(error);
+  if (!event || !event.isActive) {
+    throw new NotFoundError('Evento no encontrado');
   }
-}) as any);
 
-router.get('/public/events/:slug/gifts', (async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const eventSlug = req.params.slug as string;
-    const [event] = await db
-      .select({ id: events.id, isActive: events.isActive })
-      .from(events)
-      .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
-      .limit(1);
+  res.json({ event });
+}));
 
-    if (!event || !event.isActive) {
-      throw new NotFoundError('Evento no encontrado');
-    }
+router.get('/public/events/:slug/gifts', asyncHandler(async (req, res) => {
+  const eventSlug = req.params.slug as string;
+  const [event] = await db
+    .select({ id: events.id, isActive: events.isActive })
+    .from(events)
+    .where(and(eq(events.slug, eventSlug), isNull(events.deletedAt)))
+    .limit(1);
 
-    const eventGifts = await db
-      .select({
-        id: gifts.id,
-        name: gifts.name,
-        isClaimed: gifts.isClaimed,
-        claimedBy: gifts.claimedBy,
-        createdAt: gifts.createdAt,
-      })
-      .from(gifts)
-      .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
-      .orderBy(gifts.createdAt)
-      .limit(101);
-
-    res.json({ gifts: eventGifts });
-  } catch (error) {
-    next(error);
+  if (!event || !event.isActive) {
+    throw new NotFoundError('Evento no encontrado');
   }
-}) as any);
 
-router.get('/public/stats', (async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    const [eventCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(events);
+  const eventGifts = await db
+    .select({
+      id: gifts.id,
+      name: gifts.name,
+      isClaimed: gifts.isClaimed,
+      claimedBy: gifts.claimedBy,
+      createdAt: gifts.createdAt,
+    })
+    .from(gifts)
+    .where(and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt)))
+    .orderBy(gifts.createdAt)
+    .limit(101);
 
-    res.json({
-      status: 'online',
-      events: Number(eventCount?.count ?? 0),
-      api: 'v1',
-      docs: '/api/public/docs',
-    });
-  } catch (error) {
-    next(error);
-  }
-}) as any);
+  res.json({ gifts: eventGifts });
+}));
 
-router.get('/public/docs', (_req: Request, res: Response) => {
+router.get('/public/stats', asyncHandler(async (_req, res) => {
+  const [eventCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(events);
+
+  res.json({
+    status: 'online',
+    events: Number(eventCount?.count ?? 0),
+    api: 'v1',
+    docs: '/api/public/docs',
+  });
+}));
+
+router.get('/public/docs', (_req, res) => {
   res.json({
     api: 'Fiesta y Lista Public API v1',
     endpoints: {

@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
 
@@ -76,21 +77,21 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
   return result;
 }
 
-router.post('/mercadopago', async (req: Request, res: Response) => {
+router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => {
+  if (!verifyMpSignature(req)) {
+    console.warn('[MP Webhook] Firma inválida, ignorando notificación');
+    res.status(401).json({ received: false, error: 'Firma inválida' });
+    return;
+  }
+
+  const { topic, id } = extractTopicId(req);
+
+  if (!topic || !id) {
+    res.status(200).json({ received: true });
+    return;
+  }
+
   try {
-    if (!verifyMpSignature(req)) {
-      console.warn('[MP Webhook] Firma inválida, ignorando notificación');
-      res.status(401).json({ received: false, error: 'Firma inválida' });
-      return;
-    }
-
-    const { topic, id } = extractTopicId(req);
-
-    if (!topic || !id) {
-      res.status(200).json({ received: true });
-      return;
-    }
-
     if (topic === 'payment') {
       await mpWebhooks.handlePaymentNotification(id);
     } else if (topic === 'preapproval' || topic === 'subscription') {
@@ -103,11 +104,11 @@ router.post('/mercadopago', async (req: Request, res: Response) => {
     console.error('[MP Webhook] Error:', errorMessage);
 
     try {
-      const { topic, id } = extractTopicId(req);
-      if (topic && id) {
+      const { topic: t, id: resId } = extractTopicId(req);
+      if (t && resId) {
         await db.insert(failedWebhooks).values({
-          topic,
-          resourceId: id,
+          topic: t,
+          resourceId: resId,
           errorMessage,
           retryCount: 0,
           lastAttemptAt: new Date(),
@@ -120,6 +121,6 @@ router.post('/mercadopago', async (req: Request, res: Response) => {
 
     res.status(200).json({ received: true });
   }
-});
+}));
 
 export default router;

@@ -4,8 +4,10 @@ import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
+import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+
 const router = Router();
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
@@ -51,140 +53,76 @@ const resetPasswordSchema = z.object({
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
 
-router.post('/register', authLimiter, async (req, res, next) => {
-  try {
-    const { email, password, name } = registerSchema.parse(req.body);
-    const result = await authService.register(email, password, name);
-    setRefreshCookie(res, result.refreshToken);
-    res.status(201).json(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+router.post('/register', authLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const { email, password, name } = registerSchema.parse(req.body);
+  const result = await authService.register(email, password, name);
+  setRefreshCookie(res, result.refreshToken);
+  res.status(201).json(result);
+}));
 
-router.post('/login', authLimiter, async (req, res, next) => {
-  try {
-    const data = loginSchema.parse(req.body);
-    const result = await authService.login(data.email, data.password);
-    setRefreshCookie(res, result.refreshToken);
-    res.json(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+router.post('/login', authLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const data = loginSchema.parse(req.body);
+  const result = await authService.login(data.email, data.password);
+  setRefreshCookie(res, result.refreshToken);
+  res.json(result);
+}));
 
-router.post('/refresh', refreshLimiter, async (req, res, next) => {
-  try {
-    const refreshToken = req.cookies?.refreshToken;
-    if (!refreshToken) {
-      throw new ValidationError('Token de refresco requerido');
-    }
-    const result = await authService.refreshToken(refreshToken);
-    setRefreshCookie(res, result.refreshToken);
-    res.json(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError('Token de refresco requerido'));
-      return;
-    }
-    next(error);
+router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) {
+    throw new ValidationError('Token de refresco requerido');
   }
-});
+  const result = await authService.refreshToken(refreshToken);
+  setRefreshCookie(res, result.refreshToken);
+  res.json(result);
+}));
 
-router.get('/me', requireAnyAuth, async (req: AuthRequest, res, next) => {
-  try {
-    if ((req.user as any)?.isGuest) {
-      res.json({ user: null, isGuest: true });
-      return;
-    }
-    const user = await authService.getUser(req.user!.userId);
-    res.json({ user });
-  } catch (error) {
-    next(error);
+router.get('/me', requireAnyAuth, asyncHandler(async (req: AuthRequest, res) => {
+  if ((req.user as any)?.isGuest) {
+    res.json({ user: null, isGuest: true });
+    return;
   }
-});
+  const user = await authService.getUser(req.user!.userId);
+  res.json({ user });
+}));
 
-router.post('/verify-email', authLimiter, async (req, res, next) => {
-  try {
-    const data = verifyEmailSchema.parse(req.body);
-    await authService.verifyEmail(data.token);
-    res.json({ success: true });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+router.post('/verify-email', authLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const data = verifyEmailSchema.parse(req.body);
+  await authService.verifyEmail(data.token);
+  res.json({ success: true });
+}));
 
-router.get('/verify-email', async (req, res) => {
-  try {
-    const token = req.query.token as string;
-    if (!token || typeof token !== 'string') {
-      res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido')}`);
-      return;
-    }
-    await authService.verifyEmail(token);
-    res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=success`);
-  } catch {
-    res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido o expirado')}`);
+router.get('/verify-email', asyncHandler(async (req, res) => {
+  const token = req.query.token as string;
+  if (!token || typeof token !== 'string') {
+    res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido')}`);
+    return;
   }
-});
+  await authService.verifyEmail(token);
+  res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=success`);
+}));
 
-router.post('/resend-verification', requireAuth, authLimiter, async (req: AuthRequest, res, next) => {
-  try {
-    await authService.resendVerificationEmail(req.user!.userId);
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/resend-verification', requireAuth, authLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  await authService.resendVerificationEmail(req.user!.userId);
+  res.json({ success: true });
+}));
 
-router.post('/forgot-password', resetLimiter, async (req, res, next) => {
-  try {
-    const data = forgotPasswordSchema.parse(req.body);
-    await authService.forgotPassword(data.email);
-    res.json({ success: true });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+router.post('/forgot-password', resetLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const data = forgotPasswordSchema.parse(req.body);
+  await authService.forgotPassword(data.email);
+  res.json({ success: true });
+}));
 
-router.post('/reset-password', resetLimiter, async (req, res, next) => {
-  try {
-    const data = resetPasswordSchema.parse(req.body);
-    await authService.resetPassword(data.token, data.password);
-    res.json({ success: true });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+router.post('/reset-password', resetLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const data = resetPasswordSchema.parse(req.body);
+  await authService.resetPassword(data.token, data.password);
+  res.json({ success: true });
+}));
 
-router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
-  try {
-    await authService.revokeAllUserTokens(req.user!.userId);
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/logout', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  await authService.revokeAllUserTokens(req.user!.userId);
+  res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+  res.json({ success: true });
+}));
 
 export default router;

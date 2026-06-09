@@ -92,6 +92,70 @@ export function useEventPage() {
     };
   }, [slug, loadEvent]);
 
+  useEffect(() => {
+    if (!event?.id) return;
+
+    let cancelled = false;
+    let abortController: AbortController | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryDelay = 2000;
+
+    async function connectSSE() {
+      try {
+        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+        const tokenRes = await fetch(`${baseUrl}/api/events/${event!.id}/gifts/public-sse-token`, { method: 'POST' });
+        if (!tokenRes.ok || cancelled) return;
+        const { token } = await tokenRes.json();
+
+        abortController = new AbortController();
+        const response = await fetch(`${baseUrl}/api/events/${event!.id}/gifts/subscribe`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: abortController.signal,
+        });
+
+        if (!response.ok || !response.body || cancelled) return;
+
+        retryDelay = 2000;
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (!cancelled) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'connected') continue;
+                if (data.giftId && data.claimedBy) {
+                  loadEventRef.current?.();
+                }
+              } catch { /* ignore parse errors */ }
+            }
+          }
+        }
+      } catch { /* SSE disconnected */ }
+
+      if (!cancelled) {
+        reconnectTimeout = setTimeout(connectSSE, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 30000);
+      }
+    }
+
+    connectSSE();
+
+    return () => {
+      cancelled = true;
+      if (abortController) abortController.abort();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    };
+  }, [event?.id]);
+
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
     if (!claimName.trim()) {
       showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');

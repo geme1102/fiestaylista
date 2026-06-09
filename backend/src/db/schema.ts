@@ -111,7 +111,9 @@ export const boostPayments = pgTable('boost_payments', {
   amount: integer('amount').notNull(),
   status: text('status').notNull().default('completed'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  eventIdIdx: index('boost_payments_event_id_idx').on(table.eventId),
+}));
 
 export const failedWebhooks = pgTable('failed_webhooks', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -125,6 +127,7 @@ export const failedWebhooks = pgTable('failed_webhooks', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   statusIdx: index('failed_webhooks_status_idx').on(table.status),
+  nextRetryAtIdx: index('failed_webhooks_next_retry_at_idx').on(table.nextRetryAt),
 }));
 
 export const platformFees = pgTable('platform_fees', {
@@ -206,7 +209,11 @@ export const auditLogs = pgTable('audit_logs', {
   userAgent: text('user_agent'),
   metadata: text('metadata'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index('audit_logs_user_id_idx').on(table.userId),
+  actionIdx: index('audit_logs_action_idx').on(table.action),
+  createdAtIdx: index('audit_logs_created_at_idx').on(table.createdAt),
+}));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   events: many(events),

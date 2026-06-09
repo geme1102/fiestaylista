@@ -13,9 +13,25 @@
     "db:migrate": "cd backend && npm run db:migrate",
     "db:push": "cd backend && npm run db:push",
     "test": "cd backend && npm test && cd ../frontend && npm test",
-    "test:e2e": "cd frontend && npm run test:e2e"
+    "test:e2e": "cd frontend && npm run test:e2e",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1"
+  },
+  "lint-staged": {
+    "backend/src/**/*.ts": [
+      "cd backend && npm run lint -- --fix",
+      "cd backend && npm run typecheck"
+    ],
+    "frontend/src/**/*.ts": [
+      "cd frontend && npm run lint -- --fix"
+    ],
+    "frontend/src/**/*.tsx": [
+      "cd frontend && npm run lint -- --fix"
+    ]
   }
 }

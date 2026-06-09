@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { arcoLimiter } from '../middleware/rateLimit.js';
 import * as arcoService from '../services/arco.js';
+import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
@@ -17,69 +18,45 @@ const arcoRequestSchema = z.object({
   details: z.string().optional(),
 });
 
-router.get('/my-data', requireAuth, async (req: AuthRequest, res, next) => {
-  try {
-    const data = await arcoService.getUserData(req.user!.userId);
-    res.json({ data });
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/my-data', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  const data = await arcoService.getUserData(req.user!.userId);
+  res.json({ data });
+}));
 
 const confirmDeleteSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para eliminar la cuenta'),
 });
 
-router.post('/delete-account', requireAuth, arcoLimiter, async (req: AuthRequest, res, next) => {
-  try {
-    const { password } = confirmDeleteSchema.parse(req.body);
+router.post('/delete-account', requireAuth, arcoLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const { password } = confirmDeleteSchema.parse(req.body);
 
-    const [user] = await db
-      .select({ passwordHash: users.passwordHash })
-      .from(users)
-      .where(eq(users.id, req.user!.userId))
-      .limit(1);
+  const [user] = await db
+    .select({ passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, req.user!.userId))
+    .limit(1);
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new UnauthorizedError('Contraseña incorrecta');
-    }
-
-    await arcoService.deleteUserAccount(req.user!.userId);
-    res.json({ success: true });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    throw new UnauthorizedError('Contraseña incorrecta');
   }
-});
 
-router.post('/request', requireAuth, async (req: AuthRequest, res, next) => {
-  try {
-    const data = arcoRequestSchema.parse(req.body);
-    const request = await arcoService.createArcoRequest(
-      req.user!.userId,
-      data.requestType,
-      data.details,
-    );
-    res.status(201).json({ request });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
-  }
-});
+  await arcoService.deleteUserAccount(req.user!.userId);
+  res.json({ success: true });
+}));
 
-router.get('/requests', requireAuth, async (req: AuthRequest, res, next) => {
-  try {
-    const requests = await arcoService.getArcoRequests(req.user!.userId);
-    res.json({ requests });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/request', requireAuth, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const data = arcoRequestSchema.parse(req.body);
+  const request = await arcoService.createArcoRequest(
+    req.user!.userId,
+    data.requestType,
+    data.details,
+  );
+  res.status(201).json({ request });
+}));
+
+router.get('/requests', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  const requests = await arcoService.getArcoRequests(req.user!.userId);
+  res.json({ requests });
+}));
 
 export default router;

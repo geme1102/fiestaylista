@@ -1,14 +1,18 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
+import { eq, and, isNull } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
+import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
+import { db } from '../db/index.js';
+import { events } from '../db/schema.js';
 import { emitGiftClaimed } from '../services/notifications.js';
 
 const clients = new Map<string, Set<Response>>();
@@ -28,146 +32,131 @@ const claimGiftSchema = z.object({
   claimedBy: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
 });
 
-router.get('/', giftLimiter, (async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const eventId = req.params.eventId as string | undefined;
-    if (!eventId) {
-      throw new ValidationError('ID del evento requerido');
-    }
-    const gifts = await giftService.getEventGifts(eventId);
-    res.json({ gifts });
-  } catch (error) {
-    next(error);
+router.get('/', giftLimiter, asyncHandler(async (req, res) => {
+  const eventId = req.params.eventId as string | undefined;
+  if (!eventId) {
+    throw new ValidationError('ID del evento requerido');
   }
-}) as any);
+  const gifts = await giftService.getEventGifts(eventId);
+  res.json({ gifts });
+}));
 
-router.post('/', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const eventId = req.params.eventId as string | undefined;
-    if (!eventId) {
-      throw new ValidationError('ID del evento requerido');
-    }
+router.post('/', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const eventId = req.params.eventId as string | undefined;
+  if (!eventId) {
+    throw new ValidationError('ID del evento requerido');
+  }
 
-    const data = createGiftSchema.parse(req.body);
+  const data = createGiftSchema.parse(req.body);
 
-    const limitCheck = checkGiftLimit(eventId);
-    await new Promise<void>((resolve, reject) => {
-      limitCheck(req, res, (err: any) => {
-        if (err) reject(err);
-        else resolve();
-      });
+  const limitCheck = checkGiftLimit(eventId);
+  await new Promise<void>((resolve, reject) => {
+    limitCheck(req, res, (err: any) => {
+      if (err) reject(err);
+      else resolve();
     });
+  });
 
-    const gift = await giftService.addGift(eventId, data.name);
-    res.status(201).json({ gift });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
+  const gift = await giftService.addGift(eventId, data.name);
+  res.status(201).json({ gift });
+}));
+
+router.put('/:giftId', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const data = updateGiftSchema.parse(req.body);
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) {
+    throw new ValidationError('ID del regalo requerido');
   }
-}) as any);
+  const gift = await giftService.updateGift(giftId, data);
+  res.json({ gift });
+}));
 
-router.put('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const data = updateGiftSchema.parse(req.body);
-    const giftId = req.params.giftId as string | undefined;
-    if (!giftId) {
-      throw new ValidationError('ID del regalo requerido');
-    }
-    const gift = await giftService.updateGift(giftId, data);
-    res.json({ gift });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
+router.put('/:giftId/claim', contributeLimiter, asyncHandlerWithValidation(async (req, res) => {
+  const eventId = req.params.eventId as string | undefined;
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) {
+    throw new ValidationError('ID del regalo requerido');
   }
-}) as any);
+  const { claimedBy } = claimGiftSchema.parse(req.body);
+  const gift = await giftService.claimGift(giftId, claimedBy);
 
-router.put('/:giftId/claim', contributeLimiter, (async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const eventId = req.params.eventId as string | undefined;
-    const giftId = req.params.giftId as string | undefined;
-    if (!giftId) {
-      throw new ValidationError('ID del regalo requerido');
+  const data = {
+    eventId: eventId || '',
+    giftId: gift.id,
+    giftName: gift.name,
+    claimedBy: gift.claimedBy || '',
+    timestamp: new Date().toISOString(),
+  };
+
+  emitGiftClaimed(data);
+
+  const eventClients = clients.get(data.eventId);
+  if (eventClients) {
+    const payload = `data: ${JSON.stringify(data)}\n\n`;
+    for (const client of eventClients) {
+      try { client.write(payload); } catch { /* cliente desconectado */ }
     }
-    const { claimedBy } = claimGiftSchema.parse(req.body);
-    const gift = await giftService.claimGift(giftId, claimedBy);
-
-    const data = {
-      eventId: eventId || '',
-      giftId: gift.id,
-      giftName: gift.name,
-      claimedBy: gift.claimedBy || '',
-      timestamp: new Date().toISOString(),
-    };
-
-    emitGiftClaimed(data);
-
-    const eventClients = clients.get(data.eventId);
-    if (eventClients) {
-      const payload = `data: ${JSON.stringify(data)}\n\n`;
-      for (const client of eventClients) {
-        try { client.write(payload); } catch { /* cliente desconectado */ }
-      }
-    }
-
-    res.json({ gift });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      next(new ValidationError(error.errors.map(e => e.message).join(', ')));
-      return;
-    }
-    next(error);
   }
-}) as any);
 
-router.put('/:giftId/free', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const giftId = req.params.giftId as string | undefined;
-    if (!giftId) {
-      throw new ValidationError('ID del regalo requerido');
-    }
-    const gift = await giftService.releaseGift(giftId);
-    res.json({ gift });
-  } catch (error) {
-    next(error);
-  }
-}) as any);
+  res.json({ gift });
+}));
 
-router.delete('/:giftId', requireAuth, requireEventOwnership, (async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const giftId = req.params.giftId as string | undefined;
-    if (!giftId) {
-      throw new ValidationError('ID del regalo requerido');
-    }
-    const result = await giftService.deleteGift(giftId);
-    res.json(result);
-  } catch (error) {
-    next(error);
+router.put('/:giftId/free', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) {
+    throw new ValidationError('ID del regalo requerido');
   }
-}) as any);
+  const gift = await giftService.releaseGift(giftId);
+  res.json({ gift });
+}));
 
-router.post('/sse-token', requireAuth, (async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const eventId = req.params.eventId as string;
-    if (!eventId) {
-      res.status(400).json({ error: 'ID del evento requerido' });
-      return;
-    }
-    const sseToken = jwt.sign(
-      { eventId, scope: 'sse', userId: req.user!.userId },
-      config.JWT_SECRET,
-      { expiresIn: '2m' },
-    );
-    res.json({ token: sseToken });
-  } catch (error) {
-    next(error);
+router.delete('/:giftId', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) {
+    throw new ValidationError('ID del regalo requerido');
   }
-}) as any);
+  const result = await giftService.deleteGift(giftId);
+  res.json(result);
+}));
+
+router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  const eventId = req.params.eventId as string;
+  if (!eventId) {
+    res.status(400).json({ error: 'ID del evento requerido' });
+    return;
+  }
+  const sseToken = jwt.sign(
+    { eventId, scope: 'sse', userId: req.user!.userId },
+    config.JWT_SECRET,
+    { expiresIn: '2m' },
+  );
+  res.json({ token: sseToken });
+}));
+
+router.post('/public-sse-token', asyncHandler(async (req, res) => {
+  const eventId = req.params.eventId as string;
+  if (!eventId) {
+    res.status(400).json({ error: 'ID del evento requerido' });
+    return;
+  }
+  const [event] = await db
+    .select({ id: events.id, isActive: events.isActive, slug: events.slug })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+
+  if (!event || !event.isActive) {
+    res.status(404).json({ error: 'Evento no encontrado' });
+    return;
+  }
+
+  const sseToken = jwt.sign(
+    { eventId, scope: 'sse', type: 'guest' },
+    config.JWT_SECRET,
+    { expiresIn: '2m' },
+  );
+  res.json({ token: sseToken });
+}));
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
 const SSE_MAX_PER_IP = 3;
