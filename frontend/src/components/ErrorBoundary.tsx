@@ -116,6 +116,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col items-center gap-6 pt-4">
               <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
                 <button
+                  type="button"
                   onClick={this.handleRetry}
                   className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md text-on-primary active:scale-95 transition-all duration-200"
                   style={{
@@ -126,6 +127,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                   Intentar de nuevo
                 </button>
                 <button
+                  type="button"
                   onClick={() => window.location.reload()}
                   className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md border border-outline-variant text-on-surface active:scale-95 transition-all duration-200 group bg-white/70 backdrop-blur-sm"
                 >

@@ -39,6 +39,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center gap-4">
                   <button
+                    type="button"
                     onClick={logout}
                     className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >

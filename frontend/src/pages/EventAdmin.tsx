@@ -208,6 +208,7 @@ export default function EventAdmin() {
   };
 
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!id) return;
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -243,6 +244,7 @@ export default function EventAdmin() {
   };
 
   const handleBoost = async () => {
+    if (!id) return;
     setBoostLoading(true);
     try {
       const res = await boostEvent(id!);

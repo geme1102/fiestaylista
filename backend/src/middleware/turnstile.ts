@@ -26,12 +26,21 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
     formData.append('secret', config.TURNSTILE_SECRET_KEY);
     formData.append('response', token);
 
-    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      body: formData,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const data = await res.json() as TurnstileResponse;
+    let fetchRes: globalThis.Response;
+    try {
+      fetchRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    const data = await fetchRes.json() as TurnstileResponse;
 
     if (!data.success) {
       console.warn('[Turnstile] Verificación fallida:', data['error-codes']);

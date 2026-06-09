@@ -81,7 +81,8 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
       },
       (err, result) => {
         if (err) reject(err);
-        else resolve(result!.secure_url);
+        else if (result) resolve(result.secure_url);
+        else reject(new Error('Cloudinary devolvió una respuesta vacía'));
       },
     );
     createReadStream(filePath).pipe(uploadStream);

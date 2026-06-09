@@ -76,7 +76,7 @@ router.post('/events/guest', guestLimiter, asyncHandlerWithValidation(async (req
 
   const refreshToken = jwt.sign(
     { userId: guestId, email: guestEmail, isGuest: true, type: 'refresh' },
-    config.JWT_REFRESH_SECRET,
+    config.JWT_GUEST_SECRET,
     { expiresIn: config.REFRESH_TOKEN_EXPIRY || '7d' } as SignOptions,
   );
 

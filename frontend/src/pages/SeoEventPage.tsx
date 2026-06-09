@@ -96,7 +96,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
       <Helmet>
         <title>{content.title}</title>
         <meta name="description" content={content.subtitle} />
-        <meta name="keywords" content={`fiestaylista ${eventKey.replace('-', ' ')}, lista de regalos ${eventKey.replace('-', ' ')}, ${eventKey.replace('-', ' ')} Colombia`} />
+        <meta name="keywords" content={`fiestaylista ${eventKey.replace(/-/g, ' ')}, lista de regalos ${eventKey.replace(/-/g, ' ')}, ${eventKey.replace(/-/g, ' ')} Colombia`} />
         <meta property="og:title" content={content.title} />
         <meta property="og:description" content={content.subtitle} />
         <meta property="og:url" content={`https://fiestaylista.com/${eventKey}`} />

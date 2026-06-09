@@ -38,14 +38,17 @@ export default function LiveCounter() {
 
   useEffect(() => {
     let mounted = true;
-    apiClient.get<{ events?: number }>('/api/public/stats')
+    const controller = new AbortController();
+    apiClient.get<{ events?: number }>('/api/public/stats', { signal: controller.signal })
       .then((data) => {
         if (mounted && data.events !== undefined) {
           setStats({ totalEvents: data.events, eventsToday: 0 });
         }
       })
-      .catch(() => console.warn('[LiveCounter] Error fetching stats'));
-    return () => { mounted = false; };
+      .catch(() => {
+        if (mounted) console.warn('[LiveCounter] Error fetching stats');
+      });
+    return () => { mounted = false; controller.abort(); };
   }, []);
 
   if (!stats) return null;

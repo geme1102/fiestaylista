@@ -20,8 +20,15 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000
 export function useTurnstile() {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let attempts = 0;
@@ -52,7 +59,8 @@ export function useTurnstile() {
     if (widgetId.current && window.turnstile) {
       window.turnstile.reset(widgetId.current);
     }
-    setTimeout(() => setReady(true), 100);
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = setTimeout(() => setReady(true), 100);
   }, []);
 
   return { containerRef, token, ready, reset };

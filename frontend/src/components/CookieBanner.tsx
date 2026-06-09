@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 declare global {
@@ -53,6 +53,13 @@ export default function CookieBanner() {
   const [showConfig, setShowConfig] = useState(false);
   const [prefs, setPrefs] = useState<CookiePrefs>({ essential: true, analytics: true, preferences: true });
   const [leaving, setLeaving] = useState(false);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const existing = getStoredPrefs();
@@ -85,7 +92,8 @@ export default function CookieBanner() {
 
   const animateOut = () => {
     setLeaving(true);
-    setTimeout(() => {
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    leaveTimerRef.current = setTimeout(() => {
       setShowBanner(false);
       setShowConfig(false);
       setLeaving(false);
@@ -135,7 +143,7 @@ export default function CookieBanner() {
 
       {/* CONFIGURATION OVERLAY */}
       {showConfig && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6" id="cookie-settings">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6" id="cookie-settings" onKeyDown={(e) => { if (e.key === 'Escape') saveConfig(); }}>
           <div className="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onClick={saveConfig} />
           <div className="relative bg-surface p-8 md:p-10 rounded-[40px] shadow-2xl w-full max-w-lg space-y-8 animate-fade-in border border-outline-variant/30">
             <div className="space-y-2 text-center">

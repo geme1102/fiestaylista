@@ -1,19 +1,37 @@
 import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { events, boostPayments, cashContributions, cashFunds } from '../db/schema.js';
+import { events, boostPayments, proPayments, cashContributions, cashFunds } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 
-async function handleProPayment(userId: string, interval: string): Promise<void> {
-  const periodDays = interval === 'year' ? 365 : 30;
-  await subscriptionService.createOrUpdateSubscription(userId, {
-    mpSubscriptionId: '',
-    tier: 'pro',
-    status: 'active',
-    currentPeriodStart: new Date(),
-    currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [existingPayment] = await tx
+      .select({ id: proPayments.id })
+      .from(proPayments)
+      .where(eq(proPayments.mpPaymentId, paymentId))
+      .limit(1);
+
+    if (existingPayment) {
+      console.log(`[MP] PRO payment ${paymentId} already processed`);
+      return;
+    }
+
+    const periodDays = interval === 'year' ? 365 : 30;
+    await subscriptionService.createOrUpdateSubscription(userId, {
+      mpSubscriptionId: '',
+      tier: 'pro',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+    });
+
+    const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
+    await tx
+      .insert(proPayments)
+      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
   });
 }
 
@@ -131,7 +149,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
         console.error(`[MP] Monto de PRO inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
         return;
       }
-      await handleProPayment(userId, interval);
+      await handleProPayment(paymentId, userId, interval);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
       const parts = ref.split('_');
       const userId = parts[1];

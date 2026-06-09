@@ -56,11 +56,11 @@ export default function NotFound() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16 max-w-lg mx-auto">
-            <Link to="/" className="glass-card p-6 rounded-2xl text-left flex items-start gap-4 hover:bg-white/60 transition-all duration-300 group border border-white/40">
+            <Link to="/pricing" className="glass-card p-6 rounded-2xl text-left flex items-start gap-4 hover:bg-white/60 transition-all duration-300 group border border-white/40">
               <span className="material-symbols-outlined text-primary p-2 bg-primary/5 rounded-lg group-hover:scale-110 transition-transform">featured_seasonal_and_gifts</span>
               <div>
-                <span className="font-label-md text-label-md text-on-surface block">Tendencias</span>
-                <span className="text-caption text-outline">Descubre lo más pedido en Colombia.</span>
+                <span className="font-label-md text-label-md text-on-surface block">Planes</span>
+                <span className="text-caption text-outline">Conoce nuestros planes y precios.</span>
               </div>
             </Link>
             <Link to="/" className="glass-card p-6 rounded-2xl text-left flex items-start gap-4 hover:bg-white/60 transition-all duration-300 group border border-white/40">

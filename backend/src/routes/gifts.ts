@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -41,21 +41,13 @@ router.get('/', giftLimiter, asyncHandler(async (req, res) => {
   res.json({ gifts });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const eventId = req.params.eventId as string | undefined;
-  if (!eventId) {
-    throw new ValidationError('ID del evento requerido');
-  }
-
+router.post('/', requireAuth, requireEventOwnership, (req: AuthRequest, res: Response, next: NextFunction) => {
+  const eventId = req.params.eventId;
+  if (!eventId) return next(new ValidationError('ID del evento requerido'));
+  checkGiftLimit(eventId)(req, res, next);
+}, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const eventId = req.params.eventId as string;
   const data = createGiftSchema.parse(req.body);
-
-  const limitCheck = checkGiftLimit(eventId);
-  await new Promise<void>((resolve, reject) => {
-    limitCheck(req, res, (err: any) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
 
   const gift = await giftService.addGift(eventId, data.name);
   res.status(201).json({ gift });

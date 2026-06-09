@@ -115,6 +115,18 @@ export const boostPayments = pgTable('boost_payments', {
   eventIdIdx: index('boost_payments_event_id_idx').on(table.eventId),
 }));
 
+export const proPayments = pgTable('pro_payments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  mpPaymentId: text('mp_payment_id').notNull().unique(),
+  amount: integer('amount').notNull(),
+  interval: text('interval').notNull().default('month'),
+  status: text('status').notNull().default('completed'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('pro_payments_user_id_idx').on(table.userId),
+}));
+
 export const failedWebhooks = pgTable('failed_webhooks', {
   id: uuid('id').defaultRandom().primaryKey(),
   topic: text('topic').notNull(),

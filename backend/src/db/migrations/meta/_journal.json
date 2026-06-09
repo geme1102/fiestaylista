@@ -36,6 +36,13 @@
       "when": 1779900003000,
       "tag": "0004_add_missing_security_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779900004000,
+      "tag": "0005_add_pro_payments_table",
+      "breakpoints": true
     }
   ]
 }

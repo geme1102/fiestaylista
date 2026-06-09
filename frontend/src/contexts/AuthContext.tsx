@@ -54,7 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
     const params = new URLSearchParams(window.location.search);
       const redirect = params.get('redirect');
-      const target = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
+      let target = '/dashboard';
+      if (redirect) {
+        try {
+          const url = new URL(redirect, window.location.origin);
+          if (url.origin === window.location.origin) target = redirect;
+        } catch {}
+      }
       navigate(target);
   }, [navigate]);
 
