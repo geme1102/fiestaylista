@@ -79,7 +79,22 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
 
 router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => {
   if (!verifyMpSignature(req)) {
+    const { topic, id } = extractTopicId(req);
     console.warn('[MP Webhook] Firma inválida, ignorando notificación');
+    if (topic && id) {
+      try {
+        await db.insert(failedWebhooks).values({
+          topic,
+          resourceId: id,
+          errorMessage: 'Firma inválida',
+          retryCount: 0,
+          lastAttemptAt: new Date(),
+          nextRetryAt: new Date(Date.now() + 60 * 1000),
+        });
+      } catch (dbError) {
+        console.error('[MP Webhook] Error guardando failed webhook:', dbError);
+      }
+    }
     res.status(401).json({ received: false, error: 'Firma inválida' });
     return;
   }

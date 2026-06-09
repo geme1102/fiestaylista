@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { events, boostPayments, cashContributions } from '../db/schema.js';
+import { events, boostPayments, cashContributions, cashFunds } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
@@ -56,6 +56,11 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       .update(events)
       .set({ boostedUntil, updatedAt: new Date() })
       .where(eq(events.id, eventId));
+
+    await tx
+      .insert(cashFunds)
+      .values({ eventId, title: 'Lluvia de sobres', isActive: true })
+      .onConflictDoNothing({ target: cashFunds.eventId });
   });
 }
 
@@ -121,7 +126,16 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       const userId = parts[1];
       const interval = parts[2] || 'month';
       if (!userId) return;
+      const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
+      if (Math.abs(info.transactionAmount - expectedAmount) > 1) {
+        console.error(`[MP] Monto de PRO inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
+        return;
+      }
       await handleProPayment(userId, interval);
+    } else if (info.status === 'refunded' || info.status === 'charged_back') {
+      const parts = ref.split('_');
+      const userId = parts[1];
+      if (userId) await subscriptionService.cancelSubscription(userId);
     }
   } else {
     if (info.status === 'approved') {

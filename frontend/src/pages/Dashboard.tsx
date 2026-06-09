@@ -12,7 +12,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
 
 export default function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshUser } = useAuth();
   const [events, setEvents] = useState<(Event & { giftCount?: number; photoCount?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -26,6 +26,7 @@ export default function Dashboard() {
       setLoading(false);
       return;
     }
+    refreshUser();
     loadEvents();
   }, [isAuthenticated]);
 
