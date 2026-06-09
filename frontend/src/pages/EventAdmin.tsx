@@ -312,7 +312,7 @@ export default function EventAdmin() {
       {/* Top App Bar */}
       <nav className="bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm fixed top-0 z-50 flex justify-between items-center px-container-margin h-16 w-full">
         <div className="flex items-center gap-3">
-          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary">
+          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary" aria-label="Volver al dashboard">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <h1 className="font-headline-md text-headline-md text-primary">Administrar Evento</h1>
@@ -388,7 +388,7 @@ export default function EventAdmin() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={event.isActive} onChange={toggleActive} className="sr-only peer" />
+                <input type="checkbox" checked={event.isActive} onChange={toggleActive} className="sr-only peer" role="switch" />
                 <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
               </label>
               <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
@@ -465,16 +465,21 @@ export default function EventAdmin() {
                 type="text"
                 value={newGiftName}
                 onChange={(e) => { setNewGiftName(e.target.value); setShowSuggestions(true); }}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAddGift(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddGift(); if (e.key === 'Escape') setShowSuggestions(false); }}
                 placeholder="Añadir un regalo..."
                 className="w-full bg-white border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 shadow-sm outline-none text-on-surface"
+                role="combobox"
+                aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
+                aria-autocomplete="list"
+                aria-controls="gift-suggestions-list"
               />
               {/* Suggestions Dropdown */}
               {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                <div id="gift-suggestions-list" role="listbox" className="absolute z-10 mt-1 w-full bg-white border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {filteredSuggestions.map((s) => (
                     <button
                       key={s}
+                      role="option"
                       onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-primary-fixed transition-colors"
                     >

@@ -234,6 +234,8 @@ export default function EventGuest() {
               <span className="font-label-md text-label-md text-on-surface-variant">Lectura Fácil</span>
               <button
                 onClick={() => setEasyReadMode(!easyReadMode)}
+                role="switch"
+                aria-checked={easyReadMode}
                 className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-surface-container-highest'}`}
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
@@ -331,9 +333,11 @@ export default function EventGuest() {
             {gifts.length === 0 && <EmptyGiftState />}
 
             <div className="mb-6">
+              <label htmlFor="claim-name" className="block text-sm font-semibold text-on-surface mb-1.5">Tu nombre</label>
               <div className="relative">
                 <input
                   ref={inputRef}
+                  id="claim-name"
                   type="text"
                   value={claimName}
                   onChange={(e) => setClaimName(e.target.value)}
@@ -422,31 +426,38 @@ export default function EventGuest() {
         </div>
 
         <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
-          <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all">
+          <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>
           </Link>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Lista de regalos">
             <span className="material-symbols-outlined">card_giftcard</span>
             <span className="font-label-md text-label-md">Lista</span>
-          </a>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          </button>
+          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Regalar">
             <span className="material-symbols-outlined">payments</span>
             <span className="font-label-md text-label-md">Regalar</span>
-          </a>
-          <a href="#" className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-90">
+          </button>
+          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Cuenta">
             <span className="material-symbols-outlined">person</span>
             <span className="font-label-md text-label-md">Cuenta</span>
-          </a>
+          </button>
         </nav>
 
         {showSuccessModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl">
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="success-title"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowSuccessModal(false); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowSuccessModal(false); }}
+          >
             <div className="glass-card w-full max-w-sm rounded-[40px] p-8 text-center shadow-2xl border-white/50">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
-              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
+              <h2 id="success-title" className="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
               <p className="font-body-md text-body-md text-on-surface-variant mb-8">El organizador ya sabe qué vas a regalar. Gracias por ser parte de este momento especial.</p>
               <button
                 onClick={() => setShowSuccessModal(false)}

@@ -303,10 +303,11 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
             </div>
             <form onSubmit={handleContribute} className="space-y-4">
               <div className="relative">
-                <label className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Monto Personalizado</label>
+                <label htmlFor="custom-amount" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Monto Personalizado</label>
                 <div className="relative group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">$</span>
                   <input
+                    id="custom-amount"
                     type="number"
                     value={amount}
                     onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
@@ -317,8 +318,9 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
                 </div>
               </div>
               <div className="relative">
-                <label className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Tu Nombre</label>
+                <label htmlFor="contributor-name" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Tu Nombre</label>
                 <input
+                  id="contributor-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -328,8 +330,9 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
                 />
               </div>
               <div className="relative">
-                <label className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Mensaje de Felicitación</label>
+                <label htmlFor="contributor-message" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Mensaje de Felicitación</label>
                 <textarea
+                  id="contributor-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Escribe un mensaje especial para los anfitriones..."

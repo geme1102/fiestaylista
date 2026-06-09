@@ -22,7 +22,10 @@ export default function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     loadEvents();
   }, [isAuthenticated]);
 
@@ -117,7 +120,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit">
-            Mis Eventos <span className="text-surface-variant font-normal">({eventCount})</span>
+            Mis Eventos <span className="text-on-surface-variant/70 font-normal">({eventCount})</span>
           </h1>
           <p className="text-sm text-on-surface-variant mt-1">
             Gestiona tus listas de regalos y fondos.
