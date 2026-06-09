@@ -29,7 +29,7 @@ export function useEventPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const loadEventRef = useRef<() => Promise<void>>(undefined);
-  const confettiTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
 
   const loadEvent = useCallback(async () => {
