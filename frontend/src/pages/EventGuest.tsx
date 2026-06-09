@@ -1,60 +1,37 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
+import { ConfettiCanvas, type ConfettiCanvasRef } from '../components/ConfettiCanvas';
 import { useEventPage } from '../hooks/useEventPage';
-import { EVENT_LABELS, THEME_COLORS } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
+
+const CURSIVE_TEXTS: Record<EventType, string> = {
+  WEDDING: 'Nuestra Historia comienza con un Sí...',
+  BABY_SHOWER: 'Dulce espera, amor infinito...',
+  BIRTHDAY: 'Risas, amigos y un año milagroso...',
+  BAPTISM: 'Guiado por la luz divina...',
+  COMMUNION: 'Luz y alegría en este reencuentro de fe...',
+  HOUSE_WARMING: 'Nuevo nido de amor, nuevas historias...',
+  OTHER: 'Celebrando juntos este momento especial...',
+};
+
+const INTRO_TEXTS: Record<EventType, string> = {
+  WEDDING: 'Te invitamos a ser parte del día más especial. Tu presencia y palabras de aliento son el regalo más valioso en este camino que iniciamos.',
+  BABY_SHOWER: '¡La cigüeña está en camino! Los invitamos a celebrar la dulce espera y preparar el nido para el milagro de una nueva vida llena de felicidad.',
+  BIRTHDAY: '¡A celebrar la vida! Un año más repleto de risas, aprendizajes y sueños por realizar. El mejor regalo es brindar rodeado de las personas que amo.',
+  BAPTISM: 'Un día consagrado a la fe y la gracia. Los invitamos a acompañarnos en la bendición de bautizo, iluminando los primeros pasos espirituales.',
+  COMMUNION: 'Unión sagrada bajo una misma luz de fe. Los invitamos a conmemorar este sacramento con un espíritu puro y feliz.',
+  HOUSE_WARMING: '¡Llaves nuevas y risas compartidas! Los invitamos a celebrar nuestro nuevo hogar, un nuevo capítulo para construir con el corazón.',
+  OTHER: 'Te invitamos a ser parte de este momento especial. Tu presencia y cariño son el mejor regalo.',
+};
 
 function sanitizeForJSON(str: string): string {
   return str.replace(/<\/script>/gi, '<\\/script>');
-}
-
-function PremiumConfetti() {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="text-7xl"
-        >
-          🎉
-        </motion.div>
-      </div>
-      {Array.from({ length: 20 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: -100,
-            rotate: 0,
-            scale: 0.5 + Math.random() * 0.5,
-          }}
-          animate={{
-            y: window.innerHeight + 100,
-            rotate: 360 + Math.random() * 360,
-            x: Math.random() * window.innerWidth,
-          }}
-          transition={{
-            duration: 2 + Math.random() * 2,
-            delay: Math.random() * 0.5,
-            ease: 'easeIn',
-          }}
-        >
-          <img
-            src={`/confetti/confetti-${['star', 'heart', 'circle', 'diamond', 'ribbon'][Math.floor(Math.random() * 5)]}.svg`}
-            alt=""
-            className="w-8 h-8"
-          />
-        </motion.div>
-      ))}
-    </div>
-  );
 }
 
 function EmptyGiftState() {
@@ -85,6 +62,21 @@ export default function EventGuest() {
     availableGifts, claimedGifts, categories, filteredGifts, createdDate,
     handleClaim, handlePhotoUpload, handleDownload,
   } = useEventPage();
+
+  const confettiRef = useRef<ConfettiCanvasRef>(null);
+
+  useEffect(() => {
+    if (showConfetti) {
+      confettiRef.current?.triggerBurst();
+    }
+  }, [showConfetti]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      confettiRef.current?.triggerBurst();
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading) {
     return (
@@ -172,7 +164,7 @@ export default function EventGuest() {
       </Helmet>
 
       <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
-        {showConfetti && <PremiumConfetti />}
+        <ConfettiCanvas ref={confettiRef} />
 
         <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
@@ -185,74 +177,96 @@ export default function EventGuest() {
         </header>
 
         <section className="pt-16 w-full overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed via-surface to-secondary-fixed/30 -z-10" />
-          <div className="absolute top-20 right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-30" style={{ background: THEME_COLORS[event.eventType]?.primary || '#ec4899' }} />
-          <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="glass-card w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-xl border-white/40"
-            >
-              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-            </motion.div>
+          <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.primary}20` }} />
+          <div className="absolute top-1/4 right-0 w-72 h-72 rounded-full blur-[100px] pointer-events-none translate-x-1/3 transition-colors duration-700"                 style={{ background: `${THEME_COLORS[event.eventType]?.light}` }} />
+          <div className="absolute bottom-1/3 left-10 w-96 h-96 rounded-full blur-[120px] pointer-events-none transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.light}` }} />
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-primary/10 text-primary px-4 py-1 rounded-full font-label-md text-label-md mb-4 inline-flex items-center gap-2"
+          <div className="px-4 pt-10 pb-12">
+            <motion.header
+              initial={{ opacity: 0, y: -25, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+              className="vintage-wedding-frame rounded-[40px] p-8 md:p-14 flex flex-col items-center text-center mb-12 relative overflow-hidden shadow-2xl border-2"
+              style={{
+                background: 'rgba(255,255,255,0.85)',
+                borderColor: `${THEME_COLORS[event.eventType]?.primary}25`,
+              }}
             >
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              {EVENT_LABELS[event.eventType]}
-            </motion.div>
+              <div className="absolute inset-0 bg-[radial-gradient(#00000005_1px,transparent_1px)] [background-size:16px_16px] opacity-70 pointer-events-none" />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2 px-4"
-            >
-              {event.title}
-            </motion.h1>
+              <div className="relative mb-6 z-10">
+                <div
+                  className="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center hover:scale-110 transition-all duration-500 floating-logo"
+                  style={{ boxShadow: `0 0 0 4px ${THEME_COLORS[event.eventType]?.primary}30` }}
+                >
+                  <span className="text-4xl select-none filter drop-shadow-sm">
+                 {EVENT_ICONS[event.eventType]}
+                  </span>
+                </div>
+                <span className="absolute -top-1 -left-2 text-yellow-500 text-lg sparkle-fast pointer-events-none select-none">✦</span>
+                <span className="absolute -bottom-1 -right-2 text-pink-400 text-xl sparkle-slow pointer-events-none select-none">★</span>
+                <span className="absolute top-12 -right-6 text-amber-500 text-sm sparkle-slow pointer-events-none select-none">✨</span>
+              </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="font-body-md text-body-md text-on-surface-variant mb-6"
-            >
-              {createdDate}
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex items-center gap-3 glass-card px-4 py-2 rounded-full mb-4"
-            >
-              <span className="font-label-md text-label-md text-on-surface-variant">Lectura Fácil</span>
-              <button
-                onClick={() => setEasyReadMode(!easyReadMode)}
-                role="switch"
-                aria-checked={easyReadMode}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-surface-container-highest'}`}
+              <span
+                className="text-[10px] uppercase font-extrabold tracking-[0.25em] px-4 py-1.5 rounded-full border animate-pulse font-display shadow-xs mb-4"
+                style={{
+                  color: THEME_COLORS[event.eventType]?.primary,
+                  backgroundColor: `${THEME_COLORS[event.eventType]?.primary}12`,
+                  borderColor: `${THEME_COLORS[event.eventType]?.primary}35`,
+                }}
               >
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
-              </button>
-            </motion.div>
+                {EVENT_LABELS[event.eventType]}
+              </span>
+
+              <h1 className="font-serif-elegant font-black text-gray-900 tracking-tight leading-none uppercase filter drop-shadow-xs max-w-2xl text-3xl md:text-4xl">
+                <span className="gold-metallic-gradient-text">{event.title}</span>
+              </h1>
+
+              <div
+                className="flex flex-wrap items-center justify-center gap-3 mt-5 mb-6 text-xs font-bold uppercase tracking-widest px-5 py-3 rounded-2xl border shadow-xs"
+                style={{
+                  color: THEME_COLORS[event.eventType]?.primary,
+                  backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`,
+                  borderColor: `${THEME_COLORS[event.eventType]?.primary}25`,
+                }}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>calendar_month</span>
+                  {createdDate}
+                </span>
+              </div>
+
+              <p className="font-cursive-romance italic font-bold md:text-lg tracking-wide max-w-lg mb-4 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+                &ldquo;{CURSIVE_TEXTS[event.eventType]}&rdquo;
+              </p>
+
+              <p className="text-gray-600 font-medium max-w-xl leading-relaxed mb-8 text-xs md:text-sm">
+                {INTRO_TEXTS[event.eventType]}
+              </p>
+
+              <div className="flex items-center gap-3 px-4 py-2 rounded-full mb-6 z-10" style={{ backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`, border: `1px solid ${THEME_COLORS[event.eventType]?.primary}20` }}>
+                <span className="font-bold text-xs uppercase tracking-wider" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+                  Lectura Fácil
+                </span>
+                <button
+                  onClick={() => setEasyReadMode(!easyReadMode)}
+                  role="switch"
+                  aria-checked={easyReadMode}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="w-full max-w-md z-10 relative">
+                <ShareButtons slug={event.slug} title={event.title} />
+              </div>
+            </motion.header>
           </div>
         </section>
 
         <div className={`max-w-4xl mx-auto px-4 -mt-6 relative z-10 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <ShareButtons slug={event.slug} title={event.title} />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

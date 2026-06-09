@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Great+Vibes&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 @import "tailwindcss";
 
@@ -6,6 +6,7 @@
   --font-outfit: 'Outfit', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
   --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-cursive: 'Great Vibes', cursive;
 
   --font-display-lg: 'Outfit', sans-serif;
   --font-headline-lg: 'Outfit', sans-serif;
@@ -212,6 +213,28 @@
   100% { background-position: 200% 50%; }
 }
 
+/* Premium card design animations */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 0.95; transform: scale(1.3) rotate(180deg); }
+}
+
+@keyframes elegant-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes mesh-pulse {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes intense-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(184, 137, 73, 0.15), 0 0 5px rgba(184, 137, 73, 0.05); border-color: rgba(184, 137, 73, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(184, 137, 73, 0.4), 0 0 10px rgba(184, 137, 73, 0.2); border-color: rgba(184, 137, 73, 0.6); }
+}
+
 /* Apple-style easing curve */
 :root {
   --apple-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -233,6 +256,70 @@
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
 
 .animate-zoom-in { animation: zoom-in 0.3s ease-out; }
+
+.sparkle-slow { animation: twinkle 4s infinite ease-in-out; }
+.sparkle-fast { animation: twinkle 2s infinite ease-in-out; }
+.floating-logo { animation: elegant-float 6s infinite ease-in-out; }
+.premium-animated-bg { background: linear-gradient(135deg, #fffafb 0%, #fff0f5 25%, #fdf4ff 50%, #fff5f8 75%, #fffafb 100%); background-size: 400% 400%; animation: mesh-pulse 15s ease infinite; }
+.glowing-gold-border { animation: intense-glow 4s infinite ease-in-out; }
+
+.font-serif-elegant { font-family: 'Playfair Display', Georgia, serif; }
+.font-cursive-romance { font-family: 'Great Vibes', cursive; }
+
+.gold-metallic-gradient-text {
+  background: linear-gradient(135deg, #b8860b 0%, #e6ca65 30%, #b88923 60%, #996515 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.vintage-wedding-frame {
+  position: relative;
+  box-shadow: 0 25px 60px rgba(184, 137, 73, 0.12), inset 0 0 40px rgba(194, 45, 125, 0.03);
+  border: 1px solid rgba(194, 45, 125, 0.1);
+}
+.vintage-wedding-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px; left: 8px; right: 8px; bottom: 8px;
+  border: 1px solid rgba(184, 137, 73, 0.4);
+  pointer-events: none;
+  z-index: 2;
+}
+.vintage-wedding-frame::after {
+  content: '';
+  position: absolute;
+  top: 14px; left: 14px; right: 14px; bottom: 14px;
+  border: 2px solid rgba(184, 137, 73, 0.2);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.crystal-glass-rose {
+  background: rgba(254, 242, 246, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(194, 45, 125, 0.12);
+  box-shadow: 0 12px 35px rgba(194, 45, 125, 0.05);
+}
+
+.premium-card-hover {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.premium-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(184, 137, 73, 0.12);
+  border-color: rgba(184, 137, 73, 0.3);
+}
+
+.bg-glowing-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -1;
+  opacity: 0.35;
+  pointer-events: none;
+}
 
 .shimmer-bg {
   position: relative;
