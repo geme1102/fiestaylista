@@ -88,10 +88,12 @@ export default function Onboarding() {
               <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2">¿Qué tipo de evento?</h2>
               <p className="text-on-surface-variant font-body-md">Selecciona la ocasión que vamos a celebrar.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4" role="radiogroup" aria-label="Tipo de evento">
               {EVENT_TYPES.map((t) => (
                 <button
                   key={t.value}
+                  role="radio"
+                  aria-checked={eventType === t.value}
                   onClick={() => selectEventType(t)}
                   className={`p-6 rounded-xl flex flex-col items-center gap-3 transition-all duration-300 hover:scale-[1.02] border-2 ${
                     eventType === t.value

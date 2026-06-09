@@ -34,8 +34,12 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  if (options?.signal) {
-    options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  const onParentAbort = options?.signal
+    ? () => controller.abort()
+    : null;
+
+  if (options?.signal && onParentAbort) {
+    options.signal.addEventListener('abort', onParentAbort, { once: true });
   }
 
   try {
@@ -142,12 +146,19 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
     throw lastError ?? new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
   } finally {
     clearTimeout(timeoutId);
+    if (options?.signal && onParentAbort) {
+      options.signal.removeEventListener('abort', onParentAbort);
+    }
   }
 }
 
 let refreshPromise: Promise<boolean> | null = null;
+let refreshAttempts = 0;
 
 async function tryRefreshToken(): Promise<boolean> {
+  if (refreshAttempts >= 3) {
+    return false;
+  }
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -168,9 +179,11 @@ async function tryRefreshToken(): Promise<boolean> {
       clearTimeout(timeoutId);
 
       if (!res.ok) {
+        refreshAttempts++;
         return false;
       }
 
+      refreshAttempts = 0;
       const data = await res.json();
       accessToken = data.accessToken;
       return true;

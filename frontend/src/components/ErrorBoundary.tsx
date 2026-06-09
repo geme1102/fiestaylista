@@ -9,6 +9,10 @@ interface State {
   error: Error | null;
 }
 
+function generateErrorId(): string {
+  return crypto.randomUUID?.() ?? `ERR_${Date.now().toString(36).toUpperCase()}`;
+}
+
 export default class ErrorBoundary extends Component<Props, State> {
   private panelRef = createRef<HTMLDivElement>();
 
@@ -35,8 +39,14 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  componentDidMount() {
-    this.addParallax();
+  componentDidUpdate(_prevProps: Props, prevState: State) {
+    if (prevState.hasError !== this.state.hasError) {
+      if (this.state.hasError) {
+        this.addParallax();
+      } else {
+        this.removeParallax();
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -62,9 +72,13 @@ export default class ErrorBoundary extends Component<Props, State> {
     document.removeEventListener('mousemove', this.handleMouseMove);
   }
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
-      const errorId = `ERR_EVENT_FLOW_${Date.now().toString(36).toUpperCase()}`;
+      const errorId = generateErrorId();
       return (
         <main
           className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden"
@@ -100,18 +114,26 @@ export default class ErrorBoundary extends Component<Props, State> {
               </p>
             </div>
             <div className="flex flex-col items-center gap-6 pt-4">
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md text-on-primary active:scale-95 transition-all duration-200 group"
-                style={{
-                  background: 'linear-gradient(135deg, #b10e6b 0%, #d23284 100%)',
-                  boxShadow: '0 8px 20px rgba(177,14,107,0.3)',
-                }}
-              >
-                <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">refresh</span>
-                Recargar página
-              </button>
-              <a href="/" className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors duration-200 border-b border-transparent hover:border-primary pb-1">
+              <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
+                <button
+                  onClick={this.handleRetry}
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md text-on-primary active:scale-95 transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(135deg, #b10e6b 0%, #d23284 100%)',
+                    boxShadow: '0 8px 20px rgba(177,14,107,0.3)',
+                  }}
+                >
+                  Intentar de nuevo
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md border border-outline-variant text-on-surface active:scale-95 transition-all duration-200 group bg-white/70 backdrop-blur-sm"
+                >
+                  <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">refresh</span>
+                  Recargar página
+                </button>
+              </div>
+              <a href="/" className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors duration-200 border-b border-transparent hover:border-primary pb-1 mt-2">
                 Volver al inicio
               </a>
             </div>

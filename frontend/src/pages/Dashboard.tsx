@@ -75,9 +75,13 @@ export default function Dashboard() {
     }
   };
 
-  const copyLink = (slug: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
-    showToast('Enlace copiado ✅', 'success');
+  const copyLink = async (slug: string) => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
+      showToast('Enlace copiado ✅', 'success');
+    } catch {
+      showToast('No se pudo copiar el enlace', 'error');
+    }
   };
 
 
@@ -351,6 +355,9 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Crear nuevo evento"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >

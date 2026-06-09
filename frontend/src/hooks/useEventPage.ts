@@ -29,6 +29,8 @@ export function useEventPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const loadEventRef = useRef<() => Promise<void>>(undefined);
+  const confettiTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const sseConnectedRef = useRef(false);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -71,7 +73,11 @@ export function useEventPage() {
 
     function schedulePoll(interval: number) {
       clearInterval(pollTimer);
-      pollTimer = setInterval(() => loadEventRef.current?.(), interval);
+      pollTimer = setInterval(() => {
+        if (!sseConnectedRef.current) {
+          loadEventRef.current?.();
+        }
+      }, interval);
     }
 
     schedulePoll(POLL_FAST);
@@ -79,7 +85,8 @@ export function useEventPage() {
     function onVisibilityChange() {
       if (document.hidden) {
         clearInterval(pollTimer);
-      } else {
+      } else if (!sseConnectedRef.current) {
+        loadEventRef.current?.();
         schedulePoll(POLL_FAST);
       }
     }
@@ -89,6 +96,7 @@ export function useEventPage() {
       mountedRef.current = false;
       clearInterval(pollTimer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearTimeout(confettiTimerRef.current);
     };
   }, [slug, loadEvent]);
 
@@ -116,6 +124,7 @@ export function useEventPage() {
         if (!response.ok || !response.body || cancelled) return;
 
         retryDelay = 2000;
+      sseConnectedRef.current = true;
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -151,26 +160,28 @@ export function useEventPage() {
 
     return () => {
       cancelled = true;
+      sseConnectedRef.current = false;
       if (abortController) abortController.abort();
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
   }, [event?.id]);
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
-    if (!claimName.trim()) {
+    if (!event || !claimName.trim()) {
       showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');
       inputRef.current?.focus();
       return;
     }
     setClaimingId(giftId);
     try {
-      const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event!.id}/gifts/${giftId}/claim`, {
+      const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event.id}/gifts/${giftId}/claim`, {
         claimedBy: claimName.trim(),
       });
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
       setShowConfetti(true);
       setShowSuccessModal(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      clearTimeout(confettiTimerRef.current);
+      confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 3000);
       setClaimName('');
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch {

@@ -32,8 +32,8 @@ export function useTurnstile() {
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
           callback: (t: string) => setToken(t),
-          'expired-callback': () => setToken(null),
-          'error-callback': () => setToken(null),
+          'expired-callback': () => { setToken(null); window.turnstile?.reset(widgetId.current!); },
+          'error-callback': () => { setToken(null); window.turnstile?.reset(widgetId.current!); },
         });
       }
       if (++attempts > 50) clearInterval(interval);
@@ -48,9 +48,11 @@ export function useTurnstile() {
 
   const reset = useCallback(() => {
     setToken(null);
+    setReady(false);
     if (widgetId.current && window.turnstile) {
       window.turnstile.reset(widgetId.current);
     }
+    setTimeout(() => setReady(true), 100);
   }, []);
 
   return { containerRef, token, ready, reset };

@@ -103,7 +103,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
         <meta property="og:locale" content="es_CO" />
         <meta name="twitter:title" content={content.title} />
         <meta name="twitter:description" content={content.subtitle} />
-        <link rel="canonical" href={`https://fiestaylista.com/${eventKey}`} />
+        <link rel="canonical" href={`${window.location.origin}/${eventKey}`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

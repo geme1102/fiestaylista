@@ -18,11 +18,7 @@ export function useFocusTrap(isActive: boolean) {
     firstFocusable?.focus();
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        const closeButton = container?.querySelector('[data-dialog-close]') as HTMLElement;
-        closeButton?.click();
-        return;
-      }
+      if (e.key === 'Escape') return;
 
       if (e.key !== 'Tab') return;
 

@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Quicksand:wght@400;500;600;700&family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 @import "tailwindcss";
 
 @theme {
-  --font-quicksand: 'Quicksand', sans-serif;
-  --font-inter: 'Inter', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
   --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
@@ -250,10 +249,6 @@
   animation: shimmer 2s infinite;
 }
 
-.gift-bounce {
-  animation: float 3s ease-in-out infinite;
-}
-
 .border-3 {
   border-width: 3px;
 }
@@ -302,10 +297,14 @@
   box-shadow: 0 10px 30px -10px rgba(177, 14, 107, 0.4);
 }
 
-.hide-scrollbar::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
-.hide-scrollbar {
+.hide-scrollbar,
+.no-scrollbar,
+.scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -356,26 +355,10 @@
   padding-bottom: 0.1em;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
-  color-scheme: light;
+  color-scheme: light dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -388,14 +371,14 @@ html {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #FAF9F8;
+  background-color: var(--color-surface);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', 'Quicksand', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
 }
 
@@ -419,4 +402,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .pb-safe {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media print {
+  nav, .fixed, .sticky, [class*="z-"] { display: none !important; }
+  body { background: white; color: black; }
+  a { text-decoration: underline; }
 }

@@ -16,6 +16,10 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-surface transition-colors pb-safe sm:pb-0">
+      {/* Skip to main content link */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+        Saltar al contenido principal
+      </a>
       <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -106,7 +110,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
 

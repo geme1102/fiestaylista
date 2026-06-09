@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,7 @@ import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
@@ -47,8 +48,11 @@ export default function EventAdmin() {
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
   const [boostModal, setBoostModal] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
+  const boostTrapRef = useFocusTrap(boostModal);
 
   const [deletePhotoConfirm, setDeletePhotoConfirm] = useState<string | null>(null);
+  const [addingGift, setAddingGift] = useState(false);
+  const suggestingRef = useRef(false);
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +65,8 @@ export default function EventAdmin() {
     let abortController: AbortController | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let retryDelay = 1000;
+    let retryCount = 0;
+    const MAX_SSE_RETRIES = 5;
 
     async function connectSSE() {
       try {
@@ -108,9 +114,12 @@ export default function EventAdmin() {
         console.warn('[SSE] No se pudo conectar al stream de eventos');
       }
 
-      if (!cancelled) {
+      if (!cancelled && retryCount < MAX_SSE_RETRIES) {
+        retryCount++;
         reconnectTimeout = setTimeout(connectSSE, retryDelay);
         retryDelay = Math.min(retryDelay * 2, 30000);
+      } else if (!cancelled) {
+        console.warn('[EventAdmin] SSE max retries reached, falling back to polling');
       }
     }
 
@@ -143,7 +152,8 @@ export default function EventAdmin() {
   }
 
   const handleAddGift = async () => {
-    if (!newGiftName.trim()) return;
+    if (!newGiftName.trim() || addingGift) return;
+    setAddingGift(true);
     try {
       const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: newGiftName.trim() });
       setGifts((prev) => [...prev, res.gift]);
@@ -151,6 +161,8 @@ export default function EventAdmin() {
       setShowSuggestions(false);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al agregar regalo', 'error');
+    } finally {
+      setAddingGift(false);
     }
   };
 
@@ -255,10 +267,12 @@ export default function EventAdmin() {
   };
 
   const toggleActive = async () => {
+    const prevActive = event?.isActive;
+    setEvent((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev);
     try {
-      await apiClient.put(`/api/events/${id}`, { isActive: !event?.isActive });
-      setEvent((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev);
+      await apiClient.put(`/api/events/${id}`, { isActive: !prevActive });
     } catch (err) {
+      setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
       showToast('Error al actualizar', 'error');
     }
   };
@@ -508,10 +522,17 @@ export default function EventAdmin() {
                 .map((s) => (
                   <button
                     key={s}
-                    onClick={() => {
-                      apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s })
-                        .then((res) => setGifts((prev) => [...prev, res.gift]))
-                        .catch(() => showToast('Error al agregar regalo', 'error'));
+                    onClick={async () => {
+                      if (suggestingRef.current) return;
+                      suggestingRef.current = true;
+                      try {
+                        const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s });
+                        setGifts((prev) => [...prev, res.gift]);
+                      } catch {
+                        showToast('Error al agregar regalo', 'error');
+                      } finally {
+                        suggestingRef.current = false;
+                      }
                     }}
                     className="whitespace-nowrap bg-white border border-outline-variant px-4 py-2 rounded-full font-label-md text-on-surface-variant flex items-center gap-1 active:bg-primary-fixed transition-colors shrink-0"
                   >
@@ -605,7 +626,7 @@ export default function EventAdmin() {
 
       {/* Boost Modal */}
       {boostModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" id="modalBoost">
+        <div ref={boostTrapRef} className="fixed inset-0 z-[60] flex items-center justify-center p-6" id="modalBoost">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setBoostModal(false)} />
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}

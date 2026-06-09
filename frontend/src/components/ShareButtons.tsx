@@ -7,10 +7,14 @@ export default function ShareButtons({ slug, title }: { slug: string; title: str
   const text = `🎉 Te invito a ver mi lista de regalos: ${title}\n${url}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (

@@ -8,16 +8,19 @@ interface SplashIntroProps {
 
 export default function SplashIntro({ onComplete }: SplashIntroProps) {
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = prefersReducedMotion ? 100 : 2300;
     const timer = setTimeout(() => {
       onComplete();
-    }, 2300);
+    }, duration);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
     <motion.div
-      className="fixed inset-0 w-full h-full pointer-events-none flex items-center justify-center z-[9999] select-none"
+      aria-hidden="true"
+      className="fixed inset-0 w-full h-full flex items-center justify-center z-[9999] select-none"
       style={{
         background: 'linear-gradient(135deg, #8c0053, #d23284, #2f2ebe, #ffb77d, #c0c1ff)'
       }}

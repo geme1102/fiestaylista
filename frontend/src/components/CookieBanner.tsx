@@ -18,7 +18,12 @@ const STORAGE_KEY = 'cookie_consent_v1';
 function getStoredPrefs(): CookiePrefs | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === 'object' && 'essential' in parsed) {
+        return parsed as CookiePrefs;
+      }
+    }
   } catch (err) {
     console.warn('[CookieBanner] Error parsing stored prefs:', err);
   }
