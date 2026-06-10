@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -63,7 +63,6 @@ export default function EventAdmin() {
   const [updatingType, setUpdatingType] = useState(false);
   const [updatingDetails, setUpdatingDetails] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
-  const suggestingRef = useRef(false);
 
   useEffect(() => {
     if (!id) return;
