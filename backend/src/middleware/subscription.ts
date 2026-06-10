@@ -61,7 +61,7 @@ export function checkEventLimit() {
       const [countResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(events)
-        .where(and(eq(events.userId, req.user.userId), sql`${events.deletedAt} IS NULL`));
+        .where(eq(events.userId, req.user.userId));
 
       const eventCount = Number(countResult?.count ?? 0);
 
