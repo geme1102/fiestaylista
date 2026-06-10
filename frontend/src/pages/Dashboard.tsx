@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState({ title: '', eventType: 'BABY_SHOWER' as EventType, hostPhone: '' });
+  const [formData, setFormData] = useState({ title: '', eventType: 'BABY_SHOWER' as EventType, hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -53,7 +53,7 @@ export default function Dashboard() {
       const res = await apiClient.post<{ event: Event }>('/api/events', formData);
       setEvents((prev) => [res.event, ...prev]);
       setShowCreateModal(false);
-      setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '' });
+      setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       showToast('Evento creado 🎉', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
@@ -284,8 +284,8 @@ export default function Dashboard() {
 }
 
 function CreateForm({ formData, setFormData, creating, handleCreate }: {
-  formData: { title: string; eventType: EventType; hostPhone: string };
-  setFormData: React.Dispatch<React.SetStateAction<{ title: string; eventType: EventType; hostPhone: string }>>;
+  formData: { title: string; eventType: EventType; hostPhone: string; eventDate: string; eventLocation: string; eventNote: string };
+  setFormData: React.Dispatch<React.SetStateAction<{ title: string; eventType: EventType; hostPhone: string; eventDate: string; eventLocation: string; eventNote: string }>>;
   creating: boolean;
   handleCreate: (e: React.FormEvent) => Promise<void>;
 }) {
@@ -349,6 +349,50 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
       >
         {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}
       </button>
+
+      <details className="text-sm text-on-surface-variant">
+        <summary className="cursor-pointer font-medium">Más detalles (opcional)</summary>
+        <div className="mt-4 space-y-4">
+          <div>
+            <label htmlFor="eventDate" className="block text-sm font-bold text-on-surface-variant mb-2">
+              Fecha del evento
+            </label>
+            <input
+              id="eventDate"
+              type="datetime-local"
+              value={formData.eventDate}
+              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+              className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+            />
+          </div>
+          <div>
+            <label htmlFor="eventLocation" className="block text-sm font-bold text-on-surface-variant mb-2">
+              Lugar del evento
+            </label>
+            <input
+              id="eventLocation"
+              type="text"
+              value={formData.eventLocation}
+              onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
+              className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              placeholder="Ej: Salón de eventos, Ciudad"
+            />
+          </div>
+          <div>
+            <label htmlFor="eventNote" className="block text-sm font-bold text-on-surface-variant mb-2">
+              Nota para los invitados (Opcional)
+            </label>
+            <textarea
+              id="eventNote"
+              value={formData.eventNote}
+              onChange={(e) => setFormData({ ...formData, eventNote: e.target.value })}
+              className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+              placeholder="Ej: No se aceptan regalos envueltos"
+              rows={2}
+            />
+          </div>
+        </div>
+      </details>
     </form>
   );
 }

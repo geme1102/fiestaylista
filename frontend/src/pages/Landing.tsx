@@ -18,13 +18,13 @@ const TESTIMONIALS = [
 
 const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
 
-const TYPING_PHRASES = ['organizar tus regalos', 'recibir lo que soñaste', 'evitar regalos repetidos'];
+const TYPING_PHRASES = ['organizar tus regalos sin estrés', 'recibir justo lo que necesitas', 'decir adiós a los regalos repetidos'];
 
 const SOCIAL_PROOFS = [
-  { name: 'Un usuario', action: 'creó su lista de', amount: null, icon: '🎉', delay: 0 },
-  { name: 'Un invitado', action: 'apartó un regalo de', amount: null, icon: '🎁', delay: 1.2 },
-  { name: 'Una organizadora', action: 'compartió su evento', amount: null, icon: '✨', delay: 2.4 },
-  { name: 'Un invitado', action: 'envió una felicitación', amount: null, icon: '💌', delay: 3.6 },
+  { name: 'María', action: 'creó su lista de baby shower', amount: null, icon: '🎉', delay: 0 },
+  { name: 'Carlos', action: 'apartó un regalo de boda', amount: null, icon: '🎁', delay: 1.2 },
+  { name: 'Ana', action: 'compartió su lista por WhatsApp', amount: null, icon: '✨', delay: 2.4 },
+  { name: 'Pedro', action: 'envió un aporte con Lluvia de Sobres', amount: null, icon: '💌', delay: 3.6 },
 ];
 
 function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pauseTime = 2500) {
@@ -296,12 +296,12 @@ export default function Landing() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              Crea tu lista de regalos gratis en 2 minutos
+              🇨🇴 Hecho en Colombia — Crea tu lista gratis en 2 minutos
             </motion.div>
 
             {/* Main Headline */}
             <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface mb-3 font-outfit leading-[1.1]">
-              <span className="text-on-surface">La forma más hermosa de</span>
+              <span className="text-on-surface">La forma más fácil de</span>
               <span className="block relative min-h-[1.3em] mt-1">
                 <span className="bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent">
                   {typedText}
@@ -312,9 +312,9 @@ export default function Landing() {
 
             {/* Subtitle */}
             <p className="max-w-2xl mx-auto text-fluid-body text-on-surface-variant mb-8 leading-relaxed">
-              Crea tu lista de regalos en 2 minutos y comparte el enlace.
+              Crea tu lista, comparte el enlace por WhatsApp y deja que tus invitados aparten su regalo.
               <br className="hidden sm:block" />
-              Tus invitados apartan lo que van a regalar — sin registrarse, sin duplicados, sin estrés.
+              Sin registros, sin duplicados, sin estrés. Así de simple.
             </p>
 
             {/* CTAs */}
@@ -560,7 +560,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.15 }}
             className="text-gray-700 text-base sm:text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto"
           >
-            Tu organizador de regalos para cualquier celebración. Sin complicaciones, sin duplicados, sin estrés.
+            Todo lo que necesitas para que tu celebración sea inolvidable — sin complicaciones, sin regalos repetidos, sin estrés.
           </motion.p>
         </div>
 
@@ -583,9 +583,9 @@ export default function Landing() {
               </div>
             </div>
             <div className="relative z-10 text-center sm:text-left flex-1">
-              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Lista de Regalos</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Regalos sin repetir</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
-                Agrega los regalos que quieres recibir y comparte el enlace con tus invitados. Ellos ven lo disponible, apartan el suyo y listo — nada de regalos repetidos ni confusiones.
+                Agrega lo que necesitas, comparte el enlace y cada invitado aparta el suyo. Nadie se equivoca, todos aciertan — sin planillas, sin WhatsApps confusos, sin estrés.
               </p>
             </div>
           </motion.div>
@@ -625,9 +625,9 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 mb-2 md:mb-3">Galería de Fotos</h3>
+            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-gray-900 mb-2 md:mb-3">Fotos que todos comparten</h3>
             <p className="relative z-10 text-sm sm:text-base text-gray-700 font-light leading-relaxed">
-              Sube las fotos de tu evento para que todos las vean. Los invitados también pueden aportar sus fotos desde el celular, sin necesidad de descargar nada.
+              Sube tus fotos y deja que los invitados también aporten las suyas desde el celular. Todos ven el evento desde sus ojos — sin apps, sin registros, sin complicaciones.
             </p>
           </motion.div>
 
@@ -651,9 +651,9 @@ export default function Landing() {
               <Mail className="w-7 h-7 md:w-8 md:h-8 text-white" strokeWidth={1.5} />
             </div>
 
-            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-white mb-2 md:mb-3">Lluvia de Sobres</h3>
+            <h3 className="relative z-10 text-xl md:text-2xl font-outfit font-bold text-white mb-2 md:mb-3">Regalos en efectivo, sin efectivo</h3>
             <p className="relative z-10 text-sm sm:text-base text-white/90 font-light leading-relaxed">
-              Tus invitados te pueden hacer aportaciones en dinero directo a tu cuenta. Ideal para luna de miel, viajes o lo que prefieras. Seguro y sin complicaciones.
+              Tus invitados te envían dinero directo a tu cuenta. Ideal para la luna de miel, el ajuar del bebé o lo que tú prefieras. Seguro, rápido y sin complicaciones.
             </p>
           </motion.div>
 
@@ -669,9 +669,9 @@ export default function Landing() {
             <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 
             <div className="relative z-10 text-center sm:text-left flex-1 order-2 sm:order-1">
-              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Control Total</h3>
+              <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Tú ves todo</h3>
               <p className="text-gray-700 text-sm sm:text-base md:text-lg font-light leading-relaxed">
-                Mira cuántas personas han visto tu lista, qué regalos están apartados, quién los apartó y cuándo. Todo desde un panel sencillo, sin complicaciones.
+                Sabes quién apartó, qué falta y cuántas personas han visto tu lista. Todo desde un panel simple, sin perder tiempo. Tú disfruta, la app hace el resto.
               </p>
             </div>
 
@@ -704,7 +704,7 @@ export default function Landing() {
               <span className="text-gradient-premium leading-normal">Lo que dicen nuestros usuarios</span>
             </motion.h2>
             <p className="text-center text-on-surface-variant mb-10 max-w-xl mx-auto text-fluid-body">
-              Miles de personas ya organizan sus eventos con Fiesta y Lista.
+              Miles de familias colombianas ya organizan sus celebraciones con Fiesta y Lista.
             </p>
           </motion.div>
           <div className="relative overflow-hidden">
@@ -800,7 +800,7 @@ export default function Landing() {
               ¿Listo para empezar?
             </h2>
             <p className="text-stone-700 text-lg sm:text-xl md:text-2xl font-medium mb-10 md:mb-12 max-w-xl text-center">
-              Crea tu primer evento gratis. <br className="hidden sm:block" /> Sin tarjeta de crédito, sin compromiso.
+              Tu celebración perfecta empieza aquí. <br className="hidden sm:block" /> Crea tu primer evento gratis, sin tarjeta de crédito.
             </p>
 
             {/* CTA Button */}

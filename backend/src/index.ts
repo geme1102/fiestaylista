@@ -16,13 +16,10 @@ import photosRouter from './routes/photos.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import webhooksRouter from './routes/webhooks.js';
 import uploadRouter from './routes/upload.js';
-import guestRouter from './routes/guest.js';
-import plansRouter from './routes/plans.js';
 import analyticsRouter from './routes/analytics.js';
 import publicRouter from './routes/public.js';
 import cashRouter from './routes/cash.js';
 import boostRouter from './routes/boost.js';
-import consentRouter from './routes/consent.js';
 import arcoRouter from './routes/arco.js';
 import { startCronJobs, stopCronJobs } from './cron.js';
 
@@ -150,12 +147,9 @@ app.use('/api/events/:eventId/gifts', giftsRouter);
 app.use('/api/events/:eventId/photos', photosRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api', guestRouter);
-app.use('/api', plansRouter);
 app.use('/api', analyticsRouter);
 app.use('/api', cashRouter);
 app.use('/api', boostRouter);
-app.use('/api/auth/consent', consentRouter);
 app.use('/api/auth/arco', arcoRouter);
 
 app.use((_req, res) => {

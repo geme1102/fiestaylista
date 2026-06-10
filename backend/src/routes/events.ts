@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { checkEventLimit } from '../middleware/subscription.js';
+import { checkEventLimit, checkActiveEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
 import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -17,6 +17,9 @@ const createEventSchema = z.object({
     errorMap: () => ({ message: 'Tipo de evento inválido' }),
   }),
   hostPhone: z.string().optional(),
+  eventDate: z.string().optional(),
+  eventLocation: z.string().optional(),
+  eventNote: z.string().optional(),
 });
 
 const updateEventSchema = z.object({
@@ -24,6 +27,9 @@ const updateEventSchema = z.object({
   eventType: z.enum(EVENT_TYPES as [string, ...string[]]).optional(),
   hostPhone: z.string().optional(),
   isActive: z.boolean().optional(),
+  eventDate: z.string().nullable().optional(),
+  eventLocation: z.string().nullable().optional(),
+  eventNote: z.string().nullable().optional(),
 });
 
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
@@ -55,7 +61,7 @@ router.get('/:id', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   res.json({ event: result });
 }));
 
-router.put('/:id', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/:id', requireAuth, requireEventOwnership, checkActiveEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = updateEventSchema.parse(req.body) as UpdateEventData;
   const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
   res.json({ event });

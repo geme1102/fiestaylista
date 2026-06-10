@@ -16,6 +16,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
+  eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
 
 const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
@@ -41,8 +42,12 @@ export default function EventAdmin() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingType, setEditingType] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [typeDraft, setTypeDraft] = useState<EventType>('BABY_SHOWER');
+  const [dateDraft, setDateDraft] = useState('');
+  const [locationDraft, setLocationDraft] = useState('');
+  const [noteDraft, setNoteDraft] = useState('');
   const [uploading, setUploading] = useState(false);
 
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
@@ -52,6 +57,12 @@ export default function EventAdmin() {
 
   const [deletePhotoConfirm, setDeletePhotoConfirm] = useState<string | null>(null);
   const [addingGift, setAddingGift] = useState(false);
+  const [deletingGiftId, setDeletingGiftId] = useState<string | null>(null);
+  const [freeingGiftId, setFreeingGiftId] = useState<string | null>(null);
+  const [updatingTitle, setUpdatingTitle] = useState(false);
+  const [updatingType, setUpdatingType] = useState(false);
+  const [updatingDetails, setUpdatingDetails] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
   const suggestingRef = useRef(false);
 
   useEffect(() => {
@@ -141,6 +152,9 @@ export default function EventAdmin() {
       setEvent(ev);
       setTitleDraft(ev.title);
       setTypeDraft(ev.eventType);
+      setDateDraft(ev.eventDate ? ev.eventDate.slice(0, 16) : '');
+      setLocationDraft(ev.eventLocation ?? '');
+      setNoteDraft(ev.eventNote ?? '');
       setGifts(ev.gifts || []);
       setPhotos(ev.photos || []);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
@@ -167,25 +181,32 @@ export default function EventAdmin() {
   };
 
   const handleDeleteGift = async (giftId: string) => {
+    setDeletingGiftId(giftId);
     try {
       await apiClient.del(`/api/events/${id}/gifts/${giftId}`);
       setGifts((prev) => prev.filter((g) => g.id !== giftId));
     } catch (err) {
       showToast('Error al eliminar regalo', 'error');
+    } finally {
+      setDeletingGiftId(null);
     }
   };
 
   const handleFreeGift = async (giftId: string) => {
+    setFreeingGiftId(giftId);
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${id}/gifts/${giftId}/free`);
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
     } catch (err) {
       showToast('Error al liberar regalo', 'error');
+    } finally {
+      setFreeingGiftId(null);
     }
   };
 
   const handleUpdateTitle = async () => {
     if (!titleDraft.trim()) return;
+    setUpdatingTitle(true);
     try {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, { title: titleDraft.trim() });
       setEvent((prev) => prev ? { ...prev, title: res.event.title } : prev);
@@ -193,10 +214,13 @@ export default function EventAdmin() {
       showToast('Título actualizado', 'success');
     } catch (err) {
       showToast('Error al actualizar título', 'error');
+    } finally {
+      setUpdatingTitle(false);
     }
   };
 
   const handleUpdateType = async () => {
+    setUpdatingType(true);
     try {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, { eventType: typeDraft });
       setEvent((prev) => prev ? { ...prev, eventType: res.event.eventType } : prev);
@@ -204,6 +228,31 @@ export default function EventAdmin() {
       showToast('Tipo de evento actualizado', 'success');
     } catch (err) {
       showToast('Error al actualizar tipo de evento', 'error');
+    } finally {
+      setUpdatingType(false);
+    }
+  };
+
+  const handleUpdateDetails = async () => {
+    setUpdatingDetails(true);
+    try {
+      const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, {
+        eventDate: dateDraft || null,
+        eventLocation: locationDraft || null,
+        eventNote: noteDraft || null,
+      });
+      setEvent((prev) => prev ? {
+        ...prev,
+        eventDate: res.event.eventDate,
+        eventLocation: res.event.eventLocation,
+        eventNote: res.event.eventNote,
+      } : prev);
+      setEditingDetails(false);
+      showToast('Detalles actualizados', 'success');
+    } catch (err) {
+      showToast('Error al actualizar detalles', 'error');
+    } finally {
+      setUpdatingDetails(false);
     }
   };
 
@@ -234,12 +283,15 @@ export default function EventAdmin() {
 
   const handleDeletePhoto = async (photoId: string) => {
     setDeletePhotoConfirm(null);
+    setDeletingPhoto(true);
     try {
       await apiClient.del(`/api/events/${id}/photos/${photoId}`);
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       showToast('Foto eliminada', 'success');
     } catch (err) {
       showToast('Error al eliminar foto', 'error');
+    } finally {
+      setDeletingPhoto(false);
     }
   };
 
@@ -362,7 +414,7 @@ export default function EventAdmin() {
                         className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface font-headline-md text-headline-md text-on-surface outline-none focus:ring-2 focus:ring-primary"
                         autoFocus
                       />
-                      <button onClick={handleUpdateTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">Guardar</button>
+                      <button onClick={handleUpdateTitle} disabled={updatingTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50">Guardar</button>
                       <button onClick={() => setEditingTitle(false)} className="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
                     </div>
                   ) : (
@@ -390,7 +442,7 @@ export default function EventAdmin() {
                           {t.icon} {t.label}
                         </button>
                       ))}
-                      <button onClick={handleUpdateType} className="px-3 py-1 text-xs bg-primary text-white rounded-lg font-medium">Guardar</button>
+                      <button onClick={handleUpdateType} disabled={updatingType} className="px-3 py-1 text-xs bg-primary text-white rounded-lg font-medium disabled:opacity-50">Guardar</button>
                       <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
                     </div>
                   ) : (
@@ -419,10 +471,10 @@ export default function EventAdmin() {
               <div className="shimmer-bg absolute inset-0 pointer-events-none" />
               <div className="flex items-center gap-2 relative z-10">
                 <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                <span className="font-label-md text-secondary">Aumenta tus regalos con Boost</span>
+                <span className="font-label-md text-secondary">Activa Lluvia de Sobres para tu evento</span>
               </div>
               <button onClick={() => setBoostModal(true)} className="bg-secondary text-white px-4 py-1.5 rounded-full font-label-md active:scale-95 transition-transform relative z-10">
-                Boost
+                $10.000 COP
               </button>
             </div>
           )}
@@ -462,6 +514,80 @@ export default function EventAdmin() {
             >
               <span className="material-symbols-outlined">content_copy</span>
             </button>
+          </div>
+
+          {/* Event Details Section */}
+          <div className="mt-6 border-t border-outline-variant/30 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-label-md text-label-md text-on-surface-variant">Detalles del Evento</h3>
+              {!editingDetails && (
+                <button onClick={() => setEditingDetails(true)} className="text-primary text-sm font-medium flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">edit</span> Editar
+                </button>
+              )}
+            </div>
+            {editingDetails ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Fecha</label>
+                  <input
+                    type="datetime-local"
+                    value={dateDraft}
+                    onChange={(e) => setDateDraft(e.target.value)}
+                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Lugar</label>
+                  <input
+                    type="text"
+                    value={locationDraft}
+                    onChange={(e) => setLocationDraft(e.target.value)}
+                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="Ej: Salón de eventos, Ciudad"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Nota para invitados</label>
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                    rows={2}
+                    placeholder="Ej: No se aceptan regalos envueltos"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleUpdateDetails} disabled={updatingDetails} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50">Guardar</button>
+                  <button onClick={() => setEditingDetails(false)} className="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1 text-sm text-on-surface">
+                {event.eventDate && (
+                  <p className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base text-on-surface-variant">calendar_today</span>
+                    {new Date(event.eventDate).toLocaleDateString('es-MX', { dateStyle: 'long' })}
+                    {new Date(event.eventDate).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
+                {event.eventLocation && (
+                  <p className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base text-on-surface-variant">location_on</span>
+                    {event.eventLocation}
+                  </p>
+                )}
+                {event.eventNote && (
+                  <p className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-base text-on-surface-variant mt-0.5">info</span>
+                    {event.eventNote}
+                  </p>
+                )}
+                {!event.eventDate && !event.eventLocation && !event.eventNote && (
+                  <p className="text-on-surface-variant italic">Sin detalles adicionales</p>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
@@ -508,7 +634,7 @@ export default function EventAdmin() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleAddGift}
-              disabled={!newGiftName.trim()}
+              disabled={!newGiftName.trim() || addingGift}
               className="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center glow-shadow-pro active:scale-95 transition-all disabled:opacity-50"
             >
               <span className="material-symbols-outlined">add</span>
@@ -524,19 +650,20 @@ export default function EventAdmin() {
                 .map((s) => (
                   <button
                     key={s}
+                    disabled={addingGift}
                     onClick={async () => {
-                      if (suggestingRef.current) return;
-                      suggestingRef.current = true;
+                      if (addingGift) return;
+                      setAddingGift(true);
                       try {
                         const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s });
                         setGifts((prev) => [...prev, res.gift]);
                       } catch {
                         showToast('Error al agregar regalo', 'error');
                       } finally {
-                        suggestingRef.current = false;
+                        setAddingGift(false);
                       }
                     }}
-                    className="whitespace-nowrap bg-white border border-outline-variant px-4 py-2 rounded-full font-label-md text-on-surface-variant flex items-center gap-1 active:bg-primary-fixed transition-colors shrink-0"
+                    className="whitespace-nowrap bg-white border border-outline-variant px-4 py-2 rounded-full font-label-md text-on-surface-variant flex items-center gap-1 active:bg-primary-fixed transition-colors shrink-0 disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-sm">add</span> {s}
                   </button>
@@ -558,6 +685,8 @@ export default function EventAdmin() {
                 onFree={handleFreeGift}
                 onDelete={handleDeleteGift}
                 isAdmin
+                freeingId={freeingGiftId}
+                deletingId={deletingGiftId}
               />
             ))}
           </div>
@@ -623,6 +752,7 @@ export default function EventAdmin() {
           message="¿Eliminar esta foto? Esta acción no se puede deshacer."
           onConfirm={() => handleDeletePhoto(deletePhotoConfirm)}
           onClose={() => setDeletePhotoConfirm(null)}
+          loading={deletingPhoto}
         />
       )}
 
@@ -648,7 +778,7 @@ export default function EventAdmin() {
               <ul className="space-y-3">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-secondary">check_circle</span>
-                  <p className="text-on-surface-variant text-body-md">Recibe el 100% del valor de tus regalos en tu cuenta bancaria.</p>
+                  <p className="text-on-surface-variant text-body-md">Tus invitados te envían dinero directo a tu cuenta bancaria.</p>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-secondary">check_circle</span>
@@ -659,6 +789,7 @@ export default function EventAdmin() {
                   <p className="text-on-surface-variant text-body-md">Habilitado para transferencias internacionales.</p>
                 </li>
               </ul>
+              <p className="text-xs text-on-surface-variant text-center">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago.</p>
               <button
                 onClick={handleBoost}
                 disabled={boostLoading}

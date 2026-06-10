@@ -23,6 +23,9 @@ export interface Event {
   boostedUntil?: string;
   viewCount?: number;
   cashFund?: { collectedAmount: number; targetAmount?: number | null } | null;
+  eventDate?: string | null;
+  eventLocation?: string | null;
+  eventNote?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -115,6 +118,16 @@ export const EVENT_ICONS: Record<EventType, string> = {
   COMMUNION: '✨',
   OTHER: '🎊',
   HOUSE_WARMING: '🏠',
+};
+
+export const DEFAULT_NOTES: Record<EventType, string> = {
+  BABY_SHOWER: '¡Celebremos la llegada del bebé! 🍼',
+  WEDDING: '¡Celebremos este amor que nace! 💍',
+  BIRTHDAY: '¡A celebrar un año más de vida! 🎂',
+  BAPTISM: '¡Bienvenido a la familia de Dios! 🕊️',
+  COMMUNION: '¡Un paso importante en tu fe! ✨',
+  OTHER: '¡Gracias por acompañarnos! 🎊',
+  HOUSE_WARMING: '¡Bienvenidos a nuestro nuevo hogar! 🏠',
 };
 
 export const THEME_COLORS: Record<EventType, { primary: string; light: string; dark: string; gradient: string }> = {

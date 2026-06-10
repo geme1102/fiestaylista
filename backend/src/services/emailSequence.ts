@@ -198,7 +198,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
             const result = await resendClient.emails.send({
               from: config.FROM_EMAIL,
               to: user.email,
-              subject: '🚀 Actualiza a Pro y ahorra en comisiones',
+              subject: '🚀 Actualiza a Pro y obtén más espacio',
               html: `
                 <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
                   <h1 style="color:#1f2937;font-size:20px">🚀 Lleva tu evento al siguiente nivel</h1>
@@ -206,11 +206,12 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                   <ul style="color:#6b7280;margin:16px 0">
                     <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
                     <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
-                    <li style="margin-bottom:8px">✅ Cash fund con comisión reducida</li>
-                    <li style="margin-bottom:8px">✅ Estadísticas completas</li>
-                    <li style="margin-bottom:8px">✅ Sin marca de agua</li>
+                    <li style="margin-bottom:8px">✅ 15 fotos por evento</li>
+                    <li style="margin-bottom:8px">✅ Estadísticas de tu evento</li>
+                    <li style="margin-bottom:8px">✅ Lluvia de Sobres incluida sin costo extra</li>
+                    <li style="margin-bottom:8px">✅ Tus invitados te avisan por WhatsApp al apartar</li>
                   </ul>
-                  <p style="color:#6b7280;margin:16px 0">Todo por solo $24.990/mes COP. Ahorra pagando anual.</p>
+                  <p style="color:#6b7280;margin:16px 0">Todo por solo $24.990/mes COP. 5% de comisión en todos los planes.</p>
                   <div style="text-align:center;margin:24px 0">
                     <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver Planes</a>
                   </div>

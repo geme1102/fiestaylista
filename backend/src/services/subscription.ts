@@ -1,7 +1,8 @@
-import { eq, lte, and, inArray } from 'drizzle-orm';
+import { eq, lte, and, inArray, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users } from '../db/schema.js';
+import { subscriptions as subsTable, users, events } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
+import { TIER_LIMITS } from '../types/index.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
 
 interface UpsertData {
@@ -67,6 +68,35 @@ export async function createOrUpdateSubscription(
   });
 }
 
+async function deactivateExcessEvents(userId: string) {
+  const FREE_MAX_EVENTS = TIER_LIMITS.free.maxEvents;
+
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(events)
+    .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
+
+  const activeCount = Number(countResult?.count ?? 0);
+  if (activeCount <= FREE_MAX_EVENTS) return;
+
+  const excess = activeCount - FREE_MAX_EVENTS;
+
+  const toDeactivate = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)))
+    .orderBy(events.createdAt)
+    .limit(excess);
+
+  const ids = toDeactivate.map(e => e.id);
+  if (ids.length > 0) {
+    await db
+      .update(events)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(inArray(events.id, ids));
+  }
+}
+
 export async function getCurrentSubscription(userId: string) {
   const [sub] = await db
     .select()
@@ -78,8 +108,8 @@ export async function getCurrentSubscription(userId: string) {
 }
 
 export async function cancelSubscription(userId: string) {
-  return await db.transaction(async (tx) => {
-    const [sub] = await tx
+  const sub = await db.transaction(async (tx) => {
+    const [s] = await tx
       .update(subsTable)
       .set({
         status: 'canceled',
@@ -88,7 +118,7 @@ export async function cancelSubscription(userId: string) {
       .where(eq(subsTable.userId, userId))
       .returning();
 
-    if (!sub) {
+    if (!s) {
       throw new NotFoundError('Suscripción no encontrada');
     }
 
@@ -97,22 +127,26 @@ export async function cancelSubscription(userId: string) {
       .set({ tier: 'free', updatedAt: new Date() })
       .where(eq(users.id, userId));
 
-    return sub;
+    return s;
   });
+
+  await deactivateExcessEvents(userId);
+
+  return sub;
 }
 
 export async function updateSubscriptionStatus(
   userId: string,
   status: SubscriptionStatus,
 ) {
-  return await db.transaction(async (tx) => {
-    const [sub] = await tx
+  const sub = await db.transaction(async (tx) => {
+    const [s] = await tx
       .update(subsTable)
       .set({ status, updatedAt: new Date() })
       .where(eq(subsTable.userId, userId))
       .returning();
 
-    if (!sub) {
+    if (!s) {
       throw new NotFoundError('Suscripción no encontrada');
     }
 
@@ -123,8 +157,14 @@ export async function updateSubscriptionStatus(
         .where(eq(users.id, userId));
     }
 
-    return sub;
+    return s;
   });
+
+  if (status === 'canceled' || status === 'past_due' || status === 'incomplete') {
+    await deactivateExcessEvents(userId);
+  }
+
+  return sub;
 }
 
 export async function expireStaleSubscriptions(): Promise<number> {
@@ -161,8 +201,12 @@ export async function expireStaleSubscriptions(): Promise<number> {
         .where(inArray(users.id, userIds));
     }
 
-    return allToDowngrade.length;
+    return { count: allToDowngrade.length, userIds };
   });
 
-  return result;
+  for (const uid of result.userIds) {
+    await deactivateExcessEvents(uid);
+  }
+
+  return result.count;
 }

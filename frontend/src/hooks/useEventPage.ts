@@ -8,6 +8,7 @@ import type { Gift, Photo, EventType } from '../types';
 
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
+  eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
 
 export function useEventPage() {
@@ -262,8 +263,13 @@ export function useEventPage() {
     return availableGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter);
   }, [availableGifts, categoryFilter]);
 
-  const createdDate = event?.createdAt
-    ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+  const eventDateFormatted = event?.eventDate
+    ? new Date(event.eventDate).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+    : event?.createdAt
+      ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '';
+  const eventTimeFormatted = event?.eventDate
+    ? new Date(event.eventDate).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
     : '';
 
   return {
@@ -274,7 +280,8 @@ export function useEventPage() {
     categoryFilter, setCategoryFilter,
     uploadingPhoto,
     inputRef, filterBarRef, fileInputRef,
-    availableGifts, claimedGifts, categories, filteredGifts, createdDate,
+    availableGifts, claimedGifts, categories, filteredGifts,
+    eventDateFormatted, eventTimeFormatted,
     handleClaim, handlePhotoUpload, handleDownload,
   };
 }

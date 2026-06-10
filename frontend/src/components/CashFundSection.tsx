@@ -150,7 +150,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
               onClick={() => setBoostModal(true)}
               className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
             >
-              Activar por $4.99
+              Activar por $10.000 COP
             </button>
           </div>
           {boostModal && (

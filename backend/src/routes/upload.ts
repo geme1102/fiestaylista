@@ -26,6 +26,12 @@ const MAGIC_BYTES: { sig: Uint8Array; mime: string }[] = [
 function validateMagicBytes(buffer: Buffer): { valid: boolean; detectedMime: string | null } {
   for (const entry of MAGIC_BYTES) {
     if (entry.sig.length <= buffer.length && entry.sig.every((byte, i) => buffer[i] === byte)) {
+      if (entry.mime === 'image/webp') {
+        const webpSig = new Uint8Array([0x57, 0x45, 0x42, 0x50]);
+        if (buffer.length < 12 || !webpSig.every((byte, i) => buffer[8 + i] === byte)) {
+          continue;
+        }
+      }
       return { valid: true, detectedMime: entry.mime };
     }
   }

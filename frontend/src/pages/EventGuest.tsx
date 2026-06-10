@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import { ConfettiCanvas, type ConfettiCanvasRef } from '../components/ConfettiCanvas';
 import { useEventPage } from '../hooks/useEventPage';
-import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, DEFAULT_NOTES, type EventType } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
+import { apiClient } from '../services/api';
 
 const CURSIVE_TEXTS: Record<EventType, string> = {
   WEDDING: 'Nuestra Historia comienza con un Sí...',
@@ -59,11 +60,22 @@ export default function EventGuest() {
     categoryFilter, setCategoryFilter,
     uploadingPhoto,
     inputRef, filterBarRef, fileInputRef,
-    availableGifts, claimedGifts, categories, filteredGifts, createdDate,
+    availableGifts, claimedGifts, categories, filteredGifts,
+    eventDateFormatted, eventTimeFormatted,
     handleClaim, handlePhotoUpload, handleDownload,
   } = useEventPage();
 
+  const [lastClaimedGift, setLastClaimedGift] = useState('');
+  const [lastClaimedBy, setLastClaimedBy] = useState('');
+
+  const displayNote = event?.eventNote || DEFAULT_NOTES[event?.eventType || 'OTHER'];
+
   const confettiRef = useRef<ConfettiCanvasRef>(null);
+
+  useEffect(() => {
+    if (!event) return;
+    apiClient.post('/api/analytics/view', { eventId: event.id }).catch(() => {});
+  }, [event]);
 
   useEffect(() => {
     if (showConfetti) {
@@ -224,17 +236,25 @@ export default function EventGuest() {
               </h1>
 
               <div
-                className="flex flex-wrap items-center justify-center gap-3 mt-5 mb-6 text-xs font-bold uppercase tracking-widest px-5 py-3 rounded-2xl border shadow-xs"
+                className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-5 mb-6 text-xs font-bold uppercase tracking-widest px-5 py-3 rounded-2xl border shadow-xs"
                 style={{
                   color: THEME_COLORS[event.eventType]?.primary,
                   backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`,
                   borderColor: `${THEME_COLORS[event.eventType]?.primary}25`,
                 }}
               >
-                <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>calendar_month</span>
-                  {createdDate}
-                </span>
+                {eventDateFormatted && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>calendar_month</span>
+                    {eventDateFormatted}{eventTimeFormatted ? ` • ${eventTimeFormatted}` : ''}
+                  </span>
+                )}
+                {event?.eventLocation && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>location_on</span>
+                    {event.eventLocation}
+                  </span>
+                )}
               </div>
 
               <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-4 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
@@ -244,6 +264,12 @@ export default function EventGuest() {
               <p className="text-gray-600 font-medium max-w-xl leading-relaxed mb-8 text-xs md:text-sm">
                 {INTRO_TEXTS[event.eventType]}
               </p>
+
+              {displayNote && (
+                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mb-8 leading-relaxed text-center">
+                  {displayNote}
+                </p>
+              )}
 
               <div className="flex items-center gap-3 px-4 py-2 rounded-full mb-6 z-10" style={{ backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`, border: `1px solid ${THEME_COLORS[event.eventType]?.primary}20` }}>
                 <span className="font-bold text-xs uppercase tracking-wider" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
@@ -401,7 +427,7 @@ export default function EventGuest() {
                   <GiftCard
                     key={gift.id}
                     gift={gift}
-                    onClaim={handleClaim}
+                    onClaim={(id, name) => { setLastClaimedGift(name); setLastClaimedBy(claimName); handleClaim(id, name); }}
                     claimingId={claimingId}
                   />
                 ))}
@@ -472,7 +498,23 @@ export default function EventGuest() {
                 <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
               <h2 id="success-title" className="font-headline-md text-headline-md text-on-surface mb-2">¡Regalo Apartado!</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-8">El organizador ya sabe qué vas a regalar. Gracias por ser parte de este momento especial.</p>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-6">Gracias por ser parte de este momento especial.</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mb-6 bg-primary-fixed/30 rounded-xl px-4 py-3 font-semibold">
+                {lastClaimedGift}
+              </p>
+              {event?.hostPhone && (
+                <a
+                  href={`https://wa.me/${event.hostPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                    `🎁 ¡Hola! Aparté *${lastClaimedGift}* para *${event.title}*. ¡Confirmo mi asistencia! – ${lastClaimedBy}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-green-500/20 active:scale-95 transition-transform mb-3"
+                >
+                  <span className="material-symbols-outlined">chat</span>
+                  Notificar al anfitrión
+                </a>
+              )}
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full bg-primary text-white py-4 rounded-2xl font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 transition-transform"

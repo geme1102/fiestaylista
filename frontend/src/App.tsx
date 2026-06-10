@@ -31,7 +31,7 @@ const SeoEventPage = lazy(() => import('./pages/SeoEventPage'));
 const PAGE_META: Record<string, { title: string; desc: string; keywords?: string }> = {
   '/': {
     title: 'Fiesta y Lista - Crea tu lista de regalos',
-    desc: 'Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños. Tus invitados apartan regalos sin registrarse.',
+    desc: 'Fiesta y Lista — la app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños. Sin regalos repetidos, sin estrés. Tus invitados apartan desde su celular, sin registrarse.',
     keywords: 'fiestaylista, lista de regalos, baby shower, boda, cumpleaños, Colombia',
   },
   '/login': {
@@ -40,11 +40,11 @@ const PAGE_META: Record<string, { title: string; desc: string; keywords?: string
   },
   '/register': {
     title: 'Registrarse - Fiesta y Lista',
-    desc: 'Crea tu cuenta gratis en Fiesta y Lista y empieza a organizar tus listas de regalos en 2 minutos.',
+    desc: 'Crea tu cuenta gratis y organiza tu lista de regalos en 2 minutos. Baby showers, bodas, cumpleaños — tus invitados apartan sin registrarse.',
   },
   '/pricing': {
     title: 'Planes - Fiesta y Lista',
-    desc: 'Planes y precios de Fiesta y Lista. Plan gratis y Pro desde $24.990/mes. Sin tarjeta de crédito para empezar.',
+    desc: 'Plan gratis y Pro desde $24.990/mes. Sin tarjeta de crédito. Hasta 20 eventos, 50 regalos por evento y Lluvia de Sobres incluida.',
     keywords: 'fiestaylista planes, lista de regalos precios, plan pro, suscripción',
   },
   '/dashboard': {
@@ -105,27 +105,27 @@ const PAGE_META: Record<string, { title: string; desc: string; keywords?: string
   },
   '/baby-shower': {
     title: 'Baby Shower - Fiesta y Lista',
-    desc: 'Crea tu lista de regalos para baby shower en Fiesta y Lista. Los invitados apartan sin registrarse. La mejor app de listas de baby shower en Colombia.',
+    desc: 'Crea tu lista de regalos para baby shower. Tus invitados apartan su regalo desde el celular, sin registrarse. Recibe dinero con Lluvia de Sobres. Hecho en Colombia.',
     keywords: 'fiestaylista baby shower, lista de regalos baby shower, baby shower Colombia',
   },
   '/boda': {
     title: 'Boda - Fiesta y Lista',
-    desc: 'Crea tu lista de regalos de boda en Fiesta y Lista. Tus invitados eligen y apartan regalos sin duplicar. Lluvia de Sobres para luna de miel.',
+    desc: 'Crea tu lista de regalos de boda. Tus invitados eligen y apartan sin duplicar. Recibe aportes para la luna de miel con Lluvia de Sobres.',
     keywords: 'fiestaylista boda, lista de regalos boda, lista de bodas Colombia',
   },
   '/cumpleanos': {
     title: 'Cumpleaños - Fiesta y Lista',
-    desc: 'Organiza los regalos de cumpleaños con Fiesta y Lista. Dile adiós a los regalos repetidos.',
+    desc: 'Organiza los regalos de cumpleaños. Dile adiós a los regalos repetidos. Tus invitados apartan desde su celular en segundos.',
     keywords: 'fiestaylista cumpleaños, lista de regalos cumpleaños',
   },
   '/bautizo': {
     title: 'Bautizo - Fiesta y Lista',
-    desc: 'Crea tu lista de regalos para bautizo en Fiesta y Lista. Padrinos y familiares apartan sin registrarse.',
+    desc: 'Crea tu lista de regalos para bautizo. Padrinos y familiares apartan su regalo sin registrarse, desde cualquier celular.',
     keywords: 'fiestaylista bautizo, lista de regalos bautizo',
   },
   '/comunion': {
     title: 'Comunión - Fiesta y Lista',
-    desc: 'Organiza los regalos de primera comunión con Fiesta y Lista. Fácil, rápido y gratis.',
+    desc: 'Organiza los regalos de primera comunión. Tus invitados eligen sin repetir, desde el celular. Fácil, rápido y gratis.',
     keywords: 'fiestaylista comunión, lista de regalos comunión',
   },
 };

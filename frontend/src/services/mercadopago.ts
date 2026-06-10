@@ -11,10 +11,6 @@ export function createCheckoutSession(tier: Tier, successUrl?: string, cancelUrl
   });
 }
 
-export function cancelSubscription(): Promise<{ message: string }> {
-  return apiClient.post<{ message: string }>('/api/subscriptions/cancel');
-}
-
 export function getCurrentSubscription(): Promise<{ subscription: Subscription | null }> {
   return apiClient.get<{ subscription: Subscription | null }>('/api/subscriptions/current');
 }

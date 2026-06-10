@@ -10,6 +10,9 @@ export interface CreateEventData {
   title: string;
   eventType: EventType;
   hostPhone?: string;
+  eventDate?: string;
+  eventLocation?: string;
+  eventNote?: string;
 }
 
 export interface UpdateEventData {
@@ -17,6 +20,9 @@ export interface UpdateEventData {
   eventType?: EventType;
   hostPhone?: string;
   isActive?: boolean;
+  eventDate?: string | null;
+  eventLocation?: string | null;
+  eventNote?: string | null;
 }
 
 async function verifyOwnership(eventId: string, userId: string) {
@@ -49,6 +55,9 @@ export async function createEvent(userId: string, data: CreateEventData) {
         title: data.title,
         eventType: data.eventType,
         hostPhone: data.hostPhone || null,
+        eventDate: data.eventDate ? new Date(data.eventDate) : null,
+        eventLocation: data.eventLocation || null,
+        eventNote: data.eventNote || null,
         slug,
       })
       .onConflictDoNothing({ target: eventsTable.slug })
@@ -157,6 +166,9 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
   if (data.eventType !== undefined) updateData.eventType = data.eventType;
   if (data.hostPhone !== undefined) updateData.hostPhone = data.hostPhone;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.eventDate !== undefined) updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null;
+  if (data.eventLocation !== undefined) updateData.eventLocation = data.eventLocation;
+  if (data.eventNote !== undefined) updateData.eventNote = data.eventNote;
   updateData.updatedAt = new Date();
 
   const [event] = await db
@@ -178,6 +190,12 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       isActive: eventsTable.isActive,
       hostPhone: eventsTable.hostPhone,
       boostedUntil: eventsTable.boostedUntil,
+      eventDate: eventsTable.eventDate,
+      eventLocation: eventsTable.eventLocation,
+      eventNote: eventsTable.eventNote,
+      userId: eventsTable.userId,
+      viewCount: eventsTable.viewCount,
+      updatedAt: eventsTable.updatedAt,
       createdAt: eventsTable.createdAt,
     })
     .from(eventsTable)

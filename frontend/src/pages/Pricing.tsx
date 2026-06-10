@@ -17,7 +17,7 @@ const PLANS = [
     yearlyPrice: 0,
     popular: false,
     features: [
-      { text: '2 eventos', included: true },
+      { text: '2 eventos de por vida', included: true },
       { text: '10 regalos por evento', included: true },
       { text: '3 fotos por evento', included: true },
       { text: 'Lluvia de Sobres disponible', included: true },
@@ -37,7 +37,7 @@ const PLANS = [
       { text: '15 fotos por evento', included: true },
       { text: 'Lluvia de Sobres incluida sin costo extra', included: true },
       { text: '5% comisión al retirar dinero', included: true },
-      { text: 'Notificaciones por WhatsApp en tiempo real', included: true },
+      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
     ],
   },
 ];

@@ -31,6 +31,8 @@ export default function Account() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     getCurrentSubscription()
@@ -59,6 +61,7 @@ export default function Account() {
   };
 
   const handleDownloadData = async () => {
+    setDownloading(true);
     try {
       const res = await apiClient.get<{ data: any }>('/api/auth/arco/my-data');
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
@@ -71,10 +74,13 @@ export default function Account() {
       showToast('Datos descargados correctamente', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al descargar datos', 'error');
+    } finally {
+      setDownloading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
     try {
       await apiClient.post('/api/auth/arco/delete-account', { password: confirmPassword });
       showToast('Cuenta eliminada permanentemente', 'success');
@@ -83,6 +89,8 @@ export default function Account() {
       setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -183,9 +191,10 @@ export default function Account() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownloadData}
-            className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+            disabled={downloading}
+            className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50"
           >
-            Descargar mis datos
+            {downloading ? 'Descargando...' : 'Descargar mis datos'}
           </button>
           <Link
             to="/derechos-arco"
@@ -242,8 +251,8 @@ export default function Account() {
               <button onClick={() => { setShowDeleteConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!confirmPassword} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
-                Eliminar
+              <button onClick={handleDeleteAccount} disabled={!confirmPassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
+                {deletingAccount ? '...' : 'Eliminar'}
               </button>
             </div>
           </div>

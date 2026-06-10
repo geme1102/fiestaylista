@@ -8,7 +8,7 @@ import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLi
 import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ValidationError } from '../utils/errors.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
@@ -114,8 +114,7 @@ router.delete('/:giftId', requireAuth, requireEventOwnership, asyncHandler(async
 router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
-    res.status(400).json({ error: 'ID del evento requerido' });
-    return;
+    throw new ValidationError('ID del evento requerido');
   }
   const sseToken = jwt.sign(
     { eventId, scope: 'sse', userId: req.user!.userId },
@@ -128,8 +127,7 @@ router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res
 router.post('/public-sse-token', asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
-    res.status(400).json({ error: 'ID del evento requerido' });
-    return;
+    throw new ValidationError('ID del evento requerido');
   }
   const [event] = await db
     .select({ id: events.id, isActive: events.isActive, slug: events.slug })
@@ -138,8 +136,7 @@ router.post('/public-sse-token', asyncHandler(async (req, res) => {
     .limit(1);
 
   if (!event || !event.isActive) {
-    res.status(404).json({ error: 'Evento no encontrado' });
-    return;
+    throw new NotFoundError('Evento no encontrado');
   }
 
   const sseToken = jwt.sign(

@@ -9,10 +9,12 @@ interface GiftCardProps {
   onFree?: (id: string) => void;
   onDelete?: (id: string) => void;
   claimingId?: string | null;
+  freeingId?: string | null;
+  deletingId?: string | null;
   isAdmin?: boolean;
 }
 
-const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, isAdmin }: GiftCardProps) {
+const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, freeingId, deletingId, isAdmin }: GiftCardProps) {
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
@@ -44,9 +46,10 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           {isAdmin && onFree && (
             <button
               onClick={() => onFree(gift.id)}
-              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer"
+              disabled={freeingId === gift.id}
+              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30"
             >
-              Liberar obsequio
+              {freeingId === gift.id ? '...' : 'Liberar obsequio'}
             </button>
           )}
         </div>
@@ -97,10 +100,11 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               {onDelete && (
                 <button
                   onClick={() => onDelete(gift.id)}
-                  className="bg-error text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-red-700 active:scale-90 transition-all"
+                  disabled={deletingId === gift.id}
+                  className="bg-error text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-red-700 active:scale-90 transition-all disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined">close</span>
-                  <span className="text-[10px] font-bold mt-1">Eliminar</span>
+                  <span className="text-[10px] font-bold mt-1">{deletingId === gift.id ? '...' : 'Eliminar'}</span>
                 </button>
               )}
             </div>
@@ -140,7 +144,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-base animate-bounce">card_giftcard</span>
-            {claimingId === gift.id ? '...' : '🎁 Regalar este detalle'}
+            {claimingId === gift.id ? '...' : 'Regalar este detalle'}
           </motion.button>
         )}
         {isAdmin && onDelete && (

@@ -5,6 +5,7 @@ import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
+import { requireTier } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
@@ -42,7 +43,7 @@ router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) 
   }
 });
 
-router.get('/analytics/views/:eventId', requireAuth, async (req: AuthRequest, res: Response, next) => {
+router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), async (req: AuthRequest, res: Response, next) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user!.userId;
