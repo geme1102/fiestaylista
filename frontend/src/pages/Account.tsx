@@ -40,7 +40,7 @@ export default function Account() {
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
         showToast(message, 'error');
-        console.error('[Account] subscription error:', err);
+        if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
       })
       .finally(() => setLoadingSub(false));
   }, []);
@@ -212,15 +212,17 @@ export default function Account() {
       </div>
 
       {showCancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div role="dialog" aria-modal="true" aria-label="Cancelar suscripción" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-on-surface">Cancelar Suscripción</h3>
             <p className="text-sm text-on-surface-variant">Ingresa tu contraseña para confirmar la cancelación. Perderás acceso a funciones Pro al final del período actual.</p>
             <input
+              id="cancel-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Tu contraseña"
+              aria-label="Contraseña para cancelar suscripción"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
             />
             <div className="flex gap-3">
@@ -236,15 +238,17 @@ export default function Account() {
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div role="dialog" aria-modal="true" aria-label="Eliminar cuenta" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
             <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer. Ingresa tu contraseña para confirmar.</p>
             <input
+              id="delete-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Tu contraseña"
+              aria-label="Contraseña para eliminar cuenta"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
             />
             <div className="flex gap-3">

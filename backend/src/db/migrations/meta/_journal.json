@@ -43,6 +43,20 @@
       "when": 1779900004000,
       "tag": "0005_add_pro_payments_table",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779900005000,
+      "tag": "0006_add_event_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779900006000,
+      "tag": "0007_add_missing_fk_and_unique",
+      "breakpoints": true
     }
   ]
 }

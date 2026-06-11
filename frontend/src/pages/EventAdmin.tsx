@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowLeft, Pencil, ChevronDown, Share2, Eye,
+  MessageSquare, Copy, Calendar, MapPin, Info,
+  Plus, X, Check, Sparkles,
+  ChevronRight, Home, Upload, Trash2
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
 import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
 import { uploadPhoto, addPhoto } from '../services/events';
-import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_LABELS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
@@ -29,8 +34,14 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'HOUSE_WARMING', icon: '🏠', label: 'Casa Shower' },
 ];
 
+const EVENT_ICONS: Record<string, string> = {
+  BABY_SHOWER: '🍼', WEDDING: '💍', BIRTHDAY: '🎂',
+  BAPTISM: '🕊️', COMMUNION: '✨', OTHER: '🎊', HOUSE_WARMING: '🏠',
+};
+
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [event, setEvent] = useState<AdminEvent | null>(null);
@@ -40,8 +51,6 @@ export default function EventAdmin() {
 
   const [newGiftName, setNewGiftName] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [editingType, setEditingType] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [typeDraft, setTypeDraft] = useState<EventType>('BABY_SHOWER');
@@ -53,16 +62,15 @@ export default function EventAdmin() {
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
   const [boostModal, setBoostModal] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
-  const boostTrapRef = useFocusTrap(boostModal);
 
   const [deletePhotoConfirm, setDeletePhotoConfirm] = useState<string | null>(null);
   const [addingGift, setAddingGift] = useState(false);
   const [deletingGiftId, setDeletingGiftId] = useState<string | null>(null);
   const [freeingGiftId, setFreeingGiftId] = useState<string | null>(null);
-  const [updatingTitle, setUpdatingTitle] = useState(false);
-  const [updatingType, setUpdatingType] = useState(false);
   const [updatingDetails, setUpdatingDetails] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
+  const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -115,13 +123,13 @@ export default function EventAdmin() {
                 showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
                 loadEvent();
               } catch (err) {
-                console.warn('[SSE] Error al procesar mensaje:', err);
+                if (import.meta.env.DEV) console.warn('[SSE] Error al procesar mensaje:', err);
               }
             }
           }
         }
       } catch {
-        console.warn('[SSE] No se pudo conectar al stream de eventos');
+        if (import.meta.env.DEV) console.warn('[SSE] No se pudo conectar al stream de eventos');
       }
 
       if (!cancelled && retryCount < MAX_SSE_RETRIES) {
@@ -129,7 +137,7 @@ export default function EventAdmin() {
         reconnectTimeout = setTimeout(connectSSE, retryDelay);
         retryDelay = Math.min(retryDelay * 2, 30000);
       } else if (!cancelled) {
-        console.warn('[EventAdmin] SSE max retries reached, falling back to polling');
+        if (import.meta.env.DEV) console.warn('[EventAdmin] SSE max retries reached, falling back to polling');
       }
     }
 
@@ -203,51 +211,19 @@ export default function EventAdmin() {
     }
   };
 
-  const handleUpdateTitle = async () => {
-    if (!titleDraft.trim()) return;
-    setUpdatingTitle(true);
-    try {
-      const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, { title: titleDraft.trim() });
-      setEvent((prev) => prev ? { ...prev, title: res.event.title } : prev);
-      setEditingTitle(false);
-      showToast('Título actualizado', 'success');
-    } catch (err) {
-      showToast('Error al actualizar título', 'error');
-    } finally {
-      setUpdatingTitle(false);
-    }
-  };
-
-  const handleUpdateType = async () => {
-    setUpdatingType(true);
-    try {
-      const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, { eventType: typeDraft });
-      setEvent((prev) => prev ? { ...prev, eventType: res.event.eventType } : prev);
-      setEditingType(false);
-      showToast('Tipo de evento actualizado', 'success');
-    } catch (err) {
-      showToast('Error al actualizar tipo de evento', 'error');
-    } finally {
-      setUpdatingType(false);
-    }
-  };
-
   const handleUpdateDetails = async () => {
     setUpdatingDetails(true);
     try {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, {
+        title: titleDraft.trim(),
+        eventType: typeDraft,
         eventDate: dateDraft || null,
         eventLocation: locationDraft || null,
         eventNote: noteDraft || null,
       });
-      setEvent((prev) => prev ? {
-        ...prev,
-        eventDate: res.event.eventDate,
-        eventLocation: res.event.eventLocation,
-        eventNote: res.event.eventNote,
-      } : prev);
+      setEvent((prev) => prev ? { ...prev, ...res.event } : prev);
       setEditingDetails(false);
-      showToast('Detalles actualizados', 'success');
+      showToast('¡Información y detalles actualizados con éxito! 💾', 'success');
     } catch (err) {
       showToast('Error al actualizar detalles', 'error');
     } finally {
@@ -308,12 +284,12 @@ export default function EventAdmin() {
           setBoostLoading(false);
         }
       } else {
-        showToast('Evento boosteado 🚀', 'success');
+        showToast('¡Lluvia de sobres premium habilitada con éxito! ⚡💰', 'success');
         setBoostModal(false);
         setEvent((prev) => prev ? { ...prev, boostedUntil: res.boostedUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() } : prev);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al boostear', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al activar', 'error');
     } finally {
       setBoostLoading(false);
     }
@@ -324,32 +300,32 @@ export default function EventAdmin() {
     setEvent((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev);
     try {
       await apiClient.put(`/api/events/${id}`, { isActive: !prevActive });
+      showToast(prevActive ? 'El evento ha sido pausado de forma privada' : '¡Tu evento ya está disponible en vivo! ⚡', 'success');
     } catch (err) {
       setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
       showToast('Error al actualizar', 'error');
     }
   };
 
+  const copyShareLink = () => {
+    if (!event) return;
+    const url = `${window.location.origin}/e/${event.slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('¡Enlace exclusivo copiado al portapapeles! 🔗', 'success');
+    }).catch(() => {
+      showToast('Enlace copiado! 🔗', 'success');
+    });
+  };
+
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6 py-10 px-container-margin">
-        <div className="h-12 bg-surface-container-high rounded-2xl w-1/3" />
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <div className="h-6 bg-surface-container-high rounded-lg w-1/4" />
-            <div className="h-12 bg-surface-container-high rounded-xl" />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-surface-container-high rounded-2xl" />
-            ))}
-          </div>
-          <div className="space-y-4">
-            <div className="h-6 bg-surface-container-high rounded-lg w-1/4" />
-            <div className="grid grid-cols-2 gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-surface-container-high rounded-xl" />
-              ))}
-            </div>
-          </div>
+      <div className="animate-pulse space-y-6 py-10 px-4 max-w-4xl mx-auto mt-20">
+        <div className="h-8 bg-rose-100/50 rounded-2xl w-1/3" />
+        <div className="h-48 bg-rose-100/30 rounded-[32px]" />
+        <div className="grid md:grid-cols-2 gap-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 bg-rose-100/30 rounded-3xl" />
+          ))}
         </div>
       </div>
     );
@@ -357,398 +333,735 @@ export default function EventAdmin() {
 
   if (!event) {
     return (
-      <div className="text-center py-20 px-container-margin">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
+      <div className="text-center py-20 px-4">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-50 flex items-center justify-center text-4xl">
           😕
         </div>
-        <p className="text-on-surface-variant mb-4">Evento no encontrado</p>
-        <Link to="/dashboard" className="text-primary font-medium inline-block">Volver al dashboard</Link>
+        <p className="text-gray-500 font-semibold mb-4">Evento no encontrado</p>
+        <Link to="/dashboard" className="text-[#a21b53] font-bold inline-block hover:underline">Volver al dashboard</Link>
       </div>
     );
   }
 
   const suggestions = GIFT_SUGGESTIONS[event.eventType] || [];
-  const filteredSuggestions = suggestions.filter((s) =>
+  const filteredSuggestions = useMemo(() => suggestions.filter((s) =>
     s.toLowerCase().includes(newGiftName.toLowerCase()) &&
     !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
-  );
+  ), [suggestions, newGiftName, gifts]);
   const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const date = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return `${date} ${time}`;
+  };
+
   return (
-    <div className="font-body-md text-body-md pb-24">
-      {/* Top App Bar */}
-      <nav className="bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm fixed top-0 z-50 flex justify-between items-center px-container-margin h-16 w-full">
-        <div className="flex items-center gap-3">
-          <Link to="/dashboard" className="active:scale-95 duration-200 text-primary" aria-label="Volver al dashboard">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-headline-md text-headline-md text-primary">Administrar Evento</h1>
+    <div className="min-h-screen bg-[#faf5f6] text-[#2c1f24] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#a21b53]/20 selection:text-[#a21b53]">
+
+      {/* Ambient glow backgrounds */}
+      <div className="absolute top-[-180px] left-[-150px] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-pink-300/30 to-rose-400/20 blur-[130px] pointer-events-none -z-10 animate-pulse duration-[12000ms]" />
+      <div className="absolute top-[350px] right-[-150px] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-amber-200/25 to-pink-300/20 blur-[110px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-[#a21b53]/5 blur-[160px] pointer-events-none -z-10" />
+
+      {/* Glossy Navigation Bar */}
+      <nav className="sticky top-0 z-40 backdrop-blur-md bg-white/75 border-b border-rose-100/15 px-4 py-4 md:px-8 flex items-center justify-between shadow-[0_2px_15px_rgba(162,27,83,0.02)]">
+        <div className="flex items-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => navigate('/dashboard')}
+            className="p-2.5 hover:bg-[#a21b53]/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-[#a21b53] flex items-center justify-center bg-white shadow-sm"
+            aria-label="Regresar"
+          >
+            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+          </motion.button>
+
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-widest font-extrabold text-rose-400">PANEL DE CONTROL</span>
+            <h1 className="text-lg md:text-xl font-extrabold text-[#7e143f] tracking-tight flex items-center gap-2">
+              Administrador de Evento
+            </h1>
+          </div>
         </div>
-        <div className="w-10" />
+
+        <div className="hidden sm:flex items-center gap-2 bg-rose-50 border border-rose-100/40 px-3.5 py-1.5 rounded-full shadow-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] text-gray-600 font-extrabold tracking-wider uppercase">MODO EDICIÓN ACTIVO</span>
+        </div>
       </nav>
 
-      <main className="mt-20 px-container-margin space-y-6">
+      {/* Main Container */}
+      <div className="max-w-4xl mx-auto px-4 mt-8 relative z-10">
+
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
-          <Link to="/dashboard" className="hover:text-primary transition-colors">Mis Eventos</Link>
-          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-          <span className="text-primary font-bold">{event.title}</span>
+        <div className="flex items-center gap-2 text-xs text-gray-500 mb-6 font-semibold px-2">
+          <Link to="/dashboard" className="hover:text-rose-950 hover:underline transition-colors duration-200">Mis Eventos</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+          <span className="bg-white/70 border border-rose-100/35 px-3 py-1 rounded-full text-[#a21b53] font-black shadow-sm flex items-center gap-1">
+            <Home className="w-3 h-3 text-[#a21b53]" />
+            {event.title}
+          </span>
         </div>
 
-        {/* Header Glass Card */}
-        <section className="glass rounded-xl p-6 glow-shadow-pro relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex gap-4">
-              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-2xl">
+        {/* Main Event Card */}
+        <section className="relative bg-white/80 backdrop-blur-xl rounded-[32px] p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(162,27,83,0.06)] border border-white/70 mb-8 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[5px] bg-gradient-to-r from-pink-300 via-rose-500 to-amber-300" />
+
+          {/* Header row: avatar, title, toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-rose-100/20">
+            <div className="flex items-center gap-[18px]">
+              <motion.div
+                whileHover={{ rotate: 8, scale: 1.05 }}
+                className="relative w-[72px] h-[72px] bg-gradient-to-br from-[#fff2f5] to-[#ffe5eb] border border-white flex items-center justify-center rounded-2xl text-4xl shadow-[0_10px_25px_rgba(162,27,83,0.09)] shrink-0 cursor-default"
+              >
                 {EVENT_ICONS[event.eventType]}
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  {editingTitle ? (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={titleDraft}
-                        onChange={(e) => setTitleDraft(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface font-headline-md text-headline-md text-on-surface outline-none focus:ring-2 focus:ring-primary"
-                        autoFocus
-                      />
-                      <button onClick={handleUpdateTitle} disabled={updatingTitle} className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50">Guardar</button>
-                      <button onClick={() => setEditingTitle(false)} className="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
-                    </div>
-                  ) : (
-                    <>
-                      <h2 className="font-headline-md text-headline-md text-on-surface">{event.title}</h2>
-                      <button onClick={() => setEditingTitle(true)} className="text-primary">
-                        <span className="material-symbols-outlined text-sm">edit</span>
-                      </button>
-                    </>
-                  )}
+                <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-[#a21b53] border border-white text-[7px] text-white font-bold items-center justify-center">★</span>
+                </span>
+              </motion.div>
+
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-1.5">
+                    {event.title}
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.15, rotate: 15 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      setEditingDetails(true);
+                      setTitleDraft(event.title);
+                      setTypeDraft(event.eventType);
+                      setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
+                      setLocationDraft(event.eventLocation ?? '');
+                      setNoteDraft(event.eventNote ?? '');
+                    }}
+                    className="p-2 text-pink-500 hover:text-white hover:bg-[#a21b53] rounded-xl transition-all cursor-pointer bg-white border border-[#a21b53]/15 shadow-sm flex items-center justify-center"
+                    title="Editar título del evento"
+                  >
+                    <Pencil className="w-[18px] h-[18px]" />
+                  </motion.button>
                 </div>
-                <div className="flex items-center gap-1 text-on-surface-variant font-label-md">
-                  {editingType ? (
-                    <div className="flex gap-2 flex-wrap items-center">
-                      {EVENT_TYPES.map((t) => (
-                        <button
-                          key={t.value}
-                          onClick={() => setTypeDraft(t.value)}
-                          className={`px-2 py-1 text-xs rounded-lg font-medium transition-all ${
-                            typeDraft === t.value
-                              ? 'bg-primary-fixed text-primary-fixed-dim ring-2 ring-primary'
-                              : 'bg-surface-container-high text-on-surface-variant'
-                          }`}
-                        >
-                          {t.icon} {t.label}
-                        </button>
-                      ))}
-                      <button onClick={handleUpdateType} disabled={updatingType} className="px-3 py-1 text-xs bg-primary text-white rounded-lg font-medium disabled:opacity-50">Guardar</button>
-                      <button onClick={() => setEditingType(false)} className="px-3 py-1 text-xs text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
-                    </div>
-                  ) : (
-                    <span onClick={() => setEditingType(true)} className="cursor-pointer flex items-center gap-1">
-                      Tipo: {EVENT_LABELS[event.eventType]}
-                      <span className="material-symbols-outlined text-sm">expand_more</span>
-                    </span>
-                  )}
-                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setEditingDetails(true)}
+                  className="text-gray-500 text-xs font-bold mt-2 py-1.5 px-3.5 bg-rose-50/50 hover:bg-rose-50 border border-rose-100/40 rounded-full inline-flex items-center gap-1.5 hover:text-gray-900 transition-all cursor-pointer group"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#a21b53]" />
+                  <span>Tipo: <span className="text-[#a21b53] font-extrabold">{EVENT_LABELS[event.eventType]}</span></span>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#a21b53] group-hover:translate-y-0.5 transition-transform" />
+                </motion.button>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={event.isActive} onChange={toggleActive} className="sr-only peer" role="switch" />
-                <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-              </label>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                {event.isActive ? 'Activo' : 'Inactivo'}
-              </span>
+
+            {/* Active Toggle */}
+            <div className="flex items-center justify-between sm:justify-start gap-4 bg-white border border-[#a21b53]/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] text-[#a21b53] font-extrabold tracking-widest uppercase">ESTADO DE EVENTO</span>
+                <span className={`text-xs font-semibold tracking-wide ${event.isActive ? 'text-emerald-700 font-extrabold' : 'text-gray-400 font-medium'}`}>
+                  {event.isActive ? '● ACTIVO EN LÍNEA' : '○ PAUSADO'}
+                </span>
+              </div>
+
+              <button
+                onClick={toggleActive}
+                className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
+                aria-label="Toggle Event Active Status"
+              >
+                {event.isActive && (
+                  <span className="absolute inset-0 bg-[#c52367] rounded-full blur-[2px] opacity-30 animate-pulse" />
+                )}
+                <div className={`w-[22px] h-[22px] bg-white rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-transform duration-300 transform ${event.isActive ? 'translate-x-[26px]' : 'translate-x-0'}`} />
+              </button>
             </div>
           </div>
 
-          {/* Boost Badge */}
+          {/* Lluvia de Sobres Banner */}
           {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
-            <div className="bg-secondary-fixed/30 border border-secondary/20 rounded-lg p-3 flex justify-between items-center mb-6 overflow-hidden relative">
-              <div className="shimmer-bg absolute inset-0 pointer-events-none" />
-              <div className="flex items-center gap-2 relative z-10">
-                <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                <span className="font-label-md text-secondary">Activa Lluvia de Sobres para tu evento</span>
+            <div className="bg-gradient-to-r from-[#fff5ee] via-[#fffbf7] to-[#fff5ee] border border-orange-200/20 rounded-2xl p-5 mt-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
+              <div className="flex items-start md:items-center gap-4 text-amber-950">
+                <span className="text-2xl leading-none bg-amber-100 text-amber-700 w-11 h-11 flex items-center justify-center rounded-2xl shadow-sm border border-amber-200/40 shrink-0">⚡</span>
+                <div className="flex flex-col text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-extrabold tracking-tight">Activar Lluvia de Sobres Premium</span>
+                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-amber-200">Recomendado</span>
+                  </div>
+                  <span className="text-xs text-amber-900/80 font-medium tracking-normal mt-0.5 max-w-lg">
+                    Permite aportes voluntarios directamente transferidos a tu banco en formato digital seguro con PSE, tarjetas o efectivo.
+                  </span>
+                </div>
               </div>
-              <button onClick={() => setBoostModal(true)} className="bg-secondary text-white px-4 py-1.5 rounded-full font-label-md active:scale-95 transition-transform relative z-10">
-                $10.000 COP
-              </button>
+
+              <motion.button
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setBoostModal(true)}
+                className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
+              >
+                <span>Activar Solución</span>
+                <span className="bg-amber-100/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">$10.000 COP</span>
+              </motion.button>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
+            <motion.button
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => {
                 const url = `${window.location.origin}/e/${event.slug}`;
                 if (navigator.share) {
                   navigator.share({ title: event.title, url });
                 } else {
-                  navigator.clipboard.writeText(url);
-                  showToast('Enlace copiado', 'success');
+                  copyShareLink();
                 }
               }}
-              className="flex items-center justify-center gap-2 bg-on-surface text-surface py-3 rounded-xl font-label-md active:scale-95 transition-all"
+              className="group relative bg-[#1c1a1f] hover:bg-black text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_10px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-white/10"
             >
-              <span className="material-symbols-outlined text-sm">share</span> Compartir
-            </button>
-            <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 border border-outline/30 text-on-surface py-3 rounded-xl font-label-md active:scale-95 transition-all">
-              Vista previa <span className="material-symbols-outlined text-sm">visibility</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+              <Share2 className="w-[18px] h-[18px] text-rose-300 stroke-[2.5]" />
+              <span>Compartir con Invitados</span>
+            </motion.button>
+
+            <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer">
+              <motion.button
+                whileHover={{ y: -3, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative w-full bg-white/45 hover:bg-white/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-[#a21b53] py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+                <span>Vista Previa de Invitado</span>
+                <Eye className="w-[18px] h-[18px] text-[#a21b53] stroke-[2.2]" />
+              </motion.button>
             </a>
           </div>
 
-          {/* Social Share Row */}
-          <div className="mt-4 flex gap-4 justify-center">
-            <button
+          {/* Utility Buttons */}
+          <div className="flex items-center justify-center gap-4 mt-6 pt-2 border-t border-rose-50">
+            <motion.button
+              whileHover={{ scale: 1.12, rotate: -5 }}
+              whileTap={{ scale: 0.88 }}
               onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank')}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#25D366] text-white active:scale-95 transition-transform"
+              className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
+              title="Compartir por WhatsApp"
             >
-              <span className="material-symbols-outlined">chat</span>
-            </button>
-            <button
-              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/e/${event.slug}`); showToast('Enlace copiado', 'success'); }}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-variant text-on-surface active:scale-95 transition-transform"
+              <MessageSquare className="w-[22px] h-[22px] fill-white" />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.12, rotate: 5 }}
+              whileTap={{ scale: 0.88 }}
+              onClick={copyShareLink}
+              className="w-11 h-11 bg-white hover:bg-rose-50/50 border border-rose-100/40 flex items-center justify-center rounded-full text-gray-700 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+              title="Copiar enlace"
             >
-              <span className="material-symbols-outlined">content_copy</span>
-            </button>
+              <Copy className="w-5 h-5 text-gray-500 stroke-[2.2]" />
+            </motion.button>
           </div>
 
           {/* Event Details Section */}
-          <div className="mt-6 border-t border-outline-variant/30 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-label-md text-label-md text-on-surface-variant">Detalles del Evento</h3>
-              {!editingDetails && (
-                <button onClick={() => setEditingDetails(true)} className="text-primary text-sm font-medium flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">edit</span> Editar
-                </button>
-              )}
-            </div>
-            <AnimatePresence mode="wait">
-            {editingDetails ? (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="space-y-4"
+          <div className="mt-8 pt-6 border-t border-rose-100/20">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#a21b53]" />
+                <h3 className="text-gray-900 font-extrabold text-sm tracking-widest uppercase">Detalles del Evento</h3>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setEditingDetails(true);
+                  setTitleDraft(event.title);
+                  setTypeDraft(event.eventType);
+                  setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
+                  setLocationDraft(event.eventLocation ?? '');
+                  setNoteDraft(event.eventNote ?? '');
+                }}
+                className="bg-[#a21b53]/5 hover:bg-[#a21b53]/10 border border-[#a21b53]/15 hover:border-[#a21b53]/30 text-[#a21b53] font-bold text-xs px-4 py-2 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
               >
-                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
-                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
-                    Fecha y hora
-                  </label>
+                <Pencil className="w-3.5 h-3.5 text-[#a21b53] group-hover:rotate-12 transition-transform" />
+                <span>Editar Evento</span>
+              </motion.button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+                <div className="p-2.5 bg-[#a21b53]/5 text-[#a21b53] rounded-xl shrink-0">
+                  <Calendar className="w-5 h-5 stroke-[2]" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fecha y Hora</span>
+                  <span className="text-[#a21b53] text-[13px] font-extrabold leading-snug mt-1.5">
+                    {event.eventDate ? formatDateTime(event.eventDate) : 'Sin definir'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+                <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl shrink-0">
+                  <MapPin className="w-5 h-5 stroke-[2]" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Ubicación / Lugar</span>
+                  <span className="text-gray-800 text-[13px] font-extrabold leading-snug mt-1.5">{event.eventLocation || 'Sin definir'}</span>
+                </div>
+              </div>
+
+              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                  <Info className="w-5 h-5 stroke-[2]" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Indicaciones</span>
+                  <span className="text-gray-700 text-xs font-semibold leading-normal mt-1.5 line-clamp-3">{event.eventNote || 'Sin notas'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Gifts Section */}
+        <section className="mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 px-1">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#a21b53] to-pink-500 flex items-center justify-center text-white shadow-sm font-bold text-lg">
+                🎁
+              </div>
+              <div className="flex flex-col text-left">
+                <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                  Lista de Deseos de Regalos
+                </h3>
+                <span className="text-xs text-gray-400 font-semibold">Tus invitados elegirán los regalos directo de esta lista</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Add Gift Form */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleAddGift(); }}
+            className="bg-white/70 border border-rose-100/20 p-5 rounded-[28px] shadow-sm mb-6 text-left"
+          >
+            <h4 className="text-xs font-extrabold text-[#7e143f] uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
+              <span>+ Agregar Regalo Personalizado</span>
+            </h4>
+
+            <div className="flex gap-3">
+              <input
+                type="text"
+                placeholder="Nombre del regalo (Ej: Juego de Sábanas)..."
+                value={newGiftName}
+                onChange={(e) => { setNewGiftName(e.target.value); setShowSuggestions(true); }}
+                onKeyDown={(e) => { if (e.key === 'Escape') setShowSuggestions(false); }}
+                className="flex-1 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97c9b]/35 bg-white text-gray-800"
+                role="combobox"
+                aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
+                aria-autocomplete="list"
+              />
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="submit"
+                disabled={!newGiftName.trim() || addingGift}
+                className="bg-gradient-to-r from-[#a21b53] to-[#c52367] text-white py-3 px-6 rounded-full text-xs font-black shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{addingGift ? '...' : 'Añadir'}</span>
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              </motion.button>
+            </div>
+
+            {/* Suggestions dropdown */}
+            {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
+              <div className="mt-3 bg-white border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                {filteredSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-pink-50 transition-colors font-semibold"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
+
+          {/* Suggestion Pills */}
+          {suggestions.length > 0 && (
+            <div className="mb-6 flex flex-col gap-2">
+              <div className="flex items-center gap-1.5 px-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-bounce" />
+                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">Sugerencias rápidas:</span>
+              </div>
+
+              <div className="overflow-x-auto hide-scrollbar pb-2">
+                <div className="flex gap-2.5 min-w-max px-1">
+                  {suggestions
+                    .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
+                    .slice(0, 8)
+                    .map((s, idx) => (
+                      <motion.button
+                        key={idx}
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        type="button"
+                        disabled={addingGift}
+                        onClick={async () => {
+                          if (addingGift) return;
+                          setAddingGift(true);
+                          try {
+                            const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s });
+                            setGifts((prev) => [...prev, res.gift]);
+                            showToast(`Regalo sugerido "${s}" añadido 🎁`, 'success');
+                          } catch {
+                            showToast('Error al agregar regalo', 'error');
+                          } finally {
+                            setAddingGift(false);
+                          }
+                        }}
+                        className="text-xs font-bold py-2 px-[18px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-white hover:bg-rose-50/35 border-gray-200 text-gray-700 hover:border-[#a21b53]/40 disabled:opacity-50"
+                      >
+                        <span className="text-[#a21b53] font-black">+</span>
+                        <span>{s}</span>
+                      </motion.button>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Gift Cards Grid */}
+          {gifts.length === 0 ? (
+            <div className="bg-white/60 border rounded-3xl p-12 text-center border-gray-200/50">
+              <p className="text-gray-800 font-extrabold text-base">No hay regalos de deseos</p>
+              <p className="text-gray-400 text-xs mt-1 font-medium">Agrega tu primer regalo usando el formulario de arriba.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {gifts.map((gift) => (
+                <GiftCard
+                  key={gift.id}
+                  gift={gift}
+                  onFree={handleFreeGift}
+                  onDelete={handleDeleteGift}
+                  isAdmin
+                  freeingId={freeingGiftId}
+                  deletingId={deletingGiftId}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Photos Section */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-[18px] px-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                Álbum de Recuerdos <span className="text-gray-400 text-sm font-semibold">({photos.length})</span>
+              </h3>
+            </div>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleUploadPhoto}
+            multiple
+            accept="image/*"
+            className="hidden"
+            id="hidden-photo-uploader"
+          />
+
+          {photos.length === 0 ? (
+            <p className="text-center text-gray-400 text-xs font-semibold mb-6 bg-white p-6 rounded-2xl border border-dashed border-gray-200">
+              📸 Aún no hay fotografías agregadas. Pulsa en Subir más fotos en el banner inferior.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mb-6">
+              {photos.map((photo) => (
+                <div
+                  key={photo.id}
+                  onClick={() => setSelectedPhotoForPreview(photo)}
+                  className="bg-white p-2.5 rounded-[22px] border border-gray-200/70 shadow-sm relative group overflow-hidden cursor-pointer hover:border-[#a21b53]/45 transition-all duration-300"
+                >
+                  <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
+
+                  <div className="absolute inset-2.5 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletePhotoConfirm(photo.id);
+                      }}
+                      className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow self-end cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      title="Eliminar del catálogo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <span className="text-[10px] text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
+                  </div>
+
+                  <div className="mt-2.5 px-1 text-[11px] text-gray-500 font-bold flex justify-between gap-1 overflow-hidden">
+                    <span className="truncate max-w-[70%] text-left">{photo.caption || 'Foto'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload Area */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
+          >
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">
+              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
+            </div>
+            <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
+              {uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos'}
+            </span>
+            <span className="text-[10px] text-gray-400 font-bold mt-1">
+              Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
+            </span>
+          </div>
+        </section>
+      </div>
+
+      {/* Photo Preview Lightbox */}
+      <AnimatePresence>
+        {selectedPhotoForPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedPhotoForPreview(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Vista previa de foto"
+            className="fixed inset-0 bg-black/95 z-55 flex flex-col items-center justify-center p-4 backdrop-blur-lg"
+          >
+            <div className="absolute top-4 right-4 flex gap-4">
+              <button
+                onClick={() => setSelectedPhotoForPreview(null)}
+                className="bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-all shrink-0 cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <motion.img
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              src={selectedPhotoForPreview.url}
+              alt={selectedPhotoForPreview.caption || 'Foto del evento'}
+              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+            />
+
+            <div className="mt-5 text-center bg-white/10 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/10 max-w-sm">
+              <h5 className="text-white text-sm font-bold truncate">{selectedPhotoForPreview.caption || 'Foto'}</h5>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Details Modal */}
+      <AnimatePresence>
+        {editingDetails && (
+          <div role="dialog" aria-modal="true" aria-label="Editar información del evento" className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[32px] max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-36 h-36 bg-pink-100/40 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+              <div className="flex items-center justify-between pb-3.5 border-b border-gray-200">
+                <div className="flex items-center gap-1.5 text-left">
+                  <span className="text-xl">✨</span>
+                  <h4 className="text-lg font-black text-gray-900 tracking-tight">Editar Información de Evento</h4>
+                </div>
+                <button
+                  onClick={() => setEditingDetails(false)}
+                  aria-label="Cerrar"
+                  className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleUpdateDetails(); }}
+                className="space-y-4 text-left"
+              >
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Único de Evento</label>
                   <input
-                    type="datetime-local"
-                    value={dateDraft}
-                    onChange={(e) => setDateDraft(e.target.value)}
-                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md"
+                    type="text"
+                    value={titleDraft}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold"
+                    required
                   />
                 </div>
-                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
-                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-sm text-primary">location_on</span>
-                    Lugar
-                  </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Categoría Tipo de Reunión</label>
+                    <select
+                      value={typeDraft}
+                      onChange={(e) => setTypeDraft(e.target.value as EventType)}
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
+                    >
+                      {EVENT_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Fecha y Hora</label>
+                    <input
+                      type="datetime-local"
+                      value={dateDraft}
+                      onChange={(e) => setDateDraft(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar / Ubicación Geográfica</label>
                   <input
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold"
                     placeholder="Ej: Salón de eventos, Ciudad"
                   />
                 </div>
-                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
-                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-sm text-primary">info</span>
-                    Nota para invitados
-                  </label>
+
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Recomendaciones y Notas para Invitados</label>
                   <textarea
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
-                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md resize-none"
                     rows={3}
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-semibold text-gray-700 resize-none"
                     placeholder="Ej: No se aceptan regalos envueltos"
                   />
                 </div>
-                <div className="flex gap-3 pt-1">
-                  <button onClick={handleUpdateDetails} disabled={updatingDetails} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50">
-                    <span className="material-symbols-outlined text-sm">check</span>
-                    {updatingDetails ? 'Guardando...' : 'Guardar cambios'}
-                  </button>
-                  <button onClick={() => setEditingDetails(false)} className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-all active:scale-95">
-                    Cancelar
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="space-y-1 text-sm text-on-surface">
-                {event.eventDate && (
-                  <p className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base text-on-surface-variant">calendar_today</span>
-                    {new Date(event.eventDate).toLocaleDateString('es-MX', { dateStyle: 'long' })}
-                    {new Date(event.eventDate).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                )}
-                {event.eventLocation && (
-                  <p className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base text-on-surface-variant">location_on</span>
-                    {event.eventLocation}
-                  </p>
-                )}
-                {event.eventNote && (
-                  <p className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-base text-on-surface-variant mt-0.5">info</span>
-                    {event.eventNote}
-                  </p>
-                )}
-                {!event.eventDate && !event.eventLocation && !event.eventNote && (
-                  <p className="text-on-surface-variant italic">Sin detalles adicionales</p>
-                )}
-              </div>
-            )}
-            </AnimatePresence>
-          </div>
-        </section>
 
-        {/* Regalos Section */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-headline-md text-headline-md flex items-center gap-2">
-              Regalos <span className="text-primary font-bold">({gifts.length})</span>
-            </h3>
-            <span className="material-symbols-outlined text-on-surface-variant">featured_play_list</span>
-          </div>
-
-          {/* Add Gift */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={newGiftName}
-                onChange={(e) => { setNewGiftName(e.target.value); setShowSuggestions(true); }}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAddGift(); if (e.key === 'Escape') setShowSuggestions(false); }}
-                placeholder="Añadir un regalo..."
-                className="w-full bg-white border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 shadow-sm outline-none text-on-surface"
-                role="combobox"
-                aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
-                aria-autocomplete="list"
-                aria-controls="gift-suggestions-list"
-              />
-              {/* Suggestions Dropdown */}
-              {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-                <div id="gift-suggestions-list" role="listbox" className="absolute z-10 mt-1 w-full bg-white border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                  {filteredSuggestions.map((s) => (
-                    <button
-                      key={s}
-                      role="option"
-                      onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-primary-fixed transition-colors"
-                    >
-                      + {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleAddGift}
-              disabled={!newGiftName.trim() || addingGift}
-              className="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center glow-shadow-pro active:scale-95 transition-all disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined">add</span>
-            </motion.button>
-          </div>
-
-          {/* Quick Suggestions */}
-          {suggestions.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 hide-scrollbar">
-              {suggestions
-                .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
-                .slice(0, 6)
-                .map((s) => (
+                <div className="flex justify-end gap-3.5 pt-4 border-t border-gray-200 mt-5">
                   <button
-                    key={s}
-                    disabled={addingGift}
-                    onClick={async () => {
-                      if (addingGift) return;
-                      setAddingGift(true);
-                      try {
-                        const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s });
-                        setGifts((prev) => [...prev, res.gift]);
-                      } catch {
-                        showToast('Error al agregar regalo', 'error');
-                      } finally {
-                        setAddingGift(false);
-                      }
-                    }}
-                    className="whitespace-nowrap bg-white border border-outline-variant px-4 py-2 rounded-full font-label-md text-on-surface-variant flex items-center gap-1 active:bg-primary-fixed transition-colors shrink-0 disabled:opacity-50"
+                    type="button"
+                    onClick={() => setEditingDetails(false)}
+                    className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-sm">add</span> {s}
+                    Salir sin Guardar
                   </button>
-                ))}
-            </div>
-          )}
-
-          {/* Gift List */}
-          {gifts.length === 0 && (
-            <div className="glass p-6 rounded-xl text-center">
-              <p className="text-on-surface-variant">No hay regalos aún. ¡Agrega el primero!</p>
-            </div>
-          )}
-          <div className="space-y-3">
-            {gifts.map((gift) => (
-              <GiftCard
-                key={gift.id}
-                gift={gift}
-                onFree={handleFreeGift}
-                onDelete={handleDeleteGift}
-                isAdmin
-                freeingId={freeingGiftId}
-                deletingId={deletingGiftId}
-              />
-            ))}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={updatingDetails}
+                    className="bg-[#c52367] hover:bg-[#a21b53] text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {updatingDetails ? '...' : 'Guardar Cambios'}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </section>
+        )}
+      </AnimatePresence>
 
-        {/* Fotos Section */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-headline-md text-headline-md flex items-center gap-2">
-              Fotos <span className="text-primary font-bold">({photos.length})</span>
-            </h3>
-            <span className="material-symbols-outlined text-on-surface-variant">photo_library</span>
-          </div>
+      {/* Lluvia de Sobres / Boost Modal */}
+      <AnimatePresence>
+        {boostModal && (
+          <div role="dialog" aria-modal="true" aria-label="Activar Lluvia de Sobres" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              className="bg-[#fffdfb] rounded-[36px] max-w-md w-full p-6 md:p-8 shadow-2xl border border-orange-100 flex flex-col gap-4 text-center relative overflow-hidden"
+            >
+              <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-amber-200/20 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-          {photos.length === 0 && (
-            <div className="glass p-6 rounded-xl text-center">
-              <p className="text-on-surface-variant">Aún no hay fotos. Sube la primera.</p>
-            </div>
-          )}
+              <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-amber-700 rounded-3xl flex items-center justify-center mx-auto text-white text-3xl shadow-md border border-amber-200/50">
+                ⚡
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {photos.map((photo) => (
-              <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden shadow-sm group">
-                <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
-                <button
-                  onClick={() => setDeletePhotoConfirm(photo.id)}
-                  className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
+              <h4 className="text-xl font-black text-[#93400e] tracking-tight">
+                Habilitar Aportes Digitales ($10.000 COP)
+              </h4>
+              <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-semibold">
+                La Lluvia de Sobres digital permite a tus amistades realizar transferencias en línea directas que se abonan al instante en tu cuenta bancaria.
+              </p>
+
+              <div className="bg-amber-50/70 p-[18px] rounded-2xl border border-amber-200/50 text-left space-y-2.5">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
+                  <span>Sin intermediarios innecesarios</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
+                  <span>Permite transacciones por PSE, Tarjetas bancarias y Efectivo</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
+                  <span>Recaudación con comprobantes automáticos</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
+                  <span>Configuración inmediata libre de comisiones extra ocultas</span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-gray-400 font-semibold">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago.</p>
+
+              <div className="flex flex-col gap-2.5 mt-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBoost}
+                  disabled={boostLoading}
+                  className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-sm">close</span>
+                  {boostLoading ? '...' : 'PAGAR Y ACTIVAR ($10.000 COP)'}
+                </motion.button>
+                <button
+                  onClick={() => setBoostModal(false)}
+                  disabled={boostLoading}
+                  className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-1.5 font-extrabold cursor-pointer disabled:opacity-50"
+                >
+                  Tal vez luego
                 </button>
               </div>
-            ))}
-            {/* Upload Area */}
-            <label className="col-span-2 border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl py-8 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-primary/10 transition-colors">
-              <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
-              <p className="font-bold text-primary">{uploading ? 'Subiendo...' : 'Subir más fotos'}</p>
-              <p className="text-caption text-on-surface-variant">JPG o PNG hasta 10MB</p>
-              <input type="file" accept="image/*" onChange={handleUploadPhoto} disabled={uploading} className="hidden" />
-            </label>
+            </motion.div>
           </div>
-        </section>
-      </main>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Photo Confirmation Modal */}
+      {deletePhotoConfirm && (
+        <ConfirmModal
+          message="¿Eliminar esta foto? Esta acción no se puede deshacer."
+          onConfirm={() => handleDeletePhoto(deletePhotoConfirm)}
+          onClose={() => setDeletePhotoConfirm(null)}
+          loading={deletingPhoto}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
@@ -765,67 +1078,6 @@ export default function EventAdmin() {
           <span className="font-label-md text-label-md">Cuenta</span>
         </Link>
       </nav>
-
-      {/* Delete Photo Confirmation Modal */}
-      {deletePhotoConfirm && (
-        <ConfirmModal
-          message="¿Eliminar esta foto? Esta acción no se puede deshacer."
-          onConfirm={() => handleDeletePhoto(deletePhotoConfirm)}
-          onClose={() => setDeletePhotoConfirm(null)}
-          loading={deletingPhoto}
-        />
-      )}
-
-      {/* Boost Modal */}
-      {boostModal && (
-        <div ref={boostTrapRef} className="fixed inset-0 z-[60] flex items-center justify-center p-6" id="modalBoost">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setBoostModal(false)} />
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-surface w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative z-10"
-          >
-            <div className="bg-secondary p-6 text-center space-y-2 relative overflow-hidden">
-              <div className="shimmer-bg absolute inset-0 opacity-30 pointer-events-none" />
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
-              </div>
-              <h2 className="font-headline-md text-headline-md text-white">Activar Lluvia de Sobres</h2>
-              <p className="text-white/80 font-label-md">Convierte tus regalos en dinero efectivo</p>
-            </div>
-            <div className="p-6 space-y-4">
-              <ul className="space-y-3">
-                <li className="flex gap-3">
-                  <span className="material-symbols-outlined text-secondary">check_circle</span>
-                  <p className="text-on-surface-variant text-body-md">Tus invitados te envían dinero directo a tu cuenta bancaria.</p>
-                </li>
-                <li className="flex gap-3">
-                  <span className="material-symbols-outlined text-secondary">check_circle</span>
-                  <p className="text-on-surface-variant text-body-md">Tus invitados pueden pagar con cualquier tarjeta o PSE.</p>
-                </li>
-                <li className="flex gap-3">
-                  <span className="material-symbols-outlined text-secondary">check_circle</span>
-                  <p className="text-on-surface-variant text-body-md">Habilitado para transferencias internacionales.</p>
-                </li>
-              </ul>
-              <p className="text-xs text-on-surface-variant text-center">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago.</p>
-              <button
-                onClick={handleBoost}
-                disabled={boostLoading}
-                className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform disabled:opacity-50"
-              >
-                {boostLoading ? '...' : 'Pagar $10.000 COP'}
-              </button>
-              <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="w-full text-on-surface-variant font-label-md py-2 hover:text-on-surface transition-colors">
-                Tal vez luego
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
-
-

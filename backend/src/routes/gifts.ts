@@ -124,7 +124,7 @@ router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res
   res.json({ token: sseToken });
 }));
 
-router.post('/public-sse-token', asyncHandler(async (req, res) => {
+router.post('/public-sse-token', apiLimiter, asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

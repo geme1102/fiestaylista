@@ -180,11 +180,11 @@ export default function EventGuest() {
 
         <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary">menu</span>
+            <button className="material-symbols-outlined text-primary cursor-pointer" aria-label="Menú">menu</button>
             <span className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-primary">shopping_bag</span>
+            <button className="material-symbols-outlined text-primary cursor-pointer" aria-label="Lista de regalos">shopping_bag</button>
           </div>
         </header>
 

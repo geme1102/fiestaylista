@@ -108,6 +108,8 @@ export function useEventPage() {
     let abortController: AbortController | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let retryDelay = 2000;
+    let retryCount = 0;
+    const MAX_SSE_RETRIES = 10;
 
     async function connectSSE() {
       try {
@@ -125,6 +127,7 @@ export function useEventPage() {
         if (!response.ok || !response.body || cancelled) return;
 
         retryDelay = 2000;
+        retryCount = 0;
       sseConnectedRef.current = true;
 
         const reader = response.body.getReader();
@@ -151,7 +154,8 @@ export function useEventPage() {
         }
       } catch { /* SSE disconnected */ }
 
-      if (!cancelled) {
+      if (!cancelled && retryCount < MAX_SSE_RETRIES) {
+        retryCount++;
         reconnectTimeout = setTimeout(connectSSE, retryDelay);
         retryDelay = Math.min(retryDelay * 2, 30000);
       }

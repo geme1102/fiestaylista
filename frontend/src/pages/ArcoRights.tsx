@@ -166,7 +166,7 @@ export default function ArcoRights() {
       const res = await apiClient.get<{ requests: any[] }>('/api/auth/arco/requests');
       setRequests(res.requests);
     } catch (err) {
-      console.error('[ArcoRights] loadRequests error:', err);
+      if (import.meta.env.DEV) console.error('[ArcoRights] loadRequests error:', err);
     }
   };
 

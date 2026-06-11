@@ -293,12 +293,13 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
     <form className="space-y-6" onSubmit={handleCreate}>
       <div>
         <label className="block text-sm font-bold mb-3">Tipo de evento</label>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {ONBOARDING_TYPES.map((type) => (
             <button
               key={type}
               type="button"
               onClick={() => setFormData({ ...formData, eventType: type })}
+              aria-pressed={formData.eventType === type}
               className={cn(
                 'flex flex-col items-center p-4 rounded-2xl border-2 transition-all',
                 formData.eventType === type

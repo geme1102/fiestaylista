@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
 import type { Gift } from '../types';
 
@@ -19,9 +20,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
 
-  const onImgError = () => {
-    setImgError(true);
-  };
+  const onImgError = () => setImgError(true);
 
   if (gift.isClaimed) {
     return (
@@ -59,7 +58,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           )}
         </div>
         <div className="p-5 opacity-30 select-none">
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{gift.name}</h3>
+          <h3 className="text-lg font-bold text-on-surface mb-1">{gift.name}</h3>
         </div>
       </motion.div>
     );
@@ -71,71 +70,70 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -4 }}
-      className="bg-white rounded-3xl overflow-hidden shadow-sm border border-amber-100/60 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+      className="bg-white border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#a21b53]/25 group overflow-hidden text-left"
     >
-      <div>
-        <div className="relative h-44 bg-gradient-to-b from-amber-50/60 to-rose-50/30 flex items-center justify-center p-4">
-          <span className="absolute top-4 left-4 bg-white/95 text-amber-800 text-[9px] font-extrabold uppercase px-3 py-1 rounded-full border border-amber-200/50 shadow-xs z-10">
-            {category.label}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-50/60 to-transparent rounded-bl-full pointer-events-none -z-10" />
+
+      <div className="absolute top-4 left-4 flex gap-1.5 z-10">
+        <span className="bg-amber-50 border border-amber-200/50 text-amber-800 text-[8px] md:text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider leading-none">
+          REGALO
+        </span>
+        {isAdmin && (
+          <span className="bg-[#2a292e] text-white text-[8px] font-bold px-2 py-0.5 rounded tracking-wider uppercase leading-none">
+            ADMIN VIEW
           </span>
+        )}
+      </div>
 
-          <span className="absolute top-5 right-6 text-yellow-500 text-sm sparkle-fast pointer-events-none select-none">✦</span>
-          <span className="absolute bottom-5 left-6 text-pink-400 text-base sparkle-slow pointer-events-none select-none">✦</span>
-
-          {!imgError ? (
-            <img
-              src={image}
-              alt=""
-              loading="lazy"
-              className="w-20 h-20 object-contain transition-transform duration-500 group-hover:scale-110 select-none pointer-events-none"
-              onError={onImgError}
-            />
-          ) : (
-            <span className="text-5xl select-none">🎁</span>
-          )}
-
-          {isAdmin && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-              {onDelete && (
-                <button
-                  onClick={() => onDelete(gift.id)}
-                  disabled={deletingId === gift.id}
-                  className="bg-error text-white flex flex-col items-center justify-center w-16 h-16 rounded-full shadow-lg hover:bg-red-700 active:scale-90 transition-all disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                  <span className="text-[10px] font-bold mt-1">{deletingId === gift.id ? '...' : 'Eliminar'}</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {isAdmin && (
-            <div className="absolute top-4 right-4 z-20 bg-inverse-surface text-inverse-on-surface px-2 py-1 rounded text-[10px] uppercase tracking-wider font-bold">
-              Admin View
-            </div>
-          )}
+      <div className="flex items-start gap-4 mt-6">
+        <div className="w-[72px] h-[72px] bg-[#fff0f4] rounded-2xl flex flex-col items-center justify-center shrink-0 border border-pink-100/30 relative">
+          <div className="flex justify-center gap-0.5 -mb-0.5 pointer-events-none">
+            <div className="w-2.5 h-2.5 border border-[#d65780] rounded-full rotate-[-12deg]" />
+            <div className="w-2.5 h-2.5 border border-[#d65780] rounded-full rotate-[12deg]" />
+          </div>
+          <div className="w-9 h-2 bg-[#fadcd5] border border-[#d65780] rounded-sm relative z-10 pointer-events-none" />
+          <div className="w-8 h-7 bg-white border-x border-b border-[#d65780] rounded-b-sm relative flex justify-center pointer-events-none">
+            <div className="absolute h-full w-2 bg-[#d65780]" />
+          </div>
         </div>
 
-        <div className="p-5">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-2 rounded-full border border-amber-200/50">
-              Premium Unión
+        <div className="flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="bg-[#fef6ed] text-amber-700 text-[9px] font-extrabold py-0.5 px-2 rounded-full border border-amber-100">
+              {category.label}
             </span>
-            <span className="text-[9px] text-gray-400">Verificado</span>
+            <span className="text-[#a21b53] text-[9px] font-bold flex items-center gap-0.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 fill-emerald-100 inline" />
+              Verificado
+            </span>
           </div>
 
-          <h3 className="font-headline-md text-headline-md text-on-surface capitalize">
+          <h4 className="text-[17px] font-extrabold text-gray-900 mt-2 tracking-tight group-hover:text-[#a21b53] transition-colors capitalize">
             {gift.name}
-          </h3>
-          <p className="text-gray-500 font-medium mt-1 leading-relaxed text-xs">
+          </h4>
+          <p className="text-gray-500 text-xs font-semibold leading-normal mt-0.5">
             Set de regalo ideal para {category.label.toLowerCase()}.
           </p>
         </div>
       </div>
 
-      <div className="px-5 pb-5">
-        {onClaim && (
+      {isAdmin && onDelete && (
+        <button
+          onClick={() => onDelete(gift.id)}
+          disabled={deletingId === gift.id}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-all cursor-pointer opacity-80 hover:opacity-100 disabled:opacity-30 z-10"
+          title="Eliminar regalo"
+        >
+          {deletingId === gift.id ? (
+            <span className="text-xs font-bold">...</span>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          )}
+        </button>
+      )}
+
+      {onClaim && (
+        <div className="mt-4">
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.97 }}
@@ -146,18 +144,8 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <span className="material-symbols-outlined text-base animate-bounce">card_giftcard</span>
             {claimingId === gift.id ? '...' : 'Regalar este detalle'}
           </motion.button>
-        )}
-        {isAdmin && onDelete && (
-          <div className="mt-3 flex justify-end">
-            <button
-              onClick={() => onDelete(gift.id)}
-              className="text-outline-variant hover:text-error transition-colors text-sm"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 });

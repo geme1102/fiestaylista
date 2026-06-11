@@ -1,6 +1,14 @@
 import { useState, memo } from 'react';
 import { cn } from '../utils/cn';
 
+function getCloudinarySrcSet(src: string): string | undefined {
+  if (!src.includes('cloudinary.com')) return undefined;
+  const base = src.replace('/image/upload/', '/image/upload/w_400/');
+  const base800 = src.replace('/image/upload/', '/image/upload/w_800/');
+  const base1200 = src.replace('/image/upload/', '/image/upload/w_1200/');
+  return `${base} 400w, ${base800} 800w, ${base1200} 1200w`;
+}
+
 interface ImageWithSkeletonProps {
   src: string;
   alt: string;
@@ -13,6 +21,7 @@ interface ImageWithSkeletonProps {
 const ImageWithSkeleton = memo(function ImageWithSkeleton({ src, alt, className, containerClassName, aspectRatio = 'aspect-[4/3]' }: ImageWithSkeletonProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const srcSet = getCloudinarySrcSet(src);
 
   return (
     <div className={cn('relative overflow-hidden bg-surface-container-high rounded-xl', aspectRatio, containerClassName, 'group')}>
@@ -39,6 +48,8 @@ const ImageWithSkeleton = memo(function ImageWithSkeleton({ src, alt, className,
             src={src}
             alt={alt}
             loading="lazy"
+            srcSet={srcSet}
+            sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
             className={cn(
               'w-full h-full object-cover transition-all duration-500',
               loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105',

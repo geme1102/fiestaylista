@@ -55,6 +55,7 @@ export const gifts = pgTable('gifts', {
   eventIdIdx: index('gifts_event_id_idx').on(table.eventId),
   eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
   eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${table.isClaimed} = false`),
+  eventIdNameUnique: unique('gifts_event_id_name_unique').on(table.eventId, table.name),
 }));
 
 export const photos = pgTable('photos', {
@@ -99,7 +100,7 @@ export const cashContributions = pgTable('cash_contributions', {
   amount: integer('amount').notNull(),
   feeAmount: integer('fee_amount').notNull().default(0),
   netAmount: integer('net_amount').notNull().default(0),
-  mpPaymentId: text('mp_payment_id'),
+  mpPaymentId: text('mp_payment_id').unique(),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
@@ -216,7 +217,7 @@ export const arcoRequests = pgTable('arco_requests', {
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id'),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   action: text('action').notNull(),
   resource: text('resource').notNull(),
   resourceId: text('resource_id'),
