@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
@@ -525,42 +525,62 @@ export default function EventAdmin() {
                 </button>
               )}
             </div>
+            <AnimatePresence mode="wait">
             {editingDetails ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Fecha</label>
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="space-y-4"
+              >
+                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
+                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
+                    Fecha y hora
+                  </label>
                   <input
                     type="datetime-local"
                     value={dateDraft}
                     onChange={(e) => setDateDraft(e.target.value)}
-                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Lugar</label>
+                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
+                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-sm text-primary">location_on</span>
+                    Lugar
+                  </label>
                   <input
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md"
                     placeholder="Ej: Salón de eventos, Ciudad"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant mb-1">Nota para invitados</label>
+                <div className="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/40 shadow-sm">
+                  <label className="flex items-center gap-2 text-xs font-bold text-on-surface-variant mb-3 uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-sm text-primary">info</span>
+                    Nota para invitados
+                  </label>
                   <textarea
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
-                    className="w-full rounded-lg border border-outline-variant bg-surface text-on-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-                    rows={2}
+                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-md resize-none"
+                    rows={3}
                     placeholder="Ej: No se aceptan regalos envueltos"
                   />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={handleUpdateDetails} disabled={updatingDetails} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50">Guardar</button>
-                  <button onClick={() => setEditingDetails(false)} className="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancelar</button>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={handleUpdateDetails} disabled={updatingDetails} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50">
+                    <span className="material-symbols-outlined text-sm">check</span>
+                    {updatingDetails ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                  <button onClick={() => setEditingDetails(false)} className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-all active:scale-95">
+                    Cancelar
+                  </button>
                 </div>
-              </div>
+              </motion.div>
             ) : (
               <div className="space-y-1 text-sm text-on-surface">
                 {event.eventDate && (
@@ -587,6 +607,7 @@ export default function EventAdmin() {
                 )}
               </div>
             )}
+            </AnimatePresence>
           </div>
         </section>
 

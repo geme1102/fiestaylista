@@ -265,9 +265,7 @@ export function useEventPage() {
 
   const eventDateFormatted = event?.eventDate
     ? new Date(event.eventDate).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
-    : event?.createdAt
-      ? new Date(event.createdAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
-      : '';
+    : '';
   const eventTimeFormatted = event?.eventDate
     ? new Date(event.eventDate).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
     : '';

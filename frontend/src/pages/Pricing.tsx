@@ -20,6 +20,7 @@ const PLANS = [
       { text: '2 eventos de por vida', included: true },
       { text: '10 regalos por evento', included: true },
       { text: '3 fotos por evento', included: true },
+      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
       { text: 'Lluvia de Sobres disponible', included: true },
       { text: '5% comisión al retirar dinero', included: true },
     ],
