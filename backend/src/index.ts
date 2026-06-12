@@ -35,6 +35,27 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 app.use(requestLogger);
 
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      config.FRONTEND_URL,
+      ...(config.NODE_ENV === 'production'
+        ? [
+            'https://fiestaylista.com',
+            'https://www.fiestaylista.com',
+            /\.netlify\.app$/,
+          ]
+        : []),
+    ];
+    if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origen no permitido: ${origin}`));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: false,
@@ -63,27 +84,6 @@ app.use(helmet({
   strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
   xContentTypeOptions: true,
   xFrameOptions: false,
-}));
-
-app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      config.FRONTEND_URL,
-      ...(config.NODE_ENV === 'production'
-        ? [
-            'https://fiestaylista.com',
-            'https://www.fiestaylista.com',
-            /\.netlify\.app$/,
-          ]
-        : []),
-    ];
-    if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Origen no permitido: ${origin}`));
-    }
-  },
-  credentials: true,
 }));
 
 app.use(cookieParser());
