@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export function useTurnstile() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,6 +31,10 @@ export function useTurnstile() {
   }, []);
 
   useEffect(() => {
+    if (!SITE_KEY) {
+      setReady(true);
+      return;
+    }
     let attempts = 0;
     const interval = setInterval(() => {
       if (window.turnstile && containerRef.current) {

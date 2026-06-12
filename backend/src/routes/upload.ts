@@ -69,6 +69,10 @@ async function cleanupFile(filePath: string): Promise<void> {
 function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!config.CLOUDINARY_CLOUD_NAME) {
+      if (config.NODE_ENV === 'production') {
+        reject(new Error('Cloudinary no está configurado. Las subidas de imágenes no están disponibles en producción.'));
+        return;
+      }
       const ext = mimeType === 'image/png' ? '.png' : mimeType === 'image/webp' ? '.webp' : '.jpg';
       const name = `${randomUUID()}${ext}`;
       const uploadDir = join(process.cwd(), 'uploads');

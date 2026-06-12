@@ -68,6 +68,13 @@ function validateConfig(): void {
     requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
     requireConfig('FROM_EMAIL', process.env.FROM_EMAIL);
     requireConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
+    requireConfig('BACKEND_URL', process.env.BACKEND_URL);
+    requireConfig('FRONTEND_URL', process.env.FRONTEND_URL);
+    if (process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_SECRET) {
+      requireConfig('CLOUDINARY_CLOUD_NAME', process.env.CLOUDINARY_CLOUD_NAME);
+      requireConfig('CLOUDINARY_API_KEY', process.env.CLOUDINARY_API_KEY);
+      requireConfig('CLOUDINARY_API_SECRET', process.env.CLOUDINARY_API_SECRET);
+    }
   }
 }
 
@@ -81,9 +88,9 @@ export const config = {
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, ''),
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  FRONTEND_URL: process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace('backend', 'frontend')}` : 'http://localhost:5173'),
   PORT: parseInt(process.env.PORT || '3001', 10),
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: process.env.NODE_ENV || (process.env.RAILWAY_PUBLIC_DOMAIN ? 'production' : 'development'),
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',
@@ -97,15 +104,3 @@ export const config = {
   CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
 } as const;
-
-const isProduction = config.NODE_ENV === 'production';
-
-if (isProduction && (config.BACKEND_URL.includes('localhost') || config.FRONTEND_URL.includes('localhost'))) {
-  const missing: string[] = [];
-  if (config.BACKEND_URL.includes('localhost')) missing.push('BACKEND_URL');
-  if (config.FRONTEND_URL.includes('localhost')) missing.push('FRONTEND_URL');
-  console.error(`[config] ERROR: En producción las siguientes variables deben configurarse en Railway:`);
-  missing.forEach(v => console.error(`[config]   - ${v}`));
-  console.error(`[config] El servidor se detiene para evitar fallos silenciosos.`);
-  process.exit(1);
-}
