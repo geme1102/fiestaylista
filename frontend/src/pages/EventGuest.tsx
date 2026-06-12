@@ -311,7 +311,7 @@ export default function EventGuest() {
               <h2 className={`font-semibold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
                 <span>📸</span> Galería
               </h2>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+              <input id="guest-photo-upload" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
               <button 
                 onClick={() => fileInputRef.current?.click()} 
                 disabled={uploadingPhoto}

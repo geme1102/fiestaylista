@@ -654,6 +654,7 @@ export default function EventAdmin() {
 
             <div className="flex gap-3">
               <input
+                id="gift-name"
                 type="text"
                 placeholder="Nombre del regalo (Ej: Juego de Sábanas)..."
                 value={newGiftName}
@@ -907,6 +908,7 @@ export default function EventAdmin() {
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Único de Evento</label>
                   <input
+                    id="edit-title"
                     type="text"
                     value={titleDraft}
                     onChange={(e) => setTitleDraft(e.target.value)}
@@ -919,6 +921,7 @@ export default function EventAdmin() {
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Categoría Tipo de Reunión</label>
                     <select
+                      id="edit-type"
                       value={typeDraft}
                       onChange={(e) => setTypeDraft(e.target.value as EventType)}
                       className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
@@ -932,6 +935,7 @@ export default function EventAdmin() {
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Fecha y Hora</label>
                     <input
+                      id="edit-date"
                       type="datetime-local"
                       value={dateDraft}
                       onChange={(e) => setDateDraft(e.target.value)}
@@ -943,6 +947,7 @@ export default function EventAdmin() {
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar / Ubicación Geográfica</label>
                   <input
+                    id="edit-location"
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
@@ -954,6 +959,7 @@ export default function EventAdmin() {
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Recomendaciones y Notas para Invitados</label>
                   <textarea
+                    id="edit-note"
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
                     rows={3}

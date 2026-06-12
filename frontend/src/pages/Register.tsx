@@ -164,6 +164,7 @@ export default function Register() {
               <div className="space-y-3">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
+                    id="accept-terms"
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(e) => setAcceptTerms(e.target.checked)}
@@ -177,6 +178,7 @@ export default function Register() {
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
+                    id="accept-privacy"
                     type="checkbox"
                     checked={acceptPrivacy}
                     onChange={(e) => setAcceptPrivacy(e.target.checked)}

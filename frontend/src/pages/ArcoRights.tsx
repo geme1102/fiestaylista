@@ -256,6 +256,7 @@ export default function ArcoRights() {
                         {content.form.details}
                       </label>
                       <textarea
+                        id="arco-details"
                         value={formDetails}
                         onChange={(e) => setFormDetails(e.target.value)}
                         rows={4}
@@ -335,6 +336,7 @@ export default function ArcoRights() {
             <h3 className="font-semibold text-lg text-red-600">{content.cancel.title}</h3>
             <p className="text-sm text-on-surface-variant">{content.cancel.confirm}</p>
             <input
+              id="arco-password"
               type="password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}

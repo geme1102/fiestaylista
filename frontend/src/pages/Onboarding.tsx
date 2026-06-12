@@ -137,6 +137,7 @@ export default function Onboarding() {
             </div>
             <div className="relative mb-16">
               <input
+                id="event-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}

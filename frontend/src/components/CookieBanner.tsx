@@ -159,7 +159,7 @@ export default function CookieBanner() {
                   <span className="font-label-md text-on-surface block">Cookies Esenciales</span>
                   <span className="text-caption text-on-surface-variant">(Siempre activas)</span>
                 </div>
-                <input type="checkbox" checked disabled className="w-6 h-6 rounded-lg text-primary-container border-outline-variant opacity-50" />
+                <input id="cookie-essential" type="checkbox" checked disabled className="w-6 h-6 rounded-lg text-primary-container border-outline-variant opacity-50" />
               </label>
               {/* Analíticas */}
               <label className="flex items-center justify-between p-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl hover:border-primary/50 transition-all cursor-pointer group">
@@ -168,6 +168,7 @@ export default function CookieBanner() {
                   <span className="text-caption text-on-surface-variant">Para entender cómo usas nuestra plataforma.</span>
                 </div>
                 <input
+                  id="cookie-analytics"
                   type="checkbox"
                   checked={prefs.analytics}
                   onChange={(e) => setPrefs({ ...prefs, analytics: e.target.checked })}
@@ -181,6 +182,7 @@ export default function CookieBanner() {
                   <span className="text-caption text-on-surface-variant">Recordamos tus selecciones y listas favoritas.</span>
                 </div>
                 <input
+                  id="cookie-preferences"
                   type="checkbox"
                   checked={prefs.preferences}
                   onChange={(e) => setPrefs({ ...prefs, preferences: e.target.checked })}
