@@ -18,7 +18,6 @@ import { emitGiftClaimed } from '../services/notifications.js';
 const clients = new Map<string, Set<Response>>();
 
 // SSE scavenger: limpia conexiones abandonadas cada 5 minutos
-const SSE_HEARTBEAT_CHECK_MS = 30000;
 const SSE_SCAVENGER_INTERVAL_MS = 5 * 60 * 1000;
 let scavengerTimer: ReturnType<typeof setInterval> | null = null;
 
