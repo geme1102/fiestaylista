@@ -197,7 +197,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
   }
 
   try {
-    const decoded = jwt.verify(authToken, config.JWT_SECRET) as any;
+    const decoded = jwt.verify(authToken, config.JWT_SECRET) as { scope: string; eventId: string };
     if (decoded.scope !== 'sse' || decoded.eventId !== eventId) {
       res.status(403).json({ error: 'Token SSE inválido para este evento' });
       return;
