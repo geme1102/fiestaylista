@@ -6,7 +6,7 @@ type Lang = 'es' | 'en';
 const ES = {
   title: 'Política de Cookies',
   subtitle: 'Última actualización: Mayo 2026',
-  intro: 'En Fiesta y Lista, operada por Diego Alejandro Fierro Rivera, utilizamos cookies y tecnologías similares para garantizar el funcionamiento adecuado de nuestra plataforma y mejorar tu experiencia. Esta política explica qué son las cookies, cómo las usamos y cómo puedes controlarlas.',
+  intro: 'En Fiesta y Lista utilizamos cookies y tecnologías similares para garantizar el funcionamiento adecuado de nuestra plataforma y mejorar tu experiencia. Esta política explica qué son las cookies, cómo las usamos y cómo puedes controlarlas.',
   sections: [
     {
       title: '1. ¿Qué son las Cookies?',
@@ -37,13 +37,13 @@ const ES = {
       content: 'Podemos actualizar esta política de cookies periódicamente. Te notificaremos cualquier cambio significativo a través de la plataforma.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. Todos los derechos reservados.',
+  footer: '© {year} fiestaylista.com. Todos los derechos reservados.',
 };
 
 const EN = {
   title: 'Cookies Policy',
   subtitle: 'Last updated: May 2026',
-  intro: 'At Fiesta y Lista, operated by Diego Alejandro Fierro Rivera, we use cookies and similar technologies to ensure the proper functioning of our platform and enhance your experience. This policy explains what cookies are, how we use them, and how you can control them.',
+  intro: 'At Fiesta y Lista, we use cookies and similar technologies to ensure the proper functioning of our platform and enhance your experience. This policy explains what cookies are, how we use them, and how you can control them.',
   sections: [
     {
       title: '1. What are Cookies?',
@@ -74,7 +74,7 @@ const EN = {
       content: 'We may update this cookies policy periodically. We will notify you of any significant changes through the platform.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. All rights reserved.',
+  footer: '© {year} fiestaylista.com. All rights reserved.',
 };
 
 export default function CookiesPolicy() {

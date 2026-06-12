@@ -10,7 +10,7 @@ const ES = {
   sections: [
     {
       title: '1. Información General',
-      content: 'Fiesta y Lista es una plataforma operada por Diego Alejandro Fierro Rivera, desarrollador independiente. El uso de la plataforma implica la aceptación plena de estos términos. Nos reservamos el derecho de modificar estos términos en cualquier momento, notificando los cambios con 15 días de antelación.',
+      content: 'Fiesta y Lista es una plataforma propiedad de Fiesta y Lista. El uso de la plataforma implica la aceptación plena de estos términos. Nos reservamos el derecho de modificar estos términos en cualquier momento, notificando los cambios con 15 días de antelación.',
     },
     {
       title: '2. Registro y Cuenta',
@@ -18,7 +18,7 @@ const ES = {
     },
     {
       title: '3. Propiedad Intelectual',
-      content: 'Todos los derechos de propiedad intelectual sobre la plataforma, incluyendo código fuente, diseño, logotipos, marcas y contenido, pertenecen a Diego Alejandro Fierro Rivera. Queda prohibida la reproducción, distribución o modificación no autorizada del software o su contenido. El usuario conserva la propiedad de los datos que ingresa en la plataforma (listas de regalos, fotos, etc.), otorgando a Fiesta y Lista una licencia limitada para operar y mostrar dichos contenidos dentro de la plataforma.',
+      content: 'Todos los derechos de propiedad intelectual sobre la plataforma, incluyendo código fuente, diseño, logotipos, marcas y contenido, pertenecen a Fiesta y Lista. Queda prohibida la reproducción, distribución o modificación no autorizada del software o su contenido. El usuario conserva la propiedad de los datos que ingresa en la plataforma (listas de regalos, fotos, etc.), otorgando a Fiesta y Lista una licencia limitada para operar y mostrar dichos contenidos dentro de la plataforma.',
     },
     {
       title: '4. Uso de la Plataforma',
@@ -45,7 +45,7 @@ const ES = {
       content: 'Para consultas sobre estos términos, puedes ejercer tus derechos a través de nuestra página de Derechos ARCO.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. Todos los derechos reservados.',
+  footer: '© {year} fiestaylista.com. Todos los derechos reservados.',
 };
 
 const EN = {
@@ -55,7 +55,7 @@ const EN = {
   sections: [
     {
       title: '1. General Information',
-      content: 'Fiesta y Lista is a platform operated by Diego Alejandro Fierro Rivera, independent developer. Use of the platform implies full acceptance of these terms. We reserve the right to modify these terms at any time, notifying changes 15 days in advance.',
+      content: 'Fiesta y Lista is a platform owned by Fiesta y Lista. Use of the platform implies full acceptance of these terms. We reserve the right to modify these terms at any time, notifying changes 15 days in advance.',
     },
     {
       title: '2. Registration and Account',
@@ -63,7 +63,7 @@ const EN = {
     },
     {
       title: '3. Intellectual Property',
-      content: 'All intellectual property rights over the platform, including source code, design, logos, trademarks, and content, belong to Diego Alejandro Fierro Rivera. Unauthorized reproduction, distribution, or modification of the software or its content is prohibited. The user retains ownership of data entered into the platform (gift lists, photos, etc.), granting Fiesta y Lista a limited license to operate and display such content within the platform.',
+      content: 'All intellectual property rights over the platform, including source code, design, logos, trademarks, and content, belong to Fiesta y Lista. Unauthorized reproduction, distribution, or modification of the software or its content is prohibited. The user retains ownership of data entered into the platform (gift lists, photos, etc.), granting Fiesta y Lista a limited license to operate and display such content within the platform.',
     },
     {
       title: '4. Platform Use',
@@ -90,7 +90,7 @@ const EN = {
       content: 'For inquiries about these terms, you can exercise your rights through our ARCO Rights page.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. All rights reserved.',
+  footer: '© {year} fiestaylista.com. All rights reserved.',
 };
 
 export default function TermsConditions() {

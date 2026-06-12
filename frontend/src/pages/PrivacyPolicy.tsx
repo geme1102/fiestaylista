@@ -6,7 +6,7 @@ type Lang = 'es' | 'en';
 const ES = {
   title: 'Política de Privacidad',
   subtitle: 'Última actualización: Mayo 2026',
-  intro: 'En Fiesta y Lista, operada por Diego Alejandro Fierro Rivera, nos comprometemos a proteger tu privacidad. Esta política describe cómo recopilamos, usamos, almacenamos y protegemos tus datos personales, en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normativas aplicables en Colombia.',
+  intro: 'En Fiesta y Lista nos comprometemos a proteger tu privacidad. Esta política describe cómo recopilamos, usamos, almacenamos y protegemos tus datos personales, en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normativas aplicables en Colombia.',
   sections: [
     {
       title: '1. Datos que Recopilamos',
@@ -49,13 +49,13 @@ const ES = {
       content: 'Para ejercer tus derechos ARCO o resolver cualquier duda sobre privacidad, utiliza nuestro formulario de Derechos ARCO en la plataforma.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. Todos los derechos reservados.',
+  footer: '© {year} fiestaylista.com. Todos los derechos reservados.',
 };
 
 const EN = {
   title: 'Privacy Policy',
   subtitle: 'Last updated: May 2026',
-  intro: 'At Fiesta y Lista, operated by Diego Alejandro Fierro Rivera, we are committed to protecting your privacy. This policy describes how we collect, use, store, and protect your personal data, in compliance with Colombian Law 1581 of 2012, Decree 1377 of 2013, and other applicable regulations.',
+  intro: 'At Fiesta y Lista, we are committed to protecting your privacy. This policy describes how we collect, use, store, and protect your personal data, in compliance with Colombian Law 1581 of 2012, Decree 1377 of 2013, and other applicable regulations.',
   sections: [
     {
       title: '1. Data We Collect',
@@ -98,7 +98,7 @@ const EN = {
       content: 'To exercise your ARCO rights or resolve any questions about privacy, use our ARCO Rights form on the platform.',
     },
   ],
-  footer: '© {year} Diego Alejandro Fierro Rivera. All rights reserved.',
+  footer: '© {year} fiestaylista.com. All rights reserved.',
 };
 
 export default function PrivacyPolicy() {

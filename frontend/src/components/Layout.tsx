@@ -117,7 +117,7 @@ export default function Layout() {
       <footer className="border-t border-outline-variant/30 bg-surface-container-low">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
-            <p>© {new Date().getFullYear()} Diego Alejandro Fierro Rivera. Todos los derechos reservados.</p>
+            <p>© {new Date().getFullYear()} fiestaylista.com. Todos los derechos reservados.</p>
             <div className="flex items-center gap-4">
               <Link to="/terminos-y-condiciones" className="hover:text-primary transition-colors">Términos</Link>
               <Link to="/politica-de-privacidad" className="hover:text-primary transition-colors">Privacidad</Link>
