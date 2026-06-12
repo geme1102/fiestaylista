@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -344,10 +344,10 @@ export default function EventAdmin() {
   }
 
   const suggestions = GIFT_SUGGESTIONS[event.eventType] || [];
-  const filteredSuggestions = useMemo(() => suggestions.filter((s) =>
+  const filteredSuggestions = suggestions.filter((s) =>
     s.toLowerCase().includes(newGiftName.toLowerCase()) &&
     !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
-  ), [suggestions, newGiftName, gifts]);
+  );
   const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
   const formatDateTime = (dateStr: string) => {
