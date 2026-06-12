@@ -141,3 +141,12 @@ export const webhookLimiter = rateLimit({
   keyGenerator,
   message: { error: 'Demasiadas solicitudes de webhook' },
 });
+
+export const publicStatsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+});
