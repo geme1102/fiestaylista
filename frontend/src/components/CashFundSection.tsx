@@ -46,7 +46,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al cargar fondo';
       showToast(message, 'error');
-      console.error('[CashFund] loadFund error:', err);
+      if (import.meta.env.DEV) console.error('[CashFund] loadFund error:', err);
     } finally {
       setLoading(false);
     }

@@ -33,9 +33,9 @@ export default class ErrorBoundary extends Component<Props, State> {
       timestamp: new Date().toISOString(),
       url: window.location.href,
     };
-    console.error('[ErrorBoundary]', JSON.stringify(errorReport));
-    if (typeof (window as any).reportError === 'function') {
-      (window as any).reportError(errorReport);
+    if (import.meta.env.DEV) console.error('[ErrorBoundary]', JSON.stringify(errorReport));
+    if (typeof (window as unknown as Record<string, unknown>).reportError === 'function') {
+      (window as unknown as Record<string, (data: unknown) => void>).reportError(errorReport);
     }
   }
 

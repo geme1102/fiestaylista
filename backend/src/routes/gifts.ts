@@ -183,7 +183,7 @@ const SSE_MAX_PER_IP = 3;
 const SSE_CONNECTION_TIMEOUT_MS = 30 * 60 * 1000;
 const sseIpCount = new Map<string, number>();
 
-router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
+router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     res.status(400).json({ error: 'ID del evento requerido' });
@@ -264,7 +264,7 @@ router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
   req.on('close', cleanup);
   req.on('error', cleanup);
   res.on('error', cleanup);
-}) as any);
+}));
 
 export default router;
 export { stopSSEScavenger };

@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch((err) => {
-        console.warn('[Auth] No se pudo restaurar la sesión:', err);
+        if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
       })
       .finally(() => setIsLoading(false));
   }, []);

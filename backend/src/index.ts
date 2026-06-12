@@ -115,7 +115,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Rutas públicas (sin rate limit)
 app.use('/api', publicRouter);
 
-app.get('/api/health', async (_req, res) => {
+app.get('/api/health', apiLimiter, async (_req, res) => {
   try {
     await sql`SELECT 1`;
     res.json({
@@ -134,7 +134,7 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
-app.get('/health', (_req, res) => {
+app.get('/health', apiLimiter, (_req, res) => {
   res.json({ status: 'ok' });
 });
 

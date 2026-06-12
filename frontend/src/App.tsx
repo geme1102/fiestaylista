@@ -161,7 +161,7 @@ function TitleUpdater() {
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={meta.desc} />
-      {(meta as any).keywords && <meta name="keywords" content={(meta as any).keywords} />}
+      {'keywords' in meta && <meta name="keywords" content={meta.keywords as string} />}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={meta.desc} />
       <meta name="twitter:title" content={title} />

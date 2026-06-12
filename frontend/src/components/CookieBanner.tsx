@@ -25,7 +25,7 @@ function getStoredPrefs(): CookiePrefs | null {
       }
     }
   } catch (err) {
-    console.warn('[CookieBanner] Error parsing stored prefs:', err);
+    if (import.meta.env.DEV) console.warn('[CookieBanner] Error parsing stored prefs:', err);
   }
   return null;
 }

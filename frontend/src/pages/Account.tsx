@@ -63,7 +63,7 @@ export default function Account() {
   const handleDownloadData = async () => {
     setDownloading(true);
     try {
-      const res = await apiClient.get<{ data: any }>('/api/auth/arco/my-data');
+      const res = await apiClient.get<{ data: Record<string, unknown> }>('/api/auth/arco/my-data');
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

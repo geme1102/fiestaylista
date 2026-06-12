@@ -80,8 +80,6 @@ export async function getUserEvents(userId: string) {
 
   const eventIds = userEvents.map(e => e.id);
 
-  // const { inArray } = await import('drizzle-orm');
-
   const [giftCounts, photoCounts, funds] = await Promise.all([
     db
       .select({

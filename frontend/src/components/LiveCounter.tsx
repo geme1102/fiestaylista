@@ -46,7 +46,7 @@ export default function LiveCounter() {
         }
       })
       .catch(() => {
-        if (mounted) console.warn('[LiveCounter] Error fetching stats');
+        if (mounted && import.meta.env.DEV) console.warn('[LiveCounter] Error fetching stats');
       });
     return () => { mounted = false; controller.abort(); };
   }, []);

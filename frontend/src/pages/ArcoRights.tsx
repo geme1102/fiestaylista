@@ -90,12 +90,20 @@ const EN = {
   loginRequired: 'Log in to exercise your ARCO rights.',
 };
 
+interface ArcoRequest {
+  id: number;
+  requestType: string;
+  details?: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function ArcoRights() {
   const [lang, setLang] = useState<Lang>('es');
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<ArcoRequest[]>([]);
   const [showRequests, setShowRequests] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<'rectify' | 'oppose' | null>(null);
@@ -106,7 +114,7 @@ export default function ArcoRights() {
   const handleDownloadData = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get<{ data: any }>('/api/auth/arco/my-data');
+      const res = await apiClient.get<{ data: Record<string, unknown> }>('/api/auth/arco/my-data');
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -163,7 +171,7 @@ export default function ArcoRights() {
 
   const loadRequests = async () => {
     try {
-      const res = await apiClient.get<{ requests: any[] }>('/api/auth/arco/requests');
+      const res = await apiClient.get<{ requests: ArcoRequest[] }>('/api/auth/arco/requests');
       setRequests(res.requests);
     } catch (err) {
       if (import.meta.env.DEV) console.error('[ArcoRights] loadRequests error:', err);
@@ -301,7 +309,7 @@ export default function ArcoRights() {
                     <p className="text-sm text-on-surface-variant">{content.noHistory}</p>
                   ) : (
                     <div className="space-y-3">
-                      {requests.map((req: any) => (
+                      {requests.map((req) => (
                         <div key={req.id} className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl">
                           <div>
                             <span className="text-sm font-medium text-on-surface capitalize">{req.requestType}</span>

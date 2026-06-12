@@ -7,6 +7,7 @@ import { viewLimiter } from '../middleware/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireTier } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ const viewSchema = z.object({
   eventId: z.string().uuid('ID de evento invalido'),
 });
 
-router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) => {
+router.post('/analytics/view', viewLimiter, asyncHandler(async (req: Request, res: Response) => {
   try {
     const parsed = viewSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -41,9 +42,9 @@ router.post('/analytics/view', viewLimiter, async (req: Request, res: Response) 
     console.error('[Analytics] Error registrando vista:', err);
     res.status(200).json({ ok: true });
   }
-});
+}));
 
-router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), async (req: AuthRequest, res: Response, next) => {
+router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHandler(async (req: AuthRequest, res: Response, next) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user!.userId;
@@ -69,6 +70,6 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), async (
   } catch (err) {
     next(err);
   }
-});
+}));
 
 export default router;
