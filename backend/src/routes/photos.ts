@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { guestUploadLimiter } from '../middleware/rateLimit.js';
+import { guestUploadLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import * as photoService from '../services/photo.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
@@ -17,7 +17,7 @@ const createPhotoSchema = z.object({
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', apiLimiter, asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

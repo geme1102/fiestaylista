@@ -17,6 +17,38 @@ import { emitGiftClaimed } from '../services/notifications.js';
 
 const clients = new Map<string, Set<Response>>();
 
+// SSE scavenger: limpia conexiones abandonadas cada 5 minutos
+const SSE_HEARTBEAT_CHECK_MS = 30000;
+const SSE_SCAVENGER_INTERVAL_MS = 5 * 60 * 1000;
+let scavengerTimer: ReturnType<typeof setInterval> | null = null;
+
+function startSSEScavenger() {
+  if (scavengerTimer) return;
+  scavengerTimer = setInterval(() => {
+    for (const [eventId, eventClients] of clients) {
+      for (const client of eventClients) {
+        try {
+          client.write(':ping\n\n');
+        } catch {
+          eventClients.delete(client);
+        }
+      }
+      if (eventClients.size === 0) {
+        clients.delete(eventId);
+      }
+    }
+  }, SSE_SCAVENGER_INTERVAL_MS);
+}
+
+function stopSSEScavenger() {
+  if (scavengerTimer) {
+    clearInterval(scavengerTimer);
+    scavengerTimer = null;
+  }
+}
+
+startSSEScavenger();
+
 const router = Router({ mergeParams: true });
 
 const createGiftSchema = z.object({
@@ -236,3 +268,4 @@ router.get('/subscribe', apiLimiter, (async (req: Request, res: Response) => {
 }) as any);
 
 export default router;
+export { stopSSEScavenger };

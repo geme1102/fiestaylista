@@ -54,7 +54,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         </div>
         <div className="h-32 bg-gray-50 flex items-center justify-center opacity-30">
           {!imgError && (
-            <img src={image} alt="" className="w-12 h-12 object-contain opacity-50" onError={onImgError} />
+            <img src={image} alt="" loading="lazy" className="w-12 h-12 object-contain opacity-50" onError={onImgError} />
           )}
         </div>
         <div className="p-5 opacity-30 select-none">

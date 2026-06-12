@@ -8,6 +8,7 @@ import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
+import { viewLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -43,7 +44,7 @@ router.post('/', requireAuth, checkEventLimit(), asyncHandlerWithValidation(asyn
   res.status(201).json({ event });
 }));
 
-router.get('/slug/:slug', asyncHandler(async (req, res) => {
+router.get('/slug/:slug', viewLimiter, asyncHandler(async (req, res) => {
   const eventSlug = req.params.slug as string;
   const result = await eventService.getEventBySlug(eventSlug, {
     limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,

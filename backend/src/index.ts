@@ -22,6 +22,7 @@ import cashRouter from './routes/cash.js';
 import boostRouter from './routes/boost.js';
 import arcoRouter from './routes/arco.js';
 import { startCronJobs, stopCronJobs } from './cron.js';
+import { stopSSEScavenger } from './routes/gifts.js';
 
 const app = express();
 
@@ -39,14 +40,14 @@ app.use(helmet({
     useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
       scriptSrcAttr: ["'none'"],
-      frameSrc: ["'self'", "https://mpago.la"],
+      frameSrc: ["'self'", "https://mpago.la", "https://challenges.cloudflare.com"],
       imgSrc: ["'self'", "https:", "data:", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       styleSrcElem: ["'self'", "'unsafe-inline'"],
       styleSrcAttr: ["'none'"],
-      connectSrc: ["'self'", config.FRONTEND_URL].filter(Boolean),
+      connectSrc: ["'self'", config.FRONTEND_URL, config.BACKEND_URL, "https://challenges.cloudflare.com"].filter(Boolean),
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -175,6 +176,7 @@ const SHUTDOWN_TIMEOUT = 10_000;
 
 function gracefulShutdown(signal: string) {
   console.log(`\n  Recibido ${signal}. Cerrando servidor...`);
+  stopSSEScavenger();
   stopCronJobs();
 
   server.close(() => {
