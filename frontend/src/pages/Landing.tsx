@@ -286,19 +286,6 @@ export default function Landing() {
             transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
           >
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-primary-fixed to-primary-fixed/50 text-primary rounded-full text-sm font-medium border border-primary/20 shadow-sm backdrop-blur-sm"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              🇨🇴 Hecho en Colombia — Crea tu lista gratis en 2 minutos
-            </motion.div>
-
             {/* Main Headline */}
             <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface mb-3 font-outfit leading-[1.1]">
               <span className="text-on-surface">La forma más fácil de</span>
