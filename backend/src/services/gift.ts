@@ -75,33 +75,27 @@ export async function claimGift(giftId: string, claimedBy: string) {
     throw new ValidationError('El nombre es requerido');
   }
 
-  return await db.transaction(async (tx) => {
-    const [gift] = await tx
-      .select()
+  const [updated] = await db
+    .update(giftsTable)
+    .set({
+      isClaimed: true,
+      claimedBy: cleanedName,
+    })
+    .where(and(eq(giftsTable.id, giftId), eq(giftsTable.isClaimed, false)))
+    .returning();
+
+  if (!updated) {
+    const [existing] = await db
+      .select({ id: giftsTable.id })
       .from(giftsTable)
       .where(eq(giftsTable.id, giftId))
-      .for('update')
       .limit(1);
-
-    if (!gift) {
+    if (!existing) {
       throw new NotFoundError('Regalo no encontrado');
     }
-
-    if (gift.isClaimed) {
-      throw new ValidationError('Este regalo ya ha sido reservado');
-    }
-
-    const [updated] = await tx
-      .update(giftsTable)
-      .set({
-        isClaimed: true,
-        claimedBy: cleanedName,
-      })
-      .where(eq(giftsTable.id, giftId))
-      .returning();
-
-    return updated;
-  });
+    throw new ValidationError('Este regalo ya ha sido reservado');
+  }
+  return updated;
 }
 
 export async function releaseGift(giftId: string) {

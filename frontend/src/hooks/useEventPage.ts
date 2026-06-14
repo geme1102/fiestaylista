@@ -189,8 +189,13 @@ export function useEventPage() {
       confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 3000);
       setClaimName('');
       showToast(`¡${giftName} apartado! 🎉`, 'success');
-    } catch {
-      showToast('Error al apartar el regalo', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('ya ha sido reservado')) {
+        showToast('Este regalo ya fue apartado por otra persona', 'error');
+      } else {
+        showToast('Error al apartar el regalo. Intenta de nuevo.', 'error');
+      }
     } finally {
       setClaimingId(null);
     }
