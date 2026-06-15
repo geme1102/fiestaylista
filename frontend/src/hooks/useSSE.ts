@@ -30,6 +30,7 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
     let retryCount = 0;
 
     async function connectSSE() {
+      let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
       try {
         const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
         const tokenRes = await fetch(`${baseUrl}${sseTokenEndpoint}`, { method: 'POST', credentials: 'include' });
@@ -53,7 +54,7 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
 
         const decoder = new TextDecoder();
         let buffer = '';
-        let reader = response.body.getReader();
+        reader = response.body.getReader();
 
         while (!cancelledRef.current) {
           const { done, value } = await reader.read();
