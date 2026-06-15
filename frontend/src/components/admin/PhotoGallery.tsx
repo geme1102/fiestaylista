@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, X } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
