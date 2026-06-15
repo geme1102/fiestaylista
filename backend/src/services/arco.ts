@@ -20,38 +20,36 @@ export async function getUserData(userId: string) {
 
   const eventIds = userEvents.map(e => e.id);
 
-  const userGifts = eventIds.length > 0
-    ? await db.select().from(gifts).where(inArray(gifts.eventId, eventIds))
-    : [];
-
-  const userPhotos = eventIds.length > 0
-    ? await db.select().from(photos).where(inArray(photos.eventId, eventIds))
-    : [];
-
-  const userCashFunds = eventIds.length > 0
-    ? await db.select().from(cashFunds).where(inArray(cashFunds.eventId, eventIds))
-    : [];
+  const [userGifts, userPhotos, userCashFunds, userSubscription, userConsents, userArcoRequests] = await Promise.all([
+    eventIds.length > 0
+      ? db.select().from(gifts).where(inArray(gifts.eventId, eventIds))
+      : Promise.resolve([]),
+    eventIds.length > 0
+      ? db.select().from(photos).where(inArray(photos.eventId, eventIds))
+      : Promise.resolve([]),
+    eventIds.length > 0
+      ? db.select().from(cashFunds).where(inArray(cashFunds.eventId, eventIds))
+      : Promise.resolve([]),
+    db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1)
+      .then(r => r[0] ?? null),
+    db
+      .select()
+      .from(consentRecords)
+      .where(eq(consentRecords.userId, userId)),
+    db
+      .select()
+      .from(arcoRequests)
+      .where(eq(arcoRequests.userId, userId)),
+  ]);
 
   const cashFundIds = userCashFunds.map(cf => cf.id);
   const userContributions = cashFundIds.length > 0
     ? await db.select().from(cashContributions).where(inArray(cashContributions.cashFundId, cashFundIds))
     : [];
-
-  const [userSubscription] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, userId))
-    .limit(1);
-
-  const userConsents = await db
-    .select()
-    .from(consentRecords)
-    .where(eq(consentRecords.userId, userId));
-
-  const userArcoRequests = await db
-    .select()
-    .from(arcoRequests)
-    .where(eq(arcoRequests.userId, userId));
 
   return {
     user: {
@@ -67,7 +65,7 @@ export async function getUserData(userId: string) {
     photos: userPhotos,
     cashFunds: userCashFunds,
     contributions: userContributions,
-    subscription: userSubscription ?? null,
+    subscription: userSubscription,
     consentHistory: userConsents,
     arcoRequests: userArcoRequests,
   };

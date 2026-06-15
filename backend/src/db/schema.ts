@@ -41,6 +41,8 @@ export const events = pgTable('events', {
 }, (table) => ({
   userIdIdx: index('events_user_id_idx').on(table.userId),
   userIdDeletedAtIdx: index('events_user_id_deleted_at_idx').on(table.userId, table.deletedAt),
+  deletedAtIdx: index('events_deleted_at_idx').on(table.deletedAt),
+  userIdIsActiveDeletedAtIdx: index('events_user_id_is_active_deleted_at_idx').on(table.userId, table.isActive, table.deletedAt),
 }));
 
 export const gifts = pgTable('gifts', {
@@ -52,7 +54,6 @@ export const gifts = pgTable('gifts', {
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
-  eventIdIdx: index('gifts_event_id_idx').on(table.eventId),
   eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
   eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${table.isClaimed} = false`),
   eventIdNameUnique: unique('gifts_event_id_name_unique').on(table.eventId, table.name),
@@ -78,7 +79,9 @@ export const subscriptions = pgTable('subscriptions', {
   currentPeriodEnd: timestamp('current_period_end', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
-});
+}, (table) => ({
+  statusCurrentPeriodEndIdx: index('subscriptions_status_current_period_end_idx').on(table.status, table.currentPeriodEnd),
+}));
 
 export const cashFunds = pgTable('cash_funds', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -165,6 +168,7 @@ export const emailTracking = pgTable('email_tracking', {
 }, (table) => ({
   userIdTypeIdx: uniqueIndex('email_tracking_user_id_type_unique_idx').on(table.userId, table.type),
   sentAtIdx: index('email_tracking_sent_at_idx').on(table.sentAt),
+  userIdTypeSentAtIdx: index('email_tracking_user_id_type_sent_at_idx').on(table.userId, table.type, table.sentAt),
 }));
 
 export const eventViews = pgTable('event_views', {
@@ -174,7 +178,6 @@ export const eventViews = pgTable('event_views', {
   userAgent: text('user_agent'),
   viewedAt: timestamp('viewed_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
-  eventIdIdx: index('event_views_event_id_idx').on(table.eventId),
   eventIdViewedAtIdx: index('event_views_event_id_viewed_at_idx').on(table.eventId, table.viewedAt),
 }));
 

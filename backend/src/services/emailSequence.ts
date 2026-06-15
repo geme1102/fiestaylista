@@ -95,13 +95,12 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
         ? db
             .select({
               eventId: gifts.eventId,
-              isClaimed: gifts.isClaimed,
               count: sql<number>`count(*)::int`,
             })
             .from(gifts)
             .where(and(inArray(gifts.eventId, eventIds), eq(gifts.isClaimed, false)))
-            .groupBy(gifts.eventId, gifts.isClaimed)
-        : Promise.resolve([] as { eventId: string; isClaimed: boolean; count: number }[]),
+            .groupBy(gifts.eventId)
+        : Promise.resolve([] as { eventId: string; count: number }[]),
       eventIds.length > 0
         ? db
             .select({ eventId: cashFunds.eventId })
@@ -110,10 +109,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
         : Promise.resolve([] as { eventId: string }[]),
     ]);
 
-    const unclaimedGiftMap = new Map<string, number>();
-    for (const g of giftCounts) {
-      if (!g.isClaimed) unclaimedGiftMap.set(g.eventId, (unclaimedGiftMap.get(g.eventId) ?? 0) + g.count);
-    }
+    const unclaimedGiftMap = new Map(giftCounts.map(g => [g.eventId, g.count]));
 
     const hasCashFundSet = new Set(cashFundCounts.map(c => c.eventId));
 

@@ -1,4 +1,4 @@
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts, users, emailTracking } from '../db/schema.js';
 import { sendReminderEmail } from './email.js';
@@ -21,7 +21,6 @@ export async function processReminders(): Promise<ReminderResult> {
       title: events.title,
       slug: events.slug,
       userEmail: users.email,
-      unclaimedCount: sql<number>`(SELECT count(*)::int FROM ${gifts} WHERE ${gifts.eventId} = ${events.id} AND ${gifts.isClaimed} = false)`,
     })
     .from(events)
     .innerJoin(users, eq(events.userId, users.id))
@@ -34,13 +33,29 @@ export async function processReminders(): Promise<ReminderResult> {
     )
     .limit(50);
 
+  const eventIds = rows.map(r => r.id);
+  const unclaimedCounts = eventIds.length > 0
+    ? await db
+        .select({
+          eventId: gifts.eventId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(gifts)
+        .where(and(inArray(gifts.eventId, eventIds), eq(gifts.isClaimed, false)))
+        .groupBy(gifts.eventId)
+    : [];
+
+  const unclaimedMap = new Map(unclaimedCounts.map(u => [u.eventId, u.count]));
+
   let reminded = 0;
 
   for (const row of rows) {
     if (!row.userEmail) continue;
 
+    const unclaimedCount = unclaimedMap.get(row.id) ?? 0;
+
     try {
-      await sendReminderEmail(row.userEmail, row.title, row.slug, row.unclaimedCount);
+      await sendReminderEmail(row.userEmail, row.title, row.slug, unclaimedCount);
       await db.insert(emailTracking).values({
         userId: row.userId,
         type: 'reminder',
