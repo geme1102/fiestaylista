@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Fiesta y Lista', () => {
   test('landing page loads and shows title', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('La forma más hermosa de')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('La forma más fácil de')).toBeVisible({ timeout: 10000 });
   });
 
   test('can navigate to pricing page', async ({ page }) => {

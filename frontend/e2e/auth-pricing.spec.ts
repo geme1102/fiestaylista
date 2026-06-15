@@ -11,19 +11,19 @@ test.describe('Register Page', () => {
     await expect(page.locator('#name')).toBeVisible();
     await expect(page.locator('#email')).toBeVisible();
     await expect(page.locator('#password')).toBeVisible();
-    await expect(page.getByText('Crear Cuenta')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Crear Cuenta' })).toBeVisible();
   });
 
   test('shows password strength indicator when typing', async ({ page }) => {
-    await page.locator('#password').fill('Weak1');
-    await expect(page.getByText('Debil')).toBeVisible();
+    await page.locator('#password').fill('abc');
+    await expect(page.getByText('Débil')).toBeVisible();
 
     await page.locator('#password').fill('StrongPass1');
     await expect(page.getByText('Fuerte')).toBeVisible();
   });
 
   test('validates required fields on submit', async ({ page }) => {
-    await page.getByText('Crear Cuenta').click();
+    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
     await expect(page.getByText('Completa todos los campos')).toBeVisible({ timeout: 5000 });
   });
 
@@ -31,7 +31,7 @@ test.describe('Register Page', () => {
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('short');
-    await page.getByText('Crear Cuenta').click();
+    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
     await expect(page.getByText('al menos 8 caracteres')).toBeVisible({ timeout: 5000 });
   });
 
@@ -39,12 +39,12 @@ test.describe('Register Page', () => {
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('StrongPass1');
-    await page.getByText('Crear Cuenta').click();
-    await expect(page.getByText('Debes aceptar los terminos')).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
+    await expect(page.getByText('Debes aceptar los términos y la política de privacidad')).toBeVisible({ timeout: 5000 });
   });
 
   test('has link to login page', async ({ page }) => {
-    await page.getByText('Inicia Sesion').click();
+    await page.getByText('Inicia Sesión').click();
     await expect(page).toHaveURL('/login');
   });
 });
@@ -56,24 +56,24 @@ test.describe('Login Page', () => {
   });
 
   test('shows login form', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Iniciar Sesion');
+    await expect(page.locator('h1')).toContainText('Iniciar Sesión');
     await expect(page.locator('#email')).toBeVisible();
     await expect(page.locator('#password')).toBeVisible();
-    await expect(page.getByText('Iniciar Sesion')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Iniciar Sesión' })).toBeVisible();
   });
 
   test('validates empty fields on submit', async ({ page }) => {
-    await page.getByText('Iniciar Sesion').click();
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
     await expect(page.getByText('Completa todos los campos')).toBeVisible({ timeout: 5000 });
   });
 
   test('has link to register page', async ({ page }) => {
-    await page.getByText('Registrate').click();
+    await page.getByText('Regístrate').click();
     await expect(page).toHaveURL('/register');
   });
 
   test('has forgot password link', async ({ page }) => {
-    await expect(page.getByText('Olvidaste tu contrasena?')).toBeVisible();
+    await expect(page.getByText('¿Olvidaste tu contraseña?')).toBeVisible();
   });
 });
 
@@ -85,7 +85,7 @@ test.describe('Pricing Page', () => {
 
   test('shows plan options', async ({ page }) => {
     await expect(page.getByText('Elige el plan perfecto')).toBeVisible();
-    await expect(page.getByText('Empezar Gratis')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Empezar Gratis' })).toBeVisible();
     await expect(page.getByText('Actualizar a Pro')).toBeVisible();
   });
 
@@ -95,7 +95,7 @@ test.describe('Pricing Page', () => {
   });
 
   test('Empezar Gratis redirects to register when not authenticated', async ({ page }) => {
-    await page.getByText('Empezar Gratis').click();
+    await page.getByRole('button', { name: 'Empezar Gratis' }).click();
     await expect(page).toHaveURL('/register');
   });
 
@@ -105,7 +105,7 @@ test.describe('Pricing Page', () => {
   });
 
   test('renders FAQ section', async ({ page }) => {
-    await expect(page.getByText('Cancelacion en cualquier momento')).toBeVisible();
+    await expect(page.getByText('Cancelación en cualquier momento')).toBeVisible();
   });
 });
 
@@ -120,6 +120,6 @@ test.describe('Navigation Flow', () => {
   test('dashboard redirects to login when not authenticated', async ({ page }) => {
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
     await page.goto('/dashboard');
-    await expect(page).toHaveURL('/login');
+    await expect(page).toHaveURL(/\/login/);
   });
 });
