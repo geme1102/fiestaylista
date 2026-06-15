@@ -1,7 +1,3 @@
-[build]
-  publish = "frontend/dist"
-  command = "cd frontend && npm ci && npm run build"
-
 # IMPORTANTE: Actualizar esta URL si cambia el dominio de Railway.
 # Ve a Railway → Settings → Domains y copia la URL generada.
 # Luego reemplázala en la línea `to` de abajo.
