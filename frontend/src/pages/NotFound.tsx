@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function NotFound() {
@@ -27,14 +26,12 @@ export default function NotFound() {
         <div className="absolute bottom-1/4 right-10 w-48 h-48 bg-secondary-container/10 rounded-full blur-3xl" />
         <div className="max-w-2xl w-full text-center space-y-12 relative z-10">
           <div className="flex justify-center">
-            <motion.div
-              animate={{ y: [0, -15, 0], scale: [1, 1.02, 1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="glass-card p-10 rounded-3xl shadow-rose-500/10 shadow-2xl inline-flex items-center justify-center relative group"
+            <div
+              className="glass-card p-10 rounded-3xl shadow-rose-500/10 shadow-2xl inline-flex items-center justify-center relative group animate-float"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <span className="material-symbols-outlined text-8xl md:text-9xl text-primary drop-shadow-sm select-none relative z-10" style={{ fontVariationSettings: "'FILL' 1" }}>search</span>
-            </motion.div>
+            </div>
           </div>
           <div className="space-y-4">
             <h1 className="font-display-lg text-display-lg text-primary tracking-tighter sm:text-7xl md:text-8xl">

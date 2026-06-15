@@ -133,7 +133,22 @@ export async function deleteUserAccount(userId: string) {
     }
   }
 
-  await db.delete(users).where(eq(users.id, userId));
+  // Soft-delete: anonimizar datos personales en vez de hard-delete
+  // para preservar integridad referencial de eventos, regalos, etc.
+  await db.update(users)
+    .set({
+      email: `deleted-${userId.slice(0, 8)}@anonymous.fiestaylista.com`,
+      name: 'Usuario Eliminado',
+      tier: 'free',
+      passwordHash: '',
+      emailVerified: false,
+      verificationToken: null,
+      verificationTokenExpires: null,
+      resetToken: null,
+      resetTokenExpires: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
 }
 
 export async function createArcoRequest(

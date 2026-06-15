@@ -4,6 +4,7 @@ import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
 import { getGiftCategory } from '../data/giftEmojis';
+import { useSSE } from './useSSE';
 import type { Gift, Photo, EventType } from '../types';
 
 interface GuestEvent {
@@ -32,6 +33,7 @@ export function useEventPage() {
   const loadEventRef = useRef<() => Promise<void>>(undefined);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -70,11 +72,9 @@ export function useEventPage() {
 
     const POLL_FAST = 30000;
 
-    let pollTimer: ReturnType<typeof setInterval>;
-
     function schedulePoll(interval: number) {
-      clearInterval(pollTimer);
-      pollTimer = setInterval(() => {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = setInterval(() => {
         if (!sseConnectedRef.current) {
           loadEventRef.current?.();
         }
@@ -85,7 +85,7 @@ export function useEventPage() {
 
     function onVisibilityChange() {
       if (document.hidden) {
-        clearInterval(pollTimer);
+        clearInterval(pollTimerRef.current);
       } else if (!sseConnectedRef.current) {
         loadEventRef.current?.();
         schedulePoll(POLL_FAST);
@@ -95,81 +95,26 @@ export function useEventPage() {
 
     return () => {
       mountedRef.current = false;
-      clearInterval(pollTimer);
+      clearInterval(pollTimerRef.current);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
     };
   }, [slug, loadEvent]);
 
-  useEffect(() => {
-    if (!event?.id) return;
-
-    let cancelled = false;
-    let abortController: AbortController | null = null;
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-    let retryDelay = 2000;
-    let retryCount = 0;
-    const MAX_SSE_RETRIES = 10;
-
-    async function connectSSE() {
-      try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-        const tokenRes = await fetch(`${baseUrl}/api/events/${event!.id}/gifts/public-sse-token`, { method: 'POST' });
-        if (!tokenRes.ok || cancelled) return;
-        const { token } = await tokenRes.json();
-
-        abortController = new AbortController();
-        const response = await fetch(`${baseUrl}/api/events/${event!.id}/gifts/subscribe`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          signal: abortController.signal,
-        });
-
-        if (!response.ok || !response.body || cancelled) return;
-
-        retryDelay = 2000;
-        retryCount = 0;
+  useSSE({
+    eventId: event?.id ?? '',
+    sseTokenEndpoint: event?.id ? `/api/events/${event.id}/gifts/public-sse-token` : '',
+    maxRetries: 10,
+    initialRetryDelay: 2000,
+    onConnected: () => {
       sseConnectedRef.current = true;
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (!cancelled) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'connected') continue;
-                if (data.giftId && data.claimedBy) {
-                  loadEventRef.current?.();
-                }
-              } catch { /* ignore parse errors */ }
-            }
-          }
-        }
-      } catch { /* SSE disconnected */ }
-
-      if (!cancelled && retryCount < MAX_SSE_RETRIES) {
-        retryCount++;
-        reconnectTimeout = setTimeout(connectSSE, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 30000);
-      }
-    }
-
-    connectSSE();
-
-    return () => {
-      cancelled = true;
+      clearInterval(pollTimerRef.current);
+    },
+    onDisconnected: () => {
       sseConnectedRef.current = false;
-      if (abortController) abortController.abort();
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    };
-  }, [event?.id]);
+    },
+    onGiftClaimed: () => { loadEventRef.current?.(); },
+  });
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
     if (!event || !claimName.trim()) {

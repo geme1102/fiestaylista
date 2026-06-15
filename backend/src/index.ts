@@ -88,26 +88,10 @@ app.use(helmet({
 
 app.use(cookieParser());
 
-app.use('/api/webhooks', (req: Request, _res: Response, next: NextFunction) => {
-  const chunks: Buffer[] = [];
-  let totalBytes = 0;
-  const MAX_BYTES = 1024 * 1024;
-  req.on('data', (chunk: Buffer) => {
-    totalBytes += chunk.length;
-    if (totalBytes > MAX_BYTES) {
-      req.destroy(new Error('Payload demasiado grande'));
-      return;
-    }
-    chunks.push(chunk);
-  });
-  req.on('end', () => {
-    (req as AppRequest).rawBody = Buffer.concat(chunks).toString('utf-8');
-    next();
-  });
-  req.on('error', next);
-});
-
-app.use('/api/webhooks', webhookLimiter, webhooksRouter);
+// Raw body parser exclusivo para webhooks de MP (antes de express.json())
+// Express aplica este middleware solo a /api/webhooks/mercadopago
+app.use('/api/webhooks/mercadopago', webhookLimiter, express.raw({ type: '*/*', limit: '1mb' }));
+app.use('/api/webhooks', webhooksRouter);
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));

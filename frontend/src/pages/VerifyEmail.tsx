@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +11,12 @@ export default function VerifyEmail() {
   const { refreshUser } = useAuth();
   const navigate = useNavigate();
 
+  const hasVerified = useRef(false);
+
   useEffect(() => {
+    if (hasVerified.current) return;
+    hasVerified.current = true;
+
     const statusParam = searchParams.get('status');
     const token = searchParams.get('token');
 
@@ -43,7 +48,7 @@ export default function VerifyEmail() {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Error al verificar correo');
       });
-  }, []); // Intencionalmente vacío: solo se ejecuta al montar
+  }, [searchParams]);
 
   const goToDashboard = () => {
     navigate('/dashboard');

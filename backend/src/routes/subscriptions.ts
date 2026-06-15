@@ -29,8 +29,14 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
   const data = checkoutSchema.parse(req.body);
 
   const allowedOrigin = config.FRONTEND_URL.replace(/\/+$/, '');
-  if (!data.successUrl.startsWith(allowedOrigin) || !data.cancelUrl.startsWith(allowedOrigin)) {
-    throw new ValidationError('URL de redirección no permitida');
+  try {
+    const successOrigin = new URL(data.successUrl).origin;
+    const cancelOrigin = new URL(data.cancelUrl).origin;
+    if (successOrigin !== allowedOrigin || cancelOrigin !== allowedOrigin) {
+      throw new ValidationError('URL de redirección no permitida');
+    }
+  } catch {
+    throw new ValidationError('URL de redirección inválida');
   }
 
   const result = await mercadopagoService.createProPreference(
@@ -42,12 +48,11 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
   res.json(result);
 }));
 
-const confirmPasswordSchema = z.object({
-  password: z.string().min(1, 'Contraseña requerida para confirmar'),
-});
-
-router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const { password } = confirmPasswordSchema.parse(req.body);
+router.post('/cancel', requireAuth, cancelLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  const password = req.headers['x-password'] as string | undefined;
+  if (!password) {
+    throw new ValidationError('Contraseña requerida para confirmar');
+  }
 
   const [user] = await db
     .select({ passwordHash: users.passwordHash })

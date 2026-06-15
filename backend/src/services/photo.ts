@@ -21,13 +21,14 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
 
   return await db.transaction(async (tx) => {
     const [event] = await tx
-      .select({ userId: events.userId })
+      .select({ userId: events.userId, isActive: events.isActive })
       .from(events)
       .where(eq(events.id, eventId))
       .for('update')
       .limit(1);
 
     if (!event) throw new NotFoundError('Evento no encontrado');
+    if (!event.isActive) throw new ValidationError('Este evento no está activo');
 
     const [user] = await tx
       .select({ tier: users.tier })

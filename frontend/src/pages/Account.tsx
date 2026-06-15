@@ -48,7 +48,9 @@ export default function Account() {
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
     try {
-      await apiClient.post('/api/subscriptions/cancel', { password: confirmPassword });
+      await apiClient.post('/api/subscriptions/cancel', {}, {
+        headers: { 'x-password': confirmPassword },
+      });
       showToast('Suscripción cancelada', 'success');
       setSubscription(null);
       setShowCancelConfirm(false);
@@ -82,7 +84,9 @@ export default function Account() {
   const handleDeleteAccount = async () => {
     setDeletingAccount(true);
     try {
-      await apiClient.post('/api/auth/arco/delete-account', { password: confirmPassword });
+      await apiClient.post('/api/auth/arco/delete-account', {}, {
+        headers: { 'x-password': confirmPassword },
+      });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setConfirmPassword('');

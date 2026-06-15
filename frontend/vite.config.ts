@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       selfDestroying: true,
-      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/icon-*.png'],
       manifest: {
         name: 'Fiesta y Lista',
         short_name: 'FiestaL',
@@ -30,7 +30,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {

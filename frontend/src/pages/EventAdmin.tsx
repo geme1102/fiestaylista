@@ -1,23 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Pencil, ChevronDown, Share2, Eye,
   MessageSquare, Copy, Calendar, MapPin, Info,
-  Plus, X, Check, Sparkles,
-  ChevronRight, Home, Upload, Trash2
+  X, Check,
+  ChevronRight, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
-import GiftCard from '../components/GiftCard';
 import { showToast } from '../hooks/useToast';
+import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
-import { EVENT_LABELS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
-import { validateRedirectUrl } from '../utils/format';
-import ImageWithSkeleton from '../components/ImageWithSkeleton';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { GiftManagement } from '../components/admin/GiftManagement';
+import { PhotoGallery } from '../components/admin/PhotoGallery';
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
@@ -33,11 +32,6 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'OTHER', icon: '🎊', label: 'Otro' },
   { value: 'HOUSE_WARMING', icon: '🏠', label: 'Casa Shower' },
 ];
-
-const EVENT_ICONS: Record<string, string> = {
-  BABY_SHOWER: '🍼', WEDDING: '💍', BIRTHDAY: '🎂',
-  BAPTISM: '🕊️', COMMUNION: '✨', OTHER: '🎊', HOUSE_WARMING: '🏠',
-};
 
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
@@ -72,84 +66,7 @@ export default function EventAdmin() {
   const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!id) return;
-    loadEvent();
-  }, [id]);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    let abortController: AbortController | null = null;
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_SSE_RETRIES = 5;
-
-    async function connectSSE() {
-      try {
-        const { token } = await apiClient.post<{ token: string }>(`/api/events/${id}/gifts/sse-token`);
-        if (cancelled) return;
-
-        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-        abortController = new AbortController();
-
-        const response = await fetch(`${baseUrl}/api/events/${id}/gifts/subscribe`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          signal: abortController.signal,
-        });
-
-        if (!response.ok || !response.body) {
-          throw new Error('SSE connection failed');
-        }
-
-        retryDelay = 1000;
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (!cancelled) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'connected') continue;
-                showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
-                loadEvent();
-              } catch (err) {
-                if (import.meta.env.DEV) console.warn('[SSE] Error al procesar mensaje:', err);
-              }
-            }
-          }
-        }
-      } catch {
-        if (import.meta.env.DEV) console.warn('[SSE] No se pudo conectar al stream de eventos');
-      }
-
-      if (!cancelled && retryCount < MAX_SSE_RETRIES) {
-        retryCount++;
-        reconnectTimeout = setTimeout(connectSSE, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 30000);
-      } else if (!cancelled) {
-        if (import.meta.env.DEV) console.warn('[EventAdmin] SSE max retries reached, falling back to polling');
-      }
-    }
-
-    connectSSE();
-    return () => {
-      cancelled = true;
-      if (abortController) abortController.abort();
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    };
-  }, [id]);
-
-  async function loadEvent() {
+  const loadEvent = useCallback(async () => {
     try {
       const [eventRes, fundRes] = await Promise.all([
         apiClient.get<{ event: AdminEvent & { gifts?: Gift[]; photos?: Photo[] } }>(`/api/events/${id}`),
@@ -170,7 +87,23 @@ export default function EventAdmin() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    loadEvent();
+  }, [id, loadEvent]);
+
+  useSSE({
+    eventId: id ?? '',
+    sseTokenEndpoint: id ? `/api/events/${id}/gifts/sse-token` : '',
+    maxRetries: 5,
+    initialRetryDelay: 1000,
+    onGiftClaimed: (data) => {
+      showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
+      loadEvent();
+    },
+  });
 
   const handleAddGift = async () => {
     if (!newGiftName.trim() || addingGift) return;
@@ -208,6 +141,19 @@ export default function EventAdmin() {
       showToast('Error al liberar regalo', 'error');
     } finally {
       setFreeingGiftId(null);
+    }
+  };
+
+  const handleAddSuggestion = async (name: string) => {
+    setAddingGift(true);
+    try {
+      const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name });
+      setGifts((prev) => [...prev, res.gift]);
+      showToast(`Regalo sugerido "${name}" añadido 🎁`, 'success');
+    } catch {
+      showToast('Error al agregar regalo', 'error');
+    } finally {
+      setAddingGift(false);
     }
   };
 
@@ -472,7 +418,7 @@ export default function EventAdmin() {
               <button
                 onClick={toggleActive}
                 className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
-                aria-label="Toggle Event Active Status"
+                aria-label="Cambiar estado del evento"
               >
                 {event.isActive && (
                   <span className="absolute inset-0 bg-[#c52367] rounded-full blur-[2px] opacity-30 animate-pulse" />
@@ -627,253 +573,37 @@ export default function EventAdmin() {
           </div>
         </section>
 
-        {/* Gifts Section */}
-        <section className="mb-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 px-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#a21b53] to-pink-500 flex items-center justify-center text-white shadow-sm font-bold text-lg">
-                🎁
-              </div>
-              <div className="flex flex-col text-left">
-                <h3 className="text-xl font-bold text-gray-900 tracking-tight">
-                  Lista de Deseos de Regalos
-                </h3>
-                <span className="text-xs text-gray-400 font-semibold">Tus invitados elegirán los regalos directo de esta lista</span>
-              </div>
-            </div>
-          </div>
+        <GiftManagement
+          gifts={gifts}
+          addingGift={addingGift}
+          freeingGiftId={freeingGiftId}
+          deletingGiftId={deletingGiftId}
+          newGiftName={newGiftName}
+          showSuggestions={showSuggestions}
+          suggestions={suggestions}
+          filteredSuggestions={filteredSuggestions}
+          onAddGift={handleAddGift}
+          onFreeGift={handleFreeGift}
+          onDeleteGift={handleDeleteGift}
+          onAddSuggestion={handleAddSuggestion}
+          onNewGiftNameChange={setNewGiftName}
+          onShowSuggestionsChange={setShowSuggestions}
+        />
 
-          {/* Add Gift Form */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); handleAddGift(); }}
-            className="bg-white/70 border border-rose-100/20 p-5 rounded-[28px] shadow-sm mb-6 text-left"
-          >
-            <h4 className="text-xs font-extrabold text-[#7e143f] uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
-              <span>+ Agregar Regalo Personalizado</span>
-            </h4>
-
-            <div className="flex gap-3">
-              <input
-                id="gift-name"
-                type="text"
-                placeholder="Nombre del regalo (Ej: Juego de Sábanas)..."
-                value={newGiftName}
-                onChange={(e) => { setNewGiftName(e.target.value); setShowSuggestions(true); }}
-                onKeyDown={(e) => { if (e.key === 'Escape') setShowSuggestions(false); }}
-                className="flex-1 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97c9b]/35 bg-white text-gray-800"
-                role="combobox"
-                aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
-                aria-autocomplete="list"
-              />
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                disabled={!newGiftName.trim() || addingGift}
-                className="bg-gradient-to-r from-[#a21b53] to-[#c52367] text-white py-3 px-6 rounded-full text-xs font-black shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>{addingGift ? '...' : 'Añadir'}</span>
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              </motion.button>
-            </div>
-
-            {/* Suggestions dropdown */}
-            {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-              <div className="mt-3 bg-white border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                {filteredSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => { setNewGiftName(s); setShowSuggestions(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-pink-50 transition-colors font-semibold"
-                  >
-                    + {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </form>
-
-          {/* Suggestion Pills */}
-          {suggestions.length > 0 && (
-            <div className="mb-6 flex flex-col gap-2">
-              <div className="flex items-center gap-1.5 px-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-bounce" />
-                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">Sugerencias rápidas:</span>
-              </div>
-
-              <div className="overflow-x-auto hide-scrollbar pb-2">
-                <div className="flex gap-2.5 min-w-max px-1">
-                  {suggestions
-                    .filter((s) => !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase()))
-                    .slice(0, 8)
-                    .map((s, idx) => (
-                      <motion.button
-                        key={idx}
-                        whileHover={{ scale: 1.05, y: -1 }}
-                        whileTap={{ scale: 0.95 }}
-                        type="button"
-                        disabled={addingGift}
-                        onClick={async () => {
-                          if (addingGift) return;
-                          setAddingGift(true);
-                          try {
-                            const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: s });
-                            setGifts((prev) => [...prev, res.gift]);
-                            showToast(`Regalo sugerido "${s}" añadido 🎁`, 'success');
-                          } catch {
-                            showToast('Error al agregar regalo', 'error');
-                          } finally {
-                            setAddingGift(false);
-                          }
-                        }}
-                        className="text-xs font-bold py-2 px-[18px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-white hover:bg-rose-50/35 border-gray-200 text-gray-700 hover:border-[#a21b53]/40 disabled:opacity-50"
-                      >
-                        <span className="text-[#a21b53] font-black">+</span>
-                        <span>{s}</span>
-                      </motion.button>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Gift Cards Grid */}
-          {gifts.length === 0 ? (
-            <div className="bg-white/60 border rounded-3xl p-12 text-center border-gray-200/50">
-              <p className="text-gray-800 font-extrabold text-base">No hay regalos de deseos</p>
-              <p className="text-gray-400 text-xs mt-1 font-medium">Agrega tu primer regalo usando el formulario de arriba.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {gifts.map((gift) => (
-                <GiftCard
-                  key={gift.id}
-                  gift={gift}
-                  onFree={handleFreeGift}
-                  onDelete={handleDeleteGift}
-                  isAdmin
-                  freeingId={freeingGiftId}
-                  deletingId={deletingGiftId}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Photos Section */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-[18px] px-1">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-              <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
-                Álbum de Recuerdos <span className="text-gray-400 text-sm font-semibold">({photos.length})</span>
-              </h3>
-            </div>
-          </div>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUploadPhoto}
-            multiple
-            accept="image/*"
-            className="hidden"
-            id="hidden-photo-uploader"
-          />
-
-          {photos.length === 0 ? (
-            <p className="text-center text-gray-400 text-xs font-semibold mb-6 bg-white p-6 rounded-2xl border border-dashed border-gray-200">
-              📸 Aún no hay fotografías agregadas. Pulsa en Subir más fotos en el banner inferior.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mb-6">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  onClick={() => setSelectedPhotoForPreview(photo)}
-                  className="bg-white p-2.5 rounded-[22px] border border-gray-200/70 shadow-sm relative group overflow-hidden cursor-pointer hover:border-[#a21b53]/45 transition-all duration-300"
-                >
-                  <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
-
-                  <div className="absolute inset-2.5 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletePhotoConfirm(photo.id);
-                      }}
-                      className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow self-end cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                      title="Eliminar del catálogo"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <span className="text-[10px] text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
-                  </div>
-
-                  <div className="mt-2.5 px-1 text-[11px] text-gray-500 font-bold flex justify-between gap-1 overflow-hidden">
-                    <span className="truncate max-w-[70%] text-left">{photo.caption || 'Foto'}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Upload Area */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
-          >
-            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">
-              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
-            </div>
-            <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
-              {uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos'}
-            </span>
-            <span className="text-[10px] text-gray-400 font-bold mt-1">
-              Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
-            </span>
-          </div>
-        </section>
+        <PhotoGallery
+          photos={photos}
+          uploading={uploading}
+          deletingPhoto={deletingPhoto}
+          deletePhotoConfirm={deletePhotoConfirm}
+          fileInputRef={fileInputRef}
+          onUpload={handleUploadPhoto}
+          onDelete={handleDeletePhoto}
+          onRequestDelete={setDeletePhotoConfirm}
+          onDeleteConfirmClose={() => setDeletePhotoConfirm(null)}
+          onSelectPreview={setSelectedPhotoForPreview}
+          selectedPhotoForPreview={selectedPhotoForPreview}
+        />
       </div>
-
-      {/* Photo Preview Lightbox */}
-      <AnimatePresence>
-        {selectedPhotoForPreview && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedPhotoForPreview(null)}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Vista previa de foto"
-            className="fixed inset-0 bg-black/95 z-55 flex flex-col items-center justify-center p-4 backdrop-blur-lg"
-          >
-            <div className="absolute top-4 right-4 flex gap-4">
-              <button
-                onClick={() => setSelectedPhotoForPreview(null)}
-                className="bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-all shrink-0 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <motion.img
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              src={selectedPhotoForPreview.url}
-              alt={selectedPhotoForPreview.caption || 'Foto del evento'}
-              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
-            />
-
-            <div className="mt-5 text-center bg-white/10 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/10 max-w-sm">
-              <h5 className="text-white text-sm font-bold truncate">{selectedPhotoForPreview.caption || 'Foto'}</h5>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Edit Details Modal */}
       <AnimatePresence>
@@ -1058,16 +788,6 @@ export default function EventAdmin() {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Delete Photo Confirmation Modal */}
-      {deletePhotoConfirm && (
-        <ConfirmModal
-          message="¿Eliminar esta foto? Esta acción no se puede deshacer."
-          onConfirm={() => handleDeletePhoto(deletePhotoConfirm)}
-          onClose={() => setDeletePhotoConfirm(null)}
-          loading={deletingPhoto}
-        />
-      )}
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">

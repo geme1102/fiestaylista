@@ -134,16 +134,14 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
 
       {onClaim && (
         <div className="mt-4">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.97 }}
+          <button
             onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
             disabled={claimingId === gift.id}
-            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.97] hover:scale-[1.01] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-base animate-bounce">card_giftcard</span>
             {claimingId === gift.id ? '...' : 'Regalar este detalle'}
-          </motion.button>
+          </button>
         </div>
       )}
     </motion.div>

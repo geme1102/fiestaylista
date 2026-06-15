@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto';
-
 export function generateSlug(title: string): string {
   const base = title
     .toLowerCase()
@@ -12,17 +10,4 @@ export function generateSlug(title: string): string {
     .replace(/^-+|-+$/g, '');
 
   return base || 'evento';
-}
-
-export function generateUniqueSlug(
-  baseSlug: string,
-  existingSlugs: Set<string>,
-  maxAttempts = 10,
-): string {
-  if (!existingSlugs.has(baseSlug)) return baseSlug;
-  for (let i = 0; i < maxAttempts; i++) {
-    const slug = `${baseSlug}-${randomBytes(2).toString('hex')}`;
-    if (!existingSlugs.has(slug)) return slug;
-  }
-  return `${baseSlug}-${randomBytes(4).toString('hex')}`;
 }

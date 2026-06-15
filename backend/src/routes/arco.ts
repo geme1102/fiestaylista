@@ -6,7 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { arcoLimiter } from '../middleware/rateLimit.js';
 import * as arcoService from '../services/arco.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { UnauthorizedError } from '../utils/errors.js';
+import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
@@ -23,12 +23,11 @@ router.get('/my-data', requireAuth, asyncHandler(async (req: AuthRequest, res) =
   res.json({ data });
 }));
 
-const confirmDeleteSchema = z.object({
-  password: z.string().min(1, 'Contraseña requerida para eliminar la cuenta'),
-});
-
-router.post('/delete-account', requireAuth, arcoLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const { password } = confirmDeleteSchema.parse(req.body);
+router.post('/delete-account', requireAuth, arcoLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  const password = req.headers['x-password'] as string | undefined;
+  if (!password) {
+    throw new ValidationError('Contraseña requerida para eliminar la cuenta');
+  }
 
   const [user] = await db
     .select({ passwordHash: users.passwordHash })

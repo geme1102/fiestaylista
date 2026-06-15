@@ -12,25 +12,31 @@ import { viewLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
+function stripHtml(value: string): string {
+  return value.replace(/<[^>]*>/g, '');
+}
+
+const phoneRegex = /^\+?\d{7,15}$/;
+
 const createEventSchema = z.object({
-  title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo'),
+  title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo').transform(stripHtml),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]], {
     errorMap: () => ({ message: 'Tipo de evento inválido' }),
   }),
-  hostPhone: z.string().optional(),
+  hostPhone: z.string().regex(phoneRegex, 'Teléfono inválido').optional(),
   eventDate: z.string().optional(),
-  eventLocation: z.string().optional(),
-  eventNote: z.string().optional(),
+  eventLocation: z.string().max(200).optional().transform(v => v ? stripHtml(v) : v),
+  eventNote: z.string().max(1000).optional().transform(v => v ? stripHtml(v) : v),
 });
 
 const updateEventSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(200).optional().transform(v => v ? stripHtml(v) : v),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]]).optional(),
-  hostPhone: z.string().optional(),
+  hostPhone: z.string().regex(phoneRegex, 'Teléfono inválido').optional(),
   isActive: z.boolean().optional(),
   eventDate: z.string().nullable().optional(),
-  eventLocation: z.string().nullable().optional(),
-  eventNote: z.string().nullable().optional(),
+  eventLocation: z.string().max(200).nullable().optional().transform(v => v ? stripHtml(v) : v),
+  eventNote: z.string().max(1000).nullable().optional().transform(v => v ? stripHtml(v) : v),
 });
 
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {

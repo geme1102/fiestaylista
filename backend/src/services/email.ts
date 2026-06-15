@@ -32,7 +32,7 @@ async function sendEmail(options: { from: string; to: string; subject: string; h
 }
 
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
-  const url = `${config.BACKEND_URL}/api/auth/verify-email?token=${token}`;
+  const url = `${config.FRONTEND_URL}/verify-email?token=${token}`;
 
   await sendEmail({
     from: FROM,
@@ -75,6 +75,24 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
 
 export async function sendReminderEmail(email: string, eventTitle: string, slug: string, unclaimedCount: number): Promise<void> {
   const url = `${getBaseUrl()}/e/${slug}`;
+
+  if (unclaimedCount === 0) {
+    await sendEmail({
+      from: FROM,
+      to: email,
+      subject: `🎉 Comparte ${eventTitle} con tus invitados`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
+          <p style="color:#6b7280">Tu evento ya está listo. Comparte el enlace con tus invitados para que empiecen a apartar sus regalos.</p>
+          <div style="text-align:center;margin:24px 0">
+            <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Compartir evento</a>
+          </div>
+        </div>
+      `,
+    });
+    return;
+  }
 
   await sendEmail({
     from: FROM,

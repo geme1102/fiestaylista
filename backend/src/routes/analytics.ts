@@ -50,7 +50,7 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHa
     const userId = req.user!.userId;
 
     const [event] = await db
-      .select({ ownerId: events.userId })
+      .select({ ownerId: events.userId, views: events.viewCount })
       .from(events)
       .where(eq(events.id, eventId))
       .limit(1);
@@ -60,13 +60,7 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHa
       return;
     }
 
-    const [result] = await db
-      .select({ views: events.viewCount })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .limit(1);
-
-    res.json({ eventId, views: result?.views ?? 0 });
+    res.json({ eventId, views: event.views ?? 0 });
   } catch (err) {
     next(err);
   }

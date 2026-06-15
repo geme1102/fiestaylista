@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -38,13 +38,28 @@ function verifyMpSignature(req: Request): boolean {
     return false;
   }
 
-  const rawBody = (req as any).rawBody;
-  if (!rawBody) return false;
+  // req.body es un Buffer gracias a express.raw() montado en index.ts
+  if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+    console.warn('[MP Webhook] Body ausente o no es Buffer');
+    return false;
+  }
 
-  const bodyStr = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody);
+  const bodyStr = req.body.toString('utf-8');
 
-  const manifest = 'id:' + ts + ';' + bodyStr + ';' + webhookSecret;
-  const expected = createHash('sha256').update(manifest).digest('hex');
+  // Extraer data.id del body para incluirlo en la firma
+  let dataId: string | undefined;
+  try {
+    const parsed = JSON.parse(bodyStr);
+    dataId = parsed.data?.id;
+  } catch {
+    return false;
+  }
+  if (!dataId) return false;
+
+  // HMAC-SHA256(secret, data.id + '.' + ts + '.' + body)
+  const expected = createHmac('sha256', webhookSecret)
+    .update(dataId + '.' + ts + '.' + bodyStr)
+    .digest('hex');
 
   try {
     return timingSafeEqual(Buffer.from(hash.toLowerCase()), Buffer.from(expected.toLowerCase()));
@@ -54,38 +69,38 @@ function verifyMpSignature(req: Request): boolean {
 }
 
 function extractTopicId(req: Request): { topic?: string; id?: string } {
-  const rawBody = (req as any).rawBody;
-  let result: { topic?: string; id?: string } = {};
-
-  if (typeof rawBody === 'string') {
-    try {
-      const parsed = JSON.parse(rawBody);
-      result = {
-        topic: parsed.topic || parsed.type,
-        id: parsed.id || parsed.data?.id,
+  try {
+    const bodyStr = Buffer.isBuffer(req.body) ? req.body.toString('utf-8') : '';
+    if (!bodyStr) {
+      return {
+        topic: req.query.topic as string,
+        id: req.query.id as string,
       };
-    } catch (err) {
-      console.error('[MP Webhook] Error parsing webhook body:', err);
     }
+    const parsed = JSON.parse(bodyStr);
+    return {
+      topic: parsed.topic || parsed.type,
+      id: parsed.id || parsed.data?.id,
+    };
+  } catch (err) {
+    console.error('[MP Webhook] Error parsing webhook body:', err);
+    return {
+      topic: req.query.topic as string,
+      id: req.query.id as string,
+    };
   }
-
-  if (!result.topic) {
-    result.topic = req.query.topic as string;
-    result.id = req.query.id as string;
-  }
-
-  return result;
 }
 
 router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => {
+  const info = extractTopicId(req);
+
   if (!verifyMpSignature(req)) {
-    const { topic, id } = extractTopicId(req);
     console.warn('[MP Webhook] Firma inválida, ignorando notificación');
-    if (topic && id) {
+    if (info.topic && info.id) {
       try {
         await db.insert(failedWebhooks).values({
-          topic,
-          resourceId: id,
+          topic: info.topic,
+          resourceId: info.id,
           errorMessage: 'Firma inválida',
           retryCount: 0,
           lastAttemptAt: new Date(),
@@ -99,18 +114,16 @@ router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => 
     return;
   }
 
-  const { topic, id } = extractTopicId(req);
-
-  if (!topic || !id) {
+  if (!info.topic || !info.id) {
     res.status(200).json({ received: true });
     return;
   }
 
   try {
-    if (topic === 'payment') {
-      await mpWebhooks.handlePaymentNotification(id);
-    } else if (topic === 'preapproval' || topic === 'subscription') {
-      await mpWebhooks.handleSubscriptionNotification(id);
+    if (info.topic === 'payment') {
+      await mpWebhooks.handlePaymentNotification(info.id);
+    } else if (info.topic === 'preapproval' || info.topic === 'subscription') {
+      await mpWebhooks.handleSubscriptionNotification(info.id);
     }
 
     res.status(200).json({ received: true });
@@ -119,17 +132,14 @@ router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => 
     console.error('[MP Webhook] Error:', errorMessage);
 
     try {
-      const { topic: t, id: resId } = extractTopicId(req);
-      if (t && resId) {
-        await db.insert(failedWebhooks).values({
-          topic: t,
-          resourceId: resId,
-          errorMessage,
-          retryCount: 0,
-          lastAttemptAt: new Date(),
-          nextRetryAt: new Date(Date.now() + 60 * 1000),
-        });
-      }
+      await db.insert(failedWebhooks).values({
+        topic: info.topic,
+        resourceId: info.id,
+        errorMessage,
+        retryCount: 0,
+        lastAttemptAt: new Date(),
+        nextRetryAt: new Date(Date.now() + 60 * 1000),
+      });
     } catch (dbError) {
       console.error('[MP Webhook] Error guardando failed webhook:', dbError);
     }

@@ -1,4 +1,4 @@
-import { eq, and, sql, inArray, type SQL } from 'drizzle-orm';
+import { eq, and, sql, desc, inArray, type SQL } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';
@@ -78,7 +78,8 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
       db
         .select({ id: events.id, userId: events.userId, title: events.title, slug: events.slug, createdAt: events.createdAt })
         .from(events)
-        .where(inArray(events.userId, userIds)),
+        .where(inArray(events.userId, userIds))
+        .orderBy(desc(events.createdAt)),
       loadSentMap(userIds),
     ]);
 
@@ -147,11 +148,16 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
         try {
           if (daysSinceRegistration === 3 && userEvs.length > 0 && !sent.has('day3_loss_aversion')) {
             let totalUnclaimed = 0;
+            let mostUnclaimedEv = userEvs[0];
             for (const ev of userEvs) {
-              totalUnclaimed += unclaimedGiftMap.get(ev.id) ?? 0;
+              const count = unclaimedGiftMap.get(ev.id) ?? 0;
+              totalUnclaimed += count;
+              if (count > (unclaimedGiftMap.get(mostUnclaimedEv.id) ?? 0)) {
+                mostUnclaimedEv = ev;
+              }
             }
             if (totalUnclaimed > 0) {
-              await sendReminderEmail(user.email, userEvs[0].title, userEvs[0].slug, totalUnclaimed);
+              await sendReminderEmail(user.email, mostUnclaimedEv.title, mostUnclaimedEv.slug, totalUnclaimed);
               markBatch.push({ userId: user.id, type: 'day3_loss_aversion' });
               if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 3: Loss aversion - ${user.email}`);
               processed++;

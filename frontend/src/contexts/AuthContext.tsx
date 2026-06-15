@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../types';
-import * as auth from '../services/auth';
+import { login, register, getMe } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, apiClient } from '../services/api';
 
 interface AuthContextValue {
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    auth.getMe()
+    getMe()
       .then((res) => {
         if (res.isGuest) {
           clearTokens();
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await auth.login(email, password);
+    const res = await login(email, password);
     setTokens(res.accessToken);
     setUser(res.user);
     const params = new URLSearchParams(window.location.search);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    const res = await auth.register(email, password, name);
+    const res = await register(email, password, name);
     setTokens(res.accessToken);
     setUser(res.user);
     navigate('/onboarding');
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await auth.getMe();
+      const res = await getMe();
       setUser(res.user);
     } catch {
       clearTokens();

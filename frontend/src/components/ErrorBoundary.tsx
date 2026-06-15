@@ -102,7 +102,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                   animation: 'float 6s ease-in-out infinite',
                 }}
               >
-                <span aria-label="Confused face" role="img">😕</span>
+                <span aria-label="Rostro confundido" role="img">😕</span>
               </div>
             </div>
             <div className="space-y-4 px-4">

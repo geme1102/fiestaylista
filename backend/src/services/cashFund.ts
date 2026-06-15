@@ -113,21 +113,6 @@ export async function createContribution(
   const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
   const netAmount = amountInCents - feeAmount;
 
-  const [existingPending] = await db
-    .select({ id: cashContributions.id })
-    .from(cashContributions)
-    .where(and(
-      eq(cashContributions.cashFundId, cashFundId),
-      eq(cashContributions.contributorName, cleanedName),
-      eq(cashContributions.amount, amountInCents),
-      eq(cashContributions.status, 'pending'),
-    ))
-    .limit(1);
-
-  if (existingPending) {
-    throw new ValidationError('Ya tienes una contribución pendiente para este fondo');
-  }
-
   const [eventForSlug] = await db
     .select({ slug: events.slug })
     .from(events)
@@ -137,6 +122,28 @@ export async function createContribution(
   const backUrl = `${config.FRONTEND_URL}/e/${eventForSlug?.slug || fund.eventId}`;
 
   const result = await db.transaction(async (tx) => {
+    await tx
+      .select({ id: cashFunds.id })
+      .from(cashFunds)
+      .where(eq(cashFunds.id, cashFundId))
+      .for('update')
+      .limit(1);
+
+    const [existingPending] = await tx
+      .select({ id: cashContributions.id })
+      .from(cashContributions)
+      .where(and(
+        eq(cashContributions.cashFundId, cashFundId),
+        eq(cashContributions.contributorName, cleanedName),
+        eq(cashContributions.amount, amountInCents),
+        eq(cashContributions.status, 'pending'),
+      ))
+      .limit(1);
+
+    if (existingPending) {
+      throw new ValidationError('Ya tienes una contribución pendiente para este fondo');
+    }
+
     const contributionId = randomUUID();
     const [contribution] = await tx
       .insert(cashContributions)

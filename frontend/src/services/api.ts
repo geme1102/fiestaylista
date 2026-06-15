@@ -131,7 +131,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           const err = await res.json();
           errorMsg = err.message ?? err.error ?? errorMsg;
         } catch {
-          console.warn('[API] Error parsing error response body');
+          if (import.meta.env.DEV) console.warn('[API] Error parsing error response body');
         }
         throw new Error(errorMsg);
       }

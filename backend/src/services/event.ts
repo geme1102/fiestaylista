@@ -134,19 +134,20 @@ export async function getEvent(eventId: string, userId: string) {
     throw new ForbiddenError('No tienes permiso para ver este evento');
   }
 
-  const eventGifts = await db
-    .select()
-    .from(gifts)
-    .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
-    .orderBy(gifts.createdAt)
-    .limit(101);
-
-  const eventPhotos = await db
-    .select()
-    .from(photos)
-    .where(eq(photos.eventId, eventId))
-    .orderBy(photos.createdAt)
-    .limit(101);
+  const [eventGifts, eventPhotos] = await Promise.all([
+    db
+      .select()
+      .from(gifts)
+      .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
+      .orderBy(gifts.createdAt)
+      .limit(101),
+    db
+      .select()
+      .from(photos)
+      .where(eq(photos.eventId, eventId))
+      .orderBy(photos.createdAt)
+      .limit(101),
+  ]);
 
   return {
     ...event,

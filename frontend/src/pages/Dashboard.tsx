@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -11,10 +12,19 @@ import { ConfirmModal } from '../components/ConfirmModal';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
 
+function useEventsQuery() {
+  return useQuery({
+    queryKey: ['events'],
+    queryFn: () => apiClient.get<{ events: (Event & { giftCount?: number; photoCount?: number })[] }>('/api/events'),
+    select: (data) => data.events || [],
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export default function Dashboard() {
   const { user, isAuthenticated, refreshUser } = useAuth();
-  const [events, setEvents] = useState<(Event & { giftCount?: number; photoCount?: number })[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: events = [], isLoading, refetch } = useEventsQuery();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({ title: '', eventType: 'BABY_SHOWER' as EventType, hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
@@ -22,25 +32,11 @@ export default function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
+    if (isAuthenticated) {
+      refreshUser();
+      refetch();
     }
-    refreshUser();
-    loadEvents();
-  }, [isAuthenticated]);
-
-
-  async function loadEvents() {
-    try {
-      const data = await apiClient.get<{ events: (Event & { giftCount?: number; photoCount?: number })[] }>('/api/events');
-      setEvents(data.events || []);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al cargar eventos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [isAuthenticated, refreshUser, refetch]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +46,8 @@ export default function Dashboard() {
     }
     setCreating(true);
     try {
-      const res = await apiClient.post<{ event: Event }>('/api/events', formData);
-      setEvents((prev) => [res.event, ...prev]);
+      await apiClient.post<{ event: Event }>('/api/events', formData);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       showToast('Evento creado 🎉', 'success');
@@ -67,7 +63,7 @@ export default function Dashboard() {
     setDeleting(id);
     try {
       await apiClient.del(`/api/events/${id}`);
-      setEvents((prev) => prev.filter((ev) => ev.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['events'] });
       showToast('Evento eliminado', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar', 'error');
@@ -89,7 +85,7 @@ export default function Dashboard() {
   const limits = TIER_LIMITS[user?.tier ?? 'free'];
   const eventCount = events.length;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         <div className="flex items-center justify-between mb-8">
