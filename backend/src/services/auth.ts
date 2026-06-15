@@ -82,11 +82,11 @@ async function issueTokenPair(userId: string, email: string, client: DbClient = 
   const payload: JwtPayload = { userId, email };
 
   const accessToken = jwt.sign(payload, config.JWT_SECRET, {
-    expiresIn: config.ACCESS_TOKEN_EXPIRY,
+    expiresIn: config.ACCESS_TOKEN_EXPIRY as jwt.SignOptions['expiresIn'],
   });
 
   const refreshToken = jwt.sign(payload, config.JWT_REFRESH_SECRET, {
-    expiresIn: config.REFRESH_TOKEN_EXPIRY,
+    expiresIn: config.REFRESH_TOKEN_EXPIRY as jwt.SignOptions['expiresIn'],
   });
 
   await persistRefreshToken(userId, refreshToken, client);
@@ -148,7 +148,7 @@ export async function register(
       .returning();
 
     user = newUser;
-    tokens = await issueTokenPair(user.id, user.email, tx);
+    tokens = await issueTokenPair(user.id, user.email, tx as unknown as typeof db);
   });
 
   let emailSent = false;

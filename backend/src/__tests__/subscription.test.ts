@@ -40,8 +40,6 @@ const mockSub = {
   updatedAt: new Date(),
 };
 
-const mockUser = { id: 'user-1', tier: 'pro' };
-
 describe('getCurrentSubscription', () => {
   beforeEach(() => {
     vi.clearAllMocks();

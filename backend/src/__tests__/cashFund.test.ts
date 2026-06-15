@@ -93,7 +93,7 @@ describe('createContribution', () => {
     });
     mockTx.returning.mockResolvedValue([{ id: 'contrib-1', cashFundId: 'fund-1', contributorName: 'Juan', amount: 5000, feeAmount: 280, netAmount: 4720, status: 'pending' }]);
 
-    vi.mocked(db.transaction).mockImplementation(async (cb: (tx: MockTx) => Promise<unknown>) => {
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => {
       return cb(mockTx);
     });
 
@@ -128,7 +128,7 @@ describe('createContribution', () => {
     });
     mockTx.returning.mockResolvedValue([{ id: 'contrib-1', cashFundId: 'fund-1', contributorName: 'Juan', amount: 10000, feeAmount: 530, netAmount: 9470, status: 'pending' }]);
 
-    vi.mocked(db.transaction).mockImplementation(async (cb: (tx: MockTx) => Promise<unknown>) => cb(mockTx));
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(mockTx));
     const { createContributionPreference } = await import('../services/mercadopago.js');
     vi.mocked(createContributionPreference).mockResolvedValue({ redirectUrl: 'https://mp.com/pay/123' });
 
@@ -144,7 +144,7 @@ describe('createContribution', () => {
     const mockTx = createMockTx();
     mockTx.limit.mockResolvedValue([mockFund]);
 
-    vi.mocked(db.transaction).mockImplementation(async (cb: (tx: MockTx) => Promise<unknown>) => cb(mockTx));
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(mockTx));
 
     await expect(createContribution(
       'fund-1', 'Juan', 5000,
