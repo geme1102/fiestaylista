@@ -12,6 +12,7 @@ async function handleProPayment(paymentId: string, userId: string, interval: str
       .select({ id: proPayments.id })
       .from(proPayments)
       .where(eq(proPayments.mpPaymentId, paymentId))
+      .for('update')
       .limit(1);
 
     if (existingPayment) {
@@ -44,6 +45,7 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       .select({ id: boostPayments.id })
       .from(boostPayments)
       .where(eq(boostPayments.mpPaymentId, paymentId))
+      .for('update')
       .limit(1);
 
     if (existingPayment) {
@@ -95,6 +97,15 @@ async function revertBoostPayment(paymentId: string, ref: string): Promise<void>
   if (!payment) return;
 
   await db.transaction(async (tx) => {
+    const [boostPayment] = await tx
+      .select({ status: boostPayments.status })
+      .from(boostPayments)
+      .where(eq(boostPayments.mpPaymentId, paymentId))
+      .for('update')
+      .limit(1);
+
+    if (!boostPayment || boostPayment.status === 'refunded') return;
+
     const [event] = await tx
       .select({ id: events.id, boostedUntil: events.boostedUntil })
       .from(events)
@@ -171,6 +182,8 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
           console.error(`[MP] Monto de contribución inválido: esperado ${contribution.amount}, recibido ${info.transactionAmount}`);
           return;
         }
+      } else {
+        console.warn(`[MP] Contribución no encontrada para ref: ${ref}, paymentId: ${paymentId}`);
       }
       await cashFundService.completeContribution(ref, paymentId);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {

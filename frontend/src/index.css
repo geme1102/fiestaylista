@@ -285,6 +285,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
 }
 
 .vintage-wedding-frame {
@@ -489,8 +490,18 @@ h1, h2, h3, h4, h5, h6 {
 
 @supports not (backdrop-filter: blur(1px)) {
   .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
-    .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
-    .glass-card-premium::before { display: none; }
+  .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .glass-card-premium::before { display: none; }
+  .glass-ghost::before { display: none; }
+  .crystal-glass-rose, .glass-panel, .glass-crystal,
+  .glass-button-gold, .glass-button-primary, .glass-button-secondary {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}
+
+@supports not (mask-composite: exclude) {
+  .glass-card-premium::before,
   .glass-ghost::before { display: none; }
 }
 
@@ -582,6 +593,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .pb-safe {
+  padding-bottom: calc(1rem + constant(safe-area-inset-bottom, 0px));
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 

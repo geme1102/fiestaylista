@@ -73,7 +73,9 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
             }
           }
         }
-      } catch { /* SSE disconnected */ }
+      } catch {
+        try { reader?.cancel(); } catch { /* ignore cancel errors */ }
+      }
 
       sseConnectedRef.current = false;
       onDisconnectedRef.current?.();

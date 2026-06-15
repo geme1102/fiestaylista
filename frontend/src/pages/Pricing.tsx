@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
@@ -68,6 +68,8 @@ export default function Pricing() {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSelect = async (tier: string) => {
     if (authLoading) {
@@ -89,7 +91,7 @@ export default function Pricing() {
       }
       for (let i = 0; i < 25; i++) {
         await new Promise(r => setTimeout(r, 200));
-        if (turnstileToken) { token = turnstileToken; break; }
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
       }
       if (!token) {
         showToast('No se pudo verificar que no eres un robot. Recarga e intenta de nuevo.', 'error');

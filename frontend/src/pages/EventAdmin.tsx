@@ -242,8 +242,12 @@ export default function EventAdmin() {
     }
   };
 
+  const [toggling, setToggling] = useState(false);
+
   const toggleActive = async () => {
+    if (toggling) return;
     const prevActive = event?.isActive;
+    setToggling(true);
     setEvent((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev);
     try {
       await apiClient.put(`/api/events/${id}`, { isActive: !prevActive });
@@ -251,6 +255,8 @@ export default function EventAdmin() {
     } catch (err) {
       setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
       showToast('Error al actualizar', 'error');
+    } finally {
+      setToggling(false);
     }
   };
 

@@ -136,6 +136,12 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         throw new Error(errorMsg);
       }
 
+      refreshAttempts = 0;
+      if (refreshCooldownTimer) {
+        clearTimeout(refreshCooldownTimer);
+        refreshCooldownTimer = null;
+      }
+
       if (res.status === 204) {
         return undefined as T;
       }
@@ -154,6 +160,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
 
 let refreshPromise: Promise<boolean> | null = null;
 let refreshAttempts = 0;
+let refreshCooldownTimer: ReturnType<typeof setTimeout> | null = null;
 
 async function tryRefreshToken(): Promise<boolean> {
   if (refreshAttempts >= 3) {
@@ -180,10 +187,16 @@ async function tryRefreshToken(): Promise<boolean> {
 
       if (!res.ok) {
         refreshAttempts++;
+        if (refreshCooldownTimer) clearTimeout(refreshCooldownTimer);
+        refreshCooldownTimer = setTimeout(() => { refreshAttempts = 0; }, 30000);
         return false;
       }
 
       refreshAttempts = 0;
+      if (refreshCooldownTimer) {
+        clearTimeout(refreshCooldownTimer);
+        refreshCooldownTimer = null;
+      }
       const data = await res.json();
       accessToken = data.accessToken;
       return true;

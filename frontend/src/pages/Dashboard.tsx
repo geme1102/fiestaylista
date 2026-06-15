@@ -34,9 +34,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       refreshUser();
-      refetch();
     }
-  }, [isAuthenticated, refreshUser, refetch]);
+  }, [isAuthenticated, refreshUser]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

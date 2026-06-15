@@ -59,11 +59,20 @@ export async function updateGift(
       updateData.claimedBy = null;
     }
 
+    const whereConditions = [eq(giftsTable.id, giftId)];
+    if (data.isClaimed === true) {
+      whereConditions.push(eq(giftsTable.isClaimed, false));
+    }
+
     const [gift] = await tx
       .update(giftsTable)
       .set(updateData)
-      .where(eq(giftsTable.id, giftId))
+      .where(and(...whereConditions))
       .returning();
+
+    if (data.isClaimed === true && !gift) {
+      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+    }
 
     return gift;
   });

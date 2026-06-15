@@ -54,13 +54,15 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
 
   const handleContribute = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fund) return;
+    if (!fund || contributing) return;
 
-    const amountInCents = selectedAmount || parseInt(amount, 10);
-    if (!amountInCents || amountInCents < 2000) {
+    const rawAmount = selectedAmount || amount;
+    const parsedAmount = typeof rawAmount === 'string' ? Number(rawAmount) : rawAmount;
+    if (!Number.isInteger(parsedAmount) || parsedAmount < 2000) {
       showToast('El monto mínimo es $2,000 COP', 'error');
       return;
     }
+    const amountInCents = parsedAmount;
     if (!name.trim()) {
       showToast('Escribe tu nombre', 'error');
       return;

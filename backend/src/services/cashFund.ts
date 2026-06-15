@@ -73,17 +73,6 @@ export async function getCashFund(eventId: string) {
   return fund || null;
 }
 
-async function getOwnerTier(eventId: string): Promise<Tier> {
-  const [result] = await db
-    .select({ tier: users.tier })
-    .from(events)
-    .innerJoin(users, eq(events.userId, users.id))
-    .where(eq(events.id, eventId))
-    .limit(1);
-
-  return (result?.tier as Tier) || 'free';
-}
-
 export async function createContribution(
   cashFundId: string,
   contributorName: string,
@@ -95,39 +84,40 @@ export async function createContribution(
     throw new ValidationError('El nombre es requerido');
   }
 
-  const [fund] = await db
-    .select()
-    .from(cashFunds)
-    .where(eq(cashFunds.id, cashFundId))
-    .limit(1);
-
-  if (!fund) throw new NotFoundError('Fondo no encontrado');
-  if (!fund.isActive) throw new ValidationError('Este fondo ya no está activo');
-
   if (amountInCents < 2000) {
     throw new ValidationError('El monto mínimo es $2,000 COP');
   }
 
-  const ownerTier = await getOwnerTier(fund.eventId);
-  const commissionPercent = TIER_LIMITS[ownerTier]?.cashFundCommission ?? 4;
-  const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
-  const netAmount = amountInCents - feeAmount;
-
-  const [eventForSlug] = await db
-    .select({ slug: events.slug })
-    .from(events)
-    .where(eq(events.id, fund.eventId))
-    .limit(1);
-
-  const backUrl = `${config.FRONTEND_URL}/e/${eventForSlug?.slug || fund.eventId}`;
-
   const result = await db.transaction(async (tx) => {
-    await tx
-      .select({ id: cashFunds.id })
+    const [fund] = await tx
+      .select()
       .from(cashFunds)
       .where(eq(cashFunds.id, cashFundId))
       .for('update')
       .limit(1);
+
+    if (!fund) throw new NotFoundError('Fondo no encontrado');
+    if (!fund.isActive) throw new ValidationError('Este fondo ya no está activo');
+
+    const [slugs] = await tx
+      .select({ slug: events.slug })
+      .from(events)
+      .where(eq(events.id, fund.eventId))
+      .limit(1);
+
+    const backUrl = `${config.FRONTEND_URL}/e/${slugs?.slug || fund.eventId}`;
+
+    const [ownerInfo] = await tx
+      .select({ tier: users.tier })
+      .from(events)
+      .innerJoin(users, eq(events.userId, users.id))
+      .where(eq(events.id, fund.eventId))
+      .limit(1);
+
+    const ownerTier = (ownerInfo?.tier as Tier) || 'free';
+    const commissionPercent = TIER_LIMITS[ownerTier]?.cashFundCommission ?? 4;
+    const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
+    const netAmount = amountInCents - feeAmount;
 
     const [existingPending] = await tx
       .select({ id: cashContributions.id })
@@ -166,24 +156,24 @@ export async function createContribution(
       netAmount,
     });
 
-    return contribution;
+    return { contribution, fund, backUrl };
   });
 
   let redirectUrl: string;
   try {
     const mpResult = await mercadopagoService.createContributionPreference(
-      result.id,
+      result.contribution.id,
       cleanedName,
       amountInCents,
-      fund.title || 'Lluvia de Sobres',
-      backUrl,
+      result.fund.title || 'Lluvia de Sobres',
+      result.backUrl,
     );
     redirectUrl = mpResult.redirectUrl;
   } catch (err) {
     await db
       .update(cashContributions)
       .set({ status: 'failed' })
-      .where(eq(cashContributions.id, result.id));
+      .where(eq(cashContributions.id, result.contribution.id));
     throw err;
   }
 
@@ -191,11 +181,11 @@ export async function createContribution(
     await db
       .update(cashContributions)
       .set({ status: 'failed' })
-      .where(eq(cashContributions.id, result.id));
+      .where(eq(cashContributions.id, result.contribution.id));
     throw new ValidationError('No se pudo generar la URL de pago');
   }
 
-  return { redirectUrl, contributionId: result.id };
+  return { redirectUrl, contributionId: result.contribution.id };
 }
 
 export async function completeContribution(

@@ -72,7 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const logout = useCallback(() => {
-    apiClient.post('/api/auth/logout').catch(() => {});
+    apiClient.post('/api/auth/logout').catch((err) => {
+      if (import.meta.env.DEV) console.error('[Auth] Error en logout:', err);
+    });
     clearTokens();
     setUser(null);
     navigate('/');
@@ -89,7 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resendVerification = useCallback(async () => {
-    await apiClient.post('/api/auth/resend-verification');
+    try {
+      await apiClient.post('/api/auth/resend-verification');
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('[Auth] Error reenviando verificación:', err);
+      throw err;
+    }
   }, []);
 
   const value = useMemo(() => ({
