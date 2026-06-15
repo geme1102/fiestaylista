@@ -164,7 +164,7 @@ export default function EventAdmin() {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, {
         title: titleDraft.trim(),
         eventType: typeDraft,
-        eventDate: dateDraft || null,
+        eventDate: dateDraft ? new Date(dateDraft + ':00').toISOString() : null,
         eventLocation: locationDraft || null,
         eventNote: noteDraft || null,
       });

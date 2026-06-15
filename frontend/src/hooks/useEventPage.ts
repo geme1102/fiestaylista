@@ -218,10 +218,10 @@ export function useEventPage() {
   }, [availableGifts, categoryFilter]);
 
   const eventDateFormatted = event?.eventDate
-    ? new Date(event.eventDate).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+    ? new Date(event.eventDate).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', year: 'numeric', month: 'long', day: 'numeric' })
     : '';
   const eventTimeFormatted = event?.eventDate
-    ? new Date(event.eventDate).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+    ? new Date(event.eventDate).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' })
     : '';
 
   return {
