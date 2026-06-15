@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
@@ -24,21 +24,14 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   const [message, setMessage] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const { containerRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 5;
   const canContribute = !isOwner && fund?.isActive;
 
-  useEffect(() => {
-    loadFund();
-    return () => {
-      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
-    };
-  }, [eventId]);
-
-  async function loadFund() {
+  const loadFund = useCallback(async () => {
     try {
       const res = await getCashFund(eventId);
       setFund(res.cashFund);
@@ -53,7 +46,14 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
     } finally {
       setLoading(false);
     }
-  }
+  }, [eventId]);
+
+  useEffect(() => {
+    loadFund();
+    return () => {
+      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    };
+  }, [loadFund]);
 
   const handleContribute = async (e: React.FormEvent) => {
     e.preventDefault();

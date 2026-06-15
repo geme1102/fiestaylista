@@ -84,14 +84,6 @@ app.use(helmet({
   strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
   xContentTypeOptions: true,
   xFrameOptions: false,
-  permissionsPolicy: {
-    policy: {
-      camera: [],
-      microphone: [],
-      geolocation: [],
-      'interest-cohort': [],
-    },
-  },
 }));
 
 app.use(cookieParser());

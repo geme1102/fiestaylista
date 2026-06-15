@@ -23,7 +23,6 @@ vi.mock('../db/schema.js', () => ({
 }));
 
 import {
-  createOrUpdateSubscription,
   cancelSubscription,
   getCurrentSubscription,
   expireStaleSubscriptions,

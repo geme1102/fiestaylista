@@ -12,6 +12,7 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
   const fromRef = useRef(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fromRef.current = display;
     startRef.current = null;
     let frame: number;

@@ -35,7 +35,7 @@ export function useEventPage() {
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const { containerRef: turnstileRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const { containerRef: turnstileRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 

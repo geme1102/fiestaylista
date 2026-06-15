@@ -84,7 +84,7 @@ export default function EventAdmin() {
       setGifts(ev.gifts || []);
       setPhotos(ev.photos || []);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
-    } catch (err) {
+    } catch {
       showToast('Error al cargar el evento. Recarga la página e intenta de nuevo.', 'error');
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ export default function EventAdmin() {
     try {
       await apiClient.del(`/api/events/${id}/gifts/${giftId}`);
       setGifts((prev) => prev.filter((g) => g.id !== giftId));
-    } catch (err) {
+    } catch {
       showToast('Error al eliminar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setDeletingGiftId(null);
@@ -139,7 +139,7 @@ export default function EventAdmin() {
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${id}/gifts/${giftId}/free`);
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
-    } catch (err) {
+    } catch {
       showToast('Error al liberar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setFreeingGiftId(null);
@@ -172,7 +172,7 @@ export default function EventAdmin() {
       setEvent((prev) => prev ? { ...prev, ...res.event } : prev);
       setEditingDetails(false);
       showToast('¡Información y detalles actualizados con éxito! 💾', 'success');
-    } catch (err) {
+    } catch {
       showToast('Error al actualizar los datos del evento. Verifica los campos e intenta de nuevo.', 'error');
     } finally {
       setUpdatingDetails(false);
@@ -211,7 +211,7 @@ export default function EventAdmin() {
       await apiClient.del(`/api/events/${id}/photos/${photoId}`);
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       showToast('Foto eliminada', 'success');
-    } catch (err) {
+    } catch {
       showToast('Error al eliminar la foto. Intenta de nuevo.', 'error');
     } finally {
       setDeletingPhoto(false);
@@ -255,7 +255,7 @@ export default function EventAdmin() {
     try {
       await apiClient.put(`/api/events/${id}`, { isActive: !prevActive });
       showToast(prevActive ? 'El evento ha sido pausado de forma privada' : '¡Tu evento ya está disponible en vivo! ⚡', 'success');
-    } catch (err) {
+    } catch {
       setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
       showToast('Error al cambiar el estado del evento. Intenta de nuevo.', 'error');
     } finally {
