@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function NotFound() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden"
+    <>
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen flex flex-col font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden"
       style={{ backgroundColor: '#faf9f8',
         backgroundImage: `
           radial-gradient(at 0% 0%, rgba(210, 50, 132, 0.15) 0px, transparent 50%),
@@ -75,5 +80,6 @@ export default function NotFound() {
         © {new Date().getFullYear()} Fiesta y Lista. Elevando tus celebraciones.
       </footer>
     </div>
+    </>
   );
 }

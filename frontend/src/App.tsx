@@ -34,6 +34,7 @@ function TitleUpdater() {
   const location = useLocation();
   const path = location.pathname;
   let meta = PAGE_META[path] || PAGE_META['/'];
+  let isUnknown = false;
 
   if (!PAGE_META[path]) {
     if (path.startsWith('/e/')) {
@@ -48,6 +49,7 @@ function TitleUpdater() {
         desc: 'Administra tu evento y lista de regalos en Fiesta y Lista.',
       };
     } else {
+      isUnknown = true;
       meta = {
         title: 'Página no encontrada - Fiesta y Lista',
         desc: 'La página que buscas no existe en Fiesta y Lista. Vuelve al inicio para descubrir listas de regalos.',
@@ -56,6 +58,15 @@ function TitleUpdater() {
   }
 
   const title = meta.title;
+
+  const EN_TO_ES: Record<string, string> = {
+    '/terms-and-conditions': '/terminos-y-condiciones',
+    '/privacy-policy': '/politica-de-privacidad',
+    '/cookies-policy': '/politica-de-cookies',
+    '/arco-rights': '/derechos-arco',
+  };
+
+  const canonicalPath = EN_TO_ES[path] || path;
 
   return (
     <Helmet>
@@ -66,17 +77,31 @@ function TitleUpdater() {
       <meta property="og:description" content={meta.desc} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={meta.desc} />
-      <meta property="og:url" content={`${window.location.origin}${path}`} />
+      <meta property="og:url" content={`${window.location.origin}${canonicalPath}`} />
       <meta property="og:locale" content="es_CO" />
       <meta property="og:image" content="https://fiestaylista.com/og-image.png" />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="Fiesta y Lista — Crea tu lista de regalos para baby showers, bodas, cumpleaños y más" />
       <meta name="twitter:image" content="https://fiestaylista.com/og-image.png" />
-      <meta name="robots" content="index, follow" />
-      <link rel="canonical" href={`${window.location.origin}${path}`} />
-      <link rel="alternate" href={`${window.location.origin}${path}`} hrefLang="es-CO" />
-      <link rel="alternate" href={`${window.location.origin}${path}`} hrefLang="es" />
+      <meta name="robots" content={isUnknown ? 'noindex, nofollow' : 'index, follow'} />
+      <link rel="canonical" href={`${window.location.origin}${canonicalPath}`} />
+      <link rel="alternate" href={`${window.location.origin}${canonicalPath}`} hrefLang="es-CO" />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": title,
+          "description": meta.desc,
+          "url": `${window.location.origin}${canonicalPath}`,
+          "inLanguage": "es-CO",
+          "isPartOf": {
+            "@type": "WebApplication",
+            "name": "Fiesta y Lista",
+            "url": "https://fiestaylista.com"
+          }
+        })}
+      </script>
     </Helmet>
   );
 }

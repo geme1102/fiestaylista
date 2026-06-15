@@ -101,4 +101,5 @@
     <changefreq>monthly</changefreq>
     <priority>0.2</priority>
   </url>
+  <!-- Dynamic event pages are appended at build time via scripts/generate-sitemap.js -->
 </urlset>

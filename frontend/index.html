@@ -41,6 +41,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" as="style" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -70,7 +71,21 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="max-width:1280px;margin:0 auto;padding:2rem 1rem;font-family:sans-serif;color:#1c1b1f">
+        <h1 style="font-size:2.5rem;color:#8c0053">Fiesta y Lista — Crea tu lista de regalos</h1>
+        <p style="font-size:1.125rem;color:#49454f;margin:1rem 0 2rem">La app colombiana para crear listas de regalos. Baby showers, bodas, cumpleaños. Sin regalos repetidos, sin estrés.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem">
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">🎁 Baby Shower</h3><p style="color:#49454f">Lista de regalos para la dulce espera</p></div>
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">💍 Boda</h3><p style="color:#49454f">Lista de regalos para tu matrimonio</p></div>
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">🎂 Cumpleaños</h3><p style="color:#49454f">Organiza los regalos de cumpleaños</p></div>
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">✝️ Bautizo</h3><p style="color:#49454f">Lista de regalos para bautizo</p></div>
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">🕊️ Comunión</h3><p style="color:#49454f">Regalos para primera comunión</p></div>
+          <div style="padding:1.5rem;border-radius:1rem;background:#fef7ff"><h3 style="color:#8c0053">🏠 Casa Nueva</h3><p style="color:#49454f">Lista de regalos para estrenar hogar</p></div>
+        </div>
+        <p style="margin-top:1.5rem;color:#49454f">Tus invitados apartan regalos sin registrarse. Recibe dinero con Lluvia de Sobres.</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

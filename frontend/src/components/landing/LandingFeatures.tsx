@@ -61,17 +61,17 @@ export function LandingFeatures() {
           <div className="relative z-10 w-full h-36 md:h-40 mb-4 md:mb-6 flex items-center justify-center perspective-[1000px]">
             <motion.div className="absolute z-0 w-20 h-24 md:w-24 md:h-28 bg-white p-1 pb-4 md:pb-5 shadow-md rounded-sm -rotate-12 -ml-20 -mt-4 opacity-70 group-hover:-rotate-[16deg] group-hover:-ml-28 group-hover:opacity-90 transition-all duration-300">
               <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1525268771113-32d9e9021a97?auto=format&fit=crop&q=80&w=200" alt="Fiesta" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1525268771113-32d9e9021a97?auto=format&fit=crop&q=80&w=200" alt="Fiesta" className="w-full h-full object-cover" loading="lazy" />
               </div>
             </motion.div>
             <motion.div className="absolute z-10 w-24 h-28 md:w-28 md:h-32 bg-white p-1.5 pb-5 md:pb-6 shadow-lg rounded-sm rotate-12 ml-16 md:ml-20 mt-4 group-hover:rotate-[16deg] group-hover:ml-24 group-hover:scale-105 transition-all duration-300">
               <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1530103862676-de8892ebe853?auto=format&fit=crop&q=80&w=200" alt="Celebración" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1530103862676-de8892ebe853?auto=format&fit=crop&q=80&w=200" alt="Celebración" className="w-full h-full object-cover" loading="lazy" />
               </div>
             </motion.div>
             <motion.div className="absolute z-20 w-28 h-32 md:w-32 md:h-36 bg-white p-2 pb-6 md:pb-8 shadow-xl rounded-sm -rotate-3 group-hover:rotate-0 group-hover:scale-110 group-hover:-mt-4 transition-all duration-300">
               <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=200" alt="Evento" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=200" alt="Evento" className="w-full h-full object-cover" loading="lazy" />
               </div>
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm flex items-center justify-center shadow-lg transform -translate-y-2">
