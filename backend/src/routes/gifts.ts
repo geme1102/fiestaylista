@@ -9,6 +9,7 @@ import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
@@ -94,7 +95,7 @@ router.put('/:giftId', requireAuth, requireEventOwnership, asyncHandlerWithValid
   res.json({ gift });
 }));
 
-router.put('/:giftId/claim', contributeLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.put('/:giftId/claim', contributeLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {

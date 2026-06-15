@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
+import { useTurnstile } from './useTurnstile';
 import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
 import type { Gift, Photo, EventType } from '../types';
@@ -34,6 +35,9 @@ export function useEventPage() {
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const { containerRef: turnstileRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -122,10 +126,20 @@ export function useEventPage() {
       inputRef.current?.focus();
       return;
     }
+
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setClaimingId(giftId);
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event.id}/gifts/${giftId}/claim`, {
         claimedBy: claimName.trim(),
+        turnstileToken: token ?? undefined,
       });
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
       setShowConfetti(true);
@@ -232,6 +246,7 @@ export function useEventPage() {
     categoryFilter, setCategoryFilter,
     uploadingPhoto,
     inputRef, filterBarRef, fileInputRef,
+    turnstileRef,
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
     handleClaim, handlePhotoUpload, handleDownload,

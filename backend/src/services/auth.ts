@@ -27,8 +27,7 @@ export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbClient = any;
+type DbClient = typeof db;
 
 async function persistRefreshToken(userId: string, token: string, client: DbClient = db): Promise<void> {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -83,11 +82,11 @@ async function issueTokenPair(userId: string, email: string, client: DbClient = 
   const payload: JwtPayload = { userId, email };
 
   const accessToken = jwt.sign(payload, config.JWT_SECRET, {
-    expiresIn: config.ACCESS_TOKEN_EXPIRY as any,
+    expiresIn: config.ACCESS_TOKEN_EXPIRY,
   });
 
   const refreshToken = jwt.sign(payload, config.JWT_REFRESH_SECRET, {
-    expiresIn: config.REFRESH_TOKEN_EXPIRY as any,
+    expiresIn: config.REFRESH_TOKEN_EXPIRY,
   });
 
   await persistRefreshToken(userId, refreshToken, client);

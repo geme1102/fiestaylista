@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
-import { formatCOP } from '../utils/format';
-import { validateRedirectUrl } from '../utils/format';
+import { formatCOP, validateRedirectUrl } from '../utils/format';
+import { useTurnstile } from '../hooks/useTurnstile';
 import type { CashFund, CashContribution } from '../types';
 import { TIER_LIMITS } from '../types';
 
@@ -24,8 +24,11 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   const [message, setMessage] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
-  const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 4;
+  const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 5;
   const canContribute = !isOwner && fund?.isActive;
 
   useEffect(() => {
@@ -68,6 +71,14 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       return;
     }
 
+    let token = turnstileToken;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setContributing(true);
     try {
       const result = await createContribution({
@@ -75,6 +86,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
         contributorName: name.trim(),
         amount: amountInCents,
         message: message.trim() || undefined,
+        turnstileToken: token ?? undefined,
       });
 
       if (result.redirectUrl) {
@@ -278,6 +290,9 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
           </div>
         </motion.div>
       </section>
+
+      {/* Turnstile (invisible) */}
+      <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
 
       {/* SECTION 2: FORMULARIO DE APORTE */}
       {canContribute && (

@@ -3,6 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
+import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
 
 export async function getUserData(userId: string) {
@@ -107,8 +108,8 @@ export async function deleteUserAccount(userId: string) {
       .where(inArray(photos.eventId, eventIds));
 
     const cloudinaryDeletes = userPhotos
-      .filter(p => p.url.includes('cloudinary.com'))
-      .map(p => p.url.split('/').slice(-2).join('/').replace(/\.[^.]+$/, ''));
+      .map(p => getPublicIdFromUrl(p.url))
+      .filter(Boolean) as string[];
 
     const CONCURRENCY = 5;
     for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {

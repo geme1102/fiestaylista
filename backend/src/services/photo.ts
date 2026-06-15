@@ -1,14 +1,36 @@
 import { eq, sql } from 'drizzle-orm';
 import { v2 as cloudinary } from 'cloudinary';
+import { isIP } from 'node:net';
 import { db } from '../db/index.js';
 import { photos as photosTable, events, users } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
+
+function isPrivateHostname(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  if (lower === 'localhost' || lower === '0.0.0.0' || lower.endsWith('.local') || lower.endsWith('.internal')) {
+    return true;
+  }
+  if (isIP(lower)) {
+    const parts = lower.split('.').map(Number);
+    if (parts.length === 4) {
+      if (parts[0] === 10) return true;
+      if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+      if (parts[0] === 192 && parts[1] === 168) return true;
+      if (parts[0] === 127) return true;
+      if (parts[0] === 169 && parts[1] === 254) return true;
+    }
+  }
+  return false;
+}
 
 function isValidImageUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+    if (isPrivateHostname(parsed.hostname)) return false;
+    return true;
   } catch {
     return false;
   }
@@ -74,13 +96,9 @@ export async function deletePhoto(photoId: string) {
     throw new NotFoundError('Foto no encontrada');
   }
 
-  if (photo.url.includes('cloudinary.com')) {
+  const publicId = getPublicIdFromUrl(photo.url);
+  if (publicId) {
     try {
-      const publicId = photo.url
-        .split('/')
-        .slice(-2)
-        .join('/')
-        .replace(/\.[^.]+$/, '');
       await Promise.race([
         cloudinary.uploader.destroy(publicId),
         new Promise<never>((_, reject) =>

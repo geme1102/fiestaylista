@@ -53,7 +53,7 @@ export async function updateGift(
 
     const updateData: Record<string, unknown> = {};
     if (data.isClaimed !== undefined) updateData.isClaimed = data.isClaimed;
-    if (data.claimedBy !== undefined) updateData.claimedBy = data.claimedBy || null;
+    if (data.claimedBy !== undefined) updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
 
     if (data.isClaimed === false) {
       updateData.claimedBy = null;

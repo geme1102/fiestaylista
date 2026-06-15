@@ -6,6 +6,7 @@ interface ContributeData {
   contributorName: string;
   amount: number;
   message?: string;
+  turnstileToken?: string;
 }
 
 interface ContributeResult {
@@ -18,7 +19,14 @@ export function getCashFund(eventId: string): Promise<{ cashFund: CashFund | nul
 }
 
 export function createContribution(data: ContributeData): Promise<ContributeResult> {
-  return apiClient.post<ContributeResult>('/api/cash-fund/contribute', data);
+  const { amount, cashFundId, contributorName, message, turnstileToken } = data;
+  return apiClient.post<ContributeResult>('/api/cash-fund/contribute', {
+    cashFundId,
+    contributorName,
+    amount,
+    message,
+    turnstileToken,
+  });
 }
 
 export function getContributions(cashFundId: string): Promise<{ contributions: CashContribution[] }> {

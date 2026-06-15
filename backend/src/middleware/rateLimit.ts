@@ -135,7 +135,7 @@ export const viewLimiter = rateLimit({
 
 export const webhookLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,

@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { contributeLimiter } from '../middleware/rateLimit.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
@@ -48,7 +49,7 @@ router.get('/events/:eventId/cash-fund', asyncHandler(async (req, res) => {
   res.json({ cashFund: fund });
 }));
 
-router.post('/cash-fund/contribute', contributeLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
   const data = contributeSchema.parse(req.body);
   const result = await cashFundService.createContribution(
     data.cashFundId,

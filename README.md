@@ -15,7 +15,7 @@ Plataforma para crear y gestionar listas de regalos para eventos (baby showers, 
 ## Requisitos
 
 - Node.js 22+
-- PostgreSQL 15+
+- Docker (para Postgres local) o PostgreSQL 15+ instalado directamente
 - npm
 
 ## Instalación
@@ -32,6 +32,10 @@ cd ../frontend && npm install
 
 1. Copia `backend/.env.example` a `backend/.env` y completa las variables
 2. Copia `frontend/.env.example` a `frontend/.env` y completa las variables
+3. (Opcional) Inicia Postgres local con Docker:
+   ```bash
+   docker compose up -d
+   ```
 
 ### Backend — Variables de Entorno
 
@@ -164,7 +168,7 @@ fiesta-y-lista/
 - **Refresh tokens**: Almacenados hasheados (bcryptjs), revocados en logout, expiración forzada
 - **Rate limiting**: Por endpoint (auth, uploads, payments, webhooks)
 - **CSP**: Helmet con Content-Security-Policy restrictiva
-- **Turnstile**: Verificación server-side en creación de checkout Pro
+- **Turnstile**: Verificación server-side en checkout, cash fund y apartado de regalos
 - **Webhooks**: Firma HMAC-SHA256 con timestamp validation (±5 min, replay protection)
 - **Uploads**: Validación de magic bytes (independiente del mimetype), almacenamiento temporal en disco
 - **IDOR**: Ownership middleware para eventos/regalos/fotos, userId desde JWT (nunca del body)

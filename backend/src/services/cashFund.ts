@@ -115,7 +115,7 @@ export async function createContribution(
       .limit(1);
 
     const ownerTier = (ownerInfo?.tier as Tier) || 'free';
-    const commissionPercent = TIER_LIMITS[ownerTier]?.cashFundCommission ?? 4;
+    const commissionPercent = TIER_LIMITS[ownerTier]?.cashFundCommission ?? 5;
     const feeAmount = Math.round(amountInCents * (commissionPercent / 100)) + PLATFORM_FEE_CENTS;
     const netAmount = amountInCents - feeAmount;
 
@@ -128,6 +128,7 @@ export async function createContribution(
         eq(cashContributions.amount, amountInCents),
         eq(cashContributions.status, 'pending'),
       ))
+      .for('update')
       .limit(1);
 
     if (existingPending) {

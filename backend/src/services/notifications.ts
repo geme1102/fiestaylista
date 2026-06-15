@@ -12,7 +12,11 @@ const emitter = new EventEmitter();
 emitter.setMaxListeners(100);
 
 export function emitGiftClaimed(data: GiftClaimedEvent): void {
-  emitter.emit(`gift:claimed:${data.eventId}`, data);
+  try {
+    emitter.emit(`gift:claimed:${data.eventId}`, data);
+  } catch {
+    // Los listeners (SSE, etc.) no deben interrumpir el flujo principal
+  }
 }
 
 
