@@ -57,6 +57,13 @@
       "when": 1779900006000,
       "tag": "0007_add_missing_fk_and_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779900007000,
+      "tag": "0008_remove_tier_trigger",
+      "breakpoints": true
     }
   ]
 }

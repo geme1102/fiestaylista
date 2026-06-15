@@ -205,6 +205,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   payerEmail: string;
   reason: string;
   nextChargeDate: string | null;
+  dateCreated: string | null;
 }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');
@@ -219,6 +220,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
     payerEmail: info.payer_email ?? '',
     reason: info.reason ?? '',
     nextChargeDate: (info as any).next_charge_date || (info as any).scheduled_date || null,
+    dateCreated: (info as any).date_created || null,
   };
 }
 

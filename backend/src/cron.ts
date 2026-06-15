@@ -8,6 +8,7 @@ import { cleanupStaleContributions } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
+let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
 
 const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
@@ -171,14 +172,20 @@ export function startCronJobs(): void {
   retryFailedWebhooks();
   cleanupExpiredWebhooks();
   runDaily();
+
+  const WEBHOOK_RETRY_MS = 30 * 60 * 1000;
+
   cronInterval = setInterval(() => {
     runDaily();
-    retryFailedWebhooks();
     cleanupExpiredWebhooks();
     cleanupExpiredRefreshTokens();
     cleanupEventViews();
     cleanupAuditLogs();
   }, DAILY_MS);
+
+  webhookRetryInterval = setInterval(() => {
+    retryFailedWebhooks();
+  }, WEBHOOK_RETRY_MS);
 
   console.log('[Cron] Jobs iniciados correctamente');
 }
@@ -187,6 +194,10 @@ export function stopCronJobs(): void {
   if (cronInterval) {
     clearInterval(cronInterval);
     cronInterval = null;
-    console.log('[Cron] Jobs detenidos');
   }
+  if (webhookRetryInterval) {
+    clearInterval(webhookRetryInterval);
+    webhookRetryInterval = null;
+  }
+  console.log('[Cron] Jobs detenidos');
 }

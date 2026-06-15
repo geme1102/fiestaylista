@@ -6,7 +6,7 @@ import { TIER_LIMITS } from '../types/index.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
 
 interface UpsertData {
-  mpSubscriptionId: string;
+  mpSubscriptionId: string | null;
   tier: Tier;
   status: SubscriptionStatus;
   currentPeriodStart: Date;
@@ -107,30 +107,29 @@ export async function getCurrentSubscription(userId: string) {
   return sub || null;
 }
 
-export async function cancelSubscription(userId: string) {
+export async function cancelSubscription(userId: string, immediate = false) {
   const sub = await db.transaction(async (tx) => {
-    const [s] = await tx
-      .update(subsTable)
-      .set({
-        status: 'canceled',
-        updatedAt: new Date(),
-      })
-      .where(eq(subsTable.userId, userId))
-      .returning();
+    const [s] = immediate
+      ? await tx.update(subsTable).set({ status: 'canceled', tier: 'free', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning()
+      : await tx.update(subsTable).set({ status: 'canceled', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning();
 
     if (!s) {
       throw new NotFoundError('Suscripción no encontrada');
     }
 
-    await tx
-      .update(users)
-      .set({ tier: 'free', updatedAt: new Date() })
-      .where(eq(users.id, userId));
+    if (immediate) {
+      await tx
+        .update(users)
+        .set({ tier: 'free', updatedAt: new Date() })
+        .where(eq(users.id, userId));
+    }
 
     return s;
   });
 
-  await deactivateExcessEvents(userId);
+  if (immediate) {
+    await deactivateExcessEvents(userId);
+  }
 
   return sub;
 }
@@ -150,7 +149,7 @@ export async function updateSubscriptionStatus(
       throw new NotFoundError('Suscripción no encontrada');
     }
 
-    if (status === 'canceled' || status === 'past_due' || status === 'incomplete') {
+    if (status === 'incomplete') {
       await tx
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })
@@ -160,7 +159,7 @@ export async function updateSubscriptionStatus(
     return s;
   });
 
-  if (status === 'canceled' || status === 'past_due' || status === 'incomplete') {
+  if (status === 'incomplete') {
     await deactivateExcessEvents(userId);
   }
 
@@ -181,6 +180,15 @@ export async function expireStaleSubscriptions(): Promise<number> {
       ))
       .returning({ id: subsTable.id, userId: subsTable.userId });
 
+    const pastDueExpired = await tx
+      .update(subsTable)
+      .set({ status: 'canceled', updatedAt: new Date() })
+      .where(and(
+        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
+        eq(subsTable.status, 'past_due'),
+      ))
+      .returning({ id: subsTable.id, userId: subsTable.userId });
+
     const canceledPastPeriod = await tx
       .update(subsTable)
       .set({ tier: 'free', updatedAt: new Date() })
@@ -191,7 +199,7 @@ export async function expireStaleSubscriptions(): Promise<number> {
       ))
       .returning({ id: subsTable.id, userId: subsTable.userId });
 
-    const allToDowngrade = [...expired, ...canceledPastPeriod];
+    const allToDowngrade = [...expired, ...pastDueExpired, ...canceledPastPeriod];
     const userIds = allToDowngrade.map(s => s.userId).filter(Boolean);
 
     if (userIds.length > 0) {
