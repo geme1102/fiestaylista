@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { FloatingOrbs } from '../components/landing/FloatingOrbs';
 import { LandingNavbar } from '../components/landing/LandingNavbar';

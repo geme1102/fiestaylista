@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../types';
-import { login, register, getMe } from '../services/auth';
+import { login as loginApi, register as registerApi, getMe } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, apiClient } from '../services/api';
 
 interface AuthContextValue {
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await login(email, password);
+    const res = await loginApi(email, password);
     setTokens(res.accessToken);
     setUser(res.user);
     const params = new URLSearchParams(window.location.search);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    const res = await register(email, password, name);
+    const res = await registerApi(email, password, name);
     setTokens(res.accessToken);
     setUser(res.user);
     navigate('/onboarding');

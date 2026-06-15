@@ -15,6 +15,7 @@ import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
+import { validateRedirectUrl } from '../utils/format';
 import { GiftManagement } from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
 

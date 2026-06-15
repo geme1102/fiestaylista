@@ -1,4 +1,4 @@
-import { createRef, useRef } from 'react';
+import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, X } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
@@ -21,7 +21,7 @@ interface PhotoGalleryProps {
 
 export function PhotoGallery({
   photos, uploading, deletingPhoto, deletePhotoConfirm,
-  fileInputRef, onUpload, onDelete,
+  fileInputRef, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
 }: PhotoGalleryProps) {
   return (
