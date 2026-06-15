@@ -77,7 +77,7 @@ export default function EventGuest() {
   useEffect(() => {
     if (!event) return;
     apiClient.post('/api/analytics/view', { eventId: event.id }).catch(() => {});
-  }, [event?.id]);
+  }, [event]);
 
   useEffect(() => {
     if (showConfetti) {

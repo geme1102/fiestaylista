@@ -69,7 +69,7 @@ export default function VerifyEmail() {
         setStatus('error');
         setMessage(mapErrorMessage(raw));
       });
-  }, [searchParams]);
+  }, [searchParams, refreshUser]);
 
   useEffect(() => {
     if (status !== 'success') {

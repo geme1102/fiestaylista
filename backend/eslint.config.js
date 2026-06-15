@@ -20,4 +20,10 @@ export default [
       'no-console': 'off',
     },
   },
+  {
+    files: ['src/__tests__/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ];
