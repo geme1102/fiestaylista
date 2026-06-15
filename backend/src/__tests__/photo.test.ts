@@ -95,7 +95,7 @@ describe('addPhoto', () => {
       .mockReturnValueOnce(mockTx)
       .mockResolvedValueOnce([{ count: 3 }]);
     mockTx.limit
-      .mockResolvedValueOnce([{ userId: 'user-1' }])
+      .mockResolvedValueOnce([{ userId: 'user-1', isActive: true }])
       .mockResolvedValueOnce([{ tier: 'free' }])
       .mockResolvedValue([]);
 
@@ -112,7 +112,7 @@ describe('addPhoto', () => {
       .mockReturnValueOnce(mockTx)
       .mockResolvedValueOnce([{ count: 1 }]);
     mockTx.limit
-      .mockResolvedValueOnce([{ userId: 'user-1' }])
+      .mockResolvedValueOnce([{ userId: 'user-1', isActive: true }])
       .mockResolvedValueOnce([{ tier: 'free' }])
       .mockResolvedValue([]);
     mockTx.returning
@@ -138,7 +138,7 @@ describe('addPhoto', () => {
       .mockReturnValueOnce(mockTx)
       .mockResolvedValueOnce([{ count: 10 }]);
     mockTx.limit
-      .mockResolvedValueOnce([{ userId: 'user-1' }])
+      .mockResolvedValueOnce([{ userId: 'user-1', isActive: true }])
       .mockResolvedValueOnce([{ tier: 'pro' }])
       .mockResolvedValue([]);
     mockTx.returning
