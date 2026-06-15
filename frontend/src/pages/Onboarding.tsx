@@ -66,7 +66,11 @@ export default function Onboarding() {
         <div className="flex items-center gap-2">
           <h1 className="font-display-lg text-display-lg text-primary">Fiesta y Lista</h1>
         </div>
-        <button onClick={skip} className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-90 transition-transform">
+        <button
+          onClick={() => { if (window.confirm('¿Salir del asistente? Puedes crear tu primer evento desde el panel principal.')) skip(); }}
+          className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-90 transition-transform"
+          aria-label="Salir del asistente"
+        >
           close
         </button>
       </header>
@@ -82,10 +86,11 @@ export default function Onboarding() {
         >
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
-              <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden mb-6 shadow-2xl shadow-rose-500/10 bg-gradient-to-br from-primary-fixed to-primary-fixed/30 flex items-center justify-center">
-                <span className="text-8xl">🎉</span>
+              <div className="text-center mb-4">
+                <span className="text-5xl">🎉</span>
               </div>
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2">¿Qué tipo de evento?</h2>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 1 de 3</span>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2 mt-2">¿Qué tipo de evento?</h2>
               <p className="text-on-surface-variant font-body-md">Selecciona la ocasión que vamos a celebrar.</p>
             </div>
             <div className="grid grid-cols-2 gap-4" role="radiogroup" aria-label="Tipo de evento">
@@ -132,7 +137,8 @@ export default function Onboarding() {
         >
           <div className="w-full max-w-md">
             <div className="text-center mb-12">
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-4">¿Cómo se llama tu evento?</h2>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 2 de 3</span>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-4 mt-2">¿Cómo se llama tu evento?</h2>
               <p className="text-on-surface-variant font-body-md px-4">Dale un nombre especial a tu lista de regalos.</p>
             </div>
             <div className="relative mb-16">
@@ -170,7 +176,8 @@ export default function Onboarding() {
         >
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2">¡Todo listo!</h2>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 3 de 3</span>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2 mt-2">¡Todo listo!</h2>
               <p className="text-on-surface-variant font-body-md">Estamos listos para empezar esta celebración.</p>
             </div>
             <div
@@ -193,12 +200,18 @@ export default function Onboarding() {
                   <h3 className="font-headline-md text-headline-md text-primary">{title || `${selectedLabel} de ${user?.name || 'María'}`}</h3>
                 </div>
                 <div className="w-full h-px bg-outline-variant/30 my-2" />
-                <p className="text-body-md text-body-md text-on-surface-variant px-2 italic font-light">
-                  "Un viaje de mil millas comienza con un solo paso."
+                <p className="text-sm text-on-surface-variant px-2 font-medium text-center">
+                  Próximos pasos: agrega los regalos que quieres recibir, comparte el enlace por WhatsApp y tus invitados empezarán a apartar.
                 </p>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <button onClick={() => nextStep(2)} className="px-6 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-white/10 rounded-full transition-all">
+                Atrás
+              </button>
+              <div className="flex-1" />
+            </div>
+            <div className="space-y-4 mt-6">
               <button
                 onClick={handleFinish}
                 disabled={creating}
@@ -210,7 +223,7 @@ export default function Onboarding() {
                   'Crear mi primer evento'
                 )}
               </button>
-              <button onClick={skip} className="w-full py-3 text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors">
+              <button onClick={skip} disabled={creating} className="w-full py-3 text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors disabled:opacity-40">
                 Saltar este paso
               </button>
             </div>

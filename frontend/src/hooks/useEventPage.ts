@@ -171,7 +171,7 @@ export function useEventPage() {
       setPhotos((prev) => [res.photo, ...prev]);
       showToast('¡Foto subida con éxito! 📸', 'success');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir la foto';
+      const msg = err instanceof Error ? err.message : 'Error al subir la foto. Verifica que sea una imagen válida e intenta de nuevo.';
       showToast(msg, 'error');
     } finally {
       setUploadingPhoto(false);
@@ -192,7 +192,7 @@ export function useEventPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch {
-      showToast('Error al descargar la foto', 'error');
+      showToast('Error al descargar la foto. Verifica tu conexión e intenta de nuevo.', 'error');
     }
   }, []);
 

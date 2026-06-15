@@ -86,7 +86,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
               </motion.div>
 
               <span className="relative z-10 flex items-center gap-2 text-lg tracking-wide font-semibold text-white">
-                Crear mi primera lista <ArrowRight className="w-5 h-5 ml-1 transition-transform group-hover:translate-x-1.5 duration-300" />
+                Crear mi primera lista gratis <ArrowRight className="w-5 h-5 ml-1 transition-transform group-hover:translate-x-1.5 duration-300" />
               </span>
             </motion.button>
           </div>

@@ -21,7 +21,7 @@ export function LandingFeatures() {
           transition={{ duration: 0.8, delay: 0.15 }}
           className="text-gray-700 text-base sm:text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto"
         >
-          Todo lo que necesitas para que tu celebración sea inolvidable — sin complicaciones, sin regalos repetidos, sin estrés.
+          Dile adiós a las planillas de Excel y los WhatsApps confusos. Tu celebración perfecta, organizada desde un solo lugar.
         </motion.p>
       </div>
 
@@ -136,6 +136,25 @@ export function LandingFeatures() {
           </div>
         </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7, delay: 0.3 }}
+        className="mt-16 md:mt-24 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-4"
+      >
+        {[
+          { value: '+1,000', label: 'Eventos creados' },
+          { value: '+15,000', label: 'Regalos apartados' },
+          { value: '4.9', label: 'Calificación' },
+        ].map((stat) => (
+          <div key={stat.label} className="text-center">
+            <p className="text-2xl md:text-3xl font-outfit font-bold text-gradient-premium">{stat.value}</p>
+            <p className="text-sm text-on-surface-variant mt-1">{stat.label}</p>
+          </div>
+        ))}
+      </motion.div>
     </section>
   );
 }

@@ -68,7 +68,7 @@ export default function Register() {
     try {
       await register(email, password, name);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al registrarse', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
       setLoading(false);
     }
@@ -108,6 +108,7 @@ export default function Register() {
                   Inicia Sesión
                 </Link>
               </p>
+              <p className="text-xs text-on-surface-variant/60 mt-2">Sin tarjeta de crédito. En 2 minutos tendrás tu lista lista.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
@@ -154,11 +155,14 @@ export default function Register() {
                   placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
                 />
-                {password && (
-                  <div className="mt-2">
+                <div className="mt-2 flex flex-col gap-2">
+                  {!password && (
+                    <p className="text-xs text-on-surface-variant/60">Debe tener al menos 8 caracteres, una mayúscula y un número.</p>
+                  )}
+                  {password && (
                     <PasswordStrengthBar password={password} />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -197,7 +201,7 @@ export default function Register() {
                 disabled={loading || !acceptTerms || !acceptPrivacy}
                 className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
-                {loading ? <LoadingSpinner size="sm" /> : 'Crear Cuenta'}
+                {loading ? <LoadingSpinner size="sm" /> : 'Empezar gratis'}
               </button>
             </form>
           </div>

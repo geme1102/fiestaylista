@@ -51,7 +51,7 @@ export default function Dashboard() {
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       showToast('Evento creado 🎉', 'success');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
       setCreating(false);
     }
@@ -65,7 +65,7 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       showToast('Evento eliminado', 'success');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al eliminar', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al eliminar el evento. Intenta de nuevo.', 'error');
     } finally {
       setDeleting(null);
     }
@@ -121,9 +121,12 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit">
             Mis Eventos <span className="text-on-surface-variant/70 font-normal">({eventCount})</span>
+            <span className="ml-3 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold align-middle">
+              {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+            </span>
           </h1>
           <p className="text-sm text-on-surface-variant mt-1">
-            Gestiona tus listas de regalos y fondos.
+            Tus celebraciones, todas en un solo lugar.
           </p>
         </div>
         <button
@@ -135,11 +138,32 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {events.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Eventos', value: events.length, icon: 'calendar_month' },
+            { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard' },
+            { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings' },
+          ].map((stat) => (
+            <div key={stat.label} className="glass rounded-2xl p-4 md:p-5 flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary-fixed flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">{stat.icon}</span>
+              </div>
+              <div>
+                <p className="text-xl md:text-2xl font-bold text-on-surface">{stat.value}</p>
+                <p className="text-xs text-on-surface-variant">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {events.length === 0 ? (
         <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest/50">
-          <h2 className="text-2xl font-bold text-on-surface mb-8 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
+          <h2 className="text-2xl font-bold text-on-surface mb-3 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
+          <p className="text-sm text-on-surface-variant mb-8">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {ONBOARDING_TYPES.slice(0, 3).map((type) => (
+            {ONBOARDING_TYPES.map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -147,20 +171,12 @@ export default function Dashboard() {
                   setShowCreateModal(true);
                 }}
                 className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
-                aria-label={`Crear evento de ${EVENT_LABELS[type]}`}
+                aria-label={`Crear lista de ${EVENT_LABELS[type]}`}
               >
                 <span className="text-4xl">{EVENT_ICONS[type]}</span>
                 <span className="font-bold text-sm text-on-surface-variant">{EVENT_LABELS[type]}</span>
               </button>
             ))}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
-              aria-label="Crear otro tipo de evento"
-            >
-              <span className="text-4xl">➕</span>
-              <span className="font-bold text-sm text-on-surface-variant">Otro</span>
-            </button>
           </div>
         </section>
       ) : (
@@ -184,9 +200,12 @@ export default function Dashboard() {
                           {EVENT_ICONS[event.eventType]}
                         </div>
                         {isBoosted && (
-                          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 group relative" title="3x más visitas en tu lista">
                             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
                             BOOST
+                            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+                              3x más visitas
+                            </span>
                           </span>
                         )}
                       </div>
@@ -195,7 +214,7 @@ export default function Dashboard() {
 
                       <div className="space-y-3 mb-6">
                         <div className="flex justify-between text-sm">
-                          <span className="text-on-surface-variant">{total} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
+                          <span className="text-on-surface-variant">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
                           <span className="font-bold" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
@@ -214,10 +233,14 @@ export default function Dashboard() {
                             <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">COP</span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 text-sm font-medium text-surface-variant opacity-60">
-                            <span className="material-symbols-outlined text-sm">payments</span>
-                            Sin fondo configurado
-                          </div>
+                          <Link
+                            to={`/event/${event.id}`}
+                            className="flex items-center gap-2 text-sm font-medium text-primary/70 hover:text-primary transition-colors group"
+                          >
+                            <span className="material-symbols-outlined text-sm">add_circle</span>
+                            <span>Activar Lluvia de Sobres</span>
+                            <span className="material-symbols-outlined text-sm opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all">arrow_forward</span>
+                          </Link>
                         )}
                       </div>
 
@@ -343,7 +366,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
         disabled={creating || !formData.title.trim()}
         className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
       >
-        {creating ? <LoadingSpinner size="sm" /> : 'Crear Evento'}
+        {creating ? <LoadingSpinner size="sm" /> : 'Crear Lista de Regalos'}
       </button>
 
       <details className="text-sm text-on-surface-variant">

@@ -30,6 +30,12 @@ export function LandingNavbar({ scrolled, isAuthenticated }: LandingNavbarProps)
             ) : (
               <>
                 <Link
+                  to="/pricing"
+                  className="hidden sm:inline-flex px-4 py-2 text-on-surface-variant text-sm font-semibold hover:text-primary transition-colors"
+                >
+                  Planes
+                </Link>
+                <Link
                   to="/login"
                   className="relative hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 text-white rounded-full text-sm font-semibold overflow-hidden group bg-gradient-to-r from-primary to-primary-container shadow-lg shadow-primary/20"
                 >

@@ -40,13 +40,18 @@ export async function sendVerificationEmail(email: string, token: string): Promi
     subject: 'Verifica tu correo — Fiesta y Lista',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-        <div style="font-size:32px;text-align:center;margin-bottom:16px">🎉</div>
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
         <h1 style="text-align:center;color:#1f2937;font-size:20px">Verifica tu correo electrónico</h1>
         <p style="color:#6b7280;text-align:center;margin:16px 0">Gracias por registrarte en Fiesta y Lista. Haz clic en el botón para verificar tu dirección de correo.</p>
         <div style="text-align:center;margin:24px 0">
           <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Verificar correo</a>
         </div>
         <p style="color:#9ca3af;font-size:12px;text-align:center">Si no creaste una cuenta, ignora este mensaje.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
       </div>
     `,
   });
@@ -61,13 +66,18 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     subject: 'Restablece tu contraseña — Fiesta y Lista',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-        <div style="font-size:32px;text-align:center;margin-bottom:16px">🔐</div>
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
         <h1 style="text-align:center;color:#1f2937;font-size:20px">Restablece tu contraseña</h1>
-        <p style="color:#6b7280;text-align:center;margin:16px 0">Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón para continuar.</p>
+        <p style="color:#6b7280;text-align:center;margin:16px 0">Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón para continuar. Este enlace expirará en 1 hora por seguridad.</p>
         <div style="text-align:center;margin:24px 0">
           <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Restablecer contraseña</a>
         </div>
         <p style="color:#9ca3af;font-size:12px;text-align:center">Si no solicitaste esto, ignora este mensaje.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
       </div>
     `,
   });
@@ -80,14 +90,20 @@ export async function sendReminderEmail(email: string, eventTitle: string, slug:
     await sendEmail({
       from: FROM,
       to: email,
-      subject: `🎉 Comparte ${eventTitle} con tus invitados`,
+      subject: `Comparte ${eventTitle} con tus invitados 🎉`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+            <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+          </div>
           <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
           <p style="color:#6b7280">Tu evento ya está listo. Comparte el enlace con tus invitados para que empiecen a apartar sus regalos.</p>
           <div style="text-align:center;margin:24px 0">
             <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Compartir evento</a>
           </div>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+          <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
         </div>
       `,
     });
@@ -97,14 +113,20 @@ export async function sendReminderEmail(email: string, eventTitle: string, slug:
   await sendEmail({
     from: FROM,
     to: email,
-    subject: `💝 Tienes ${unclaimedCount} regalos sin apartar — ${eventTitle}`,
+    subject: `${eventTitle}: ${unclaimedCount} regalos sin apartar 💝`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
         <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
         <p style="color:#6b7280">Tienes <strong>${unclaimedCount} regalos</strong> que aún no han sido apartados por tus invitados.</p>
         <div style="text-align:center;margin:24px 0">
           <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver lista de regalos</a>
         </div>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
       </div>
     `,
   });

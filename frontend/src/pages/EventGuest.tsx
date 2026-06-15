@@ -47,6 +47,7 @@ function EmptyGiftState() {
       </div>
       <p className="text-on-surface-variant font-medium text-lg">La lista de regalos se está preparando</p>
       <p className="text-surface-variant text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
+      <p className="text-surface-variant text-xs mt-4">Mientras tanto, comparte este evento con quien pueda querer apartar algo ✨</p>
     </motion.div>
   );
 }
@@ -180,11 +181,16 @@ export default function EventGuest() {
 
         <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
-            <button className="material-symbols-outlined text-primary cursor-pointer" aria-label="Menú">menu</button>
-            <span className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</span>
+            <Link to="/" className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</Link>
           </div>
           <div className="flex items-center gap-4">
-            <button className="material-symbols-outlined text-primary cursor-pointer" aria-label="Lista de regalos">shopping_bag</button>
+            <button
+              onClick={() => document.getElementById('gift-list')?.scrollIntoView({ behavior: 'smooth' })}
+              className="material-symbols-outlined text-primary cursor-pointer"
+              aria-label="Ir a la lista de regalos"
+            >
+              shopping_bag
+            </button>
           </div>
         </header>
 
@@ -243,7 +249,11 @@ export default function EventGuest() {
                   borderColor: `${THEME_COLORS[event.eventType]?.primary}25`,
                 }}
               >
-                {eventDateFormatted && (
+                <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>card_giftcard</span>
+                    {availableGifts.length} regalos{claimedGifts.length > 0 ? ` · ${claimedGifts.length} apartados` : ''}
+                  </span>
+                  {eventDateFormatted && (
                   <span className="flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>calendar_month</span>
                     {eventDateFormatted}{eventTimeFormatted ? ` • ${eventTimeFormatted}` : ''}
@@ -273,7 +283,7 @@ export default function EventGuest() {
 
               <div className="flex items-center gap-3 px-4 py-2 rounded-full mb-6 z-10" style={{ backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`, border: `1px solid ${THEME_COLORS[event.eventType]?.primary}20` }}>
                 <span className="font-bold text-xs uppercase tracking-wider" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
-                  Lectura Fácil
+                  Texto más grande
                 </span>
                 <button
                   onClick={() => setEasyReadMode(!easyReadMode)}
@@ -293,67 +303,13 @@ export default function EventGuest() {
         </section>
 
         <div className={`max-w-4xl mx-auto px-4 -mt-6 relative z-10 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
-            className={easyReadMode ? 'space-y-6' : ''}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className={`font-semibold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
-                <span>📸</span> Galería
-              </h2>
-              <input id="guest-photo-upload" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-              <button 
-                onClick={() => fileInputRef.current?.click()} 
-                disabled={uploadingPhoto}
-                className="px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-xl flex items-center gap-2 hover:bg-primary/20 transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">{uploadingPhoto ? 'hourglass_empty' : 'upload'}</span>
-                {uploadingPhoto ? 'Subiendo...' : photos.length === 0 ? 'Sube la primera foto' : 'Subir foto'}
-              </button>
-            </div>
-
-            {photos.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {photos.map((photo) => (
-                  <motion.div
-                    key={photo.id}
-                    whileHover={{ scale: 1.03 }}
-                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group"
-                  >
-                    <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
-                    {photo.caption && (
-                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <p className="text-white text-xs">{photo.caption}</p>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => handleDownload(photo.url)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
-                      aria-label="Descargar foto"
-                    >
-                      <span className="material-symbols-outlined text-sm">download</span>
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-
+          {/* Gift List — primary action, shown first */}
           <div className={easyReadMode ? 'space-y-8' : ''}>
             <motion.div
+              id="gift-list"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
               className="flex items-center justify-between mb-6"
             >
               <h2 className={`font-bold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-3xl' : 'text-xl'}`}>
@@ -460,28 +416,74 @@ export default function EventGuest() {
             )}
           </div>
 
+          {/* Photo Gallery — secondary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className={easyReadMode ? 'space-y-6' : ''}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`font-semibold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
+                <span>📸</span> Galería
+              </h2>
+              <input id="guest-photo-upload" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={uploadingPhoto}
+                className="px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-xl flex items-center gap-2 hover:bg-primary/20 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">{uploadingPhoto ? 'hourglass_empty' : 'upload'}</span>
+                {uploadingPhoto ? 'Subiendo...' : photos.length === 0 ? 'Sube la primera foto' : 'Subir foto'}
+              </button>
+            </div>
+
+            {photos.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {photos.map((photo) => (
+                  <motion.div
+                    key={photo.id}
+                    whileHover={{ scale: 1.03 }}
+                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group"
+                  >
+                    <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
+                    {photo.caption && (
+                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <p className="text-white text-xs">{photo.caption}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => handleDownload(photo.url)}
+                      className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
+                      aria-label="Descargar foto"
+                    >
+                      <span className="material-symbols-outlined text-sm">download</span>
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Cash Fund — tertiary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+          >
+            <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} />
+          </motion.div>
+
           <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
-            <p>Hecho con 🎉 por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
+            <p>Hecho por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center h-20 px-4 pb-safe">
+        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-20 px-4 pb-safe">
           <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>
           </Link>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Lista de regalos">
-            <span className="material-symbols-outlined">card_giftcard</span>
-            <span className="font-label-md text-label-md">Lista</span>
-          </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Regalar">
-            <span className="material-symbols-outlined">payments</span>
-            <span className="font-label-md text-label-md">Regalar</span>
-          </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/60 transition-all active:scale-90" disabled aria-disabled="true" aria-label="Cuenta">
-            <span className="material-symbols-outlined">person</span>
-            <span className="font-label-md text-label-md">Cuenta</span>
-          </button>
         </nav>
 
         {showSuccessModal && (
@@ -512,7 +514,7 @@ export default function EventGuest() {
                   className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-green-500/20 active:scale-95 transition-transform mb-3"
                 >
                   <span className="material-symbols-outlined">chat</span>
-                  Notificar al anfitrión
+                  Notificar al anfitrión por WhatsApp
                 </a>
               )}
               <button

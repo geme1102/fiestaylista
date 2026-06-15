@@ -11,7 +11,7 @@ import { LandingTestimonials } from '../components/landing/LandingTestimonials';
 import { LandingCTA } from '../components/landing/LandingCTA';
 import { LandingFooter } from '../components/landing/LandingFooter';
 
-const TYPING_PHRASES = ['organizar tus regalos sin estrés', 'recibir justo lo que necesitas', 'decir adiós a los regalos repetidos'];
+const TYPING_PHRASES = ['decir adiós a los regalos repetidos', 'recibir justo lo que necesitas', 'celebrar sin complicaciones'];
 
 function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pauseTime = 2500) {
   const [displayed, setDisplayed] = useState('');

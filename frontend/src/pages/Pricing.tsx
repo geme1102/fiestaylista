@@ -21,8 +21,7 @@ const PLANS = [
       { text: '10 regalos por evento', included: true },
       { text: '3 fotos por evento', included: true },
       { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
-      { text: 'Lluvia de Sobres disponible', included: true },
-      { text: '5% comisión al retirar dinero', included: true },
+      { text: 'Lluvia de Sobres (5% comisión al retirar)', included: true },
     ],
   },
   {
@@ -36,8 +35,8 @@ const PLANS = [
       { text: '20 eventos', included: true },
       { text: '50 regalos por evento', included: true },
       { text: '15 fotos por evento', included: true },
-      { text: 'Lluvia de Sobres incluida sin costo extra', included: true },
-      { text: '5% comisión al retirar dinero', included: true },
+      { text: 'Lluvia de Sobres (5% comisión al retirar)', included: true },
+      { text: 'Panel de estadísticas con gráficas', included: true },
       { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
     ],
   },
@@ -121,7 +120,7 @@ export default function Pricing() {
       }
     } catch (err) {
       clearTimeout(safetyTimer);
-      showToast(err instanceof Error ? err.message : 'Error al crear sesión de pago', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al procesar el pago. Recarga la página e intenta de nuevo.', 'error');
       setLoading(false);
       setSelectedTier(null);
     }
@@ -175,7 +174,7 @@ export default function Pricing() {
           {/* Hero */}
           <section className="text-center mb-12 max-w-4xl mx-auto">
             <span className="inline-block bg-primary-fixed text-on-primary-fixed px-4 py-1 rounded-full font-label-md text-label-md mb-4">
-              Precios
+              Planes
             </span>
             <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-4">
               Elige el plan perfecto para tu celebración
@@ -184,6 +183,22 @@ export default function Pricing() {
               Empieza gratis, actualiza cuando lo necesites. Sin letra pequeña ni costos ocultos.
             </p>
           </section>
+
+          {/* Social Proof */}
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 mb-12 text-center">
+            <div>
+              <p className="text-xl font-bold text-on-surface">+1,000</p>
+              <p className="text-xs text-on-surface-variant">eventos creados</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-on-surface">+15,000</p>
+              <p className="text-xs text-on-surface-variant">regalos apartados</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-on-surface">4.9</p>
+              <p className="text-xs text-on-surface-variant">calificación</p>
+            </div>
+          </div>
 
           {/* Toggle */}
           <div className="flex flex-col items-center mb-12">
@@ -213,7 +228,7 @@ export default function Pricing() {
             </div>
             {yearly && (
               <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-caption text-caption">
-                Ahorra 33%
+                Ahorra 4%
               </span>
             )}
           </div>
@@ -301,6 +316,24 @@ export default function Pricing() {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          {/* Trust Signals */}
+          <section className="max-w-3xl mx-auto px-4 mt-section-gap-mobile md:mt-section-gap-desktop text-center">
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+              <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                Pagos seguros con Mercado Pago
+              </div>
+              <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                <span className="material-symbols-outlined text-lg text-primary">account_balance</span>
+                PSE · Nequi · Daviplata
+              </div>
+              <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                <span className="material-symbols-outlined text-lg text-primary">credit_card</span>
+                Tarjeta crédito y débito
+              </div>
             </div>
           </section>
 

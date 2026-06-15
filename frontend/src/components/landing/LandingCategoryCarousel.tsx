@@ -92,7 +92,7 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
               </h3>
 
               <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 border border-gray-100/50 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-all duration-300">
-                <span className="text-xs md:text-sm font-semibold tracking-wide transition-colors text-brand-pink group-hover:text-white">Ver más</span>
+                <span className="text-xs md:text-sm font-semibold tracking-wide transition-colors text-brand-pink group-hover:text-white">Crear lista</span>
                 <ArrowRight strokeWidth={2.5} className="w-4 h-4 text-brand-pink group-hover:text-white group-hover:translate-x-1 transition-transform" />
               </div>
             </motion.button>

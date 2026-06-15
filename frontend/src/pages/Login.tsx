@@ -8,7 +8,7 @@ import NavbarPremium from '../components/NavbarPremium';
 import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function Login() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,18 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
+      if (user && !user.emailVerified) {
+        showToast('Inicio de sesión exitoso. Tu correo aún no está verificado — revisa tu bandeja de entrada.', 'info');
+      }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al iniciar sesión', 'error');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Credenciales inválidas')) {
+        showToast('Credenciales inválidas. Verifica tu correo y contraseña e intenta de nuevo.', 'error');
+      } else if (msg) {
+        showToast(msg, 'error');
+      } else {
+        showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
+      }
     } finally {
       setLoading(false);
     }

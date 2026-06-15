@@ -7,7 +7,7 @@ import { validateRedirectUrl } from '../utils/format';
 import type { CashFund, CashContribution } from '../types';
 import { TIER_LIMITS } from '../types';
 
-const SUGGESTED_AMOUNTS = [50000, 100000, 200000];
+const SUGGESTED_AMOUNTS = [30000, 50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
 
 export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
@@ -44,7 +44,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
         setContributions(contribRes.contributions.filter((c) => c.status === 'completed'));
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar fondo';
+      const message = err instanceof Error ? err.message : 'Error al cargar la Lluvia de Sobres. Recarga la página e intenta de nuevo.';
       showToast(message, 'error');
       if (import.meta.env.DEV) console.error('[CashFund] loadFund error:', err);
     } finally {
@@ -96,7 +96,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       setMessage('');
       loadFund();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al procesar contribución', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al procesar tu aporte. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
       setContributing(false);
     }
@@ -119,7 +119,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
         loadFund();
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al boostear', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
       setBoostLoading(false);
     }
@@ -192,7 +192,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       {/* SECTION 1: ESTADO ACTIVO (Vista Invitado) */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-headline-md text-headline-md text-on-surface">Fondo Activo</h2>
+          <h2 className="font-headline-md text-headline-md text-on-surface">Lluvia de Sobres</h2>
           <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200">
             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
             Seguridad Activa
@@ -217,16 +217,16 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
             <div className="w-16 h-16 bg-gradient-to-br from-secondary-container to-secondary rounded-2xl flex items-center justify-center shadow-lg mb-4 text-white">
               <span className="material-symbols-outlined text-4xl">mail</span>
             </div>
-            <h3 className="font-headline-md text-headline-md text-secondary mb-1">{fund.title || 'Lluvia de Sobres Digital'}</h3>
+            <h3 className="font-headline-md text-headline-md text-secondary mb-1">{fund.title || 'Lluvia de Sobres'}</h3>
             {fund.description && (
               <p className="font-body-md text-body-md text-on-surface-variant mb-6">{fund.description}</p>
             )}
             {!fund.description && (
               <p className="font-body-md text-body-md text-on-surface-variant mb-6">Tu aporte es el mejor regalo para nuestro futuro hogar.</p>
             )}
-            <div className="w-full space-y-2 mb-8">
+              <div className="w-full space-y-2 mb-8">
               <div className="flex justify-between text-xs font-bold text-secondary uppercase tracking-tighter">
-                <span>Meta Alcanzada</span>
+                <span>{formatCOP(fund.collectedAmount)} de {formatCOP(fund.targetAmount || 0)}</span>
                 <span>{Math.round(progressPercent)}%</span>
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
@@ -272,7 +272,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
               </div>
               <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">savings</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Directo al Anfitrión</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Para el Anfitrión</span>
               </div>
             </div>
           </div>
@@ -286,7 +286,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-surface-variant space-y-6">
             <div className="space-y-3">
               <p className="font-label-md text-label-md text-on-surface-variant">Selecciona un monto:</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {SUGGESTED_AMOUNTS.map((amt) => (
                   <button
                     key={amt}
@@ -350,11 +350,11 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
                 className="w-full bg-gradient-to-r from-secondary-container to-secondary text-white font-bold py-4 rounded-2xl shadow-lg shadow-secondary/20 shimmer-bg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
               >
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>mail</span>
-                {contributing ? 'Procesando...' : 'Aportar ahora'}
+                {contributing ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Procesando...</span> : 'Enviar mi aporte'}
               </button>
               <div className="pt-4 border-t border-surface-variant flex flex-col items-center gap-3">
                 <p className="text-[10px] text-center text-on-surface-variant max-w-[200px]">
-                  Comisión por servicio: <span className="font-bold">{commission}%</span>. Procesado de forma segura.
+                  Comisión <span className="font-bold">{commission}%</span> de Fiesta y Lista por procesar el pago. Transacción segura con Mercado Pago.
                 </p>
                 <div className="flex items-center grayscale opacity-60">
                   <span className="text-xs font-bold text-on-surface-variant">Mercado Pago</span>
@@ -451,7 +451,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
         </p>
         <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
           <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
-          <li className="flex items-center gap-2">✅ Estadísticas básicas del evento</li>
+          <li className="flex items-center gap-2">✅ 3x más visitas en tu lista</li>
           <li className="flex items-center gap-2">✅ Sin necesidad de suscripción mensual</li>
         </ul>
         <div className="flex gap-3">

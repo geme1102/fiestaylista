@@ -23,7 +23,7 @@ function getUserAvatar(email: string): string {
 }
 
 export default function Account() {
-  const { user } = useAuth();
+  const { user, resendVerification } = useAuth();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
@@ -124,6 +124,15 @@ export default function Account() {
             <div>
               <dt className="text-sm text-on-surface-variant">Correo electrónico</dt>
               <dd className="text-on-surface font-medium">{user.email}</dd>
+              {!user.emailVerified && (
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                  No verificado —{' '}
+                  <button onClick={resendVerification} className="underline font-medium hover:text-amber-700">
+                    Reenviar verificación
+                  </button>
+                </p>
+              )}
             </div>
             <div>
               <dt className="text-sm text-on-surface-variant">Miembro desde</dt>
@@ -142,7 +151,12 @@ export default function Account() {
             <>
               <div className="mb-6">
                 <span className="text-sm text-on-surface-variant">Plan actual</span>
-                <p className="text-2xl font-bold text-on-surface capitalize">{user.tier}</p>
+                <p className="text-2xl font-bold text-on-surface">
+                  {user.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+                  <span className="ml-3 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold align-middle">
+                    {user.tier === 'free' ? 'FREE' : 'PRO'}
+                  </span>
+                </p>
               </div>
 
               <div className="space-y-2 mb-6">
@@ -159,10 +173,19 @@ export default function Account() {
                   <span className="text-on-surface font-medium">{limits.maxPhotosPerEvent}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">Cash fund comisión</span>
+                  <span className="text-on-surface-variant">Comisión Lluvia de Sobres</span>
                   <span className="text-on-surface font-medium">{limits.cashFundCommission}%</span>
                 </div>
               </div>
+
+              {user.tier === 'free' && (
+                <Link
+                  to="/pricing"
+                  className="w-full block text-center py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-bold hover:shadow-lg transition-all mb-6"
+                >
+                  Mejorar a Pro
+                </Link>
+              )}
 
               {subscription && (
                 <div className="text-sm text-on-surface-variant mb-6">
@@ -174,13 +197,16 @@ export default function Account() {
               )}
 
               {subscription?.status === 'active' && (
-                <button
-                  onClick={() => setShowCancelConfirm(true)}
-                  disabled={cancelLoading}
-                  className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
-                >
-                  {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción'}
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    disabled={cancelLoading}
+                    className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción Pro'}
+                  </button>
+                  <p className="text-xs text-on-surface-variant text-center mt-2">Al cancelar perderás acceso a funciones Pro al final del período actual.</p>
+                </>
               )}
             </>
           )}
@@ -188,7 +214,7 @@ export default function Account() {
       </div>
 
       <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
-        <h2 className="text-lg font-semibold text-on-surface mb-4">🔐 Mis Datos Personales</h2>
+        <h2 className="text-lg font-semibold text-on-surface mb-4">Mis Datos Personales</h2>
         <p className="text-sm text-on-surface-variant mb-4">
           De acuerdo con la Ley 1581 de 2012, puedes ejercer tus derechos ARCO sobre tus datos personales.
         </p>
@@ -198,13 +224,13 @@ export default function Account() {
             disabled={downloading}
             className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {downloading ? 'Descargando...' : 'Descargar mis datos'}
+            {downloading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Descargando...</span> : 'Descargar mis datos'}
           </button>
           <Link
             to="/derechos-arco"
             className="px-5 py-2.5 text-on-surface-variant bg-surface-container-high rounded-xl text-sm font-medium hover:bg-surface-container-highest transition-all"
           >
-            Gestionar solicitudes ARCO
+            Solicitar acceso, corrección o eliminación de datos
           </Link>
           <button
             onClick={() => setShowDeleteConfirm(true)}
@@ -233,8 +259,8 @@ export default function Account() {
               <button onClick={() => { setShowCancelConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleCancelSubscription} disabled={!confirmPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
-                {cancelLoading ? '...' : 'Confirmar'}
+              <button onClick={handleCancelSubscription} disabled={!confirmPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+                {cancelLoading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Cancelando...</span> : 'Confirmar'}
               </button>
             </div>
           </div>
@@ -259,8 +285,8 @@ export default function Account() {
               <button onClick={() => { setShowDeleteConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!confirmPassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
-                {deletingAccount ? '...' : 'Eliminar'}
+              <button onClick={handleDeleteAccount} disabled={!confirmPassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+                {deletingAccount ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>
           </div>

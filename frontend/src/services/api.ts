@@ -116,12 +116,15 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
           }
         } else {
-          throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          throw new Error('Sesión expirada. Serás redirigido al inicio de sesión.');
         }
       }
 
       if (res.status >= 500 && attempt < MAX_RETRIES) {
-        lastError = new Error(`Error ${res.status}. Reintentando...`);
+        lastError = new Error(`Error del servidor (${res.status}). Reintentando...`);
         continue;
       }
 

@@ -16,6 +16,7 @@ import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { GiftManagement } from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
 
@@ -84,7 +85,7 @@ export default function EventAdmin() {
       setPhotos(ev.photos || []);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
     } catch (err) {
-      showToast('Error al cargar el evento', 'error');
+      showToast('Error al cargar el evento. Recarga la página e intenta de nuevo.', 'error');
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export default function EventAdmin() {
       await apiClient.del(`/api/events/${id}/gifts/${giftId}`);
       setGifts((prev) => prev.filter((g) => g.id !== giftId));
     } catch (err) {
-      showToast('Error al eliminar regalo', 'error');
+      showToast('Error al eliminar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setDeletingGiftId(null);
     }
@@ -139,7 +140,7 @@ export default function EventAdmin() {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${id}/gifts/${giftId}/free`);
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
     } catch (err) {
-      showToast('Error al liberar regalo', 'error');
+      showToast('Error al liberar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setFreeingGiftId(null);
     }
@@ -172,7 +173,7 @@ export default function EventAdmin() {
       setEditingDetails(false);
       showToast('¡Información y detalles actualizados con éxito! 💾', 'success');
     } catch (err) {
-      showToast('Error al actualizar detalles', 'error');
+      showToast('Error al actualizar los datos del evento. Verifica los campos e intenta de nuevo.', 'error');
     } finally {
       setUpdatingDetails(false);
     }
@@ -196,7 +197,7 @@ export default function EventAdmin() {
       const res = await addPhoto(id!, url);
       setPhotos((prev) => [...prev, res.photo]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir foto';
+      const msg = err instanceof Error ? err.message : 'Error al subir la foto. Verifica que sea una imagen válida e intenta de nuevo.';
       showToast(msg, 'error');
     } finally {
       setUploading(false);
@@ -211,7 +212,7 @@ export default function EventAdmin() {
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       showToast('Foto eliminada', 'success');
     } catch (err) {
-      showToast('Error al eliminar foto', 'error');
+      showToast('Error al eliminar la foto. Intenta de nuevo.', 'error');
     } finally {
       setDeletingPhoto(false);
     }
@@ -236,13 +237,15 @@ export default function EventAdmin() {
         setEvent((prev) => prev ? { ...prev, boostedUntil: res.boostedUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() } : prev);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al activar', 'error');
+      showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
       setBoostLoading(false);
     }
   };
 
   const [toggling, setToggling] = useState(false);
+
+  const [toggleConfirm, setToggleConfirm] = useState(false);
 
   const toggleActive = async () => {
     if (toggling) return;
@@ -254,9 +257,10 @@ export default function EventAdmin() {
       showToast(prevActive ? 'El evento ha sido pausado de forma privada' : '¡Tu evento ya está disponible en vivo! ⚡', 'success');
     } catch (err) {
       setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
-      showToast('Error al actualizar', 'error');
+      showToast('Error al cambiar el estado del evento. Intenta de nuevo.', 'error');
     } finally {
       setToggling(false);
+      setToggleConfirm(false);
     }
   };
 
@@ -334,8 +338,8 @@ export default function EventAdmin() {
 
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-extrabold text-rose-400">PANEL DE CONTROL</span>
-            <h1 className="text-lg md:text-xl font-extrabold text-[#7e143f] tracking-tight flex items-center gap-2">
-              Administrador de Evento
+            <h1 className="text-lg md:text-xl font-extrabold text-[#7e143f] tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
+              {event?.title || 'Evento'}
             </h1>
           </div>
         </div>
@@ -400,6 +404,17 @@ export default function EventAdmin() {
                   </motion.button>
                 </div>
 
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-xs font-bold text-pink-700 bg-pink-50 border border-pink-100/50 px-3 py-1 rounded-full">
+                    {gifts.length} regalos
+                  </span>
+                  {photos.length > 0 && (
+                    <span className="text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100/50 px-3 py-1 rounded-full">
+                      {photos.length} fotos
+                    </span>
+                  )}
+                </div>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -423,7 +438,7 @@ export default function EventAdmin() {
               </div>
 
               <button
-                onClick={toggleActive}
+                onClick={() => setToggleConfirm(true)}
                 className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
                 aria-label="Cambiar estado del evento"
               >
@@ -457,7 +472,7 @@ export default function EventAdmin() {
                 onClick={() => setBoostModal(true)}
                 className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
               >
-                <span>Activar Solución</span>
+                <span>Activar Lluvia de Sobres</span>
                 <span className="bg-amber-100/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">$10.000 COP</span>
               </motion.button>
             </div>
@@ -643,7 +658,7 @@ export default function EventAdmin() {
                 className="space-y-4 text-left"
               >
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Único de Evento</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre del evento</label>
                   <input
                     id="edit-title"
                     type="text"
@@ -656,7 +671,7 @@ export default function EventAdmin() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Categoría Tipo de Reunión</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tipo de evento</label>
                     <select
                       id="edit-type"
                       value={typeDraft}
@@ -682,7 +697,7 @@ export default function EventAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar / Ubicación Geográfica</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar del evento</label>
                   <input
                     id="edit-location"
                     type="text"
@@ -694,7 +709,7 @@ export default function EventAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Recomendaciones y Notas para Invitados</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Notas para invitados</label>
                   <textarea
                     id="edit-note"
                     value={noteDraft}
@@ -711,7 +726,7 @@ export default function EventAdmin() {
                     onClick={() => setEditingDetails(false)}
                     className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
                   >
-                    Salir sin Guardar
+                    Salir sin guardar
                   </button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -746,32 +761,28 @@ export default function EventAdmin() {
               </div>
 
               <h4 className="text-xl font-black text-[#93400e] tracking-tight">
-                Habilitar Aportes Digitales ($10.000 COP)
+                Activar Lluvia de Sobres
               </h4>
               <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-semibold">
-                La Lluvia de Sobres digital permite a tus amistades realizar transferencias en línea directas que se abonan al instante en tu cuenta bancaria.
+                <strong>Pago único de $10.000 COP.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta por PSE, tarjeta o Nequi. Válido por 30 días.
               </p>
 
               <div className="bg-amber-50/70 p-[18px] rounded-2xl border border-amber-200/50 text-left space-y-2.5">
                 <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
                   <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Sin intermediarios innecesarios</span>
+                  <span>Cada invitado paga con PSE, tarjeta, Nequi o Daviplata</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
                   <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Permite transacciones por PSE, Tarjetas bancarias y Efectivo</span>
+                  <span>El dinero llega directo a tu cuenta bancaria</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
                   <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Recaudación con comprobantes automáticos</span>
-                </div>
-                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
-                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Configuración inmediata libre de comisiones extra ocultas</span>
+                  <span>Recibes comprobante automático de cada aporte</span>
                 </div>
               </div>
 
-              <p className="text-[10px] text-gray-400 font-semibold">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago.</p>
+              <p className="text-[10px] text-gray-400 font-semibold">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago. Pago único de $10.000 COP — no es una suscripción.</p>
 
               <div className="flex flex-col gap-2.5 mt-2">
                 <motion.button
@@ -781,14 +792,14 @@ export default function EventAdmin() {
                   disabled={boostLoading}
                   className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  {boostLoading ? '...' : 'PAGAR Y ACTIVAR ($10.000 COP)'}
+                    {boostLoading ? '...' : 'PAGAR Y ACTIVAR — $10.000 COP'}
                 </motion.button>
                 <button
                   onClick={() => setBoostModal(false)}
                   disabled={boostLoading}
                   className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-1.5 font-extrabold cursor-pointer disabled:opacity-50"
                 >
-                  Tal vez luego
+                  Ahora no, gracias
                 </button>
               </div>
             </motion.div>
@@ -796,15 +807,30 @@ export default function EventAdmin() {
         )}
       </AnimatePresence>
 
+      {/* Toggle Confirm Modal */}
+      {toggleConfirm && (
+        <ConfirmModal
+          message={event.isActive
+            ? '¿Pausar el evento? Los invitados verán la página como "no disponible" hasta que lo actives de nuevo.'
+            : '¿Activar el evento? Los invitados podrán ver la lista, apartar regalos y enviar dinero.'}
+          onConfirm={toggleActive}
+          onClose={() => setToggleConfirm(false)}
+          loading={toggling}
+        />
+      )}
+
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
         <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>
         </Link>
-        <Link to="/pricing" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
+        <Link to="/pricing" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200 relative">
           <span className="material-symbols-outlined">card_giftcard</span>
           <span className="font-label-md text-label-md">Planes</span>
+          <span className="absolute -top-0.5 -right-2 text-[7px] font-black px-1 py-0.5 rounded-full bg-primary/10 text-primary">
+            {user?.tier === 'free' ? 'FREE' : 'PRO'}
+          </span>
         </Link>
         <Link to="/account" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
           <span className="material-symbols-outlined">person</span>
