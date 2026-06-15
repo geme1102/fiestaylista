@@ -189,8 +189,8 @@ export default function ArcoRights() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link to="/" className="text-primary hover:text-primary-fixed-dim text-sm font-medium">
-              ← {lang === 'es' ? 'Volver' : 'Back'}
+            <Link to="/account" className="text-primary hover:text-primary-fixed-dim text-sm font-medium">
+              ← {lang === 'es' ? 'Volver a mi cuenta' : 'Back to my account'}
             </Link>
             <h1 className="text-3xl font-bold text-on-surface mt-2">{content.title}</h1>
             <p className="text-sm text-on-surface-variant mt-1">{content.subtitle}</p>
@@ -355,8 +355,8 @@ export default function ArcoRights() {
               <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!deletePassword || loading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50">
-                {loading ? '...' : 'Eliminar'}
+              <button onClick={handleDeleteAccount} disabled={!deletePassword || loading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+                {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>
           </div>

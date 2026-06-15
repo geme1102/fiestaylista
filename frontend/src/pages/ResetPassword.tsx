@@ -53,7 +53,7 @@ export default function ResetPassword() {
       <>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
           <div className="w-full max-w-md text-center">
-            <span className="text-5xl mb-4 block">✅</span>
+            <span className="material-symbols-outlined text-5xl mb-4 block text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <h1 className="text-2xl font-bold text-on-surface mb-2">Contraseña actualizada</h1>
             <p className="text-on-surface-variant mb-6">Tu contraseña se ha restablecido correctamente.</p>
             <Link
@@ -83,7 +83,9 @@ export default function ResetPassword() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <span className="text-3xl" aria-hidden="true">🎉</span>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
+                F
+              </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>
@@ -131,6 +133,11 @@ export default function ResetPassword() {
             >
               {loading ? <LoadingSpinner size="sm" /> : 'Restablecer contraseña'}
             </button>
+            <p className="text-center text-sm text-on-surface-variant">
+              <Link to="/login" className="text-primary hover:text-primary-fixed-dim font-medium">
+                Volver a iniciar sesión
+              </Link>
+            </p>
           </form>
         </div>
       </div>

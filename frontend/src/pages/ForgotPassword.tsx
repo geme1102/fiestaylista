@@ -43,7 +43,9 @@ export default function ForgotPassword() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <span className="text-3xl" aria-hidden="true">🎉</span>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
+                F
+              </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>
@@ -56,18 +58,29 @@ export default function ForgotPassword() {
 
           {sent ? (
             <div className="glass-card rounded-2xl p-8 text-center">
-              <span className="text-5xl mb-4 block">📧</span>
+              <span className="material-symbols-outlined text-5xl mb-4 block text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>mail</span>
               <h2 className="text-lg font-bold text-on-surface mb-2">Revisa tu bandeja de entrada</h2>
-              <p className="text-on-surface-variant mb-6">
+              <p className="text-on-surface-variant mb-2">
                 Si existe una cuenta con <strong className="text-on-surface-variant">{email}</strong>,
                 recibirás un enlace para restablecer tu contraseña en unos minutos.
               </p>
-              <Link
-                to="/login"
-                className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px]"
-              >
-                Volver a iniciar sesión
-              </Link>
+              <p className="text-xs text-on-surface-variant/60 mb-6">
+                ¿No lo encuentras? Revisa tu carpeta de spam o correo no deseado.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Link
+                  to="/login"
+                  className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px]"
+                >
+                  Volver a iniciar sesión
+                </Link>
+                <button
+                  onClick={() => setSent(false)}
+                  className="text-sm text-primary hover:text-primary-fixed-dim font-medium"
+                >
+                  Reenviar correo
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 space-y-5">

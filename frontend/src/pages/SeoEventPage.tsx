@@ -2,6 +2,14 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import NavbarPremium from '../components/NavbarPremium';
 
+const CTA_LABELS: Record<string, string> = {
+  'baby-shower': 'Crear mi lista de baby shower',
+  boda: 'Crear mi lista de bodas',
+  cumpleanos: 'Crear mi lista de cumpleaños',
+  bautizo: 'Crear mi lista de bautizo',
+  comunion: 'Crear mi lista de comunión',
+};
+
 const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: string; benefits: string[]; faq: { q: string; a: string }[] }> = {
   'baby-shower': {
     icon: '🍼',
@@ -134,13 +142,13 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <p className="text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto">
               {content.subtitle}
             </p>
-            <Link
-              to="/register"
-              className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all shadow-lg shadow-primary/20"
-            >
-              Crear mi lista gratis
-              <span className="text-primary-fixed">→</span>
-            </Link>
+              <Link
+                to="/register"
+                className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-full text-lg font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all shadow-lg shadow-primary/20"
+              >
+                {CTA_LABELS[eventKey] || 'Crear mi lista gratis'}
+                <span className="text-primary-fixed">→</span>
+              </Link>
           </div>
 
           <div className="mb-16">
@@ -148,7 +156,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <div className="grid sm:grid-cols-2 gap-4">
               {content.benefits.map((b) => (
                 <div key={b} className="flex items-center gap-3 p-4 backdrop-blur-md bg-white/70 border border-white/20 rounded-xl shadow-sm">
-                  <span className="text-emerald-500 text-xl shrink-0">✓</span>
+                  <span className="material-symbols-outlined text-emerald-500 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <span className="text-on-surface">{b}</span>
                 </div>
               ))}
@@ -160,9 +168,9 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <div className="max-w-2xl mx-auto space-y-3">
               {content.faq.map((faq) => (
                 <details key={faq.q} className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl group">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-on-surface">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-on-surface hover:bg-primary/5 rounded-2xl transition-colors">
                     {faq.q}
-                    <span className="ml-2 text-rose-500 group-open:rotate-180 transition-transform">▼</span>
+                    <span className="material-symbols-outlined ml-2 text-rose-500 group-open:rotate-180 transition-transform">expand_more</span>
                   </summary>
                   <div className="px-4 pb-4 text-sm text-on-surface-variant">{faq.a}</div>
                 </details>
@@ -174,6 +182,12 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <Link to="/pricing" className="text-sm text-on-surface-variant hover:text-on-surface transition-colors">
               Ver planes y precios →
             </Link>
+          </div>
+
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-6 text-xs text-on-surface-variant">
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">lock</span> Pagos seguros con Mercado Pago</span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">credit_card</span> PSE, Nequi y Daviplata</span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">shield</span> Datos protegidos</span>
           </div>
         </div>
       </div>
