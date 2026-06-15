@@ -51,9 +51,9 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
         sseConnectedRef.current = true;
         onConnectedRef.current?.();
 
-        const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let reader = response.body.getReader();
 
         while (!cancelledRef.current) {
           const { done, value } = await reader.read();

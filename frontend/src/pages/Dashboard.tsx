@@ -24,7 +24,7 @@ function useEventsQuery() {
 export default function Dashboard() {
   const { user, isAuthenticated, refreshUser } = useAuth();
   const queryClient = useQueryClient();
-  const { data: events = [], isLoading, refetch } = useEventsQuery();
+  const { data: events = [], isLoading } = useEventsQuery();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({ title: '', eventType: 'BABY_SHOWER' as EventType, hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
