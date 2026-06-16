@@ -96,6 +96,8 @@ export default function ForgotPassword() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
+                  inputMode="email"
+                  enterKeyHint="go"
                   autoFocus
                 />
               </div>

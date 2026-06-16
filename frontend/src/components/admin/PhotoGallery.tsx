@@ -55,6 +55,9 @@ export function PhotoGallery({
               <div
                 key={photo.id}
                 onClick={() => onSelectPreview(photo)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectPreview(photo); } }}
+                role="button"
+                tabIndex={0}
                 className="bg-white p-2.5 rounded-[22px] border border-gray-200/70 shadow-sm relative group overflow-hidden cursor-pointer hover:border-[#a21b53]/45 transition-all duration-300"
               >
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
@@ -65,7 +68,7 @@ export function PhotoGallery({
                       e.stopPropagation();
                       onRequestDelete(photo.id);
                     }}
-                    className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow self-end cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    className="bg-white/90 hover:bg-white text-red-600 p-3 rounded-full shadow self-end cursor-pointer transition-transform hover:scale-105 active:scale-95"
                     title="Eliminar del catálogo"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -83,6 +86,9 @@ export function PhotoGallery({
 
         <div
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+          role="button"
+          tabIndex={0}
           className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
         >
           <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">

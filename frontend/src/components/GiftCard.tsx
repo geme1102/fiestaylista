@@ -46,7 +46,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <button
               onClick={() => onFree(gift.id)}
               disabled={freeingId === gift.id}
-              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30"
+              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30 py-2.5"
             >
               {freeingId === gift.id ? '...' : 'Liberar obsequio'}
             </button>
@@ -121,7 +121,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         <button
           onClick={() => onDelete(gift.id)}
           disabled={deletingId === gift.id}
-          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-all cursor-pointer opacity-80 hover:opacity-100 disabled:opacity-30 z-10"
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all cursor-pointer opacity-80 hover:opacity-100 disabled:opacity-30 z-10"
           title="Eliminar regalo"
         >
           {deletingId === gift.id ? (

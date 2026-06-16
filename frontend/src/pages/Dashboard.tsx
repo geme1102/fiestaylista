@@ -343,6 +343,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="Ej: Boda de María y Juan"
+          autoComplete="off"
           autoFocus
         />
       </div>
@@ -358,6 +359,9 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           onChange={(e) => setFormData({ ...formData, hostPhone: e.target.value })}
           className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           placeholder="+57 300 000 0000"
+          autoComplete="tel"
+          inputMode="tel"
+          enterKeyHint="next"
         />
       </div>
 

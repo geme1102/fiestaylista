@@ -330,6 +330,8 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
                     onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
                     placeholder="Otro valor"
                     min="2000"
+                    inputMode="numeric"
+                    enterKeyHint="next"
                     className="w-full pl-8 pr-4 py-3 rounded-xl border border-surface-variant focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-surface-container-low"
                   />
                 </div>
@@ -342,6 +344,10 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ej. Familia Rodríguez"
+                  autoComplete="name"
+                  inputMode="text"
+                  autoCapitalize="words"
+                  enterKeyHint="go"
                   required
                   className="w-full px-4 py-3 rounded-xl border border-surface-variant focus:ring-2 focus:ring-primary outline-none bg-surface-container-low"
                 />

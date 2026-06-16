@@ -342,6 +342,10 @@ export default function EventGuest() {
                   value={claimName}
                   onChange={(e) => setClaimName(e.target.value)}
                   placeholder="Escribe tu nombre para apartar un regalo"
+                  autoComplete="name"
+                  inputMode="text"
+                  autoCapitalize="words"
+                  enterKeyHint="go"
                   className={`w-full rounded-2xl border border-outline-variant bg-surface/80 text-on-surface outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 />
               </div>
@@ -352,7 +356,7 @@ export default function EventGuest() {
                 <div className="flex gap-2 w-max">
                   <button
                     onClick={() => setCategoryFilter(null)}
-                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[44px] ${
                       categoryFilter === null
   ? 'bg-primary text-on-primary border-primary shadow-md shadow-primary/20'
   : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary'
@@ -364,7 +368,7 @@ export default function EventGuest() {
                     <button
                       key={cat.label}
                       onClick={() => setCategoryFilter(cat.label === categoryFilter ? null : cat.label)}
-                      className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[36px] ${
+                      className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[44px] ${
                         categoryFilter === cat.label
                           ? 'text-white shadow-md'
                           : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:border-primary'
@@ -458,7 +462,7 @@ export default function EventGuest() {
                     )}
                     <button
                       onClick={() => handleDownload(photo.url)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
+                      className="absolute top-2 right-2 w-11 h-11 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
                       aria-label="Descargar foto"
                     >
                       <span className="material-symbols-outlined text-sm">download</span>

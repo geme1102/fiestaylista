@@ -14,6 +14,7 @@ export function FloatingOrbs() {
         style={{
           background: 'radial-gradient(circle, #b10e6b 0%, #d23284 50%, transparent 70%)',
           filter: 'blur(80px)',
+          willChange: 'transform',
         }}
       />
       <motion.div
@@ -27,6 +28,7 @@ export function FloatingOrbs() {
         style={{
           background: 'radial-gradient(circle, #d23284 0%, #b10e6b 50%, transparent 70%)',
           filter: 'blur(80px)',
+          willChange: 'transform',
         }}
       />
       <motion.div
@@ -40,6 +42,7 @@ export function FloatingOrbs() {
         style={{
           background: 'radial-gradient(circle, #d97706 0%, #f59e0b 50%, transparent 70%)',
           filter: 'blur(80px)',
+          willChange: 'transform',
         }}
       />
     </div>

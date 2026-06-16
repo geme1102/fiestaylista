@@ -24,6 +24,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
               }}
               transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-[0%] left-[0%] w-[80vw] h-[80vw] md:w-[40rem] md:h-[40rem] bg-gradient-to-br from-pink-400 via-[#d23284] to-brand-berry rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              style={{ willChange: 'transform' }}
             />
 
             <motion.div
@@ -34,6 +35,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
               }}
               transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute top-[10%] right-[0%] w-[75vw] h-[75vw] md:w-[35rem] md:h-[35rem] bg-gradient-to-bl from-cyan-300 via-blue-500 to-indigo-500 rounded-full blur-[60px] md:blur-[100px] opacity-[0.85]"
+              style={{ willChange: 'transform' }}
             />
 
             <motion.div
@@ -44,6 +46,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
               }}
               transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute bottom-[0%] left-[10%] w-[90vw] h-[90vw] md:w-[45rem] md:h-[45rem] bg-gradient-to-tr from-yellow-300 via-orange-400 to-brand-peach rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              style={{ willChange: 'transform' }}
             />
           </div>
         </div>

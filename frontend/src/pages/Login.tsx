@@ -88,6 +88,8 @@ export default function Login() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
+                  inputMode="email"
+                  enterKeyHint="next"
                 />
               </div>
 
@@ -103,6 +105,7 @@ export default function Login() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  enterKeyHint="go"
                 />
                 <div className="text-right mt-1">
                   <Link to="/forgot-password" className="text-sm text-primary hover:text-primary-fixed-dim font-medium">

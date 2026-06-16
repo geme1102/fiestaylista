@@ -124,6 +124,9 @@ export default function Register() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Tu nombre"
                   autoComplete="name"
+                  inputMode="text"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
                 />
               </div>
 
@@ -139,6 +142,8 @@ export default function Register() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
                   autoComplete="email"
+                  inputMode="email"
+                  enterKeyHint="next"
                 />
               </div>
 
@@ -154,6 +159,7 @@ export default function Register() {
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="Mínimo 8 caracteres"
                   autoComplete="new-password"
+                  enterKeyHint="go"
                 />
                 <div className="mt-2 flex flex-col gap-2">
                   {!password && (

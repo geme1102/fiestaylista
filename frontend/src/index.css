@@ -477,6 +477,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-surface);
+  overscroll-behavior: contain;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -601,4 +602,27 @@ h1, h2, h3, h4, h5, h6 {
   nav, .fixed, .sticky, [class*="z-"] { display: none !important; }
   body { background: white; color: black; }
   a { text-decoration: underline; }
+}
+
+/* === Mobile optimizations === */
+
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  button, a, [role="button"], .btn-like {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Remove stuck hover states on touch devices */
+  .hover\:bg-surface-container-highest:hover {
+    background-color: transparent;
+  }
+  .hover\:shadow-lg:hover {
+    box-shadow: none;
+  }
+  .hover\:scale-105:hover {
+    transform: none;
+  }
 }

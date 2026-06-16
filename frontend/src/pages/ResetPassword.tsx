@@ -107,6 +107,7 @@ export default function ResetPassword() {
                 className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
                 autoComplete="new-password"
+                enterKeyHint="next"
                 autoFocus
               />
             </div>
@@ -123,6 +124,7 @@ export default function ResetPassword() {
                 className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder="Repite la contraseña"
                 autoComplete="new-password"
+                enterKeyHint="go"
               />
             </div>
 

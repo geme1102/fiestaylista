@@ -397,7 +397,7 @@ export default function EventAdmin() {
                       setLocationDraft(event.eventLocation ?? '');
                       setNoteDraft(event.eventNote ?? '');
                     }}
-                    className="p-2 text-pink-500 hover:text-white hover:bg-[#a21b53] rounded-xl transition-all cursor-pointer bg-white border border-[#a21b53]/15 shadow-sm flex items-center justify-center"
+                    className="p-2.5 text-pink-500 hover:text-white hover:bg-[#a21b53] rounded-xl transition-all cursor-pointer bg-white border border-[#a21b53]/15 shadow-sm flex items-center justify-center"
                     title="Editar título del evento"
                   >
                     <Pencil className="w-[18px] h-[18px]" />
@@ -552,7 +552,7 @@ export default function EventAdmin() {
                   setLocationDraft(event.eventLocation ?? '');
                   setNoteDraft(event.eventNote ?? '');
                 }}
-                className="bg-[#a21b53]/5 hover:bg-[#a21b53]/10 border border-[#a21b53]/15 hover:border-[#a21b53]/30 text-[#a21b53] font-bold text-xs px-4 py-2 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
+                className="bg-[#a21b53]/5 hover:bg-[#a21b53]/10 border border-[#a21b53]/15 hover:border-[#a21b53]/30 text-[#a21b53] font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
               >
                 <Pencil className="w-3.5 h-3.5 text-[#a21b53] group-hover:rotate-12 transition-transform" />
                 <span>Editar Evento</span>
@@ -647,7 +647,7 @@ export default function EventAdmin() {
                 <button
                   onClick={() => setEditingDetails(false)}
                   aria-label="Cerrar"
-                  className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
+                  className="p-2.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -665,6 +665,8 @@ export default function EventAdmin() {
                     value={titleDraft}
                     onChange={(e) => setTitleDraft(e.target.value)}
                     className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold"
+                    autoComplete="off"
+                    enterKeyHint="next"
                     required
                   />
                 </div>
@@ -703,8 +705,11 @@ export default function EventAdmin() {
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
                     placeholder="Ej: Salón de eventos, Ciudad"
+                    autoComplete="street-address"
+                    inputMode="text"
+                    enterKeyHint="next"
                   />
                 </div>
 
@@ -724,7 +729,7 @@ export default function EventAdmin() {
                   <button
                     type="button"
                     onClick={() => setEditingDetails(false)}
-                    className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
+                    className="px-5 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
                   >
                     Salir sin guardar
                   </button>
