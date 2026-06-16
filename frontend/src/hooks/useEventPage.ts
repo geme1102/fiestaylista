@@ -197,6 +197,15 @@ export function useEventPage() {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
+
+      if (navigator.share && (/Mobi|Android/i.test(navigator.userAgent) || 'ontouchstart' in window)) {
+        try {
+          const file = new File([blob], url.split('/').pop() || 'photo.jpg', { type: blob.type });
+          await navigator.share({ files: [file], title: 'Foto del evento' });
+          return;
+        } catch { /* user cancelled */ }
+      }
+
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
@@ -206,7 +215,7 @@ export function useEventPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch {
-      showToast('Error al descargar la foto. Verifica tu conexión e intenta de nuevo.', 'error');
+      window.open(url, '_blank');
     }
   }, []);
 
