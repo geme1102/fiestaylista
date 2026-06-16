@@ -35,15 +35,19 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
         const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
         const tokenRes = await fetch(`${baseUrl}${sseTokenEndpoint}`, { method: 'POST', credentials: 'include' });
         if (!tokenRes.ok || cancelledRef.current) return;
-        const { token } = await tokenRes.json();
+        let token: string;
+        try { ({ token } = await tokenRes.json()); } catch { return; }
 
         if (cancelledRef.current) return;
 
         abortController = new AbortController();
-        const response = await fetch(`${baseUrl}/api/events/${eventId}/gifts/subscribe`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          signal: abortController.signal,
-        });
+        let response: Response;
+        try {
+          response = await fetch(`${baseUrl}/api/events/${eventId}/gifts/subscribe`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            signal: abortController.signal,
+          });
+        } catch { return; }
 
         if (!response.ok || !response.body || cancelledRef.current) return;
 
