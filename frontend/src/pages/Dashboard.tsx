@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
@@ -23,6 +23,7 @@ function useEventsQuery() {
 
 export default function Dashboard() {
   const { user, isAuthenticated, refreshUser } = useAuth();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading } = useEventsQuery();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -36,6 +37,33 @@ export default function Dashboard() {
       refreshUser();
     }
   }, [isAuthenticated, refreshUser]);
+
+  const tierRef = useRef(user?.tier);
+  useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('pro')) return;
+
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    const poll = setInterval(async () => {
+      attempts++;
+      await refreshUser();
+      if (tierRef.current === 'pro' || attempts >= maxAttempts) {
+        clearInterval(poll);
+        if (tierRef.current === 'pro') {
+          showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
+          queryClient.invalidateQueries({ queryKey: ['events'] });
+        }
+      }
+    }, 1500);
+
+    return () => clearInterval(poll);
+  }, [location.search, refreshUser, queryClient]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -108,7 +108,9 @@ export default function Pricing() {
 
     try {
       const interval = yearly ? 'year' : 'month';
-      const res = await createCheckoutSession(tier as 'pro', undefined, undefined, interval, token);
+      const successUrl = `${window.location.origin}/dashboard?pro=activated`;
+      const cancelUrl = `${window.location.origin}/pricing`;
+      const res = await createCheckoutSession(tier as 'pro', successUrl, cancelUrl, interval, token);
       clearTimeout(safetyTimer);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
@@ -234,7 +236,7 @@ export default function Pricing() {
           </div>
 
           {/* Turnstile (invisible) */}
-          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+          <div ref={containerRef} className="fixed overflow-hidden" style={{ left: '-9999px', top: '-9999px', width: '1px', height: '1px' }} />
 
           {/* Pricing Cards */}
           <section className="md:max-w-5xl mx-auto px-4">

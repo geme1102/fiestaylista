@@ -23,14 +23,15 @@ function getUserAvatar(email: string): string {
 }
 
 export default function Account() {
-  const { user, resendVerification } = useAuth();
+  const { user, resendVerification, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [cancelPassword, setCancelPassword] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -49,12 +50,13 @@ export default function Account() {
     setCancelLoading(true);
     try {
       await apiClient.post('/api/subscriptions/cancel', {}, {
-        headers: { 'x-password': confirmPassword },
+        headers: { 'x-password': cancelPassword },
       });
-      showToast('Suscripción cancelada', 'success');
-      setSubscription(null);
+      showToast('Suscripción cancelada exitosamente. Seguirás teniendo acceso Pro hasta el final del período actual.', 'success');
+      setSubscription(prev => prev ? { ...prev, status: 'canceled' as const } : null);
+      await refreshUser();
       setShowCancelConfirm(false);
-      setConfirmPassword('');
+      setCancelPassword('');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al cancelar suscripción', 'error');
     } finally {
@@ -85,11 +87,11 @@ export default function Account() {
     setDeletingAccount(true);
     try {
       await apiClient.post('/api/auth/arco/delete-account', {}, {
-        headers: { 'x-password': confirmPassword },
+        headers: { 'x-password': deletePassword },
       });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
-      setConfirmPassword('');
+      setDeletePassword('');
       setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
@@ -189,10 +191,61 @@ export default function Account() {
 
               {subscription && (
                 <div className="text-sm text-on-surface-variant mb-6">
-                  <p>Estado: <span className="capitalize font-medium text-on-surface">{subscription.status === 'active' ? 'Activo' : subscription.status}</span></p>
+                  <p>Estado: <span className="capitalize font-medium text-on-surface">
+                    {subscription.status === 'active' ? 'Activo' :
+                     subscription.status === 'past_due' ? 'Vencido' :
+                     subscription.status === 'canceled' ? 'Cancelado' :
+                     subscription.status === 'incomplete' ? 'Incompleto' :
+                     subscription.status === 'incomplete_expired' ? 'Expirado' :
+                     subscription.status === 'trialing' ? 'Prueba' :
+                     subscription.status}
+                  </span></p>
                   {subscription.currentPeriodEnd && (
-                    <p>Próxima factura: {formatDate(subscription.currentPeriodEnd)}</p>
+                    <p>{subscription.status === 'canceled' ? 'Acceso Pro hasta' : 'Próxima factura'}: {formatDate(subscription.currentPeriodEnd)}</p>
                   )}
+                </div>
+              )}
+
+              {subscription?.status === 'past_due' && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-amber-600 text-sm mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Pago vencido</p>
+                      <p className="text-xs text-amber-700 mt-1">Tu suscripción Pro está temporalmente suspendida por falta de pago. Actualiza tu método de pago para recuperar el acceso.</p>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const successUrl = `${window.location.origin}/dashboard?pro=activated`;
+                            const cancelUrl = `${window.location.origin}/account`;
+                            const res = await apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
+                              tier: 'pro',
+                              successUrl,
+                              cancelUrl,
+                            });
+                            window.location.href = res.url;
+                          } catch {
+                            showToast('Error al iniciar el proceso de pago', 'error');
+                          }
+                        }}
+                        className="mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-all"
+                      >
+                        Reintentar pago
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {subscription?.status === 'canceled' && user.tier === 'pro' && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-blue-600 text-sm mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Suscripción cancelada</p>
+                      <p className="text-xs text-blue-700 mt-1">Tu suscripción ha sido cancelada, pero seguirás teniendo acceso a todas las funciones Pro hasta el final del período actual.</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -249,17 +302,17 @@ export default function Account() {
             <input
               id="cancel-password"
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              value={cancelPassword}
+              onChange={(e) => setCancelPassword(e.target.value)}
               placeholder="Tu contraseña"
               aria-label="Contraseña para cancelar suscripción"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
             />
             <div className="flex gap-3">
-              <button onClick={() => { setShowCancelConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+              <button onClick={() => { setShowCancelConfirm(false); setCancelPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleCancelSubscription} disabled={!confirmPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleCancelSubscription} disabled={!cancelPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {cancelLoading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Cancelando...</span> : 'Confirmar'}
               </button>
             </div>
@@ -275,17 +328,17 @@ export default function Account() {
             <input
               id="delete-password"
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Tu contraseña"
               aria-label="Contraseña para eliminar cuenta"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
             />
             <div className="flex gap-3">
-              <button onClick={() => { setShowDeleteConfirm(false); setConfirmPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+              <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!confirmPassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleDeleteAccount} disabled={!deletePassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {deletingAccount ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>
