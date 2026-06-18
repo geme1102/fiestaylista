@@ -205,6 +205,12 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-4px); }
+  30%, 70% { transform: translateX(4px); }
+}
+
 @keyframes splash-fade {
   0%, 78% { opacity: 1; }
   100% { opacity: 0; }
@@ -265,6 +271,7 @@
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
 
 .animate-zoom-in { animation: zoom-in 0.3s ease-out; }
+.animate-shake { animation: shake 0.5s ease-in-out; }
 .animate-splash-fade { animation: splash-fade 2.3s ease-in-out forwards; }
 .animate-splash-content { animation: splash-content 2.3s ease-in-out forwards; }
 

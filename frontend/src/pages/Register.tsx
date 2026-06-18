@@ -161,12 +161,23 @@ export default function Register() {
                   autoComplete="new-password"
                   enterKeyHint="go"
                 />
-                <div className="mt-2 flex flex-col gap-2">
-                  {!password && (
-                    <p className="text-xs text-on-surface-variant/60">Debe tener al menos 8 caracteres, una mayúscula y un número.</p>
-                  )}
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {[
+                    { check: password.length >= 8, label: 'Al menos 8 caracteres' },
+                    { check: /[A-Z]/.test(password), label: 'Una mayúscula' },
+                    { check: /[0-9]/.test(password), label: 'Un número' },
+                  ].map((req) => (
+                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : password ? 'text-on-surface-variant/50' : 'text-on-surface-variant/50'}`}>
+                      <span className={`material-symbols-outlined text-sm ${req.check ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                        {req.check ? 'check_circle' : 'radio_button_unchecked'}
+                      </span>
+                      {req.label}
+                    </div>
+                  ))}
                   {password && (
-                    <PasswordStrengthBar password={password} />
+                    <div className="mt-1">
+                      <PasswordStrengthBar password={password} />
+                    </div>
                   )}
                 </div>
               </div>

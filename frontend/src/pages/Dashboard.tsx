@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -24,6 +25,7 @@ function useEventsQuery() {
 export default function Dashboard() {
   const { user, isAuthenticated, refreshUser } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading } = useEventsQuery();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -73,11 +75,11 @@ export default function Dashboard() {
     }
     setCreating(true);
     try {
-      await apiClient.post<{ event: Event }>('/api/events', formData);
+      const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', formData);
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
-      showToast('Evento creado 🎉', 'success');
+      navigate(`/event/${res.event.id}`);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
@@ -314,14 +316,16 @@ export default function Dashboard() {
       )}
 
       {showCreateModal && (
-        <Modal onClose={() => setShowCreateModal(false)}>
-          <CreateForm
-            formData={formData}
-            setFormData={setFormData}
-            creating={creating}
-            handleCreate={handleCreate}
-          />
-        </Modal>
+        <AnimatePresence>
+          <Modal onClose={() => setShowCreateModal(false)}>
+            <CreateForm
+              formData={formData}
+              setFormData={setFormData}
+              creating={creating}
+              handleCreate={handleCreate}
+            />
+          </Modal>
+        </AnimatePresence>
       )}
     </div>
   );
@@ -450,14 +454,23 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       role="dialog"
       aria-modal="true"
       aria-label="Crear nuevo evento"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+      <motion.div
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto mb-6 sm:hidden" />
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-xl font-bold text-on-surface font-outfit">Crear nuevo evento</h2>
@@ -470,7 +483,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
           </button>
         </div>
         {children}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

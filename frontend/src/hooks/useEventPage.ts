@@ -22,6 +22,7 @@ export function useEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [claimName, setClaimName] = useState('');
+  const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [easyReadMode, setEasyReadMode] = useState(false);
@@ -122,8 +123,10 @@ export function useEventPage() {
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
     if (!event || !claimName.trim()) {
-      showToast('Escribe tu nombre para que sepan quién apartó el regalo', 'error');
       inputRef.current?.focus();
+      inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setShaking(true);
+      setTimeout(() => setShaking(false), 600);
       return;
     }
 
@@ -249,7 +252,7 @@ export function useEventPage() {
 
   return {
     event, gifts, photos, loading, error,
-    claimingId, claimName, setClaimName,
+    claimingId, claimName, setClaimName, shaking,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
     categoryFilter, setCategoryFilter,

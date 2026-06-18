@@ -55,7 +55,7 @@ function EmptyGiftState() {
 export default function EventGuest() {
   const {
     event, gifts, photos, loading, error,
-    claimingId, claimName, setClaimName,
+    claimingId, claimName, setClaimName, shaking,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
     categoryFilter, setCategoryFilter,
@@ -346,7 +346,7 @@ export default function EventGuest() {
                   inputMode="text"
                   autoCapitalize="words"
                   enterKeyHint="go"
-                  className={`w-full rounded-2xl border border-outline-variant bg-surface/80 text-on-surface outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
+                  className={`w-full rounded-2xl border outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${shaking ? 'animate-shake border-red-400 ring-2 ring-red-300' : 'border-outline-variant bg-surface/80 text-on-surface'} ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
                 />
               </div>
             </div>

@@ -66,6 +66,7 @@ export default function EventAdmin() {
   const [updatingDetails, setUpdatingDetails] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
   const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
+  const [showCoach, setShowCoach] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadEvent = useCallback(async () => {
@@ -594,6 +595,45 @@ export default function EventAdmin() {
             </div>
           </div>
         </section>
+
+        {showCoach && gifts.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative bg-gradient-to-r from-pink-50 via-white to-amber-50 border border-pink-100/50 rounded-3xl p-6 mb-8 shadow-sm overflow-hidden"
+          >
+            <div className="absolute -top-6 -right-6 w-24 h-24 bg-pink-100/40 rounded-full blur-2xl pointer-events-none" />
+            <button
+              onClick={() => setShowCoach(false)}
+              className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white/60 transition-all cursor-pointer"
+              aria-label="Cerrar guía"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-start gap-2 mb-4">
+              <span className="text-xl">🚀</span>
+              <div>
+                <h3 className="font-extrabold text-gray-800 text-sm tracking-tight">¡Tu evento está creado! Sigue estos pasos:</h3>
+                <p className="text-xs text-gray-500 mt-0.5">En menos de 5 minutos tendrás tu lista lista para compartir.</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 mt-4">
+              {[
+                { step: 1, icon: '🎁', title: 'Agrega regalos', desc: 'Escribe lo que quieres recibir o elige sugerencias rápidas.', color: 'bg-pink-100 text-pink-700 border-pink-200' },
+                { step: 2, icon: '🔗', title: 'Comparte el enlace', desc: 'Envía tu lista por WhatsApp, redes o copia el link.', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+                { step: 3, icon: '🎉', title: 'Recibe confirmaciones', desc: 'Tus invitados apartan regalos sin registrarse, en tiempo real.', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+              ].map((item) => (
+                <div key={item.step} className={`rounded-2xl p-4 border ${item.color} flex flex-col items-start text-left gap-2`}>
+                  <span className="text-2xl">{item.icon}</span>
+                  <div>
+                    <p className="font-extrabold text-sm">{item.title}</p>
+                    <p className="text-xs opacity-80 mt-0.5">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <GiftManagement
           gifts={gifts}

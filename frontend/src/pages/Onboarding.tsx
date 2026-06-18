@@ -44,6 +44,10 @@ export default function Onboarding() {
   const skip = () => navigate('/dashboard');
 
   const nextStep = (s: number) => {
+    if (s === 3) {
+      handleFinish();
+      return;
+    }
     setStep(s);
   };
 
@@ -129,68 +133,42 @@ export default function Onboarding() {
           </div>
         </motion.section>
 
-        {/* Step 2: Event Name */}
+        {/* Step 2: Event Name + Create (merged with old step 3) */}
         <motion.section
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
           animate={{ x: step === 2 ? '0%' : step < 2 ? '100%' : '-100%' }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
           <div className="w-full max-w-md">
-            <div className="text-center mb-12">
-              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 2 de 3</span>
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-4 mt-2">¿Cómo se llama tu evento?</h2>
-              <p className="text-on-surface-variant font-body-md px-4">Dale un nombre especial a tu lista de regalos.</p>
-            </div>
-            <div className="relative mb-16">
-              <input
-                id="event-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={`${selectedLabel} de ${user?.name || 'María'}`}
-                autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && nextStep(3)}
-                className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors outline-none"
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <button onClick={() => prevStep(1)} className="px-6 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-white/10 rounded-full transition-all">
-                Atrás
-              </button>
-              <button
-                onClick={() => nextStep(3)}
-                disabled={!title.trim()}
-                className="primary-gradient text-on-primary px-10 py-3 rounded-full font-label-md text-label-md shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all active:scale-90 disabled:opacity-50"
-              >
-                Continuar
-              </button>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* Step 3: Success */}
-        <motion.section
-          className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
-          animate={{ x: step === 3 ? '0%' : '100%' }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        >
-          <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 3 de 3</span>
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2 mt-2">¡Todo listo!</h2>
-              <p className="text-on-surface-variant font-body-md">Estamos listos para empezar esta celebración.</p>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 2 de 2</span>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2 mt-2">¿Cómo se llama tu evento?</h2>
+              <p className="text-on-surface-variant font-body-md">Dale un nombre especial a tu lista de regalos.</p>
             </div>
+
+            <input
+              id="event-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={`${selectedLabel} de ${user?.name || 'María'}`}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleFinish()}
+              className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors outline-none mb-8"
+            />
+
+            {/* Summary preview card (was step 3) */}
             <div
-              className="rounded-2xl p-8 mb-8 border border-white/40 shadow-xl shadow-rose-500/5 relative overflow-hidden group"
+              className="rounded-2xl p-6 mb-8 border border-white/40 shadow-xl shadow-rose-500/5 relative overflow-hidden"
               style={{
                 background: 'rgba(255, 255, 255, 0.4)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
               }}
             >
-              <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
-              <div className="flex flex-col items-center text-center gap-4 relative z-10">
-                <div className="w-20 h-20 bg-primary-fixed flex items-center justify-center rounded-full text-4xl shadow-inner mb-2">
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+              <div className="flex flex-col items-center text-center gap-3 relative z-10">
+                <div className="w-16 h-16 bg-primary-fixed flex items-center justify-center rounded-full text-3xl shadow-inner">
                   <span>{selectedIcon}</span>
                 </div>
                 <div>
@@ -199,31 +177,34 @@ export default function Onboarding() {
                   </p>
                   <h3 className="font-headline-md text-headline-md text-primary">{title || `${selectedLabel} de ${user?.name || 'María'}`}</h3>
                 </div>
-                <div className="w-full h-px bg-outline-variant/30 my-2" />
-                <p className="text-sm text-on-surface-variant px-2 font-medium text-center">
-                  Próximos pasos: agrega los regalos que quieres recibir, comparte el enlace por WhatsApp y tus invitados empezarán a apartar.
+                <div className="w-full h-px bg-outline-variant/30 my-1" />
+                <p className="text-xs text-on-surface-variant px-2 font-medium">
+                  Próximos pasos: agrega los regalos, comparte el enlace por WhatsApp y tus invitados empezarán a apartar.
                 </p>
               </div>
             </div>
+
             <div className="flex items-center justify-between gap-4">
-              <button onClick={() => nextStep(2)} className="px-6 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-white/10 rounded-full transition-all">
+              <button onClick={() => prevStep(1)} className="px-6 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-white/10 rounded-full transition-all">
                 Atrás
               </button>
-              <div className="flex-1" />
-            </div>
-            <div className="space-y-4 mt-6">
               <button
                 onClick={handleFinish}
-                disabled={creating}
-                className="w-full primary-gradient text-on-primary py-4 rounded-xl font-label-md text-label-md shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center"
+                disabled={creating || !title.trim()}
+                className="primary-gradient text-on-primary px-10 py-3 rounded-full font-label-md text-label-md shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all active:scale-90 disabled:opacity-50 flex items-center gap-2 min-h-[44px]"
               >
                 {creating ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
-                  'Crear mi primer evento'
+                  <>
+                    Crear mi {selectedLabel.toLowerCase()}
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </>
                 )}
               </button>
-              <button onClick={skip} disabled={creating} className="w-full py-3 text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors disabled:opacity-40">
+            </div>
+            <div className="text-center mt-4">
+              <button onClick={skip} disabled={creating} className="text-xs text-on-surface-variant hover:text-primary transition-colors disabled:opacity-40 underline">
                 Saltar este paso
               </button>
             </div>
@@ -233,7 +214,7 @@ export default function Onboarding() {
 
       {/* Dots Indicator */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-center gap-4 items-center pb-8 pt-4 bg-surface/10 backdrop-blur-xl border-t border-white/20 shadow-rose-500/20 shadow-lg rounded-t-xl">
-        {[1, 2, 3].map((s) => (
+        {[1, 2].map((s) => (
           <div
             key={s}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${

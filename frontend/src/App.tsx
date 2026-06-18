@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -10,6 +11,26 @@ import { PAGE_META } from './data/pageMeta';
 
 function PageBoundary({ children }: { children: ReactNode }) {
   return <ErrorBoundary>{children}</ErrorBoundary>;
+}
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -12 },
+};
+
+function PageTransition({ children }: { children: ReactNode }) {
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
@@ -112,6 +133,7 @@ export default function App() {
     localStorage.setItem('splash_seen', 'true');
     setSplashDone(true);
   }, []);
+  const location = useLocation();
 
   if (!splashDone) {
     return <SplashIntro onComplete={handleSplashDone} />;
@@ -121,38 +143,40 @@ export default function App() {
     <QueryProvider>
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>}>
       <TitleUpdater />
-      <Routes>
-        <Route path="/" element={<PageBoundary><Landing /></PageBoundary>} />
-        <Route path="/login" element={<PageBoundary><Login /></PageBoundary>} />
-        <Route path="/register" element={<PageBoundary><Register /></PageBoundary>} />
-        <Route path="/pricing" element={<PageBoundary><Pricing /></PageBoundary>} />
-        <Route path="/e/:slug" element={<PageBoundary><EventGuest /></PageBoundary>} />
-        <Route path="/verify-email" element={<PageBoundary><VerifyEmail /></PageBoundary>} />
-        <Route path="/forgot-password" element={<PageBoundary><ForgotPassword /></PageBoundary>} />
-        <Route path="/reset-password" element={<PageBoundary><ResetPassword /></PageBoundary>} />
-        <Route path="/baby-shower" element={<PageBoundary><SeoEventPage eventKey="baby-shower" /></PageBoundary>} />
-        <Route path="/boda" element={<PageBoundary><SeoEventPage eventKey="boda" /></PageBoundary>} />
-        <Route path="/cumpleanos" element={<PageBoundary><SeoEventPage eventKey="cumpleanos" /></PageBoundary>} />
-        <Route path="/bautizo" element={<PageBoundary><SeoEventPage eventKey="bautizo" /></PageBoundary>} />
-        <Route path="/comunion" element={<PageBoundary><SeoEventPage eventKey="comunion" /></PageBoundary>} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<PageBoundary><Dashboard /></PageBoundary>} />
-            <Route path="/event/:id" element={<PageBoundary><EventAdmin /></PageBoundary>} />
-            <Route path="/account" element={<PageBoundary><Account /></PageBoundary>} />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><PageBoundary><Landing /></PageBoundary></PageTransition>} />
+          <Route path="/login" element={<PageTransition><PageBoundary><Login /></PageBoundary></PageTransition>} />
+          <Route path="/register" element={<PageTransition><PageBoundary><Register /></PageBoundary></PageTransition>} />
+          <Route path="/pricing" element={<PageTransition><PageBoundary><Pricing /></PageBoundary></PageTransition>} />
+          <Route path="/e/:slug" element={<PageTransition><PageBoundary><EventGuest /></PageBoundary></PageTransition>} />
+          <Route path="/verify-email" element={<PageTransition><PageBoundary><VerifyEmail /></PageBoundary></PageTransition>} />
+          <Route path="/forgot-password" element={<PageTransition><PageBoundary><ForgotPassword /></PageBoundary></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><PageBoundary><ResetPassword /></PageBoundary></PageTransition>} />
+          <Route path="/baby-shower" element={<PageTransition><PageBoundary><SeoEventPage eventKey="baby-shower" /></PageBoundary></PageTransition>} />
+          <Route path="/boda" element={<PageTransition><PageBoundary><SeoEventPage eventKey="boda" /></PageBoundary></PageTransition>} />
+          <Route path="/cumpleanos" element={<PageTransition><PageBoundary><SeoEventPage eventKey="cumpleanos" /></PageBoundary></PageTransition>} />
+          <Route path="/bautizo" element={<PageTransition><PageBoundary><SeoEventPage eventKey="bautizo" /></PageBoundary></PageTransition>} />
+          <Route path="/comunion" element={<PageTransition><PageBoundary><SeoEventPage eventKey="comunion" /></PageBoundary></PageTransition>} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<PageTransition><PageBoundary><Dashboard /></PageBoundary></PageTransition>} />
+              <Route path="/event/:id" element={<PageTransition><PageBoundary><EventAdmin /></PageBoundary></PageTransition>} />
+              <Route path="/account" element={<PageTransition><PageBoundary><Account /></PageBoundary></PageTransition>} />
+            </Route>
+            <Route path="/onboarding" element={<PageTransition><PageBoundary><Onboarding /></PageBoundary></PageTransition>} />
           </Route>
-          <Route path="/onboarding" element={<PageBoundary><Onboarding /></PageBoundary>} />
-        </Route>
-        <Route path="/terminos-y-condiciones" element={<PageBoundary><TermsConditions /></PageBoundary>} />
-        <Route path="/terms-and-conditions" element={<PageBoundary><TermsConditions /></PageBoundary>} />
-        <Route path="/politica-de-privacidad" element={<PageBoundary><PrivacyPolicy /></PageBoundary>} />
-        <Route path="/privacy-policy" element={<PageBoundary><PrivacyPolicy /></PageBoundary>} />
-        <Route path="/politica-de-cookies" element={<PageBoundary><CookiesPolicy /></PageBoundary>} />
-        <Route path="/cookies-policy" element={<PageBoundary><CookiesPolicy /></PageBoundary>} />
-        <Route path="/derechos-arco" element={<PageBoundary><ArcoRights /></PageBoundary>} />
-        <Route path="/arco-rights" element={<PageBoundary><ArcoRights /></PageBoundary>} />
-        <Route path="*" element={<PageBoundary><NotFound /></PageBoundary>} />
-      </Routes>
+          <Route path="/terminos-y-condiciones" element={<PageTransition><PageBoundary><TermsConditions /></PageBoundary></PageTransition>} />
+          <Route path="/terms-and-conditions" element={<PageTransition><PageBoundary><TermsConditions /></PageBoundary></PageTransition>} />
+          <Route path="/politica-de-privacidad" element={<PageTransition><PageBoundary><PrivacyPolicy /></PageBoundary></PageTransition>} />
+          <Route path="/privacy-policy" element={<PageTransition><PageBoundary><PrivacyPolicy /></PageBoundary></PageTransition>} />
+          <Route path="/politica-de-cookies" element={<PageTransition><PageBoundary><CookiesPolicy /></PageBoundary></PageTransition>} />
+          <Route path="/cookies-policy" element={<PageTransition><PageBoundary><CookiesPolicy /></PageBoundary></PageTransition>} />
+          <Route path="/derechos-arco" element={<PageTransition><PageBoundary><ArcoRights /></PageBoundary></PageTransition>} />
+          <Route path="/arco-rights" element={<PageTransition><PageBoundary><ArcoRights /></PageBoundary></PageTransition>} />
+          <Route path="*" element={<PageTransition><PageBoundary><NotFound /></PageBoundary></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
     </Suspense>
     </QueryProvider>
   );
