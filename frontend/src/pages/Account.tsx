@@ -196,7 +196,6 @@ export default function Account() {
                      subscription.status === 'past_due' ? 'Vencido' :
                      subscription.status === 'canceled' ? 'Cancelado' :
                      subscription.status === 'incomplete' ? 'Incompleto' :
-                     subscription.status === 'incomplete_expired' ? 'Expirado' :
                      subscription.status === 'trialing' ? 'Prueba' :
                      subscription.status}
                   </span></p>
