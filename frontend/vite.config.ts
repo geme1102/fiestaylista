@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       selfDestroying: true,
-      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/icon-*.png'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/icon-*.png'],
       manifest: {
         name: 'Fiesta y Lista',
         short_name: 'FiestaL',
