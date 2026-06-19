@@ -69,7 +69,7 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
               whileHover={{ y: -12, scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="relative snap-center shrink-0 w-[80vw] sm:w-[260px] md:w-[320px] flex flex-col items-center p-8 md:p-10
-                         bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-2xl rounded-[2.5rem] md:rounded-[3rem]
+                         bg-surface/70 backdrop-blur-2xl rounded-[2.5rem] md:rounded-[3rem]
                          shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06),0_4px_10px_-5px_rgba(0,0,0,0.02),inset_0_0_0_1px_rgba(255,255,255,0.7),inset_0_4px_15px_rgba(255,255,255,0.9)]
                          hover:shadow-[0_40px_60px_-15px_rgba(140,0,83,0.25),0_15px_25px_-10px_rgba(210,50,132,0.15),inset_0_0_0_2px_rgba(255,255,255,1),inset_0_4px_25px_rgba(255,255,255,1)]
                          active:shadow-[0_15px_25px_-5px_rgba(140,0,83,0.2),inset_0_0_0_2px_rgba(255,255,255,0.9),inset_0_4px_20px_rgba(255,255,255,0.8)]
@@ -91,7 +91,7 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
                 {event.title}
               </h3>
 
-              <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 border border-gray-100/50 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-all duration-300">
+              <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-low border border-outline-variant/20 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-all duration-300">
                 <span className="text-xs md:text-sm font-semibold tracking-wide transition-colors text-brand-pink group-hover:text-white">Crear lista</span>
                 <ArrowRight strokeWidth={2.5} className="w-4 h-4 text-brand-pink group-hover:text-white group-hover:translate-x-1 transition-transform" />
               </div>
@@ -105,14 +105,14 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
       <div className="hidden md:flex justify-center items-center gap-6 mt-8">
         <button
           onClick={scrollLeft}
-          className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-white hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
+          className="w-14 h-14 bg-surface/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-surface hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
           aria-label="Desplazar a la izquierda"
         >
           <ChevronLeft strokeWidth={2.5} className="w-7 h-7 -ml-1" />
         </button>
         <button
           onClick={scrollRight}
-          className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-white hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
+          className="w-14 h-14 bg-surface/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-[0_8px_30px_-5px_rgba(0,0,0,0.15)] border border-white/60 text-brand-berry hover:bg-surface hover:text-brand-pink hover:scale-105 hover:shadow-[0_15px_40px_-5px_rgba(210,50,132,0.25)] transition-all focus:outline-none"
           aria-label="Desplazar a la derecha"
         >
           <ChevronRight strokeWidth={2.5} className="w-7 h-7 -mr-1" />

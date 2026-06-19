@@ -24,11 +24,8 @@ export default function Layout() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
+              <Link to="/dashboard" className="shrink-0">
 <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
-                <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
-                  Fiesta y Lista
-                </span>
               </Link>
               <div className="hidden md:flex items-center gap-1">
                 {NAV_ITEMS.map((item) => (
