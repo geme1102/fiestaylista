@@ -10,7 +10,7 @@ interface LandingHeroProps {
 export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingHeroProps) {
   return (
     <section className="relative overflow-hidden min-h-[calc(100dvh-4rem)] flex flex-col justify-center z-10">
-      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/30 to-white pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface/30 to-surface pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
