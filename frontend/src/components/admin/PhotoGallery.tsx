@@ -58,7 +58,7 @@ export function PhotoGallery({
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectPreview(photo); } }}
                 role="button"
                 tabIndex={0}
-                className="bg-white p-2.5 rounded-[22px] border border-gray-200/70 shadow-sm relative group overflow-hidden cursor-pointer hover:border-[#a21b53]/45 transition-all duration-300"
+                className="bg-surface p-2.5 rounded-[22px] border border-gray-200/70 shadow-sm relative group overflow-hidden cursor-pointer hover:border-[#a21b53]/45 transition-all duration-300"
               >
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
 

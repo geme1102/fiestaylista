@@ -10,8 +10,8 @@ export default function NotFound() {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-screen flex flex-col font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden"
-      style={{ backgroundColor: '#faf9f8',
+      <div className="min-h-screen flex flex-col font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden bg-surface"
+      style={{
         backgroundImage: `
           radial-gradient(at 0% 0%, rgba(210, 50, 132, 0.15) 0px, transparent 50%),
           radial-gradient(at 100% 0%, rgba(254, 147, 44, 0.1) 0px, transparent 50%),

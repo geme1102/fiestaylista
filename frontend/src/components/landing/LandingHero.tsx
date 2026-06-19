@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { SocialProofFloating } from './SocialProofFloating';
-import LiveCounter from '../LiveCounter';
 
 interface LandingHeroProps {
   typedText: string;
@@ -11,7 +9,7 @@ interface LandingHeroProps {
 
 export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingHeroProps) {
   return (
-    <section className="relative overflow-hidden pt-20 pb-28 z-10">
+    <section className="relative overflow-hidden pt-14 pb-16 z-10">
       <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/30 to-white pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
@@ -99,16 +97,7 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-12"
-          >
-            <SocialProofFloating />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
             className="mt-8 flex flex-wrap items-center justify-center gap-3"
           >
             <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border border-amber-200/30 bg-surface/60 text-on-surface-variant shadow-sm">
@@ -125,13 +114,6 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
             </span>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.5 }}
-          >
-            <LiveCounter />
-          </motion.div>
         </motion.div>
       </div>
 

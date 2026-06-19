@@ -81,10 +81,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       const errorId = generateErrorId();
       return (
         <main
-          className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden"
-          style={{
-            background: 'radial-gradient(circle at top left, #ffffff 0%, #faf9f8 50%, #f4f3f2 100%)',
-          }}
+          className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden bg-surface"
         >
           <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary-container/5 rounded-full blur-[120px]" />
@@ -94,10 +91,10 @@ export default class ErrorBoundary extends Component<Props, State> {
                 ref={this.panelRef}
                 className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] flex items-center justify-center text-6xl md:text-7xl shadow-xl transition-all duration-500 hover:rotate-3"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.4)',
+                  background: 'rgba(250, 249, 248, 0.4)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  border: '1px solid rgba(250, 249, 248, 0.3)',
                   boxShadow: '0 0 40px rgba(177, 14, 107, 0.15)',
                   animation: 'float 6s ease-in-out infinite',
                 }}
@@ -129,7 +126,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md border border-outline-variant text-on-surface active:scale-95 transition-all duration-200 group bg-white/70 backdrop-blur-sm"
+                  className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-label-md text-label-md border border-outline-variant text-on-surface active:scale-95 transition-all duration-200 group bg-surface/70 backdrop-blur-sm"
                 >
                   <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">refresh</span>
                   Recargar página

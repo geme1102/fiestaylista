@@ -27,7 +27,7 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
   ];
 
   return (
-    <section className="pt-16 md:pt-24 pb-12 md:pb-20">
+    <section className="pt-10 md:pt-14 pb-8 md:pb-12">
       <div className="max-w-4xl mx-auto text-center mb-10 md:mb-14 px-4 md:px-8">
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
@@ -50,8 +50,8 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
       </div>
 
       <div className="relative w-full">
-        <div className="hidden md:block absolute top-0 left-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-r from-[#fdfbfb] via-[#fdfbfb]/80 to-transparent z-10 pointer-events-none"></div>
-        <div className="hidden md:block absolute top-0 right-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-l from-[#fdfbfb] via-[#fdfbfb]/80 to-transparent z-10 pointer-events-none"></div>
+        <div className="hidden md:block absolute top-0 left-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-r from-surface via-surface/80 to-transparent z-10 pointer-events-none"></div>
+        <div className="hidden md:block absolute top-0 right-0 bottom-0 w-16 lg:w-24 xl:w-40 bg-gradient-to-l from-surface via-surface/80 to-transparent z-10 pointer-events-none"></div>
 
         <motion.div
           ref={carouselRef}

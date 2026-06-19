@@ -185,7 +185,7 @@ export default function ArcoRights() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -340,7 +340,7 @@ export default function ArcoRights() {
 
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">{content.cancel.title}</h3>
             <p className="text-sm text-on-surface-variant">{content.cancel.confirm}</p>
             <input

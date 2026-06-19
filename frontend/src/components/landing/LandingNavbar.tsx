@@ -8,13 +8,11 @@ interface LandingNavbarProps {
 
 export function LandingNavbar({ scrolled, isAuthenticated }: LandingNavbarProps) {
   return (
-    <nav className={`sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-white/20 shadow-sm transition-all duration-300 ${scrolled ? 'shadow-primary/5' : ''}`}>
+    <nav className={`sticky top-0 z-50 crystal-nav border-b border-white/20 transition-all duration-300 ${scrolled ? 'shadow-primary/5' : ''}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-all duration-300">
-              F
-            </div>
+            <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
             <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit tracking-tight">
               Fiesta y Lista
             </span>

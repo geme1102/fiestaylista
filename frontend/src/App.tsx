@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
@@ -50,6 +50,16 @@ const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'));
 const ArcoRights = lazy(() => import('./pages/ArcoRights'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SeoEventPage = lazy(() => import('./pages/SeoEventPage'));
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function TitleUpdater() {
   const location = useLocation();
@@ -141,6 +151,7 @@ export default function App() {
 
   return (
     <QueryProvider>
+      <ScrollToTop />
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>}>
       <TitleUpdater />
       <AnimatePresence mode="wait">

@@ -18,15 +18,13 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
 
   return (
     <header
-      className={`sticky top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-white/20 shadow-rose-500/10 shadow-lg transition-all duration-300 ${
+      className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 ${
         scrolled ? 'h-16 shadow-md' : 'h-20'
       }`}
     >
       <div className="flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full">
         <Link to="/" className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-10 h-10 bg-gradient-to-tr from-primary to-secondary-container rounded-xl flex items-center justify-center text-on-primary font-headline-md shadow-lg shadow-primary/20 transform group-hover:scale-110 transition-transform duration-300">
-            F
-          </div>
+<img src="/logo.png" alt="Fiesta y Lista" className="w-10 h-10 object-contain" />
           <span className="font-headline-md text-headline-md font-extrabold text-on-surface hidden sm:block">
             Fiesta y Lista
           </span>

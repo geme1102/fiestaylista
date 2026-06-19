@@ -11,7 +11,7 @@ const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS]
 
 export function LandingTestimonials() {
   return (
-    <section className="space-fluid-section bg-surface-container-lowest/70 backdrop-blur-sm overflow-hidden relative z-10">
+    <section className="pt-12 md:pt-20 pb-12 md:pb-20 bg-surface/70 backdrop-blur-sm overflow-hidden relative z-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

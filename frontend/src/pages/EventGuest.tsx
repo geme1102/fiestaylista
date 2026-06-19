@@ -94,7 +94,7 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF9F8] animate-pulse">
+      <div className="min-h-screen bg-surface animate-pulse">
         <div className="pt-16 w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
@@ -177,10 +177,10 @@ export default function EventGuest() {
         </script>
       </Helmet>
 
-      <div className={`min-h-screen bg-[#FAF9F8] transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <div className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         <ConfettiCanvas ref={confettiRef} />
 
-        <header className="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-4 h-16">
+        <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
             <Link to="/" className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</Link>
           </div>
@@ -487,7 +487,7 @@ export default function EventGuest() {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-20 px-4 pb-safe">
+        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-20 px-4 pb-safe">
           <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>

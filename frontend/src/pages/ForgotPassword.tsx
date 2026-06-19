@@ -38,14 +38,12 @@ export default function ForgotPassword() {
         <meta name="twitter:title" content="Recuperar Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Recupera tu contraseña de Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen bg-gradient-to-b from-primary-fixed/10 via-surface to-surface pb-24 sm:pb-0">
+      <div className="min-h-screen bg-surface pb-24 sm:pb-0">
         <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
-                F
-              </div>
+              <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>

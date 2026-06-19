@@ -298,7 +298,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       {canContribute && (
         <section className="space-y-4 mt-8">
           <h2 className="font-headline-md text-headline-md text-on-surface">Realiza tu Aporte</h2>
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-surface-variant space-y-6">
+          <div className="bg-surface rounded-3xl p-6 shadow-sm border border-surface-variant space-y-6">
             <div className="space-y-3">
               <p className="font-label-md text-label-md text-on-surface-variant">Selecciona un monto:</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

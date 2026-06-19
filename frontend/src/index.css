@@ -104,8 +104,8 @@
   --color-brand-peach: #ffb77d;
   --color-brand-lavender: #c0c1ff;
 
-  --color-glass-white: rgba(255, 255, 255, 0.7);
-  --color-glass-border: rgba(255, 255, 255, 0.5);
+  --color-glass-white: rgba(250, 249, 248, 0.7);
+  --color-glass-border: rgba(250, 249, 248, 0.5);
 
   --radius-sm: 0.25rem;
   --radius-default: 0.5rem;
@@ -371,14 +371,14 @@
 
 /* Organic clip path for photos */
 .glass-card {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(250, 249, 248, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(250, 249, 248, 0.3);
 }
 
 .glass-card-premium {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(250, 249, 248, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 0;
@@ -391,7 +391,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05));
+  background: linear-gradient(135deg, rgba(250,249,248,0.4), rgba(250,249,248,0.05));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -420,7 +420,7 @@
 
 /* Ghost button premium with reflective crystal border */
 .glass-ghost {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(250, 249, 248, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 0;
@@ -433,14 +433,14 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1));
+  background: linear-gradient(135deg, rgba(250,249,248,0.6), rgba(250,249,248,0.1));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
 .glass-ghost:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(250, 249, 248, 0.7);
   box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);
 }
 
@@ -497,13 +497,13 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
-  .glass-card-premium { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .glass-card { background: rgba(250, 249, 248, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .glass-card-premium { background: rgba(250, 249, 248, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
   .glass-card-premium::before { display: none; }
   .glass-ghost::before { display: none; }
   .crystal-glass-rose, .glass-panel, .glass-crystal,
   .glass-button-gold, .glass-button-primary, .glass-button-secondary {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(250, 249, 248, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.08);
   }
 }
@@ -522,20 +522,35 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Design glass panel utilities */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(250, 249, 248, 0.55);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(250, 249, 248, 0.5);
+}
+
+/* Navigation crystal glass effect - unified across all navbars */
+.crystal-nav {
+  background: linear-gradient(
+    180deg,
+    rgba(250, 249, 248, 0.75) 0%,
+    rgba(250, 249, 248, 0.55) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border-bottom: 1px solid rgba(250, 249, 248, 0.6);
+  box-shadow:
+    0 4px 24px -8px rgba(177, 14, 107, 0.06),
+    inset 0 1px 0 rgba(250, 249, 248, 0.9);
 }
 
 .glass-crystal {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(250, 249, 248, 0.85) 0%, rgba(250, 249, 248, 0.4) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(250, 249, 248, 0.8);
   box-shadow:
     0 12px 40px -10px rgba(162, 27, 83, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 1),
+    inset 0 1px 2px rgba(250, 249, 248, 1),
     inset 0 -1.5px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -558,13 +573,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .glass-button-secondary {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 245, 246, 0.5) 100%);
+  background: linear-gradient(135deg, rgba(250, 249, 248, 0.8) 0%, rgba(248, 245, 246, 0.5) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(250, 249, 248, 0.85);
   box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.02),
-    inset 0 1px 2px rgba(255, 255, 255, 1);
+    inset 0 1px 2px rgba(250, 249, 248, 1);
 }
 
 .luxury-card {
@@ -574,7 +589,7 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-6px);
   box-shadow:
     0 24px 50px -12px rgba(162, 27, 83, 0.12),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    inset 0 1px 2px rgba(250, 249, 248, 0.9);
   border-color: rgba(217, 124, 155, 0.35);
 }
 

@@ -128,7 +128,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
           })}
         </script>
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8]">
+      <div className="min-h-screen bg-surface">
         <NavbarPremium />
 
         <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
@@ -155,7 +155,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <h2 className="text-2xl font-bold text-on-surface mb-6 text-center font-outfit">Beneficios</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {content.benefits.map((b) => (
-                <div key={b} className="flex items-center gap-3 p-4 backdrop-blur-md bg-white/70 border border-white/20 rounded-xl shadow-sm">
+                <div key={b} className="flex items-center gap-3 p-4 backdrop-blur-md bg-surface/70 border border-white/20 rounded-xl shadow-sm">
                   <span className="material-symbols-outlined text-emerald-500 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <span className="text-on-surface">{b}</span>
                 </div>
@@ -167,7 +167,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <h2 className="text-2xl font-bold text-on-surface mb-6 text-center font-outfit">Preguntas Frecuentes</h2>
             <div className="max-w-2xl mx-auto space-y-3">
               {content.faq.map((faq) => (
-                <details key={faq.q} className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl group">
+                <details key={faq.q} className="backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl group">
                   <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-on-surface hover:bg-primary/5 rounded-2xl transition-colors">
                     {faq.q}
                     <span className="material-symbols-outlined ml-2 text-rose-500 group-open:rotate-180 transition-transform">expand_more</span>

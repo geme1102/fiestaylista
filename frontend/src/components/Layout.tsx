@@ -20,14 +20,12 @@ export default function Layout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-primary">
         Saltar al contenido principal
       </a>
-      <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+      <nav className="sticky top-0 z-50 crystal-nav border-b border-white/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-on-primary text-sm font-bold shadow-lg shadow-primary/25">
-                  F
-                </div>
+<img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
                 <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
@@ -114,7 +112,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-outline-variant/30 bg-surface-container-low">
+      <footer className="border-t border-outline-variant/30 bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
             <p>© {new Date().getFullYear()} fiestaylista.com. Todos los derechos reservados.</p>
@@ -128,7 +126,7 @@ export default function Layout() {
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-surface/70 backdrop-blur-2xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
         <div className="flex items-center justify-around h-16 px-4">
           {NAV_ITEMS.map((item) => (
             <Link

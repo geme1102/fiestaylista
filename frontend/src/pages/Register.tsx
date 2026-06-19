@@ -88,15 +88,13 @@ export default function Register() {
         <meta name="twitter:title" content="Registrarse - Fiesta y Lista" />
         <meta name="twitter:description" content="Crea tu cuenta gratis en Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen bg-[#FAF9F8] pb-24 sm:pb-0">
+      <div className="min-h-screen bg-surface pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
-                  F
-                </div>
+<img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
                 <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
@@ -111,7 +109,7 @@ export default function Register() {
               <p className="text-xs text-on-surface-variant/60 mt-2">Sin tarjeta de crédito. En 2 minutos tendrás tu lista lista.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
+            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Nombre

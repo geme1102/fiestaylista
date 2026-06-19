@@ -29,7 +29,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-white/90 rounded-3xl overflow-hidden shadow-xs border border-amber-100/50 relative group"
+        className="bg-surface/90 rounded-3xl overflow-hidden shadow-xs border border-amber-100/50 relative group"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-amber-50 via-white/98 to-white/98 backdrop-blur-xs flex flex-col items-center justify-center p-6 z-10 text-center border-2 border-amber-300/40 rounded-3xl">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow border border-amber-200 mb-2 animate-pulse">
@@ -70,7 +70,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#a21b53]/25 group overflow-hidden text-left"
+      className="bg-surface border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#a21b53]/25 group overflow-hidden text-left"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-50/60 to-transparent rounded-bl-full pointer-events-none -z-10" />
 

@@ -130,7 +130,7 @@ export default function VerifyEmail() {
 
   return (
     <>
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
+    <div className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
       <div className="text-center max-w-md">
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
           {status === 'verifying' ? (

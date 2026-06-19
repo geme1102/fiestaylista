@@ -51,7 +51,7 @@ export default function ResetPassword() {
   if (done) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
+        <div className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
           <div className="w-full max-w-md text-center">
             <span className="material-symbols-outlined text-5xl mb-4 block text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <h1 className="text-2xl font-bold text-on-surface mb-2">Contraseña actualizada</h1>
@@ -79,13 +79,11 @@ export default function ResetPassword() {
         <meta name="twitter:title" content="Nueva Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4 pb-24 sm:pb-0">
+      <div className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25">
-                F
-              </div>
+              <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>

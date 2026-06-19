@@ -7,8 +7,8 @@ interface LandingCTAProps {
 
 export function LandingCTA({ onNavigate }: LandingCTAProps) {
   return (
-    <section className="relative z-10 w-full py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto">
-      <div className="relative w-full bg-white rounded-[3rem] px-4 py-20 md:py-28 text-center overflow-hidden border border-gray-100 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
+    <section className="relative z-10 w-full py-10 md:py-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <div className="relative w-full bg-surface rounded-[3rem] px-4 py-14 md:py-20 text-center overflow-hidden border border-gray-100 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute inset-0 opacity-[0.06] mix-blend-multiply"
@@ -56,7 +56,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="relative z-10 flex flex-col items-center max-w-3xl mx-auto bg-white/60 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-14 border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
+          className="relative z-10 flex flex-col items-center max-w-3xl mx-auto bg-surface/60 backdrop-blur-3xl rounded-[2.5rem] p-6 md:p-10 border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
         >
           <h2 className="font-outfit text-4xl sm:text-5xl md:text-6xl font-bold text-stone-800 mb-4 tracking-tight drop-shadow-sm">
             ¿Listo para empezar?

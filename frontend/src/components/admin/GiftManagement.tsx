@@ -56,7 +56,7 @@ export function GiftManagement({
 
       <form
         onSubmit={(e) => { e.preventDefault(); onAddGift(); }}
-        className="bg-white/70 border border-rose-100/20 p-5 rounded-[28px] shadow-sm mb-6 text-left"
+        className="bg-surface/70 border border-rose-100/20 p-5 rounded-[28px] shadow-sm mb-6 text-left"
       >
         <h4 className="text-xs font-extrabold text-[#7e143f] uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
           <span>+ Agregar Regalo Personalizado</span>
@@ -70,7 +70,7 @@ export function GiftManagement({
             value={newGiftName}
             onChange={(e) => { onNewGiftNameChange(e.target.value); onShowSuggestionsChange(true); }}
             onKeyDown={(e) => { if (e.key === 'Escape') onShowSuggestionsChange(false); }}
-            className="flex-1 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97c9b]/35 bg-white text-gray-800"
+            className="flex-1 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97c9b]/35 bg-surface text-gray-800"
             role="combobox"
             aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
             aria-autocomplete="list"
@@ -89,7 +89,7 @@ export function GiftManagement({
         </div>
 
         {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-          <div className="mt-3 bg-white border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+          <div className="mt-3 bg-surface border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
             {filteredSuggestions.map((s) => (
               <button
                 key={s}

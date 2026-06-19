@@ -317,7 +317,7 @@ export default function EventAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf5f6] text-[#2c1f24] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#a21b53]/20 selection:text-[#a21b53]">
+    <div className="min-h-screen bg-surface text-[#2c1f24] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#a21b53]/20 selection:text-[#a21b53]">
 
       {/* Ambient glow backgrounds */}
       <div className="absolute top-[-180px] left-[-150px] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-pink-300/30 to-rose-400/20 blur-[130px] pointer-events-none -z-10 animate-pulse duration-[12000ms]" />
@@ -325,13 +325,13 @@ export default function EventAdmin() {
       <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-[#a21b53]/5 blur-[160px] pointer-events-none -z-10" />
 
       {/* Glossy Navigation Bar */}
-      <nav className="sticky top-0 z-40 backdrop-blur-md bg-white/75 border-b border-rose-100/15 px-4 py-4 md:px-8 flex items-center justify-between shadow-[0_2px_15px_rgba(162,27,83,0.02)]">
+      <nav className="sticky top-0 z-40 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => navigate('/dashboard')}
-            className="p-2.5 hover:bg-[#a21b53]/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-[#a21b53] flex items-center justify-center bg-white shadow-sm"
+            className="p-2.5 hover:bg-[#a21b53]/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-[#a21b53] flex items-center justify-center bg-surface shadow-sm"
             aria-label="Regresar"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
@@ -358,14 +358,14 @@ export default function EventAdmin() {
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6 font-semibold px-2">
           <Link to="/dashboard" className="hover:text-rose-950 hover:underline transition-colors duration-200">Mis Eventos</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-          <span className="bg-white/70 border border-rose-100/35 px-3 py-1 rounded-full text-[#a21b53] font-black shadow-sm flex items-center gap-1">
+          <span className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-[#a21b53] font-black shadow-sm flex items-center gap-1">
             <Home className="w-3 h-3 text-[#a21b53]" />
             {event.title}
           </span>
         </div>
 
         {/* Main Event Card */}
-        <section className="relative bg-white/80 backdrop-blur-xl rounded-[32px] p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(162,27,83,0.06)] border border-white/70 mb-8 overflow-hidden">
+          <section className="relative bg-surface/80 backdrop-blur-xl rounded-[32px] p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(162,27,83,0.06)] border border-white/70 mb-8 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[5px] bg-gradient-to-r from-pink-300 via-rose-500 to-amber-300" />
 
           {/* Header row: avatar, title, toggle */}
@@ -430,7 +430,7 @@ export default function EventAdmin() {
             </div>
 
             {/* Active Toggle */}
-            <div className="flex items-center justify-between sm:justify-start gap-4 bg-white border border-[#a21b53]/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
+            <div className="flex items-center justify-between sm:justify-start gap-4 bg-surface border border-[#a21b53]/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
               <div className="flex flex-col text-left">
                 <span className="text-[9px] text-[#a21b53] font-extrabold tracking-widest uppercase">ESTADO DE EVENTO</span>
                 <span className={`text-xs font-semibold tracking-wide ${event.isActive ? 'text-emerald-700 font-extrabold' : 'text-gray-400 font-medium'}`}>
@@ -503,7 +503,7 @@ export default function EventAdmin() {
               <motion.button
                 whileHover={{ y: -3, scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative w-full bg-white/45 hover:bg-white/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-[#a21b53] py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
+                className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-[#a21b53] py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
                 <span>Vista Previa de Invitado</span>
@@ -561,7 +561,7 @@ export default function EventAdmin() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+              <div className="bg-surface border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
                 <div className="p-2.5 bg-[#a21b53]/5 text-[#a21b53] rounded-xl shrink-0">
                   <Calendar className="w-5 h-5 stroke-[2]" />
                 </div>
@@ -573,7 +573,7 @@ export default function EventAdmin() {
                 </div>
               </div>
 
-              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+              <div className="bg-surface border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
                 <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl shrink-0">
                   <MapPin className="w-5 h-5 stroke-[2]" />
                 </div>
@@ -583,7 +583,7 @@ export default function EventAdmin() {
                 </div>
               </div>
 
-              <div className="bg-[#fffdfd] border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
+              <div className="bg-surface border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
                 <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
                   <Info className="w-5 h-5 stroke-[2]" />
                 </div>
@@ -675,7 +675,7 @@ export default function EventAdmin() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[32px] max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden"
+              className="bg-surface rounded-[32px] max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-36 h-36 bg-pink-100/40 rounded-full blur-3xl -z-10 pointer-events-none" />
 
@@ -797,7 +797,7 @@ export default function EventAdmin() {
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.94, opacity: 0 }}
-              className="bg-[#fffdfb] rounded-[36px] max-w-md w-full p-6 md:p-8 shadow-2xl border border-orange-100 flex flex-col gap-4 text-center relative overflow-hidden"
+              className="bg-surface rounded-[36px] max-w-md w-full p-6 md:p-8 shadow-2xl border border-orange-100 flex flex-col gap-4 text-center relative overflow-hidden"
             >
               <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-amber-200/20 rounded-full blur-3xl -z-10 pointer-events-none" />
 
@@ -865,7 +865,7 @@ export default function EventAdmin() {
       )}
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
         <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>

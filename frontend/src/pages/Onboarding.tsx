@@ -62,8 +62,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen font-body-md text-on-surface overflow-hidden"
-      style={{ background: 'radial-gradient(circle at top left, #fff1f2 0%, #faf9f8 40%, #fdf2f8 100%)' }}
+    <div className="min-h-screen bg-surface font-body-md text-on-surface overflow-hidden"
     >
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 flex items-center justify-between px-gutter py-4 bg-transparent">

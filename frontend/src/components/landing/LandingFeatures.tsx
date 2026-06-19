@@ -3,8 +3,8 @@ import { Gift, Camera, Mail, BarChart3 } from 'lucide-react';
 
 export function LandingFeatures() {
   return (
-    <section className="pt-16 md:pt-24 pb-16 md:pb-24 px-4 md:px-8 max-w-6xl mx-auto">
-      <div className="text-center mb-10 md:mb-16">
+    <section className="pt-10 md:pt-16 pb-10 md:pb-16 px-4 md:px-8 max-w-6xl mx-auto">
+      <div className="text-center mb-8 md:mb-12">
         <motion.h2
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,7 +32,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.01 }}
           transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
-          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
+          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-bl from-brand-peach/30 via-brand-pink/10 to-transparent opacity-60 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
           <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-pink to-brand-peach p-1 shadow-[0_10px_25px_-5px_rgba(210,50,132,0.4)] group-hover:shadow-[0_15px_35px_-5px_rgba(210,50,132,0.5)] transition-shadow">
@@ -54,22 +54,16 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.02 }}
           transition={{ duration: 0.5, delay: 0.1, type: 'spring', bounce: 0.3 }}
-          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
+          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 to-brand-lavender/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
           <div className="relative z-10 w-full h-36 md:h-40 mb-4 md:mb-6 flex items-center justify-center perspective-[1000px]">
-            <motion.div className="absolute z-0 w-20 h-24 md:w-24 md:h-28 bg-white p-1 pb-4 md:pb-5 shadow-md rounded-sm -rotate-12 -ml-20 -mt-4 opacity-70 group-hover:-rotate-[16deg] group-hover:-ml-28 group-hover:opacity-90 transition-all duration-300">
+            <motion.div className="absolute z-0 w-20 h-24 md:w-24 md:h-28 bg-white p-1 pb-4 md:pb-5 shadow-md rounded-sm -rotate-12 -ml-20 -mt-4 opacity-70 transition-all duration-300">
               <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1525268771113-32d9e9021a97?auto=format&fit=crop&q=80&w=200" alt="Fiesta" className="w-full h-full object-cover" loading="lazy" />
               </div>
             </motion.div>
-            <motion.div className="absolute z-10 w-24 h-28 md:w-28 md:h-32 bg-white p-1.5 pb-5 md:pb-6 shadow-lg rounded-sm rotate-12 ml-16 md:ml-20 mt-4 group-hover:rotate-[16deg] group-hover:ml-24 group-hover:scale-105 transition-all duration-300">
-              <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1530103862676-de8892ebe853?auto=format&fit=crop&q=80&w=200" alt="Celebración" className="w-full h-full object-cover" loading="lazy" />
-              </div>
-            </motion.div>
-            <motion.div className="absolute z-20 w-28 h-32 md:w-32 md:h-36 bg-white p-2 pb-6 md:pb-8 shadow-xl rounded-sm -rotate-3 group-hover:rotate-0 group-hover:scale-110 group-hover:-mt-4 transition-all duration-300">
+            <motion.div className="absolute z-20 w-28 h-32 md:w-32 md:h-36 bg-white p-2 pb-6 md:pb-8 shadow-xl rounded-sm -rotate-3 transition-all duration-300">
               <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=200" alt="Evento" className="w-full h-full object-cover" loading="lazy" />
               </div>
@@ -118,7 +112,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.01 }}
           transition={{ duration: 0.5, delay: 0.3, type: 'spring', bounce: 0.3 }}
-          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-white/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
+          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
         >
           <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 
@@ -142,7 +136,7 @@ export function LandingFeatures() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.7, delay: 0.3 }}
-        className="mt-16 md:mt-24 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-4"
+        className="mt-10 md:mt-14 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-4"
       >
         {[
           { value: '+1,000', label: 'Eventos creados' },
