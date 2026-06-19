@@ -108,7 +108,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             </span>
           </div>
 
-          <h4 className="text-[17px] font-extrabold text-gray-900 mt-2 tracking-tight group-hover:text-[#a21b53] transition-colors capitalize">
+          <h4 className="text-base sm:text-lg font-extrabold text-gray-900 mt-2 tracking-tight group-hover:text-[#a21b53] transition-colors capitalize">
             {gift.name}
           </h4>
           <p className="text-gray-500 text-xs font-semibold leading-normal mt-0.5">

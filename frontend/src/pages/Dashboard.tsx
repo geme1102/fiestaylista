@@ -174,7 +174,7 @@ export default function Dashboard() {
       </div>
 
       {events.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           {[
             { label: 'Eventos', value: events.length, icon: 'calendar_month' },
             { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard' },
