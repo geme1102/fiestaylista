@@ -25,7 +25,7 @@ export default function Layout() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="shrink-0">
-<img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
+<img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" />
               </Link>
               <div className="hidden md:flex items-center gap-1">
                 {NAV_ITEMS.map((item) => (

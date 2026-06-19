@@ -12,7 +12,7 @@ export function LandingNavbar({ scrolled, isAuthenticated }: LandingNavbarProps)
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="group">
-            <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
+            <img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" />
           </Link>
           <div className="flex items-center gap-3">
             {isAuthenticated ? (

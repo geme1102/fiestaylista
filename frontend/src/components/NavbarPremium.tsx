@@ -24,7 +24,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
     >
       <div className="flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full">
         <Link to="/" className="group cursor-pointer">
-<img src="/logo.png" alt="Fiesta y Lista" className="w-10 h-10 object-contain" />
+<img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" />
         </Link>
 
         <div className="flex items-center gap-4">
