@@ -108,7 +108,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <Outlet />
       </main>
 

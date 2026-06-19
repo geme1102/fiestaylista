@@ -147,21 +147,26 @@ export default function Dashboard() {
   const dashboardContent = (
     <div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit">
-            Mis Eventos <span className="text-on-surface-variant/70 font-normal">({eventCount})</span>
-            <span className="ml-3 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold align-middle">
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit tracking-tight">
+            Mis Eventos <span className="text-on-surface-variant/50 font-normal text-xl sm:text-2xl">({eventCount})</span>
+          </h1>
+          <div className="flex items-center gap-3 mt-2">
+            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {user?.tier === 'free' ? 'redeem' : 'auto_awesome'}
+              </span>
               {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
             </span>
-          </h1>
-          <p className="text-sm text-on-surface-variant mt-1">
-            Tus celebraciones, todas en un solo lugar.
-          </p>
+            <span className="text-sm text-on-surface-variant/70">
+              Tus celebraciones, todas en un solo lugar.
+            </span>
+          </div>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
         >
           <span className="material-symbols-outlined text-lg">add</span>
           <span className="hidden sm:inline">Nuevo Evento</span>
@@ -169,19 +174,19 @@ export default function Dashboard() {
       </div>
 
       {events.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-10">
           {[
             { label: 'Eventos', value: events.length, icon: 'calendar_month' },
             { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard' },
             { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings' },
           ].map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl p-4 md:p-5 flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary-fixed flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">{stat.icon}</span>
+            <div key={stat.label} className="glass rounded-2xl p-5 md:p-6 flex items-center gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-xl text-primary">{stat.icon}</span>
               </div>
-              <div>
-                <p className="text-xl md:text-2xl font-bold text-on-surface">{stat.value}</p>
-                <p className="text-xs text-on-surface-variant">{stat.label}</p>
+              <div className="min-w-0">
+                <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{stat.value}</p>
+                <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
               </div>
             </div>
           ))}
@@ -189,9 +194,14 @@ export default function Dashboard() {
       )}
 
       {events.length === 0 ? (
-        <section className="mt-8 text-center py-12 px-6 rounded-[40px] border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest/50">
-          <h2 className="text-2xl font-bold text-on-surface mb-3 font-outfit">🎉 ¿Qué evento quieres crear?</h2>
-          <p className="text-sm text-on-surface-variant mb-8">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
+        <section className="mt-8 text-center py-14 px-8 rounded-[40px] border border-outline-variant/20 bg-surface-container-lowest/40 shadow-sm">
+          <div className="max-w-sm mx-auto mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-5 shadow-lg shadow-primary/20">
+              <span className="material-symbols-outlined text-3xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>celebration</span>
+            </div>
+            <h2 className="text-2xl font-bold text-on-surface font-outfit tracking-tight">¿Qué evento quieres crear?</h2>
+            <p className="text-sm text-on-surface-variant/70 mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {ONBOARDING_TYPES.map((type) => (
               <button
@@ -200,11 +210,11 @@ export default function Dashboard() {
                   setFormData({ ...formData, eventType: type });
                   setShowCreateModal(true);
                 }}
-                className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-105 transition-transform min-h-[120px]"
+                className="p-6 glass rounded-3xl flex flex-col items-center gap-3 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 min-h-[130px] group"
                 aria-label={`Crear lista de ${EVENT_LABELS[type]}`}
               >
-                <span className="text-4xl">{EVENT_ICONS[type]}</span>
-                <span className="font-bold text-sm text-on-surface-variant">{EVENT_LABELS[type]}</span>
+                <span className="text-4xl group-hover:scale-110 transition-transform duration-300">{EVENT_ICONS[type]}</span>
+                <span className="font-bold text-sm text-on-surface-variant group-hover:text-primary transition-colors">{EVENT_LABELS[type]}</span>
               </button>
             ))}
           </div>
@@ -221,82 +231,79 @@ export default function Dashboard() {
                 return (
                   <div
                     key={event.id}
-                    className="glass rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow group relative"
+                    className="glass rounded-3xl overflow-hidden flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group relative hover:-translate-y-0.5"
                   >
                     <div className="h-2" style={{ background: theme.primary }} />
-                    <div className="p-6 flex-1">
+                    <div className="p-6 flex-1 flex flex-col">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-primary-fixed rounded-2xl flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 bg-primary-fixed rounded-2xl flex items-center justify-center text-2xl shadow-inner">
                           {EVENT_ICONS[event.eventType]}
                         </div>
                         {isBoosted && (
-                          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 group relative" title="3x más visitas en tu lista">
+                          <span className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-amber-200/50 shadow-sm">
                             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
                             BOOST
-                            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
-                              3x más visitas
-                            </span>
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-bold text-on-surface mb-2 truncate">{event.title}</h3>
+                      <h3 className="text-lg font-bold text-on-surface mb-3 truncate tracking-tight">{event.title}</h3>
 
-                      <div className="space-y-3 mb-6">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-on-surface-variant">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? ` · ${event.photoCount} fotos` : ''}</span>
-                          <span className="font-bold" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
+                      <div className="space-y-3 mb-5">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-on-surface-variant/70 font-medium">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? <span className="ml-2 pl-2 border-l border-outline-variant/20">{event.photoCount} fotos</span> : ''}</span>
+                          <span className="font-bold text-sm" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
                         </div>
-                        <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                        <div className="w-full h-2.5 bg-surface-container-highest rounded-full overflow-hidden shadow-inner">
                           <div
-                            className="h-full rounded-full transition-all duration-500"
+                            className="h-full rounded-full transition-all duration-700 ease-out"
                             style={{ width: `${progress}%`, background: `linear-gradient(to right, ${theme.primary}, ${theme.dark})` }}
                           />
                         </div>
 
                         {fund ? (
-                          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/30 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm font-bold text-amber-600">
-                              <span className="material-symbols-outlined text-sm">savings</span>
+                          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200/30 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-2.5 text-sm font-bold text-amber-700">
+                              <span className="material-symbols-outlined text-base">savings</span>
                               Recaudado: {formatCOP(fund.collectedAmount)}
                             </div>
-                            <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">COP</span>
+                            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-widest bg-amber-100/50 px-2 py-0.5 rounded-md">COP</span>
                           </div>
                         ) : (
                           <Link
                             to={`/event/${event.id}`}
-                            className="flex items-center gap-2 text-sm font-medium text-primary/70 hover:text-primary transition-colors group"
+                            className="flex items-center gap-2 text-sm font-medium text-primary/60 hover:text-primary transition-all group/link"
                           >
-                            <span className="material-symbols-outlined text-sm">add_circle</span>
+                            <span className="material-symbols-outlined text-base">add_circle</span>
                             <span>Activar Lluvia de Sobres</span>
-                            <span className="material-symbols-outlined text-sm opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all">arrow_forward</span>
+                            <span className="material-symbols-outlined text-sm opacity-0 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all">arrow_forward</span>
                           </Link>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 pt-4 border-t border-outline-variant/30">
+                      <div className="flex items-center gap-2 pt-4 border-t border-outline-variant/20 mt-auto">
                         <Link
                           to={`/event/${event.id}`}
-                          className="flex-1 text-center px-3 py-2.5 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all hover:opacity-90"
-                          style={{ background: theme.primary }}
+                          className="flex-1 text-center px-4 py-2.5 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90 active:scale-[0.98]"
+                          style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.dark})` }}
                           aria-label={`Administrar ${event.title}`}
                         >
                           Administrar
                         </Link>
                         <button
                           onClick={() => copyLink(event.slug)}
-                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant/30 rounded-xl text-on-surface-variant hover:bg-primary-fixed hover:text-primary transition-all duration-200"
                           aria-label={`Copiar enlace de ${event.title}`}
                         >
-                          <span className="material-symbols-outlined text-sm">link</span>
+                          <span className="material-symbols-outlined text-base">link</span>
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(event.id)}
                           disabled={deleting === event.id}
-                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant rounded-xl text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant/30 rounded-xl text-red-300 hover:bg-red-50 hover:text-red-500 transition-all duration-200 disabled:opacity-50"
                           aria-label={`Eliminar ${event.title}`}
                         >
-                          {deleting === event.id ? '...' : <span className="material-symbols-outlined text-sm">delete</span>}
+                          {deleting === event.id ? '...' : <span className="material-symbols-outlined text-base">delete</span>}
                         </button>
                       </div>
                     </div>

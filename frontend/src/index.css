@@ -398,6 +398,14 @@
   pointer-events: none;
 }
 
+.glass {
+  background: rgba(250, 249, 248, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(250, 249, 248, 0.5);
+  box-shadow: 0 4px 24px rgba(177, 14, 107, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
 .primary-gradient {
   background: linear-gradient(135deg, #b10e6b 0%, #d23284 100%);
 }
