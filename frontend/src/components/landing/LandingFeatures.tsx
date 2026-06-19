@@ -56,7 +56,7 @@ export function LandingFeatures() {
           transition={{ duration: 0.5, delay: 0.1, type: 'spring', bounce: 0.3 }}
           className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 to-brand-lavender/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-pink/5 to-brand-peach/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
           <div className="relative z-10 w-full h-36 md:h-40 mb-4 md:mb-6 flex items-center justify-center perspective-[1000px]">
             <motion.div className="absolute z-0 w-20 h-24 md:w-24 md:h-28 bg-white p-1 pb-4 md:pb-5 shadow-md rounded-sm -rotate-12 -ml-20 -mt-4 opacity-70 transition-all duration-300">
@@ -114,7 +114,7 @@ export function LandingFeatures() {
           transition={{ duration: 0.5, delay: 0.3, type: 'spring', bounce: 0.3 }}
           className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
         >
-          <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-lavender/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
+          <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-pink/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 
           <div className="relative z-10 text-center sm:text-left flex-1 order-2 sm:order-1">
             <h3 className="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-3 md:mb-4">Tú ves todo</h3>
@@ -123,9 +123,9 @@ export function LandingFeatures() {
             </p>
           </div>
 
-          <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 order-1 sm:order-2 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-blue to-brand-lavender p-1 shadow-[0_10px_25px_-5px_rgba(47,46,190,0.3)] group-hover:shadow-[0_15px_35px_-5px_rgba(47,46,190,0.4)] transition-shadow">
+          <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 order-1 sm:order-2 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-pink to-brand-peach p-1 shadow-[0_10px_25px_-5px_rgba(210,50,132,0.3)] group-hover:shadow-[0_15px_35px_-5px_rgba(210,50,132,0.4)] transition-shadow">
             <div className="w-full h-full bg-white rounded-[1rem] md:rounded-[20px] flex items-center justify-center">
-              <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-brand-blue" strokeWidth={1.5} />
+              <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-brand-pink" strokeWidth={1.5} />
             </div>
           </div>
         </motion.div>

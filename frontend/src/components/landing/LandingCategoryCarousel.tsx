@@ -19,10 +19,10 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
 
   const events = [
     { title: 'Boda', icon: Gem, color: 'from-brand-peach/50 to-brand-pink/20', glow: 'bg-brand-pink' },
-    { title: 'Baby Shower', icon: Baby, color: 'from-brand-blue/20 to-brand-lavender/50', glow: 'bg-brand-blue' },
+    { title: 'Baby Shower', icon: Baby, color: 'from-brand-pink/20 to-brand-berry/30', glow: 'bg-brand-pink' },
     { title: 'Cumpleaños', icon: Cake, color: 'from-amber-200 to-rose-200', glow: 'bg-amber-400' },
     { title: 'Bautizo', icon: Droplet, color: 'from-emerald-100 to-teal-200/80', glow: 'bg-teal-400' },
-    { title: 'Comunión', icon: Sun, color: 'from-brand-lavender/40 to-brand-peach/20', glow: 'bg-brand-peach' },
+    { title: 'Comunión', icon: Sun, color: 'from-brand-peach/20 to-brand-pink/20', glow: 'bg-brand-pink' },
     { title: 'Casa Shower', icon: Home, color: 'from-orange-100 to-amber-200/60', glow: 'bg-orange-400' },
   ];
 

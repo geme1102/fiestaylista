@@ -23,8 +23,11 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
       }`}
     >
       <div className="flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full">
-        <Link to="/" className="group cursor-pointer">
+        <Link to="/" className="flex items-center gap-3 group cursor-pointer">
 <img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" />
+          <span className="font-headline-md text-headline-md font-extrabold text-on-surface hidden sm:block">
+            Fiesta y Lista
+          </span>
         </Link>
 
         <div className="flex items-center gap-4">
