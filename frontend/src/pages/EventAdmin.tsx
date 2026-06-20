@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -72,9 +72,10 @@ export default function EventAdmin() {
 
   const loadEvent = useCallback(async () => {
     try {
+      if (!id) return;
       const [eventRes, fundRes] = await Promise.all([
         apiClient.get<{ event: AdminEvent & { gifts?: Gift[]; photos?: Photo[] } }>(`/api/events/${id}`),
-        getCashFund(id!),
+        getCashFund(id),
       ]);
       const ev = eventRes.event;
       setEvent(ev);
@@ -98,6 +99,14 @@ export default function EventAdmin() {
     loadEvent();
   }, [id, loadEvent]);
 
+  const debouncedLoadEvent = useMemo(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { loadEvent(); timer = null; }, 1000);
+    };
+  }, [loadEvent]);
+
   useSSE({
     eventId: id ?? '',
     sseTokenEndpoint: id ? `/api/events/${id}/gifts/sse-token` : '',
@@ -105,11 +114,11 @@ export default function EventAdmin() {
     initialRetryDelay: 1000,
     onGiftClaimed: (data) => {
       showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
-      loadEvent();
+      debouncedLoadEvent();
     },
   });
 
-  const handleAddGift = async () => {
+  const handleAddGift = useCallback(async () => {
     if (!newGiftName.trim() || addingGift) return;
     setAddingGift(true);
     try {
@@ -122,9 +131,9 @@ export default function EventAdmin() {
     } finally {
       setAddingGift(false);
     }
-  };
+  }, [newGiftName, addingGift, id]);
 
-  const handleDeleteGift = async (giftId: string) => {
+  const handleDeleteGift = useCallback(async (giftId: string) => {
     setDeletingGiftId(giftId);
     try {
       await apiClient.del(`/api/events/${id}/gifts/${giftId}`);
@@ -134,9 +143,9 @@ export default function EventAdmin() {
     } finally {
       setDeletingGiftId(null);
     }
-  };
+  }, [id]);
 
-  const handleFreeGift = async (giftId: string) => {
+  const handleFreeGift = useCallback(async (giftId: string) => {
     setFreeingGiftId(giftId);
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${id}/gifts/${giftId}/free`);
@@ -146,9 +155,9 @@ export default function EventAdmin() {
     } finally {
       setFreeingGiftId(null);
     }
-  };
+  }, [id]);
 
-  const handleAddSuggestion = async (name: string) => {
+  const handleAddSuggestion = useCallback(async (name: string) => {
     setAddingGift(true);
     try {
       const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name });
@@ -159,7 +168,7 @@ export default function EventAdmin() {
     } finally {
       setAddingGift(false);
     }
-  };
+  }, [id]);
 
   const handleUpdateDetails = async () => {
     setUpdatingDetails(true);
@@ -181,7 +190,7 @@ export default function EventAdmin() {
     }
   };
 
-  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadPhoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!id) return;
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -217,9 +226,9 @@ export default function EventAdmin() {
     setUploadProgress(null);
     setUploading(false);
     e.target.value = '';
-  };
+  }, [id]);
 
-  const handleDeletePhoto = async (photoId: string) => {
+  const handleDeletePhoto = useCallback(async (photoId: string) => {
     setDeletePhotoConfirm(null);
     setDeletingPhoto(true);
     try {
@@ -231,7 +240,7 @@ export default function EventAdmin() {
     } finally {
       setDeletingPhoto(false);
     }
-  };
+  }, [id]);
 
   const handleBoost = async () => {
     if (!id) return;

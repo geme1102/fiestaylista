@@ -43,8 +43,8 @@ export function useTurnstile() {
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
           callback: (t: string) => setToken(t),
-          'expired-callback': () => { setToken(null); window.turnstile?.reset(widgetId.current!); },
-          'error-callback': () => { setToken(null); window.turnstile?.reset(widgetId.current!); },
+          'expired-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
+          'error-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
         });
       }
       if (++attempts > 50) clearInterval(interval);

@@ -34,9 +34,11 @@ export default class ErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
     if (import.meta.env.DEV) console.error('[ErrorBoundary]', JSON.stringify(errorReport));
-    if (typeof (window as unknown as Record<string, unknown>).reportError === 'function') {
-      (window as unknown as Record<string, (data: unknown) => void>).reportError(errorReport);
-    }
+    try {
+      if (typeof (window as unknown as Record<string, unknown>).reportError === 'function') {
+        (window as unknown as Record<string, (data: unknown) => void>).reportError(errorReport);
+      }
+    } catch {} // eslint-disable-line no-empty
   }
 
   componentDidUpdate(_prevProps: Props, prevState: State) {

@@ -1,6 +1,6 @@
-import { eq, lte, and, inArray, sql, isNull } from 'drizzle-orm';
+import { eq, lte, and, inArray, sql, isNull, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, gifts, photos } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
@@ -70,6 +70,8 @@ export async function createOrUpdateSubscription(
 
 async function deactivateExcessEvents(userId: string) {
   const FREE_MAX_EVENTS = TIER_LIMITS.free.maxEvents;
+  const FREE_MAX_GIFTS = TIER_LIMITS.free.maxGiftsPerEvent;
+  const FREE_MAX_PHOTOS = TIER_LIMITS.free.maxPhotosPerEvent;
 
   const [countResult] = await db
     .select({ count: sql<number>`count(*)` })
@@ -94,6 +96,59 @@ async function deactivateExcessEvents(userId: string) {
       .update(events)
       .set({ isActive: false, updatedAt: new Date() })
       .where(inArray(events.id, ids));
+  }
+
+  // Trim excess gifts and photos in remaining active events
+  const remainingEvents = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
+
+  for (const ev of remainingEvents) {
+    const [giftCountResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(gifts)
+      .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)));
+
+    const giftCount = Number(giftCountResult?.count ?? 0);
+    if (giftCount > FREE_MAX_GIFTS) {
+      const giftExcess = giftCount - FREE_MAX_GIFTS;
+      const toDelete = await db
+        .select({ id: gifts.id })
+        .from(gifts)
+        .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)))
+        .orderBy(asc(gifts.createdAt))
+        .limit(giftExcess);
+
+      const giftIds = toDelete.map(g => g.id);
+      if (giftIds.length > 0) {
+        await db
+          .update(gifts)
+          .set({ deletedAt: new Date() })
+          .where(inArray(gifts.id, giftIds));
+      }
+    }
+
+    const [photoCountResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(photos)
+      .where(and(eq(photos.eventId, ev.id)));
+
+    const photoCount = Number(photoCountResult?.count ?? 0);
+    if (photoCount > FREE_MAX_PHOTOS) {
+      const photoExcess = photoCount - FREE_MAX_PHOTOS;
+      const toDelete = await db
+        .select({ id: photos.id })
+        .from(photos)
+        .where(eq(photos.eventId, ev.id))
+        .orderBy(asc(photos.createdAt))
+        .limit(photoExcess);
+
+      const photoIds = toDelete.map(p => p.id);
+      if (photoIds.length > 0) {
+        await db.delete(photos).where(inArray(photos.id, photoIds));
+      }
+    }
   }
 }
 

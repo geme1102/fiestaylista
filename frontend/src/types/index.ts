@@ -89,15 +89,13 @@ export interface TierLimits {
   maxEvents: number;
   maxGiftsPerEvent: number;
   maxPhotosPerEvent: number;
-  allowPhotoUpload: boolean;
-  customDomain: boolean;
   analytics: boolean;
   cashFundCommission: number;
 }
 
 export const TIER_LIMITS: Record<Tier, TierLimits> = {
-  free: { maxEvents: 2, maxGiftsPerEvent: 10, maxPhotosPerEvent: 3, allowPhotoUpload: true, customDomain: false, analytics: false, cashFundCommission: 5 },
-  pro: { maxEvents: 20, maxGiftsPerEvent: 50, maxPhotosPerEvent: 15, allowPhotoUpload: true, customDomain: false, analytics: true, cashFundCommission: 5 },
+  free: { maxEvents: 2, maxGiftsPerEvent: 10, maxPhotosPerEvent: 3, analytics: false, cashFundCommission: 5 },
+  pro: { maxEvents: 20, maxGiftsPerEvent: 50, maxPhotosPerEvent: 15, analytics: true, cashFundCommission: 5 },
 };
 
 export const EVENT_LABELS: Record<EventType, string> = {

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
@@ -69,6 +69,13 @@ export default function EventGuest() {
 
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
+  const claimNameRef = useRef(claimName);
+  claimNameRef.current = claimName;
+  const handleClaimWithRef = useCallback((id: string, name: string) => {
+    setLastClaimedGift(name);
+    setLastClaimedBy(claimNameRef.current);
+    handleClaim(id, name);
+  }, [handleClaim]);
 
   const displayNote = event?.eventNote || DEFAULT_NOTES[event?.eventType || 'OTHER'];
 
@@ -393,8 +400,8 @@ export default function EventGuest() {
                   <GiftCard
                     key={gift.id}
                     gift={gift}
-                    onClaim={(id, name) => { setLastClaimedGift(name); setLastClaimedBy(claimName); handleClaim(id, name); }}
-                    claimingId={claimingId}
+                    onClaim={handleClaimWithRef}
+                    claimingId={claimingId === gift.id ? claimingId : null}
                   />
                 ))}
               </div>

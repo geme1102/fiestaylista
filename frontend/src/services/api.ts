@@ -181,7 +181,7 @@ async function tryRefreshToken(): Promise<boolean> {
 
       const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Refresh-Request': 'true' },
         credentials: 'include',
         body: JSON.stringify({}),
         signal: controller.signal,

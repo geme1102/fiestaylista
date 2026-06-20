@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
@@ -6,6 +7,15 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
+
+const mpWebhookPayloadSchema = z.object({
+  id: z.string().optional(),
+  topic: z.string().optional(),
+  type: z.string().optional(),
+  data: z.object({
+    id: z.string().min(1),
+  }).optional(),
+});
 
 const router = Router();
 
@@ -78,10 +88,10 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
         id: req.query.id as string,
       };
     }
-    const parsed = JSON.parse(bodyStr);
+    const parsed = mpWebhookPayloadSchema.parse(JSON.parse(bodyStr));
     return {
-      topic: parsed.topic || parsed.type,
-      id: parsed.id || parsed.data?.id,
+      topic: parsed.topic || parsed.type || (req.query.topic as string),
+      id: parsed.id || parsed.data?.id || (req.query.id as string),
     };
   } catch (err) {
     console.error('[MP Webhook] Error parsing webhook body:', err);

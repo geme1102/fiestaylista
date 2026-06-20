@@ -12,7 +12,7 @@ const router = Router();
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
@@ -68,7 +68,11 @@ router.post('/login', authLimiter, asyncHandlerWithValidation(async (req, res) =
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
-  const refreshToken = req.cookies?.refreshToken;
+  if (req.headers['x-refresh-request'] !== 'true') {
+    throw new ValidationError('Token de refresco requerido');
+  }
+  const isProduction = process.env.NODE_ENV === 'production';
+  const refreshToken = req.cookies?.[isProduction ? '__Secure-refreshToken' : 'refreshToken'];
   if (!refreshToken) {
     throw new ValidationError('Token de refresco requerido');
   }
@@ -92,7 +96,7 @@ router.post('/verify-email', authLimiter, asyncHandlerWithValidation(async (req,
   res.json({ success: true });
 }));
 
-router.get('/verify-email', asyncHandler(async (req, res) => {
+router.get('/verify-email', authLimiter, asyncHandler(async (req, res) => {
   const token = req.query.token as string;
   if (!token || typeof token !== 'string') {
     res.redirect(302, `${config.FRONTEND_URL}/verify-email?status=error&message=${encodeURIComponent('Token inválido')}`);

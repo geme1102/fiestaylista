@@ -52,19 +52,25 @@ export default function Dashboard() {
 
     let attempts = 0;
     const maxAttempts = 10;
-    const poll = setInterval(async () => {
+    let cancelled = false;
+
+    async function poll() {
+      if (cancelled) return;
       attempts++;
       await refreshUser();
+      if (cancelled) return;
       if (tierRef.current === 'pro' || attempts >= maxAttempts) {
-        clearInterval(poll);
         if (tierRef.current === 'pro') {
           showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
           queryClient.invalidateQueries({ queryKey: ['events'] });
         }
+      } else {
+        setTimeout(poll, 1500);
       }
-    }, 1500);
+    }
 
-    return () => clearInterval(poll);
+    const timer = setTimeout(poll, 1500);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [location.search, refreshUser, queryClient]);
 
   const handleCreate = async (e: React.FormEvent) => {

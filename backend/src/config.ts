@@ -90,7 +90,7 @@ export const config = {
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, '').trim(),
   FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace('backend', 'frontend')}` : 'http://localhost:5173')).trim(),
   PORT: parseInt(process.env.PORT || '3001', 10),
-  NODE_ENV: process.env.NODE_ENV || (process.env.RAILWAY_PUBLIC_DOMAIN ? 'production' : 'development'),
+  NODE_ENV: process.env.NODE_ENV || 'development',
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',
