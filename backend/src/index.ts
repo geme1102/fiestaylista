@@ -47,7 +47,7 @@ app.use(cors({
           ]
         : ['http://localhost:5173']),
     ];
-    if (origin && allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
+    if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
       callback(null, true);
     } else {
       callback(new Error(`Origen no permitido: ${origin}`));
