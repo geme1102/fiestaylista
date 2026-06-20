@@ -31,7 +31,10 @@ describe('verifyTurnstile', () => {
     global.fetch = originalFetch;
   });
 
-  it('throws ValidationError when token is missing', async () => {
+  it('throws ValidationError when token is missing in production', async () => {
+    (config as any).NODE_ENV = 'production';
+    (config as any).TURNSTILE_SECRET_KEY = 'valid-secret';
+
     const req = createReq();
     await verifyTurnstile(req as Request, {} as Response, next as NextFunction);
 

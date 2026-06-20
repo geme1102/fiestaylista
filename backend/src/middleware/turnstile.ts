@@ -10,6 +10,15 @@ interface TurnstileResponse {
 export async function verifyTurnstile(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
     const token = req.body?.turnstileToken;
+
+    if (!config.TURNSTILE_SECRET_KEY) {
+      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        next();
+        return;
+      }
+      throw new ValidationError('Turnstile no está configurado');
+    }
+
     if (!token) {
       throw new ValidationError('Token de seguridad requerido');
     }
@@ -24,6 +33,14 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
 export async function verifyTurnstileOptional(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
     const token = req.body?.turnstileToken;
+
+    if (!config.TURNSTILE_SECRET_KEY) {
+      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        next();
+        return;
+      }
+    }
+
     if (!token) {
       next();
       return;
@@ -37,13 +54,6 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
 }
 
 async function verifyToken(token: string): Promise<void> {
-  if (!config.TURNSTILE_SECRET_KEY) {
-    if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
-      return;
-    }
-    throw new ValidationError('Turnstile no está configurado');
-  }
-
   const formData = new URLSearchParams();
   formData.append('secret', config.TURNSTILE_SECRET_KEY);
   formData.append('response', token);
