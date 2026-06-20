@@ -138,6 +138,7 @@ export default function Login() {
                   />
                   <button
                     type="button"
+                    data-testid="password-toggle"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}

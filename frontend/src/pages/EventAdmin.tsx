@@ -402,6 +402,7 @@ export default function EventAdmin() {
                     {event.title}
                   </h2>
                   <motion.button
+                    data-testid="edit-event-button"
                     whileHover={{ scale: 1.15, rotate: 15 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => {
@@ -453,9 +454,10 @@ export default function EventAdmin() {
               </div>
 
               <button
-                onClick={() => setToggleConfirm(true)}
-                className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
-                aria-label="Cambiar estado del evento"
+              data-testid="toggle-event-status"
+              onClick={() => setToggleConfirm(true)}
+              className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
+              aria-label="Cambiar estado del evento"
               >
                 {event.isActive && (
                   <span className="absolute inset-0 bg-[#c52367] rounded-full blur-[2px] opacity-30 animate-pulse" />
@@ -484,10 +486,11 @@ export default function EventAdmin() {
               <motion.button
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.96 }}
-                onClick={() => setBoostModal(true)}
-                className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
-              >
-                <span>Activar Lluvia de Sobres</span>
+              data-testid="boost-button"
+              onClick={() => setBoostModal(true)}
+              className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
+            >
+              <span>Activar Lluvia de Sobres</span>
                 <span className="bg-amber-100/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">$10.000 COP</span>
               </motion.button>
             </div>
@@ -506,6 +509,7 @@ export default function EventAdmin() {
                   copyShareLink();
                 }
               }}
+              data-testid="share-event-button"
               className="group relative bg-[#1c1a1f] hover:bg-black text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_10px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-white/10"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
@@ -694,7 +698,7 @@ export default function EventAdmin() {
             >
               <div className="absolute top-0 right-0 w-36 h-36 bg-pink-100/40 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-              <div className="flex items-center justify-between pb-3.5 border-b border-gray-200">
+                <div className="flex items-center justify-between pb-3.5 border-b border-gray-200">
                 <div className="flex items-center gap-1.5 text-left">
                   <span className="text-xl">✨</span>
                   <h4 className="text-lg font-black text-gray-900 tracking-tight">Editar Información de Evento</h4>
@@ -702,6 +706,7 @@ export default function EventAdmin() {
                 <button
                   onClick={() => setEditingDetails(false)}
                   aria-label="Cerrar"
+                  data-testid="close-edit-modal"
                   className="p-2.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -792,6 +797,7 @@ export default function EventAdmin() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
+                    data-testid="save-event-changes"
                     disabled={updatingDetails}
                     className="bg-[#c52367] hover:bg-[#a21b53] text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
                   >
@@ -848,7 +854,8 @@ export default function EventAdmin() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={handleBoost}
+                  data-testid="pay-boost-button"
+                onClick={handleBoost}
                   disabled={boostLoading}
                   className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >

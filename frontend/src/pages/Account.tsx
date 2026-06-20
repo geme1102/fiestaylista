@@ -256,13 +256,14 @@ export default function Account() {
 
               {subscription?.status === 'active' && (
                 <>
-                  <button
-                    onClick={() => setShowCancelConfirm(true)}
-                    disabled={cancelLoading}
-                    className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
-                  >
-                    {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción Pro'}
-                  </button>
+                <button
+                  data-testid="cancel-subscription-button"
+                  onClick={() => setShowCancelConfirm(true)}
+                  disabled={cancelLoading}
+                  className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
+                >
+                  {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción Pro'}
+                </button>
                   <p className="text-xs text-on-surface-variant text-center mt-2">Al cancelar perderás acceso a funciones Pro al final del período actual.</p>
                 </>
               )}
@@ -277,30 +278,32 @@ export default function Account() {
           De acuerdo con la Ley 1581 de 2012, puedes ejercer tus derechos ARCO sobre tus datos personales.
         </p>
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleDownloadData}
-            disabled={downloading}
-            className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-          >
-            {downloading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Descargando...</span> : 'Descargar mis datos'}
-          </button>
+            <button
+              data-testid="download-data-button"
+              onClick={handleDownloadData}
+              disabled={downloading}
+              className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              {downloading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Descargando...</span> : 'Descargar mis datos'}
+            </button>
           <Link
             to="/derechos-arco"
             className="px-5 py-2.5 text-on-surface-variant bg-surface-container-high rounded-xl text-sm font-medium hover:bg-surface-container-highest transition-all"
           >
             Solicitar acceso, corrección o eliminación de datos
           </Link>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="px-5 py-2.5 text-red-600 bg-red-50 rounded-xl text-sm font-medium hover:bg-red-100 transition-all"
-          >
-            Eliminar mi cuenta
-          </button>
+            <button
+              data-testid="delete-account-button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-5 py-2.5 text-red-600 bg-red-50 rounded-xl text-sm font-medium hover:bg-red-100 transition-all"
+            >
+              Eliminar mi cuenta
+            </button>
         </div>
       </div>
 
       {showCancelConfirm && (
-        <div role="dialog" aria-modal="true" aria-label="Cancelar suscripción" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div data-testid="cancel-subscription-dialog" role="dialog" aria-modal="true" aria-label="Cancelar suscripción" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-on-surface">Cancelar Suscripción</h3>
             <p className="text-sm text-on-surface-variant">Ingresa tu contraseña para confirmar la cancelación. Perderás acceso a funciones Pro al final del período actual.</p>
@@ -326,7 +329,7 @@ export default function Account() {
       )}
 
       {showDeleteConfirm && (
-        <div role="dialog" aria-modal="true" aria-label="Eliminar cuenta" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div data-testid="delete-account-dialog" role="dialog" aria-modal="true" aria-label="Eliminar cuenta" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
             <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer. Ingresa tu contraseña para confirmar.</p>

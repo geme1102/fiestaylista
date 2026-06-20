@@ -24,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
                 toastOptions={{
                   style: { fontFamily: 'Quicksand, sans-serif' },
                 }}
+                data-testid="toaster"
               />
             </AuthProvider>
         </ErrorBoundary>

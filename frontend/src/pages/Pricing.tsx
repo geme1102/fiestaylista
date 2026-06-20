@@ -206,6 +206,7 @@ export default function Pricing() {
           <div className="flex flex-col items-center mb-12">
             <div className="bg-surface-container flex p-1 rounded-full relative mb-4">
               <button
+                data-testid="pricing-toggle-monthly"
                 onClick={() => setYearly(false)}
                 className={cn(
                   'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
@@ -215,6 +216,7 @@ export default function Pricing() {
                 Mensual
               </button>
               <button
+                data-testid="pricing-toggle-yearly"
                 onClick={() => setYearly(true)}
                 className={cn(
                   'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
@@ -297,6 +299,7 @@ export default function Pricing() {
                         </div>
                       ) : (
                         <button
+                          data-testid={plan.price === 0 ? 'cta-free' : 'cta-pro'}
                           onClick={() => handleSelect(plan.tier)}
                           disabled={loading}
                           className={cn(

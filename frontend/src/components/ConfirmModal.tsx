@@ -31,6 +31,7 @@ export function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabe
           role="dialog"
           aria-modal="true"
           aria-labelledby="confirm-title"
+          data-testid="confirm-modal"
           className="w-full max-w-md bg-surface p-8 rounded-3xl shadow-2xl text-center"
         >
           {destructive && (
@@ -41,10 +42,10 @@ export function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabe
           <h2 id="confirm-title" className="text-lg font-bold text-on-surface mb-2">¿Estás seguro?</h2>
           <p className="text-sm text-on-surface-variant mb-8">{message}</p>
           <div className="flex gap-3">
-            <button data-dialog-close onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">
+            <button data-testid="confirm-cancel" data-dialog-close onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">
               Cancelar
             </button>
-            <button onClick={onConfirm} disabled={loading} className={cn(
+            <button data-testid="confirm-confirm" onClick={onConfirm} disabled={loading} className={cn(
               'flex-1 py-3 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all disabled:opacity-50',
               destructive
                 ? 'bg-red-500 hover:opacity-90 shadow-lg shadow-red-500/20'

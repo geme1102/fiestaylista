@@ -164,23 +164,24 @@ export default function Dashboard() {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
-        >
-          <span className="material-symbols-outlined text-lg">add</span>
-          <span className="hidden sm:inline">Nuevo Evento</span>
-        </button>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  data-testid="new-event-button"
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  <span className="hidden sm:inline">Nuevo Evento</span>
+                </button>
       </div>
 
       {events.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-          {[
-            { label: 'Eventos', value: events.length, icon: 'calendar_month' },
-            { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard' },
-            { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings' },
-          ].map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl p-5 md:p-6 flex items-center gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+            {[
+              { label: 'Eventos', value: events.length, icon: 'calendar_month', stat: 'events' },
+              { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard', stat: 'gifts' },
+              { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings', stat: 'raised' },
+            ].map((stat) => (
+              <div key={stat.label} data-testid={`stat-${stat.stat}`} className="glass rounded-2xl p-5 md:p-6 flex items-center gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-xl text-primary">{stat.icon}</span>
               </div>
@@ -203,9 +204,10 @@ export default function Dashboard() {
             <p className="text-sm text-on-surface-variant/70 mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {ONBOARDING_TYPES.map((type) => (
+              {ONBOARDING_TYPES.map((type) => (
               <button
                 key={type}
+                data-testid={`create-event-${type.toLowerCase()}`}
                 onClick={() => {
                   setFormData({ ...formData, eventType: type });
                   setShowCreateModal(true);
@@ -231,6 +233,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={event.id}
+                    data-testid={`event-card-${event.id}`}
                     className="glass rounded-3xl overflow-hidden flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group relative hover:-translate-y-0.5"
                   >
                     <div className="h-2" style={{ background: theme.primary }} />

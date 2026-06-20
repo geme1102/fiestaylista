@@ -18,6 +18,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
 
   return (
     <header
+      data-testid="navbar"
       className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 ${
         scrolled ? 'h-16 shadow-md' : 'h-20'
       }`}
@@ -38,6 +39,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                 <div className="hidden md:flex items-center gap-4">
                   <button
                     type="button"
+                    data-testid="logout-button"
                     onClick={logout}
                     className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >
@@ -49,6 +51,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     </div>
                     <Link
                       to="/dashboard"
+                      data-testid="dashboard-link"
                       className="bg-primary/10 text-primary px-6 py-2.5 rounded-full text-label-md font-label-md hover:bg-primary/20 active:scale-95 transition-all duration-200"
                     >
                       Ir al Dashboard

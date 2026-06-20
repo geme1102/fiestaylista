@@ -65,6 +65,7 @@ export function GiftManagement({
         <div className="flex gap-3">
           <input
             id="gift-name"
+            data-testid="gift-name-input"
             type="text"
             placeholder="Nombre del regalo (Ej: Juego de Sábanas)..."
             value={newGiftName}
@@ -80,6 +81,7 @@ export function GiftManagement({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
+            data-testid="add-gift-button"
             disabled={!newGiftName.trim() || addingGift}
             className="bg-gradient-to-r from-[#a21b53] to-[#c52367] text-white py-3 px-6 rounded-full text-xs font-black shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >

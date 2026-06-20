@@ -11,7 +11,7 @@ export default function AuthBottomNav() {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
+    <nav data-testid="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-[env(safe-area-inset-bottom,0px)] rounded-t-xl">
       <div className="flex items-center justify-around h-16 px-4">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;

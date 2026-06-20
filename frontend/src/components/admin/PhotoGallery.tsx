@@ -44,6 +44,7 @@ export function PhotoGallery({
           accept="image/*"
           className="hidden"
           id="hidden-photo-uploader"
+          data-testid="photo-uploader"
         />
 
         {photos.length === 0 ? (

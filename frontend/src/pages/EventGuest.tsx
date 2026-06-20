@@ -186,6 +186,7 @@ export default function EventGuest() {
           </div>
           <div className="flex items-center gap-4">
             <button
+              data-testid="scroll-to-gifts"
               onClick={() => document.getElementById('gift-list')?.scrollIntoView({ behavior: 'smooth' })}
               className="material-symbols-outlined text-primary cursor-pointer"
               aria-label="Ir a la lista de regalos"
@@ -311,6 +312,7 @@ export default function EventGuest() {
           <div className={easyReadMode ? 'space-y-8' : ''}>
             <motion.div
               id="gift-list"
+              data-testid="gift-list"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -496,6 +498,7 @@ export default function EventGuest() {
 
         {showSuccessModal && (
           <div
+            data-testid="success-modal"
             className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl"
             role="dialog"
             aria-modal="true"
