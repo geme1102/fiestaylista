@@ -1,3 +1,5 @@
+ENV NODE_ENV=production
+
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY backend/package*.json ./
