@@ -1,5 +1,3 @@
-ENV NODE_ENV=production
-
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY backend/package*.json ./
@@ -8,6 +6,7 @@ COPY backend/ .
 RUN npm run build
 
 FROM node:22-alpine
+ENV NODE_ENV=production
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
