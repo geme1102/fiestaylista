@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { events, boostPayments, proPayments, cashContributions, cashFunds } from '../db/schema.js';
@@ -7,81 +7,57 @@ import * as cashFundService from './cashFund.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 
 async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    const [existingPayment] = await tx
-      .select({ id: proPayments.id })
-      .from(proPayments)
-      .where(eq(proPayments.mpPaymentId, paymentId))
-      .for('update')
-      .limit(1);
+  const periodDays = interval === 'year' ? 365 : 30;
+  await subscriptionService.createOrUpdateSubscription(userId, {
+    mpSubscriptionId: null,
+    tier: 'pro',
+    status: 'active',
+    currentPeriodStart: new Date(),
+    currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+  });
 
-    if (existingPayment) {
+  const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
+  try {
+    await db
+      .insert(proPayments)
+      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
+  } catch (err: any) {
+    if (err?.code === '23505') {
       console.log(`[MP] PRO payment ${paymentId} already processed`);
       return;
     }
-
-    const periodDays = interval === 'year' ? 365 : 30;
-    await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: null,
-      tier: 'pro',
-      status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
-    });
-
-    const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
-    await tx
-      .insert(proPayments)
-      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
-  });
+    throw err;
+  }
 }
 
 async function handleBoostPayment(paymentId: string, ref: string): Promise<void> {
   const eventId = ref.slice(6);
   if (!eventId) return;
 
-  await db.transaction(async (tx) => {
-    const [existingPayment] = await tx
-      .select({ id: boostPayments.id })
-      .from(boostPayments)
-      .where(eq(boostPayments.mpPaymentId, paymentId))
-      .for('update')
-      .limit(1);
-
-    if (existingPayment) {
+  try {
+    await db
+      .insert(boostPayments)
+      .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
+  } catch (err: any) {
+    if (err?.code === '23505') {
       console.log(`[MP] Boost payment ${paymentId} already processed`);
       return;
     }
+    throw err;
+  }
 
-    const [event] = await tx
-      .select({ id: events.id, boostedUntil: events.boostedUntil })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .for('update')
-      .limit(1);
+  await db
+    .update(events)
+    .set({
+      boostedUntil: sql`GREATEST(COALESCE(${events.boostedUntil}, NOW()), NOW()) + INTERVAL '30 days'`,
+      updatedAt: new Date(),
+    })
+    .where(eq(events.id, eventId));
 
-    if (!event) return;
-
-    await tx
-      .insert(boostPayments)
-      .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
-
-    const now = Date.now();
-    const currentBoost = event.boostedUntil?.getTime() ?? 0;
-    const remaining = Math.max(0, currentBoost - now);
-    const boostDuration = 30 * 24 * 60 * 60 * 1000;
-    const boostedUntil = new Date(now + remaining + boostDuration);
-
-    await tx
-      .update(events)
-      .set({ boostedUntil, updatedAt: new Date() })
-      .where(eq(events.id, eventId));
-
-    await tx
-      .insert(cashFunds)
-      .values({ eventId, title: 'Lluvia de sobres', isActive: true })
-      .onConflictDoNothing({ target: cashFunds.eventId });
-  });
+  await db
+    .insert(cashFunds)
+    .values({ eventId, title: 'Lluvia de sobres', isActive: true })
+    .onConflictDoNothing({ target: cashFunds.eventId });
 }
 
 async function revertBoostPayment(paymentId: string, ref: string): Promise<void> {
@@ -89,48 +65,27 @@ async function revertBoostPayment(paymentId: string, ref: string): Promise<void>
   if (!eventId) return;
 
   const [payment] = await db
-    .select({ id: boostPayments.id })
-    .from(boostPayments)
-    .where(eq(boostPayments.mpPaymentId, paymentId))
-    .limit(1);
+    .update(boostPayments)
+    .set({ status: 'refunded' })
+    .where(and(
+      eq(boostPayments.mpPaymentId, paymentId),
+      ne(boostPayments.status, 'refunded'),
+    ))
+    .returning({ id: boostPayments.id });
 
   if (!payment) return;
 
-  await db.transaction(async (tx) => {
-    const [boostPayment] = await tx
-      .select({ status: boostPayments.status })
-      .from(boostPayments)
-      .where(eq(boostPayments.mpPaymentId, paymentId))
-      .for('update')
-      .limit(1);
-
-    if (!boostPayment || boostPayment.status === 'refunded') return;
-
-    const [event] = await tx
-      .select({ id: events.id, boostedUntil: events.boostedUntil })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .for('update')
-      .limit(1);
-
-    if (!event) return;
-
-    const now = Date.now();
-    const currentBoost = event.boostedUntil?.getTime() ?? 0;
-    const remaining = Math.max(0, currentBoost - now);
-    const reducedBoost = Math.max(0, remaining - 30 * 24 * 60 * 60 * 1000);
-    const newBoostedUntil = reducedBoost > 0 ? new Date(now + reducedBoost) : null;
-
-    await tx
-      .update(events)
-      .set({ boostedUntil: newBoostedUntil, updatedAt: new Date() })
-      .where(eq(events.id, eventId));
-
-    await tx
-      .update(boostPayments)
-      .set({ status: 'refunded' })
-      .where(eq(boostPayments.mpPaymentId, paymentId));
-  });
+  await db
+    .update(events)
+    .set({
+      boostedUntil: sql`CASE
+        WHEN ${events.boostedUntil} IS NULL OR ${events.boostedUntil} <= NOW() THEN NULL
+        WHEN ${events.boostedUntil} - INTERVAL '30 days' <= NOW() THEN NULL
+        ELSE ${events.boostedUntil} - INTERVAL '30 days'
+      END`,
+      updatedAt: new Date(),
+    })
+    .where(eq(events.id, eventId));
 }
 
 export async function handlePaymentNotification(paymentId: string): Promise<void> {

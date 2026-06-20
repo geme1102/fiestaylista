@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { events as eventsTable, gifts as giftsTable } from '../db/schema.js';
+import { gifts as giftsTable } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 function sanitize(input: string): string {
@@ -16,75 +16,60 @@ export async function addGift(eventId: string, name: string) {
     throw new ValidationError('El nombre del regalo es requerido');
   }
 
-  return await db.transaction(async (tx) => {
-    await tx
-      .select({ id: eventsTable.id })
-      .from(eventsTable)
-      .where(eq(eventsTable.id, eventId))
-      .for('update')
-      .limit(1);
+  const [gift] = await db
+    .insert(giftsTable)
+    .values({ eventId, name: cleaned })
+    .returning();
 
-    const [gift] = await tx
-      .insert(giftsTable)
-      .values({
-        eventId,
-        name: cleaned,
-      })
-      .returning();
-
-    return gift;
-  });
+  return gift;
 }
 
 export async function updateGift(
   giftId: string,
   data: { isClaimed?: boolean; claimedBy?: string | null },
 ) {
-  return await db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select()
-      .from(giftsTable)
-      .where(eq(giftsTable.id, giftId))
-      .for('update')
-      .limit(1);
+  const [existing] = await db
+    .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed, claimedBy: giftsTable.claimedBy })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
 
-    if (!existing) {
-      throw new NotFoundError('Regalo no encontrado');
-    }
+  if (!existing) {
+    throw new NotFoundError('Regalo no encontrado');
+  }
 
-    if (data.isClaimed === true && existing.isClaimed && existing.claimedBy !== data.claimedBy) {
-      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
-    }
+  if (data.isClaimed === true && existing.isClaimed && existing.claimedBy !== data.claimedBy) {
+    throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+  }
 
-    if (data.isClaimed === true && !data.claimedBy) {
-      throw new ValidationError('Debes especificar quién reserva el regalo');
-    }
+  if (data.isClaimed === true && !data.claimedBy) {
+    throw new ValidationError('Debes especificar quién reserva el regalo');
+  }
 
-    const updateData: Record<string, unknown> = {};
-    if (data.isClaimed !== undefined) updateData.isClaimed = data.isClaimed;
-    if (data.claimedBy !== undefined) updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
+  const updateData: Record<string, unknown> = {};
+  if (data.isClaimed !== undefined) updateData.isClaimed = data.isClaimed;
+  if (data.claimedBy !== undefined) updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
 
-    if (data.isClaimed === false) {
-      updateData.claimedBy = null;
-    }
+  if (data.isClaimed === false) {
+    updateData.claimedBy = null;
+  }
 
-    const whereConditions = [eq(giftsTable.id, giftId)];
-    if (data.isClaimed === true) {
-      whereConditions.push(eq(giftsTable.isClaimed, false));
-    }
+  const whereConditions = [eq(giftsTable.id, giftId)];
+  if (data.isClaimed === true) {
+    whereConditions.push(eq(giftsTable.isClaimed, false));
+  }
 
-    const [gift] = await tx
-      .update(giftsTable)
-      .set(updateData)
-      .where(and(...whereConditions))
-      .returning();
+  const [gift] = await db
+    .update(giftsTable)
+    .set(updateData)
+    .where(and(...whereConditions))
+    .returning();
 
-    if (data.isClaimed === true && !gift) {
-      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
-    }
+  if (data.isClaimed === true && !gift) {
+    throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+  }
 
-    return gift;
-  });
+  return gift;
 }
 
 export async function claimGift(giftId: string, claimedBy: string) {
@@ -117,29 +102,17 @@ export async function claimGift(giftId: string, claimedBy: string) {
 }
 
 export async function releaseGift(giftId: string) {
-  return await db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select()
-      .from(giftsTable)
-      .where(eq(giftsTable.id, giftId))
-      .for('update')
-      .limit(1);
+  const [gift] = await db
+    .update(giftsTable)
+    .set({ isClaimed: false, claimedBy: null })
+    .where(eq(giftsTable.id, giftId))
+    .returning();
 
-    if (!existing) {
-      throw new NotFoundError('Regalo no encontrado');
-    }
+  if (!gift) {
+    throw new NotFoundError('Regalo no encontrado');
+  }
 
-    const [gift] = await tx
-      .update(giftsTable)
-      .set({
-        isClaimed: false,
-        claimedBy: null,
-      })
-      .where(eq(giftsTable.id, giftId))
-      .returning();
-
-    return gift;
-  });
+  return gift;
 }
 
 export async function deleteGift(giftId: string) {

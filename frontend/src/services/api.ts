@@ -1,6 +1,6 @@
 let accessToken: string | null = null;
-const REQUEST_TIMEOUT = 30000;
-const MAX_RETRIES = 3;
+const REQUEST_TIMEOUT = 10000;
+const MAX_RETRIES = 1;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

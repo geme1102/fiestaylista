@@ -130,7 +130,11 @@ export function useEventPage() {
     onDisconnected: () => {
       sseConnectedRef.current = false;
     },
-    onGiftClaimed: () => { loadEventRef.current?.(); },
+    onGiftClaimed: (data) => {
+      setGifts((prev) => prev.map((g) =>
+        g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
+      ));
+    },
   });
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {

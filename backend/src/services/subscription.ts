@@ -17,55 +17,35 @@ export async function createOrUpdateSubscription(
   userId: string,
   data: UpsertData,
 ) {
-  return await db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select({ id: subsTable.id })
-      .from(subsTable)
-      .where(eq(subsTable.userId, userId))
-      .for('update')
-      .limit(1);
-
-    if (existing) {
-      const [sub] = await tx
-        .update(subsTable)
-        .set({
-          mpSubscriptionId: data.mpSubscriptionId,
-          tier: data.tier,
-          status: data.status,
-          currentPeriodStart: data.currentPeriodStart,
-          currentPeriodEnd: data.currentPeriodEnd,
-          updatedAt: new Date(),
-        })
-        .where(eq(subsTable.id, existing.id))
-        .returning();
-
-      await tx
-        .update(users)
-        .set({ tier: data.tier, updatedAt: new Date() })
-        .where(eq(users.id, userId));
-
-      return sub;
-    }
-
-    const [sub] = await tx
-      .insert(subsTable)
-      .values({
-        userId,
+  const [sub] = await db
+    .insert(subsTable)
+    .values({
+      userId,
+      mpSubscriptionId: data.mpSubscriptionId,
+      tier: data.tier,
+      status: data.status,
+      currentPeriodStart: data.currentPeriodStart,
+      currentPeriodEnd: data.currentPeriodEnd,
+    })
+    .onConflictDoUpdate({
+      target: subsTable.userId,
+      set: {
         mpSubscriptionId: data.mpSubscriptionId,
         tier: data.tier,
         status: data.status,
         currentPeriodStart: data.currentPeriodStart,
         currentPeriodEnd: data.currentPeriodEnd,
-      })
-      .returning();
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
 
-    await tx
-      .update(users)
-      .set({ tier: data.tier, updatedAt: new Date() })
-      .where(eq(users.id, userId));
+  await db
+    .update(users)
+    .set({ tier: data.tier, updatedAt: new Date() })
+    .where(eq(users.id, userId));
 
-    return sub;
-  });
+  return sub;
 }
 
 async function deactivateExcessEvents(userId: string) {

@@ -28,11 +28,12 @@ export interface UpdateEventData {
 
 export async function createEvent(userId: string, data: CreateEventData) {
   return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+
     const [user] = await tx
       .select({ tier: users.tier })
       .from(users)
       .where(eq(users.id, userId))
-      .for('update')
       .limit(1);
 
     const tier = (user?.tier ?? 'free') as Tier;
@@ -164,11 +165,12 @@ export async function getEvent(eventId: string, userId: string) {
 export async function updateEvent(eventId: string, userId: string, data: UpdateEventData) {
   if (data.isActive === true) {
     return await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+
       const [user] = await tx
         .select({ tier: users.tier })
         .from(users)
         .where(eq(users.id, userId))
-        .for('update')
         .limit(1);
 
       const tier = (user?.tier ?? 'free') as Tier;

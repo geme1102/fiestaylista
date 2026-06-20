@@ -42,11 +42,12 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
   }
 
   return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
+
     const [event] = await tx
       .select({ userId: events.userId, isActive: events.isActive })
       .from(events)
       .where(eq(events.id, eventId))
-      .for('update')
       .limit(1);
 
     if (!event) throw new NotFoundError('Evento no encontrado');

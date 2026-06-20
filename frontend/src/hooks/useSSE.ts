@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 interface SSEOptions {
   eventId: string;
   sseTokenEndpoint: string;
-  onGiftClaimed?: (data: { giftName: string; claimedBy: string }) => void;
+  onGiftClaimed?: (data: { giftId: string; giftName: string; claimedBy: string }) => void;
   maxRetries?: number;
   initialRetryDelay?: number;
   onConnected?: () => void;
@@ -72,7 +72,7 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
                 const data = JSON.parse(line.slice(6));
                 if (data.type === 'connected') continue;
                 if (data.giftId && data.claimedBy) {
-                  onGiftClaimedRef.current?.({ giftName: data.giftName, claimedBy: data.claimedBy });
+                  onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
                 }
               } catch { /* ignore parse errors */ }
             }

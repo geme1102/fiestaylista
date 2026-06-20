@@ -51,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   mockTx = {
+    execute: vi.fn().mockResolvedValue(undefined),
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn(),

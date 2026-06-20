@@ -100,14 +100,6 @@ export default function EventAdmin() {
     loadEvent();
   }, [id, loadEvent]);
 
-  const debouncedLoadEvent = useMemo(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    return () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => { loadEvent(); timer = null; }, 1000);
-    };
-  }, [loadEvent]);
-
   useSSE({
     eventId: id ?? '',
     sseTokenEndpoint: id ? `/api/events/${id}/gifts/sse-token` : '',
@@ -115,7 +107,9 @@ export default function EventAdmin() {
     initialRetryDelay: 1000,
     onGiftClaimed: (data) => {
       showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
-      debouncedLoadEvent();
+      setGifts((prev) => prev.map((g) =>
+        g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
+      ));
     },
   });
 

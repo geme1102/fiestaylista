@@ -84,7 +84,6 @@ export async function createContribution(
       .select()
       .from(cashFunds)
       .where(eq(cashFunds.id, cashFundId))
-      .for('update')
       .limit(1);
 
     if (!fund) throw new NotFoundError('Fondo no encontrado');
@@ -119,7 +118,6 @@ export async function createContribution(
         eq(cashContributions.amount, amountInCents),
         eq(cashContributions.status, 'pending'),
       ))
-      .for('update')
       .limit(1);
 
     if (existingPending) {
@@ -184,62 +182,48 @@ export async function completeContribution(
   contributionId: string,
   mpPaymentId?: string,
 ): Promise<void> {
-  await db.transaction(async (tx) => {
-    const [contribution] = await tx
-      .select()
-      .from(cashContributions)
-      .where(eq(cashContributions.id, contributionId))
-      .for('update')
-      .limit(1);
+  const updateData: Record<string, unknown> = { status: 'completed' };
+  if (mpPaymentId) updateData.mpPaymentId = mpPaymentId;
 
-    if (!contribution || contribution.status !== 'pending') return;
+  const [contribution] = await db
+    .update(cashContributions)
+    .set(updateData)
+    .where(and(
+      eq(cashContributions.id, contributionId),
+      eq(cashContributions.status, 'pending'),
+    ))
+    .returning();
 
-    const updateData: Record<string, unknown> = {
-      status: 'completed',
-    };
-    if (mpPaymentId) {
-      updateData.mpPaymentId = mpPaymentId;
-    }
+  if (!contribution) return;
 
-    await tx
-      .update(cashContributions)
-      .set(updateData)
-      .where(eq(cashContributions.id, contribution.id));
-
-    await tx
-      .update(cashFunds)
-      .set({
-        collectedAmount: sql`${cashFunds.collectedAmount} + ${contribution.netAmount}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(cashFunds.id, contribution.cashFundId));
-  });
+  await db
+    .update(cashFunds)
+    .set({
+      collectedAmount: sql`${cashFunds.collectedAmount} + ${contribution.netAmount}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(cashFunds.id, contribution.cashFundId));
 }
 
 export async function revertContribution(contributionId: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    const [contribution] = await tx
-      .select()
-      .from(cashContributions)
-      .where(eq(cashContributions.id, contributionId))
-      .for('update')
-      .limit(1);
+  const [contribution] = await db
+    .update(cashContributions)
+    .set({ status: 'refunded' })
+    .where(and(
+      eq(cashContributions.id, contributionId),
+      eq(cashContributions.status, 'completed'),
+    ))
+    .returning();
 
-    if (!contribution || contribution.status !== 'completed') return;
+  if (!contribution) return;
 
-    await tx
-      .update(cashContributions)
-      .set({ status: 'refunded' })
-      .where(eq(cashContributions.id, contribution.id));
-
-    await tx
-      .update(cashFunds)
-      .set({
-        collectedAmount: sql`GREATEST(${cashFunds.collectedAmount} - ${contribution.netAmount}, 0)`,
-        updatedAt: new Date(),
-      })
-      .where(eq(cashFunds.id, contribution.cashFundId));
-  });
+  await db
+    .update(cashFunds)
+    .set({
+      collectedAmount: sql`GREATEST(${cashFunds.collectedAmount} - ${contribution.netAmount}, 0)`,
+      updatedAt: new Date(),
+    })
+    .where(eq(cashFunds.id, contribution.cashFundId));
 }
 
 export async function cleanupStaleContributions(): Promise<number> {
