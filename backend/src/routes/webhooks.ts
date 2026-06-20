@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import express from 'express';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import * as mpWebhooks from '../services/mp-webhooks.js';
@@ -102,7 +103,7 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
   }
 }
 
-router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => {
+router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHandler(async (req: Request, res: Response) => {
   const info = extractTopicId(req);
 
   if (!verifyMpSignature(req)) {

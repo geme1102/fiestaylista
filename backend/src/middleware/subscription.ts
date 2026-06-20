@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts } from '../db/schema.js';
+import { users, events, gifts, subscriptions } from '../db/schema.js';
 import { ForbiddenError, ValidationError } from '../utils/errors.js';
 import { TIER_LIMITS, TIER_ORDER } from '../types/index.js';
 import type { AuthRequest, Tier } from '../types/index.js';
@@ -121,6 +121,38 @@ export function checkActiveEventLimit() {
 
       if (activeCount >= limits.maxEvents) {
         throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos activos en tu plan ${tier}`);
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+export function requireActiveSubscription() {
+  return async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) {
+        throw new ForbiddenError('Acceso denegado');
+      }
+
+      const [sub] = await db
+        .select({ status: subscriptions.status, currentPeriodEnd: subscriptions.currentPeriodEnd })
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, req.user.userId))
+        .limit(1);
+
+      if (!sub) {
+        throw new ForbiddenError('No tienes una suscripción activa');
+      }
+
+      if (sub.status !== 'active') {
+        throw new ForbiddenError('Tu suscripción no está activa');
+      }
+
+      if (sub.currentPeriodEnd && sub.currentPeriodEnd <= new Date()) {
+        throw new ForbiddenError('Tu suscripción ha expirado');
       }
 
       next();

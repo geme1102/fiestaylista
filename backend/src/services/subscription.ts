@@ -16,8 +16,10 @@ interface UpsertData {
 export async function createOrUpdateSubscription(
   userId: string,
   data: UpsertData,
+  tx?: any,
 ) {
-  const [sub] = await db
+  const conn = tx || db;
+  const [sub] = await conn
     .insert(subsTable)
     .values({
       userId,
@@ -40,7 +42,7 @@ export async function createOrUpdateSubscription(
     })
     .returning();
 
-  await db
+  await conn
     .update(users)
     .set({ tier: data.tier, updatedAt: new Date() })
     .where(eq(users.id, userId));
@@ -163,7 +165,11 @@ export async function cancelSubscription(userId: string, immediate = false) {
   });
 
   if (immediate) {
-    await deactivateExcessEvents(userId);
+    try {
+      await deactivateExcessEvents(userId);
+    } catch (err) {
+      console.error(`[Subscription] Error desactivando eventos tras cancelación para ${userId}:`, err);
+    }
   }
 
   return sub;

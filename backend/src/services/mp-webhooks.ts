@@ -1,32 +1,54 @@
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { events, boostPayments, proPayments, cashContributions, cashFunds } from '../db/schema.js';
+import { events, users, boostPayments, proPayments, cashContributions, cashFunds } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
+import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 
 async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
-  await subscriptionService.createOrUpdateSubscription(userId, {
-    mpSubscriptionId: null,
-    tier: 'pro',
-    status: 'active',
-    currentPeriodStart: new Date(),
-    currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+  const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
+
+  const result = await db.transaction(async (tx) => {
+    const sub = await subscriptionService.createOrUpdateSubscription(userId, {
+      mpSubscriptionId: null,
+      tier: 'pro',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+    }, tx);
+
+    try {
+      await tx
+        .insert(proPayments)
+        .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
+    } catch (err: any) {
+      if (err?.code === '23505') {
+        console.log(`[MP] PRO payment ${paymentId} already processed`);
+        return null;
+      }
+      throw err;
+    }
+
+    return sub;
   });
 
-  const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
-  try {
-    await db
-      .insert(proPayments)
-      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
-  } catch (err: any) {
-    if (err?.code === '23505') {
-      console.log(`[MP] PRO payment ${paymentId} already processed`);
-      return;
+  if (result) {
+    try {
+      const [user] = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      if (user) {
+        const period = interval === 'year' ? 'anual' : 'mensual';
+        await emailService.sendProConfirmationEmail(user.email, user.name, period);
+      }
+    } catch (err) {
+      console.error(`[MP] Error enviando email de confirmación PRO para ${userId}:`, err);
     }
-    throw err;
   }
 }
 
@@ -181,7 +203,7 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: preapprovalId,
       tier: 'pro',
-      status: 'active',
+      status: 'pending_approval',
       currentPeriodStart,
       currentPeriodEnd,
     });

@@ -5,7 +5,7 @@ import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireTier } from '../middleware/subscription.js';
+import { requireTier, requireActiveSubscription } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -44,7 +44,7 @@ router.post('/analytics/view', viewLimiter, asyncHandler(async (req: Request, re
   }
 }));
 
-router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHandler(async (req: AuthRequest, res: Response, next) => {
+router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), requireActiveSubscription(), asyncHandler(async (req: AuthRequest, res: Response, next) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user!.userId;
@@ -66,7 +66,7 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHa
   }
 }));
 
-router.post('/analytics/views/batch', requireAuth, requireTier('pro'), asyncHandler(async (req: AuthRequest, res: Response, next) => {
+router.post('/analytics/views/batch', requireAuth, requireTier('pro'), requireActiveSubscription(), asyncHandler(async (req: AuthRequest, res: Response, next) => {
   try {
     const parsed = z.object({ eventIds: z.array(z.string().uuid()).max(50) }).safeParse(req.body);
     if (!parsed.success) {

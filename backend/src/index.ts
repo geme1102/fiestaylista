@@ -88,10 +88,7 @@ app.use(helmet({
 
 app.use(cookieParser());
 
-// Raw body parser exclusivo para webhooks de MP (antes de express.json())
-// Express aplica este middleware solo a /api/webhooks/mercadopago
-app.use('/api/webhooks/mercadopago', webhookLimiter, express.raw({ type: '*/*', limit: '1mb' }));
-app.use('/api/webhooks', webhooksRouter);
+app.use('/api/webhooks', webhookLimiter, webhooksRouter);
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../services/mercadopago';
@@ -62,6 +62,7 @@ const FAQS = [
 export default function Pricing() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -69,6 +70,15 @@ export default function Pricing() {
   const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('payment') === 'pending') {
+      showToast('El pago está pendiente de confirmación. Te notificaremos cuando se complete.', 'info');
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [location.search]);
 
   const handleSelect = async (tier: string) => {
     if (authLoading) {

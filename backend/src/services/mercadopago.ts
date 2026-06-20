@@ -86,7 +86,7 @@ export async function createProPreference(
       back_urls: {
         success: successUrl,
         failure: cancelUrl,
-        pending: cancelUrl,
+        pending: `${cancelUrl}?payment=pending`,
       },
       auto_return: 'approved',
       external_reference: `pro_${userId}_${interval}`,
