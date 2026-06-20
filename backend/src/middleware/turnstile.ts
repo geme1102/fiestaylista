@@ -65,7 +65,8 @@ async function verifyToken(token: string): Promise<void> {
   const data = await fetchRes.json() as TurnstileResponse;
 
   if (!data.success) {
-    console.warn('[Turnstile] Verificación fallida:', data['error-codes']);
-    throw new ValidationError('No se pudo verificar que no eres un robot');
+    const codes = data['error-codes']?.join(', ') ?? 'desconocido';
+    console.warn('[Turnstile] Verificación fallida:', codes);
+    throw new ValidationError(`No se pudo verificar que no eres un robot (${codes})`);
   }
 }

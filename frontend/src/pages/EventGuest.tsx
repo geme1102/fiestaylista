@@ -204,7 +204,7 @@ export default function EventGuest() {
         </header>
 
         {/* Turnstile (invisible) */}
-        <div ref={turnstileRef} className="absolute overflow-hidden" style={{ left: '-9999px', top: '-9999px', width: '1px', height: '1px' }} />
+        <div ref={turnstileRef} className="opacity-0 pointer-events-none overflow-hidden" aria-hidden="true" style={{ height: 0 }} />
 
         <section className="pt-16 w-full overflow-hidden relative">
           <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.primary}20` }} />

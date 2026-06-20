@@ -104,7 +104,7 @@ describe('verifyTurnstile', () => {
 
     expect(next).toHaveBeenCalledWith(expect.objectContaining({
       statusCode: 400,
-      message: 'No se pudo verificar que no eres un robot',
+      message: 'No se pudo verificar que no eres un robot (invalid-input-response)',
     }));
   });
 });
