@@ -1,4 +1,6 @@
 import { eq, and, inArray } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
@@ -139,7 +141,7 @@ export async function deleteUserAccount(userId: string) {
       email: `deleted-${userId.slice(0, 8)}@anonymous.fiestaylista.com`,
       name: 'Usuario Eliminado',
       tier: 'free',
-      passwordHash: '',
+      passwordHash: await bcrypt.hash(randomBytes(32).toString('hex'), 12),
       emailVerified: false,
       verificationToken: null,
       verificationTokenExpires: null,

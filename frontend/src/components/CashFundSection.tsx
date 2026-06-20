@@ -162,7 +162,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
 
   // STATE: Inactive (Admin) — no fund yet
   if (!fund) {
-    if (isOwner && ownerTier === 'free') {
+    if (isOwner) {
       return (
         <section className="space-y-4 mb-12">
           <h2 className="font-headline-md text-headline-md text-on-surface">Configuración (Admin)</h2>

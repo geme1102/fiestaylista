@@ -167,10 +167,11 @@ export default function Dashboard() {
                 <button
                   onClick={() => setShowCreateModal(true)}
                   data-testid="new-event-button"
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
+                  disabled={eventCount >= limits.maxEvents}
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <span className="material-symbols-outlined text-lg">add</span>
-                  <span className="hidden sm:inline">Nuevo Evento</span>
+                  <span className="material-symbols-outlined text-lg">{eventCount >= limits.maxEvents ? 'lock' : 'add'}</span>
+                  <span className="hidden sm:inline">{eventCount >= limits.maxEvents ? 'Límite alcanzado' : 'Nuevo Evento'}</span>
                 </button>
       </div>
 

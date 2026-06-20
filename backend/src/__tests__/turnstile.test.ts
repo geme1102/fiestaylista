@@ -5,6 +5,7 @@ vi.mock('../config.js', () => ({
   config: {
     TURNSTILE_SECRET_KEY: '',
     NODE_ENV: 'test',
+    FRONTEND_URL: 'http://localhost:5173',
   },
 }));
 
@@ -26,6 +27,7 @@ describe('verifyTurnstile', () => {
     next = vi.fn();
     (config as any).TURNSTILE_SECRET_KEY = '';
     (config as any).NODE_ENV = 'test';
+    (config as any).FRONTEND_URL = 'http://localhost:5173';
     global.fetch = originalFetch;
   });
 
@@ -39,15 +41,27 @@ describe('verifyTurnstile', () => {
     }));
   });
 
-  it('calls next() in non-production when TURNSTILE_SECRET_KEY is not set', async () => {
+  it('calls next() in non-production when TURNSTILE_SECRET_KEY is not set and FRONTEND_URL is localhost', async () => {
     const req = createReq('some-token');
     await verifyTurnstile(req as Request, {} as Response, next as NextFunction);
 
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('throws ValidationError in production when TURNSTILE_SECRET_KEY is not set', async () => {
+  it('throws ValidationError in production when TURNSTILE_SECRET_KEY is not set even with localhost FRONTEND_URL', async () => {
     (config as any).NODE_ENV = 'production';
+
+    const req = createReq('some-token');
+    await verifyTurnstile(req as Request, {} as Response, next as NextFunction);
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({
+      statusCode: 400,
+      message: 'Turnstile no está configurado',
+    }));
+  });
+
+  it('throws ValidationError when TURNSTILE_SECRET_KEY is not set and FRONTEND_URL is not localhost', async () => {
+    (config as any).FRONTEND_URL = 'https://fiestaylista.com';
 
     const req = createReq('some-token');
     await verifyTurnstile(req as Request, {} as Response, next as NextFunction);

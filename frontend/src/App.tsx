@@ -50,6 +50,7 @@ const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'));
 const ArcoRights = lazy(() => import('./pages/ArcoRights'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SeoEventPage = lazy(() => import('./pages/SeoEventPage'));
+const Statistics = lazy(() => import('./pages/Statistics'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -182,6 +183,7 @@ export default function App() {
               <Route path="/dashboard" element={<PageTransition><PageBoundary><Dashboard /></PageBoundary></PageTransition>} />
               <Route path="/event/:id" element={<PageTransition><PageBoundary><EventAdmin /></PageBoundary></PageTransition>} />
               <Route path="/account" element={<PageTransition><PageBoundary><Account /></PageBoundary></PageTransition>} />
+              <Route path="/statistics" element={<PageTransition><PageBoundary><Statistics /></PageBoundary></PageTransition>} />
             </Route>
             <Route path="/onboarding" element={<PageTransition><PageBoundary><Onboarding /></PageBoundary></PageTransition>} />
           </Route>

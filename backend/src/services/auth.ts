@@ -278,7 +278,7 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
     .limit(1);
 
   if (!user) {
-    throw new ValidationError('Usuario no encontrado');
+    return;
   }
 
   if (user.emailVerified) {

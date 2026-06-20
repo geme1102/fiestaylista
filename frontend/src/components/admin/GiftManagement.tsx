@@ -13,6 +13,7 @@ interface GiftManagementProps {
   showSuggestions: boolean;
   suggestions: string[];
   filteredSuggestions: string[];
+  maxGiftsPerEvent?: number;
   onAddGift: () => Promise<void>;
   onFreeGift: (giftId: string) => Promise<void>;
   onDeleteGift: (giftId: string) => Promise<void>;
@@ -24,7 +25,7 @@ interface GiftManagementProps {
 export function GiftManagement({
   gifts, addingGift, freeingGiftId, deletingGiftId,
   newGiftName, showSuggestions, suggestions, filteredSuggestions,
-  onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
+  maxGiftsPerEvent, onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
   onNewGiftNameChange, onShowSuggestionsChange,
 }: GiftManagementProps) {
   const [addedGifts, setAddedGifts] = useState<Set<string>>(new Set());
@@ -49,7 +50,7 @@ export function GiftManagement({
             <h3 className="text-xl font-bold text-gray-900 tracking-tight">
               Lista de Deseos de Regalos
             </h3>
-            <span className="text-xs text-gray-400 font-semibold">Tus invitados elegirán los regalos directo de esta lista</span>
+            <span className="text-xs text-gray-400 font-semibold">{gifts.length}{maxGiftsPerEvent ? ` / ${maxGiftsPerEvent}` : ''} — Tus invitados elegirán los regalos directo de esta lista</span>
           </div>
         </div>
       </div>
@@ -82,10 +83,10 @@ export function GiftManagement({
             whileTap={{ scale: 0.95 }}
             type="submit"
             data-testid="add-gift-button"
-            disabled={!newGiftName.trim() || addingGift}
+            disabled={!newGiftName.trim() || addingGift || (maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent)}
             className="bg-gradient-to-r from-[#a21b53] to-[#c52367] text-white py-3 px-6 rounded-full text-xs font-black shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{addingGift ? '...' : 'Añadir'}</span>
+            <span>{addingGift ? '...' : maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent ? 'Límite alcanzado' : 'Añadir'}</span>
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </motion.button>
         </div>

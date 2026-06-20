@@ -1,18 +1,32 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '../utils/cn';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { path: '/dashboard', label: 'Mis Eventos', icon: 'celebration' },
   { path: '/pricing', label: 'Planes', icon: 'auto_awesome' },
   { path: '/account', label: 'Mi Cuenta', icon: 'person' },
 ];
 
+function useNavItems(tier: string | undefined) {
+  return useMemo(() => {
+    if (tier === 'pro') {
+      return [
+        ...BASE_NAV_ITEMS.slice(0, 1),
+        { path: '/statistics', label: 'Estadísticas', icon: 'bar_chart' },
+        ...BASE_NAV_ITEMS.slice(1),
+      ];
+    }
+    return BASE_NAV_ITEMS;
+  }, [tier]);
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const NAV_ITEMS = useNavItems(user?.tier);
 
   return (
     <div className="min-h-screen bg-surface transition-colors pb-safe sm:pb-0">
@@ -108,7 +122,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+      <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10 pb-24 sm:pb-10">
         <Outlet />
       </main>
 

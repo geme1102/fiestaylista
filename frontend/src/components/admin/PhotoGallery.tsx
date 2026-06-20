@@ -11,6 +11,7 @@ interface PhotoGalleryProps {
   deletingPhoto: boolean;
   deletePhotoConfirm: string | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
+  maxPhotosPerEvent?: number;
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
   onRequestDelete: (photoId: string) => void;
@@ -21,7 +22,7 @@ interface PhotoGalleryProps {
 
 export function PhotoGallery({
   photos, uploading, uploadProgress, deletingPhoto, deletePhotoConfirm,
-  fileInputRef, onUpload, onDelete, onRequestDelete,
+  fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
 }: PhotoGalleryProps) {
   return (
@@ -31,7 +32,7 @@ export function PhotoGallery({
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
-              Álbum de Recuerdos <span className="text-gray-400 text-sm font-semibold">({photos.length})</span>
+              Álbum de Recuerdos <span className="text-gray-400 text-sm font-semibold">{photos.length}{maxPhotosPerEvent ? ` / ${maxPhotosPerEvent}` : ''}</span>
             </h3>
           </div>
         </div>

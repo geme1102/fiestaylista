@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { gifts as giftsTable } from '../db/schema.js';
+import { events as eventsTable, gifts as giftsTable } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 function sanitize(input: string): string {
@@ -16,15 +16,24 @@ export async function addGift(eventId: string, name: string) {
     throw new ValidationError('El nombre del regalo es requerido');
   }
 
-  const [gift] = await db
-    .insert(giftsTable)
-    .values({
-      eventId,
-      name: cleaned,
-    })
-    .returning();
+  return await db.transaction(async (tx) => {
+    await tx
+      .select({ id: eventsTable.id })
+      .from(eventsTable)
+      .where(eq(eventsTable.id, eventId))
+      .for('update')
+      .limit(1);
 
-  return gift;
+    const [gift] = await tx
+      .insert(giftsTable)
+      .values({
+        eventId,
+        name: cleaned,
+      })
+      .returning();
+
+    return gift;
+  });
 }
 
 export async function updateGift(

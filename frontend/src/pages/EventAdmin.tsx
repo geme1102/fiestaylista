@@ -13,7 +13,7 @@ import { getCashFund, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
-import { EVENT_LABELS, EVENT_ICONS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -662,6 +662,7 @@ export default function EventAdmin() {
           showSuggestions={showSuggestions}
           suggestions={suggestions}
           filteredSuggestions={filteredSuggestions}
+          maxGiftsPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxGiftsPerEvent}
           onAddGift={handleAddGift}
           onFreeGift={handleFreeGift}
           onDeleteGift={handleDeleteGift}
@@ -677,6 +678,7 @@ export default function EventAdmin() {
           deletingPhoto={deletingPhoto}
           deletePhotoConfirm={deletePhotoConfirm}
           fileInputRef={fileInputRef}
+          maxPhotosPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent}
           onUpload={handleUploadPhoto}
           onDelete={handleDeletePhoto}
           onRequestDelete={setDeletePhotoConfirm}

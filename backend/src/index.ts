@@ -39,15 +39,15 @@ app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
       config.FRONTEND_URL,
+      'https://fiestaylista.com',
+      'https://www.fiestaylista.com',
       ...(config.NODE_ENV === 'production'
         ? [
-            'https://fiestaylista.com',
-            'https://www.fiestaylista.com',
-            /\.netlify\.app$/,
+            /^https:\/\/[a-zA-Z0-9-]+--fiestaylista\.netlify\.app$/,
           ]
-        : []),
+        : ['http://localhost:5173']),
     ];
-    if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
+    if (origin && allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
       callback(null, true);
     } else {
       callback(new Error(`Origen no permitido: ${origin}`));

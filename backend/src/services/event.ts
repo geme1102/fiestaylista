@@ -1,10 +1,11 @@
 import { eq, and, sql, isNull, inArray, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
-import { events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
-import { NotFoundError, ForbiddenError } from '../utils/errors.js';
+import { users, events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
+import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors.js';
 import { generateSlug } from '../utils/slug.js';
-import type { EventType } from '../types/index.js';
+import { TIER_LIMITS } from '../types/index.js';
+import type { EventType, Tier } from '../types/index.js';
 
 export interface CreateEventData {
   title: string;
@@ -44,29 +45,51 @@ async function verifyOwnership(eventId: string, userId: string) {
 }
 
 export async function createEvent(userId: string, data: CreateEventData) {
-  const baseSlug = generateSlug(data.title);
+  return await db.transaction(async (tx) => {
+    const [user] = await tx
+      .select({ tier: users.tier })
+      .from(users)
+      .where(eq(users.id, userId))
+      .for('update')
+      .limit(1);
 
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
-    const [event] = await db
-      .insert(eventsTable)
-      .values({
-        userId,
-        title: data.title,
-        eventType: data.eventType,
-        hostPhone: data.hostPhone || null,
-        eventDate: data.eventDate ? new Date(data.eventDate) : null,
-        eventLocation: data.eventLocation || null,
-        eventNote: data.eventNote || null,
-        slug,
-      })
-      .onConflictDoNothing({ target: eventsTable.slug })
-      .returning();
+    const tier = (user?.tier ?? 'free') as Tier;
+    const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
 
-    if (event) return event;
-  }
+    const [countResult] = await tx
+      .select({ count: sql<number>`count(*)` })
+      .from(eventsTable)
+      .where(and(eq(eventsTable.userId, userId), isNull(eventsTable.deletedAt)));
 
-  throw new Error('No se pudo generar un slug único después de varios intentos');
+    const eventCount = Number(countResult?.count ?? 0);
+    if (eventCount >= limits.maxEvents) {
+      throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos en tu plan ${tier}`);
+    }
+
+    const baseSlug = generateSlug(data.title);
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
+      const [event] = await tx
+        .insert(eventsTable)
+        .values({
+          userId,
+          title: data.title,
+          eventType: data.eventType,
+          hostPhone: data.hostPhone || null,
+          eventDate: data.eventDate ? new Date(data.eventDate) : null,
+          eventLocation: data.eventLocation || null,
+          eventNote: data.eventNote || null,
+          slug,
+        })
+        .onConflictDoNothing({ target: eventsTable.slug })
+        .returning();
+
+      if (event) return event;
+    }
+
+    throw new Error('No se pudo generar un slug único después de varios intentos');
+  });
 }
 
 export async function getUserEvents(userId: string) {
@@ -159,8 +182,54 @@ export async function getEvent(eventId: string, userId: string) {
 export async function updateEvent(eventId: string, userId: string, data: UpdateEventData) {
   await verifyOwnership(eventId, userId);
 
-  const updateData: Record<string, unknown> = {};
+  if (data.isActive === true) {
+    return await db.transaction(async (tx) => {
+      const [user] = await tx
+        .select({ tier: users.tier })
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update')
+        .limit(1);
 
+      const tier = (user?.tier ?? 'free') as Tier;
+      const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
+
+      const [countResult] = await tx
+        .select({ count: sql<number>`count(*)` })
+        .from(eventsTable)
+        .where(and(
+          eq(eventsTable.userId, userId),
+          eq(eventsTable.isActive, true),
+          isNull(eventsTable.deletedAt),
+          sql`${eventsTable.id} != ${eventId}`,
+        ));
+
+      const activeCount = Number(countResult?.count ?? 0);
+      if (activeCount >= limits.maxEvents) {
+        throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos activos en tu plan ${tier}`);
+      }
+
+      const updateData: Record<string, unknown> = {};
+      if (data.title !== undefined) updateData.title = data.title;
+      if (data.eventType !== undefined) updateData.eventType = data.eventType;
+      if (data.hostPhone !== undefined) updateData.hostPhone = data.hostPhone;
+      updateData.isActive = true;
+      if (data.eventDate !== undefined) updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null;
+      if (data.eventLocation !== undefined) updateData.eventLocation = data.eventLocation;
+      if (data.eventNote !== undefined) updateData.eventNote = data.eventNote;
+      updateData.updatedAt = new Date();
+
+      const [event] = await tx
+        .update(eventsTable)
+        .set(updateData)
+        .where(eq(eventsTable.id, eventId))
+        .returning();
+
+      return event;
+    });
+  }
+
+  const updateData: Record<string, unknown> = {};
   if (data.title !== undefined) updateData.title = data.title;
   if (data.eventType !== undefined) updateData.eventType = data.eventType;
   if (data.hostPhone !== undefined) updateData.hostPhone = data.hostPhone;

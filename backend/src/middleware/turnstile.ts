@@ -38,10 +38,10 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
 
 async function verifyToken(token: string): Promise<void> {
   if (!config.TURNSTILE_SECRET_KEY) {
-    if (config.NODE_ENV === 'production') {
-      throw new ValidationError('Turnstile no está configurado');
+    if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+      return;
     }
-    return;
+    throw new ValidationError('Turnstile no está configurado');
   }
 
   const formData = new URLSearchParams();
