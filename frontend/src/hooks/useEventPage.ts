@@ -36,6 +36,7 @@ export function useEventPage() {
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const cancelPollRef = useRef<(() => void) | null>(null);
   const { containerRef: turnstileRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
@@ -75,32 +76,43 @@ export function useEventPage() {
     if (!slug) return;
     loadEvent();
 
-    const POLL_FAST = 30000;
+    const POLL_FALLBACK = 30000;
 
-    function schedulePoll(interval: number) {
-      clearInterval(pollTimerRef.current);
+    let initialPollTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
       pollTimerRef.current = setInterval(() => {
         if (!sseConnectedRef.current) {
           loadEventRef.current?.();
         }
-      }, interval);
-    }
+      }, POLL_FALLBACK);
+    }, 5000);
 
-    schedulePoll(POLL_FAST);
+    const cancelPoll = () => {
+      if (initialPollTimer) {
+        clearTimeout(initialPollTimer);
+        initialPollTimer = null;
+      }
+      clearInterval(pollTimerRef.current);
+    };
+    cancelPollRef.current = cancelPoll;
 
     function onVisibilityChange() {
       if (document.hidden) {
-        clearInterval(pollTimerRef.current);
+        cancelPoll();
       } else if (!sseConnectedRef.current) {
         loadEventRef.current?.();
-        schedulePoll(POLL_FAST);
+        const rePollTimer = setTimeout(() => {
+          pollTimerRef.current = setInterval(() => {
+            if (!sseConnectedRef.current) { loadEventRef.current?.(); }
+          }, POLL_FALLBACK);
+        }, 5000);
+        initialPollTimer = rePollTimer;
       }
     }
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       mountedRef.current = false;
-      clearInterval(pollTimerRef.current);
+      cancelPoll();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
     };
@@ -113,7 +125,7 @@ export function useEventPage() {
     initialRetryDelay: 2000,
     onConnected: () => {
       sseConnectedRef.current = true;
-      clearInterval(pollTimerRef.current);
+      cancelPollRef.current?.();
     },
     onDisconnected: () => {
       sseConnectedRef.current = false;

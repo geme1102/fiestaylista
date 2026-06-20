@@ -113,7 +113,7 @@ export default function Register() {
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-2 mb-6">
-<img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
+<picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" /></picture>
                 <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>

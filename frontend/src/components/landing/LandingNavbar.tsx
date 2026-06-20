@@ -12,7 +12,7 @@ export function LandingNavbar({ scrolled, isAuthenticated }: LandingNavbarProps)
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain shrink-0" />
+            <picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain shrink-0" /></picture>
             <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit tracking-tight">
               Fiesta y Lista
             </span>

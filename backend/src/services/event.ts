@@ -236,15 +236,11 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       eventType: eventsTable.eventType,
       slug: eventsTable.slug,
       isActive: eventsTable.isActive,
-      hostPhone: eventsTable.hostPhone,
       boostedUntil: eventsTable.boostedUntil,
       eventDate: eventsTable.eventDate,
       eventLocation: eventsTable.eventLocation,
       eventNote: eventsTable.eventNote,
-      userId: eventsTable.userId,
       viewCount: eventsTable.viewCount,
-      updatedAt: eventsTable.updatedAt,
-      createdAt: eventsTable.createdAt,
     })
     .from(eventsTable)
     .where(and(eq(eventsTable.slug, eventSlug), isNull(eventsTable.deletedAt)))

@@ -39,7 +39,7 @@ export default function Layout() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-<img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" />
+<picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" /></picture>
                 <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>

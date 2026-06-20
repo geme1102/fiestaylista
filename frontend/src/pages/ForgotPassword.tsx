@@ -63,7 +63,7 @@ export default function ForgotPassword() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" />
+              <picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" /></picture>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>
