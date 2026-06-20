@@ -7,9 +7,10 @@ import { formatCOP } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
 import type { Event } from '../types';
 
-function useEventsWithViews() {
+function useEventsWithViews(enabled: boolean) {
   return useQuery({
     queryKey: ['events-with-views'],
+    enabled,
     queryFn: async () => {
       const eventsRes = await apiClient.get<{ events: (Event & { giftCount?: number; photoCount?: number })[] }>('/api/events');
       const events = eventsRes.events || [];
@@ -29,9 +30,10 @@ function useEventsWithViews() {
 
 export default function Statistics() {
   const { user } = useAuth();
-  const { data: events = [], isLoading } = useEventsWithViews();
+  const isPro = user?.tier === 'pro';
+  const { data: events = [], isLoading } = useEventsWithViews(isPro);
 
-  if (user?.tier !== 'pro') {
+  if (!isPro) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center mb-5">

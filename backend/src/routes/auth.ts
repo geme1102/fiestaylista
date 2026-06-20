@@ -125,7 +125,8 @@ router.post('/reset-password', resetLimiter, asyncHandlerWithValidation(async (r
 
 router.post('/logout', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   await authService.revokeAllUserTokens(req.user!.userId);
-  res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', { path: '/api/auth/refresh' });
   res.json({ success: true });
 }));
 
