@@ -9,6 +9,7 @@ import { TIER_LIMITS } from '../types';
 
 const SUGGESTED_AMOUNTS = [30000, 50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
+const MAX_AMOUNT = 5000000;
 
 export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
   const [fund, setFund] = useState<CashFund | null>(null);
@@ -27,6 +28,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
   const { containerRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const [turnstileBlocked, setTurnstileBlocked] = useState(false);
 
   const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 5;
   const canContribute = !isOwner && fund?.isActive;
@@ -65,6 +67,10 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       showToast('El monto mínimo es $2,000 COP', 'error');
       return;
     }
+    if (parsedAmount > MAX_AMOUNT) {
+      showToast(`El monto máximo es $${MAX_AMOUNT.toLocaleString('es-CO')} COP`, 'error');
+      return;
+    }
     const amountInCents = parsedAmount;
     if (!name.trim()) {
       showToast('Escribe tu nombre', 'error');
@@ -77,6 +83,12 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
         await new Promise(r => setTimeout(r, 200));
         if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
       }
+    }
+
+    if (!token) {
+      setTurnstileBlocked(true);
+      showToast('No se pudo verificar que no eres un robot. Si usas un bloqueador de anuncios, desactívalo o intenta con otro navegador.', 'error');
+      return;
     }
 
     setContributing(true);
@@ -293,6 +305,12 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
 
       {/* Turnstile (invisible) */}
       <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+      {turnstileBlocked && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-start gap-2">
+          <span className="material-symbols-outlined text-lg shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+          <span>No se pudo verificar que no eres un robot. Si usas un bloqueador de anuncios, desactívalo o intenta con otro navegador.</span>
+        </div>
+      )}
 
       {/* SECTION 2: FORMULARIO DE APORTE */}
       {canContribute && (

@@ -138,9 +138,17 @@ function TitleUpdater() {
 }
 
 export default function App() {
-  const [splashDone, setSplashDone] = useState(() => localStorage.getItem('splash_seen') === 'true');
+  const [splashDone, setSplashDone] = useState(() => {
+    try {
+      return localStorage.getItem('splash_seen') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const handleSplashDone = useCallback(() => {
-    localStorage.setItem('splash_seen', 'true');
+    try {
+      localStorage.setItem('splash_seen', 'true');
+    } catch {}
     setSplashDone(true);
   }, []);
   const location = useLocation();

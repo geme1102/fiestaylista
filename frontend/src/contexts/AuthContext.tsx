@@ -1,15 +1,16 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../types';
+import type { User, AuthResponse } from '../types';
 import { login as loginApi, register as registerApi, getMe } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, apiClient } from '../services/api';
+import { showToast } from '../hooks/useToast';
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<AuthResponse>;
+  register: (email: string, password: string, name: string, turnstileToken?: string) => Promise<AuthResponse>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -44,32 +45,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch((err) => {
         if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
+        showToast('Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.', 'error');
       })
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await loginApi(email, password);
+  const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {
+    const res = await loginApi(email, password, turnstileToken);
     setTokens(res.accessToken);
     setUser(res.user);
-    const params = new URLSearchParams(window.location.search);
-      const redirect = params.get('redirect');
-      let target = '/dashboard';
-      if (redirect) {
-        try {
-          const url = new URL(redirect, window.location.origin);
-          if (url.origin === window.location.origin) target = redirect;
-        } catch {}
-      }
-      navigate(target);
-  }, [navigate]);
+    return res;
+  }, []);
 
-  const register = useCallback(async (email: string, password: string, name: string) => {
-    const res = await registerApi(email, password, name);
+  const register = useCallback(async (email: string, password: string, name: string, turnstileToken?: string) => {
+    const res = await registerApi(email, password, name, turnstileToken);
     setTokens(res.accessToken);
     setUser(res.user);
-    navigate('/onboarding');
-  }, [navigate]);
+    return res;
+  }, []);
 
   const logout = useCallback(() => {
     apiClient.post('/api/auth/logout').catch((err) => {

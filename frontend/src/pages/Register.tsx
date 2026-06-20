@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
+import { useTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -34,13 +35,20 @@ function PasswordStrengthBar({ password }: { password: string }) {
 
 export default function Register() {
   const { register, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigatedRef = useRef(false);
 
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+
+  const { containerRef, token: turnstileToken } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +72,20 @@ export default function Register() {
       showToast('Debes aceptar los términos y la política de privacidad', 'error');
       return;
     }
+
+    let token = turnstileToken;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setLoading(true);
     try {
-      await register(email, password, name);
+      await register(email, password, name, token ?? undefined);
+      navigatedRef.current = true;
+      navigate('/onboarding', { replace: true });
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
@@ -75,7 +94,7 @@ export default function Register() {
   };
 
   if (isLoading) return <LoadingSpinner fullScreen />;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated && !navigatedRef.current) return <Navigate to="/dashboard" replace />;
 
   return (
     <>
@@ -149,16 +168,28 @@ export default function Register() {
                 <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Contraseña
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  placeholder="Mínimo 8 caracteres"
-                  autoComplete="new-password"
-                  enterKeyHint="go"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
+                    placeholder="Mínimo 8 caracteres"
+                    autoComplete="new-password"
+                    enterKeyHint="go"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
                 <div className="mt-2 flex flex-col gap-1.5">
                   {[
                     { check: password.length >= 8, label: 'Al menos 8 caracteres' },
@@ -219,6 +250,8 @@ export default function Register() {
                 {loading ? <LoadingSpinner size="sm" /> : 'Empezar gratis'}
               </button>
             </form>
+
+            <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
           </div>
         </div>
       </div>

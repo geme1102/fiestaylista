@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription } from '../services/mercadopago';
 import { apiClient } from '../services/api';
@@ -23,8 +23,7 @@ function getUserAvatar(email: string): string {
 }
 
 export default function Account() {
-  const { user, resendVerification, refreshUser } = useAuth();
-  const navigate = useNavigate();
+  const { user, resendVerification, refreshUser, logout } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -58,7 +57,14 @@ export default function Account() {
       setShowCancelConfirm(false);
       setCancelPassword('');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al cancelar suscripción', 'error');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.toLowerCase().includes('contrase') || msg.toLowerCase().includes('password')) {
+        showToast('Contraseña incorrecta. Verifica e intenta de nuevo.', 'error');
+      } else if (msg) {
+        showToast(msg, 'error');
+      } else {
+        showToast('Error al cancelar suscripción', 'error');
+      }
     } finally {
       setCancelLoading(false);
     }
@@ -92,7 +98,7 @@ export default function Account() {
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setDeletePassword('');
-      setTimeout(() => { navigate('/'); }, 2000);
+      setTimeout(() => { logout(); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {

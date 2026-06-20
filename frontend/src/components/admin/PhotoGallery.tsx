@@ -7,6 +7,7 @@ import type { Photo } from '../../types';
 interface PhotoGalleryProps {
   photos: Photo[];
   uploading: boolean;
+  uploadProgress?: string | null;
   deletingPhoto: boolean;
   deletePhotoConfirm: string | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -19,7 +20,7 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({
-  photos, uploading, deletingPhoto, deletePhotoConfirm,
+  photos, uploading, uploadProgress, deletingPhoto, deletePhotoConfirm,
   fileInputRef, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
 }: PhotoGalleryProps) {
@@ -95,8 +96,13 @@ export function PhotoGallery({
             <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
           </div>
           <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
-            {uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos'}
+            {uploadProgress || (uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos')}
           </span>
+          {uploading && !uploadProgress && (
+            <div className="w-48 h-1.5 bg-rose-100 rounded-full mt-2 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#a21b53] to-pink-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+            </div>
+          )}
           <span className="text-[10px] text-gray-400 font-bold mt-1">
             Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
           </span>

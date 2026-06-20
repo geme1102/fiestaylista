@@ -324,7 +324,7 @@ export default function Dashboard() {
 
       {showCreateModal && (
         <AnimatePresence>
-          <Modal onClose={() => setShowCreateModal(false)}>
+          <Modal onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}>
             <CreateForm
               formData={formData}
               setFormData={setFormData}
@@ -460,6 +460,12 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 }
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -472,6 +478,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <motion.div
+        ref={scrollRef}
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}

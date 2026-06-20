@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { useTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AuthBottomNav from '../components/AuthBottomNav';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const { containerRef, token: turnstileToken } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,9 +24,22 @@ export default function ForgotPassword() {
       showToast('Ingresa tu correo electrónico', 'error');
       return;
     }
+    if (!EMAIL_REGEX.test(email.trim())) {
+      showToast('Ingresa un correo electrónico válido', 'error');
+      return;
+    }
+
+    let token = turnstileToken;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setLoading(true);
     try {
-      await apiClient.post('/api/auth/forgot-password', { email: email.trim() });
+      await apiClient.post('/api/auth/forgot-password', { email: email.trim(), turnstileToken: token ?? undefined });
       setSent(true);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al enviar correo', 'error');
@@ -115,6 +135,8 @@ export default function ForgotPassword() {
               </p>
             </form>
           )}
+
+          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
         </div>
       </div>
       </div>

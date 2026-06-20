@@ -1,17 +1,25 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
+import { useTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
 import AuthBottomNav from '../components/AuthBottomNav';
 
 export default function Login() {
-  const { login, isAuthenticated, isLoading, user } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigatedRef = useRef(false);
+
+  const { containerRef, token: turnstileToken } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +27,34 @@ export default function Login() {
       showToast('Completa todos los campos', 'error');
       return;
     }
+
+    let token = turnstileToken;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setLoading(true);
     try {
-      await login(email, password);
-      if (user && !user.emailVerified) {
+      const res = await login(email, password, token ?? undefined);
+      navigatedRef.current = true;
+      if (res.user && !res.user.emailVerified) {
         showToast('Inicio de sesión exitoso. Tu correo aún no está verificado — revisa tu bandeja de entrada.', 'info');
       }
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect) {
+        try {
+          const url = new URL(redirect, window.location.origin);
+          if (url.origin === window.location.origin) {
+            navigate(url.pathname + url.search, { replace: true });
+            return;
+          }
+        } catch {}
+      }
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('Credenciales inválidas')) {
@@ -40,7 +70,7 @@ export default function Login() {
   };
 
   if (isLoading) return <LoadingSpinner fullScreen />;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated && !navigatedRef.current) return <Navigate to="/dashboard" replace />;
 
   return (
     <>
@@ -95,16 +125,28 @@ export default function Login() {
                 <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Contraseña
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  enterKeyHint="go"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    enterKeyHint="go"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
                 <div className="text-right mt-1">
                   <Link to="/forgot-password" className="text-sm text-primary hover:text-primary-fixed-dim font-medium">
                     ¿Olvidaste tu contraseña?
@@ -120,6 +162,8 @@ export default function Login() {
                 {loading ? <LoadingSpinner size="sm" /> : 'Iniciar Sesión'}
               </button>
             </form>
+
+            <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
           </div>
         </div>
       </div>

@@ -54,6 +54,7 @@ export default function EventAdmin() {
   const [locationDraft, setLocationDraft] = useState('');
   const [noteDraft, setNoteDraft] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
   const [boostModal, setBoostModal] = useState(false);
@@ -182,27 +183,40 @@ export default function EventAdmin() {
 
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!id) return;
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      showToast('Solo se permiten imágenes', 'error');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('La imagen no debe superar los 10MB', 'error');
-      return;
-    }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith('image/')) {
+        showToast(`"${f.name}" no es una imagen`, 'error');
+        return false;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        showToast(`"${f.name}" supera los 10MB`, 'error');
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
     setUploading(true);
-    try {
-      const { url } = await uploadPhoto(file);
-      const res = await addPhoto(id!, url);
-      setPhotos((prev) => [...prev, res.photo]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir la foto. Verifica que sea una imagen válida e intenta de nuevo.';
-      showToast(msg, 'error');
-    } finally {
-      setUploading(false);
+    let uploaded = 0;
+    for (const file of validFiles) {
+      uploaded++;
+      setUploadProgress(`Subiendo foto ${uploaded} de ${validFiles.length}...`);
+      try {
+        const { url } = await uploadPhoto(file);
+        const res = await addPhoto(id!, url);
+        setPhotos((prev) => [...prev, res.photo]);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : `Error al subir "${file.name}"`;
+        showToast(msg, 'error');
+      }
     }
+    setUploadProgress(null);
+    setUploading(false);
+    e.target.value = '';
   };
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -655,6 +669,7 @@ export default function EventAdmin() {
         <PhotoGallery
           photos={photos}
           uploading={uploading}
+          uploadProgress={uploadProgress}
           deletingPhoto={deletingPhoto}
           deletePhotoConfirm={deletePhotoConfirm}
           fileInputRef={fileInputRef}

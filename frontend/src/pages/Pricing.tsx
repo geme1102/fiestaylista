@@ -76,7 +76,7 @@ export default function Pricing() {
       return;
     }
     if (!isAuthenticated) {
-      navigate('/register');
+      navigate(`/register?plan=${tier}${yearly ? '&interval=year' : ''}`);
       return;
     }
     if (tier === 'free') {
@@ -88,7 +88,7 @@ export default function Pricing() {
       if (!turnstileReady) {
         showToast('Verificando que no eres un robot...', 'info');
       }
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 50; i++) {
         await new Promise(r => setTimeout(r, 200));
         if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
       }

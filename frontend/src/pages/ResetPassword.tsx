@@ -1,20 +1,39 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { useTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AuthBottomNav from '../components/AuthBottomNav';
 
+function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (score <= 1) return { score, label: 'Débil', color: 'bg-red-500' };
+  if (score <= 3) return { score, label: 'Media', color: 'bg-amber-500' };
+  return { score, label: 'Fuerte', color: 'bg-green-500' };
+}
+
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const resetToken = searchParams.get('token');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  if (!token) {
+  const { containerRef, token: turnstileToken } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+
+  if (!resetToken) {
     return <Navigate to="/login" replace />;
   }
 
@@ -36,9 +55,18 @@ export default function ResetPassword() {
       showToast('Las contraseñas no coinciden', 'error');
       return;
     }
+
+    let token = turnstileToken;
+    if (!token) {
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
+      }
+    }
+
     setLoading(true);
     try {
-      await apiClient.post('/api/auth/reset-password', { token, password });
+      await apiClient.post('/api/auth/reset-password', { token: resetToken, password, turnstileToken: token ?? undefined });
       setDone(true);
       showToast('Contraseña actualizada correctamente', 'success');
     } catch (err) {
@@ -97,33 +125,81 @@ export default function ResetPassword() {
               <label htmlFor="password" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                 Nueva contraseña
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
-                autoComplete="new-password"
-                enterKeyHint="next"
-                autoFocus
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
+                  placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
+                  autoComplete="new-password"
+                  enterKeyHint="next"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              {password && (
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {[
+                    { check: password.length >= 8, label: 'Al menos 8 caracteres' },
+                    { check: /[A-Z]/.test(password), label: 'Una mayúscula' },
+                    { check: /[0-9]/.test(password), label: 'Un número' },
+                  ].map((req) => (
+                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : 'text-on-surface-variant/50'}`}>
+                      <span className={`material-symbols-outlined text-sm ${req.check ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                        {req.check ? 'check_circle' : 'radio_button_unchecked'}
+                      </span>
+                      {req.label}
+                    </div>
+                  ))}
+                  <div className="mt-1">
+                    <div className="flex items-center gap-3" aria-label={`Fortaleza de contraseña: ${getPasswordStrength(password).label}`}>
+                      <div className="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength(password).color}`} style={{ width: `${(getPasswordStrength(password).score / 5) * 100}%` }} />
+                      </div>
+                      <span className={`text-xs font-medium whitespace-nowrap ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>{getPasswordStrength(password).label}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                 Confirmar contraseña
               </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                placeholder="Repite la contraseña"
-                autoComplete="new-password"
-                enterKeyHint="go"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
+                  placeholder="Repite la contraseña"
+                  autoComplete="new-password"
+                  enterKeyHint="go"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+                  aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    {showConfirmPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <button
@@ -139,6 +215,8 @@ export default function ResetPassword() {
               </Link>
             </p>
           </form>
+
+          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
         </div>
       </div>
       <AuthBottomNav />

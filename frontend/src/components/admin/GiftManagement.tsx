@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Sparkles } from 'lucide-react';
 import GiftCard from '../GiftCard';
@@ -27,16 +27,16 @@ export function GiftManagement({
   onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
   onNewGiftNameChange, onShowSuggestionsChange,
 }: GiftManagementProps) {
-  const [addingSuggestion, setAddingSuggestion] = useState(false);
   const [addedGifts, setAddedGifts] = useState<Set<string>>(new Set());
+  const suggestionLoadingRef = useRef(false);
 
   const handleAddSuggestion = useCallback(async (s: string) => {
-    if (addingSuggestion || addedGifts.has(s)) return;
-    setAddingSuggestion(true);
+    if (suggestionLoadingRef.current || addedGifts.has(s)) return;
+    suggestionLoadingRef.current = true;
     await onAddSuggestion(s);
     setAddedGifts((prev) => new Set(prev).add(s));
-    setAddingSuggestion(false);
-  }, [addingSuggestion, addedGifts, onAddSuggestion]);
+    suggestionLoadingRef.current = false;
+  }, [addedGifts, onAddSuggestion]);
 
   return (
     <section className="mb-10">
@@ -89,13 +89,31 @@ export function GiftManagement({
         </div>
 
         {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-          <div className="mt-3 bg-surface border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-            {filteredSuggestions.map((s) => (
+          <div className="mt-3 bg-surface border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto" role="listbox">
+            {filteredSuggestions.map((s, idx) => (
               <button
                 key={s}
                 type="button"
+                role="option"
+                aria-selected={false}
                 onClick={() => { onNewGiftNameChange(s); onShowSuggestionsChange(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-pink-50 transition-colors font-semibold"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = e.currentTarget.parentElement?.children[idx + 1] as HTMLElement | undefined;
+                    next?.focus();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = e.currentTarget.parentElement?.children[idx - 1] as HTMLElement | undefined;
+                    if (prev) prev.focus();
+                    else onShowSuggestionsChange(false);
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onNewGiftNameChange(s);
+                    onShowSuggestionsChange(false);
+                  }
+                }}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-pink-50 transition-colors font-semibold focus:bg-pink-50 focus:outline-none"
               >
                 + {s}
               </button>
@@ -122,7 +140,7 @@ export function GiftManagement({
                     whileHover={{ scale: 1.05, y: -1 }}
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    disabled={addingSuggestion || addedGifts.has(s)}
+                    disabled={suggestionLoadingRef.current || addedGifts.has(s)}
                     onClick={() => handleAddSuggestion(s)}
                     className="text-xs font-bold py-2 px-[18px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-white hover:bg-rose-50/35 border-gray-200 text-gray-700 hover:border-[#a21b53]/40 disabled:opacity-50"
                   >
