@@ -8,6 +8,7 @@ declare global {
         callback: (token: string) => void;
         'expired-callback'?: () => void;
         'error-callback'?: () => void;
+        appearance?: 'always' | 'execute' | 'interaction-only';
       }) => string;
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
@@ -45,6 +46,7 @@ export function useTurnstile() {
           callback: (t: string) => setToken(t),
           'expired-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
           'error-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
+          appearance: 'execute',
         });
       }
       if (++attempts > 50) clearInterval(interval);
