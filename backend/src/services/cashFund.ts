@@ -3,7 +3,7 @@ import { type PaginationParams, type PaginatedResult, buildPaginationConditions 
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
 import { config } from '../config.js';
-import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
 import * as mercadopagoService from './mercadopago.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
 import { randomUUID } from 'node:crypto';
@@ -16,17 +16,8 @@ interface CashFundData {
   targetAmount?: number;
 }
 
-export async function createOrUpdateCashFund(eventId: string, userId: string, data: CashFundData) {
+export async function createOrUpdateCashFund(eventId: string, _userId: string, data: CashFundData) {
   return await db.transaction(async (tx) => {
-    const [event] = await tx
-      .select({ id: events.id, userId: events.userId })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .limit(1);
-
-    if (!event) throw new NotFoundError('Evento no encontrado');
-    if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
-
     const existing = await tx
       .select({ id: cashFunds.id })
       .from(cashFunds)

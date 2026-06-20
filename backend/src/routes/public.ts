@@ -7,7 +7,14 @@ import { publicStatsLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
-router.get('/public/stats', publicStatsLimiter, asyncHandler(async (_req, res) => {
+function cacheControl(seconds: number) {
+  return (_req: any, res: any, next: any) => {
+    res.set('Cache-Control', `public, max-age=${seconds}, s-maxage=${seconds}`);
+    next();
+  };
+}
+
+router.get('/public/stats', publicStatsLimiter, cacheControl(300), asyncHandler(async (_req, res) => {
   const [eventCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(events)

@@ -13,17 +13,15 @@ function useEventsWithViews() {
     queryFn: async () => {
       const eventsRes = await apiClient.get<{ events: (Event & { giftCount?: number; photoCount?: number })[] }>('/api/events');
       const events = eventsRes.events || [];
-      const withViews = await Promise.all(
-        events.map(async (event) => {
-          try {
-            const viewsRes = await apiClient.get<{ count: number }>(`/api/analytics/views/${event.id}`);
-            return { ...event, viewCount: viewsRes.count };
-          } catch {
-            return { ...event, viewCount: 0 };
-          }
-        })
-      );
-      return withViews;
+      const eventIds = events.map(e => e.id);
+      let viewsMap: Record<string, number> = {};
+      if (eventIds.length > 0) {
+        try {
+          const res = await apiClient.post<{ views: Record<string, number> }>('/api/analytics/views/batch', { eventIds });
+          viewsMap = res.views;
+        } catch {}
+      }
+      return events.map(event => ({ ...event, viewCount: viewsMap[event.id] ?? 0 }));
     },
     staleTime: 1000 * 60,
   });

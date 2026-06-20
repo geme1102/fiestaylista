@@ -124,7 +124,7 @@ app.get('/health', apiLimiter, (_req, res) => {
 
 app.use('/api', apiLimiter);
 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('uploads', { maxAge: '1y', immutable: true }));
 
 app.use('/api/auth', authRouter);
 app.use('/api/events', eventsRouter);

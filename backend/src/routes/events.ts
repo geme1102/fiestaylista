@@ -50,7 +50,7 @@ router.post('/', requireAuth, checkEventLimit(), asyncHandlerWithValidation(asyn
   res.status(201).json({ event });
 }));
 
-router.get('/slug/:slug', viewLimiter, asyncHandler(async (req, res) => {
+router.get('/slug/:slug', viewLimiter, (_req, res, next) => { res.set('Cache-Control', 'public, max-age=60, s-maxage=120'); next(); }, asyncHandler(async (req, res) => {
   const eventSlug = req.params.slug as string;
   const result = await eventService.getEventBySlug(eventSlug, {
     limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,

@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { compressImage } from '../utils/compressImage';
 import type { Event, Gift, Photo } from '../types';
 
 interface CreateEventData {
@@ -15,9 +16,13 @@ export function addPhoto(eventId: string, url: string, caption?: string): Promis
   return apiClient.post<{ photo: Photo }>(`/api/events/${eventId}/photos`, { url, caption });
 }
 
-export function uploadPhoto(file: File): Promise<{ url: string }> {
+export async function uploadPhoto(file: File, onProgress?: (pct: number) => void): Promise<{ url: string }> {
+  const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', compressed, file.name.replace(/\.[^.]+$/, '.jpg'));
+  if (onProgress) {
+    return apiClient.uploadWithProgress<{ url: string }>('/api/upload', formData, onProgress);
+  }
   return apiClient.post<{ url: string }>('/api/upload', formData);
 }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Sparkles } from 'lucide-react';
 import GiftCard from '../GiftCard';
@@ -22,7 +22,7 @@ interface GiftManagementProps {
   onShowSuggestionsChange: (show: boolean) => void;
 }
 
-export function GiftManagement({
+export default memo(function GiftManagement({
   gifts, addingGift, freeingGiftId, deletingGiftId,
   newGiftName, showSuggestions, suggestions, filteredSuggestions,
   maxGiftsPerEvent, onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
@@ -178,4 +178,4 @@ export function GiftManagement({
       )}
     </section>
   );
-}
+});

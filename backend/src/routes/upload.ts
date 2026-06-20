@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { unlink, rename, readFile, mkdir } from 'node:fs/promises';
+import { open, unlink, rename, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { v2 as cloudinary } from 'cloudinary';
@@ -22,6 +22,19 @@ const MAGIC_BYTES: { sig: Uint8Array; mime: string }[] = [
   { sig: new Uint8Array([0x52, 0x49, 0x46, 0x46]), mime: 'image/webp' },
   { sig: new Uint8Array([0x47, 0x49, 0x46, 0x38]), mime: 'image/gif' },
 ];
+
+const MAGIC_BYTES_READ = 12;
+
+async function readFileHeader(filePath: string): Promise<Buffer> {
+  const fd = await open(filePath, 'r');
+  try {
+    const buf = Buffer.alloc(MAGIC_BYTES_READ);
+    await fd.read(buf, 0, MAGIC_BYTES_READ, 0);
+    return buf;
+  } finally {
+    await fd.close();
+  }
+}
 
 function validateMagicBytes(buffer: Buffer): { valid: boolean; detectedMime: string | null } {
   for (const entry of MAGIC_BYTES) {
@@ -126,7 +139,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
       }
 
       const filePath = req.file.path;
-      const rawBuffer = await readFile(filePath);
+      const rawBuffer = await readFileHeader(filePath);
       const { valid, detectedMime } = validateMagicBytes(rawBuffer);
       if (!valid) {
         await cleanupFile(filePath);
@@ -160,7 +173,7 @@ router.post('/guest', guestUploadLimiter, (req: Request, res: Response, next: Ne
       }
 
       const filePath = req.file.path;
-      const rawBuffer = await readFile(filePath);
+      const rawBuffer = await readFileHeader(filePath);
       const { valid, detectedMime } = validateMagicBytes(rawBuffer);
       if (!valid) {
         await cleanupFile(filePath);

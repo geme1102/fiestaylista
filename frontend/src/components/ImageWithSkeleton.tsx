@@ -3,9 +3,9 @@ import { cn } from '../utils/cn';
 
 function getCloudinarySrcSet(src: string): string | undefined {
   if (!src.includes('cloudinary.com')) return undefined;
-  const base = src.replace('/image/upload/', '/image/upload/w_400/');
-  const base800 = src.replace('/image/upload/', '/image/upload/w_800/');
-  const base1200 = src.replace('/image/upload/', '/image/upload/w_1200/');
+  const base = src.replace('/image/upload/', '/image/upload/f_auto,w_400/');
+  const base800 = src.replace('/image/upload/', '/image/upload/f_auto,w_800/');
+  const base1200 = src.replace('/image/upload/', '/image/upload/f_auto,w_1200/');
   return `${base} 400w, ${base800} 800w, ${base1200} 1200w`;
 }
 

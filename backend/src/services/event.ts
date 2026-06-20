@@ -26,24 +26,6 @@ export interface UpdateEventData {
   eventNote?: string | null;
 }
 
-async function verifyOwnership(eventId: string, userId: string) {
-  const [event] = await db
-    .select()
-    .from(eventsTable)
-    .where(eq(eventsTable.id, eventId))
-    .limit(1);
-
-  if (!event) {
-    throw new NotFoundError('Evento no encontrado');
-  }
-
-  if (event.userId !== userId) {
-    throw new ForbiddenError('No tienes permiso para modificar este evento');
-  }
-
-  return event;
-}
-
 export async function createEvent(userId: string, data: CreateEventData) {
   return await db.transaction(async (tx) => {
     const [user] = await tx
@@ -180,8 +162,6 @@ export async function getEvent(eventId: string, userId: string) {
 }
 
 export async function updateEvent(eventId: string, userId: string, data: UpdateEventData) {
-  await verifyOwnership(eventId, userId);
-
   if (data.isActive === true) {
     return await db.transaction(async (tx) => {
       const [user] = await tx
@@ -317,9 +297,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
   };
 }
 
-export async function deleteEvent(eventId: string, userId: string) {
-  await verifyOwnership(eventId, userId);
-
+export async function deleteEvent(eventId: string, _userId: string) {
   await db
     .update(eventsTable)
     .set({ deletedAt: new Date(), updatedAt: new Date() })

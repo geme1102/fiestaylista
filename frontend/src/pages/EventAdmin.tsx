@@ -17,7 +17,7 @@ import { EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { GiftManagement } from '../components/admin/GiftManagement';
+import GiftManagement from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
 
 interface AdminEvent {
@@ -55,6 +55,7 @@ export default function EventAdmin() {
   const [noteDraft, setNoteDraft] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [uploadPercent, setUploadPercent] = useState(0);
 
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
   const [boostModal, setBoostModal] = useState(false);
@@ -210,20 +211,36 @@ export default function EventAdmin() {
     if (validFiles.length === 0) return;
 
     setUploading(true);
-    let uploaded = 0;
-    for (const file of validFiles) {
-      uploaded++;
-      setUploadProgress(`Subiendo foto ${uploaded} de ${validFiles.length}...`);
-      try {
-        const { url } = await uploadPhoto(file);
-        const res = await addPhoto(id!, url);
-        setPhotos((prev) => [...prev, res.photo]);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : `Error al subir "${file.name}"`;
-        showToast(msg, 'error');
-      }
-    }
+    setUploadPercent(0);
+    setUploadProgress(`Subiendo 0 de ${validFiles.length}...`);
+
+    let completed = 0;
+    const fileProgress = new Map<number, number>();
+    const totalWeight = validFiles.length;
+
+    await Promise.allSettled(
+      validFiles.map((file, idx) =>
+        (async () => {
+          try {
+            const { url } = await uploadPhoto(file, (pct) => {
+              fileProgress.set(idx, pct);
+              const total = [...fileProgress.values()].reduce((a, b) => a + b, 0);
+              setUploadPercent(Math.round(total / totalWeight));
+            });
+            const res = await addPhoto(id!, url);
+            completed++;
+            setUploadProgress(`Subiendo ${completed} de ${validFiles.length}...`);
+            setPhotos((prev) => [...prev, res.photo]);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : `Error al subir "${file.name}"`;
+            showToast(msg, 'error');
+          }
+        })()
+      ),
+    );
+
     setUploadProgress(null);
+    setUploadPercent(0);
     setUploading(false);
     e.target.value = '';
   }, [id]);
@@ -324,20 +341,27 @@ export default function EventAdmin() {
     );
   }
 
-  const suggestions = GIFT_SUGGESTIONS[event.eventType] || [];
-  const filteredSuggestions = suggestions.filter((s) =>
-    s.toLowerCase().includes(newGiftName.toLowerCase()) &&
-    !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
+  const suggestions = useMemo(() => GIFT_SUGGESTIONS[event.eventType] || [], [event.eventType]);
+  const filteredSuggestions = useMemo(() => {
+    if (!newGiftName) return suggestions;
+    const q = newGiftName.toLowerCase();
+    return suggestions.filter((s) =>
+      s.toLowerCase().includes(q) &&
+      !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
+    );
+  }, [suggestions, newGiftName, gifts]);
+  const isBoosted = useMemo(() =>
+    !!(event.boostedUntil && new Date(event.boostedUntil) > new Date()),
+    [event.boostedUntil]
   );
-  const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
-  const formatDateTime = (dateStr: string) => {
+  const formatDateTime = useCallback((dateStr: string) => {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
     const date = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
     const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     return `${date} ${time}`;
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-surface text-[#2c1f24] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#a21b53]/20 selection:text-[#a21b53]">
@@ -684,6 +708,7 @@ export default function EventAdmin() {
           photos={photos}
           uploading={uploading}
           uploadProgress={uploadProgress}
+          uploadPercent={uploadPercent}
           deletingPhoto={deletingPhoto}
           deletePhotoConfirm={deletePhotoConfirm}
           fileInputRef={fileInputRef}

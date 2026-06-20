@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
@@ -10,6 +10,20 @@ import { TIER_LIMITS } from '../types';
 const SUGGESTED_AMOUNTS = [30000, 50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
 const MAX_AMOUNT = 5000000;
+
+const INITIALS_COLORS = ['bg-secondary-fixed text-secondary', 'bg-primary-fixed text-primary', 'bg-tertiary-fixed text-tertiary'];
+
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getInitialsBg(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return INITIALS_COLORS[Math.abs(hash) % INITIALS_COLORS.length];
+}
 
 export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
   const [fund, setFund] = useState<CashFund | null>(null);
@@ -192,20 +206,10 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
     ? Math.min((fund.collectedAmount / fund.targetAmount) * 100, 100)
     : 0;
 
-  const recentContributions = contributions.slice(-MAX_RECENT_CONTRIBUTIONS).reverse();
-
-  function getInitials(name: string) {
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  }
-
-  function getInitialsBg(name: string) {
-    const colors = ['bg-secondary-fixed text-secondary', 'bg-primary-fixed text-primary', 'bg-tertiary-fixed text-tertiary'];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  }
+  const recentContributions = useMemo(() =>
+    contributions.slice(-MAX_RECENT_CONTRIBUTIONS).reverse(),
+    [contributions]
+  );
 
   return (
     <div className="mb-12 relative">

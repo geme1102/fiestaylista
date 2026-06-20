@@ -64,7 +64,7 @@ const claimGiftSchema = z.object({
   claimedBy: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
 });
 
-router.get('/', giftLimiter, asyncHandler(async (req, res) => {
+router.get('/', giftLimiter, (_req, res, next) => { res.set('Cache-Control', 'public, max-age=30, s-maxage=60'); next(); }, asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

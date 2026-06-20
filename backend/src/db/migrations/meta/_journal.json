@@ -85,6 +85,13 @@
       "when": 1779900010000,
       "tag": "0011_remove_duplicate_subscriptions_index",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1779900011000,
+      "tag": "0012_add_refresh_tokens_expires_at_index",
+      "breakpoints": true
     }
   ]
 }

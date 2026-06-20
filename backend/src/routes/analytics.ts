@@ -66,4 +66,30 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), asyncHa
   }
 }));
 
+router.post('/analytics/views/batch', requireAuth, requireTier('pro'), asyncHandler(async (req: AuthRequest, res: Response, next) => {
+  try {
+    const parsed = z.object({ eventIds: z.array(z.string().uuid()).max(50) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Lista de IDs inválida' });
+      return;
+    }
+    const { eventIds } = parsed.data;
+    const userId = req.user!.userId;
+
+    const rows = await db
+      .select({ id: events.id, viewCount: events.viewCount })
+      .from(events)
+      .where(sql`${events.id} = ANY(${eventIds}) AND ${events.userId} = ${userId}`);
+
+    const viewMap: Record<string, number> = {};
+    for (const row of rows) {
+      viewMap[row.id] = row.viewCount ?? 0;
+    }
+
+    res.json({ views: viewMap });
+  } catch (err) {
+    next(err);
+  }
+}));
+
 export default router;

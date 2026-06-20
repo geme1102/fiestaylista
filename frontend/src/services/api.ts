@@ -227,4 +227,34 @@ export const apiClient = {
   del<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     return request<T>('DELETE', path, body, options);
   },
+  uploadWithProgress<T>(path: string, formData: FormData, onProgress: (pct: number) => void): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const url = `${BASE_URL}${path}`;
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(undefined as T); }
+        } else {
+          let msg = `Error ${xhr.status}`;
+          try { const err = JSON.parse(xhr.responseText); msg = err.message ?? err.error ?? msg; } catch {}
+          reject(new Error(msg));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Error de conexión. Verifica tu internet e intenta de nuevo.'));
+      xhr.onabort = () => reject(new Error('La solicitud tardó demasiado. Intenta de nuevo.'));
+
+      xhr.open('POST', url);
+      if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+      xhr.timeout = REQUEST_TIMEOUT;
+      xhr.send(formData);
+    });
+  },
 };

@@ -8,6 +8,7 @@ interface PhotoGalleryProps {
   photos: Photo[];
   uploading: boolean;
   uploadProgress?: string | null;
+  uploadPercent?: number;
   deletingPhoto: boolean;
   deletePhotoConfirm: string | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -21,7 +22,7 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({
-  photos, uploading, uploadProgress, deletingPhoto, deletePhotoConfirm,
+  photos, uploading, uploadProgress, uploadPercent, deletingPhoto, deletePhotoConfirm,
   fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
 }: PhotoGalleryProps) {
@@ -100,9 +101,12 @@ export function PhotoGallery({
           <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
             {uploadProgress || (uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos')}
           </span>
-          {uploading && !uploadProgress && (
+          {uploading && (
             <div className="w-48 h-1.5 bg-rose-100 rounded-full mt-2 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#a21b53] to-pink-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+              <div
+                className="h-full bg-gradient-to-r from-[#a21b53] to-pink-500 rounded-full transition-all duration-300"
+                style={{ width: `${uploadPercent ?? 50}%` }}
+              />
             </div>
           )}
           <span className="text-[10px] text-gray-400 font-bold mt-1">
