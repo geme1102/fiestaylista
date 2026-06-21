@@ -144,6 +144,37 @@ router.delete('/:giftId', requireAuth, requireEventOwnership, validateUuidParam(
   res.json(result);
 }));
 
+const groupClaimSchema = z.object({
+  claimedBy: z.string().min(1, 'El nombre es requerido').max(100),
+  message: z.string().max(500).optional(),
+});
+
+router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstileOptional, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) throw new ValidationError('ID del regalo requerido');
+
+  const data = groupClaimSchema.parse(req.body);
+  const result = await giftService.addGroupClaim(giftId, data.claimedBy, data.message);
+  res.status(201).json(result);
+}));
+
+router.get('/:giftId/claims', validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req, res) => {
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) throw new ValidationError('ID del regalo requerido');
+
+  const claims = await giftService.getGiftClaims(giftId);
+  res.json({ claims });
+}));
+
+router.put('/:giftId/toggle-group', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
+  const giftId = req.params.giftId as string | undefined;
+  if (!giftId) throw new ValidationError('ID del regalo requerido');
+
+  const { isGroupGift } = z.object({ isGroupGift: z.boolean() }).parse(req.body);
+  const gift = await giftService.toggleGroupGift(giftId, isGroupGift);
+  res.json({ gift });
+}));
+
 router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
@@ -10,7 +10,7 @@ import * as cashFundService from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
 import { db } from '../db/index.js';
-import { cashFunds, events } from '../db/schema.js';
+import { cashFunds, cashContributions, events } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 
@@ -20,6 +20,8 @@ const createFundSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
   targetAmount: z.number().int().min(0).optional(),
+  bankPhone: z.string().max(20).optional().nullable(),
+  bankType: z.string().max(20).optional().nullable(),
 });
 
 const contributeSchema = z.object({
@@ -29,12 +31,25 @@ const contributeSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
+const promiseSchema = z.object({
+  cashFundId: z.string().uuid('ID de fondo inválido'),
+  contributorName: z.string().min(1, 'Tu nombre es requerido').max(100),
+  amount: z.number().int().min(2000, 'El monto mínimo es $2,000 COP').max(500000, 'El monto máximo es $5.000.000'),
+  message: z.string().max(500).optional(),
+});
+
 router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
   const data = createFundSchema.parse(req.body);
-  const fund = await cashFundService.createOrUpdateCashFund(eventId, req.user!.userId, data);
+  const fund = await cashFundService.createOrUpdateCashFund(eventId, req.user!.userId, {
+    title: data.title,
+    description: data.description,
+    targetAmount: data.targetAmount,
+    bankPhone: data.bankPhone ?? undefined,
+    bankType: data.bankType ?? undefined,
+  });
   res.json({ cashFund: fund });
 }));
 
@@ -59,6 +74,37 @@ router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstileOptional,
     data.message,
   );
   res.status(201).json(result);
+}));
+
+router.post('/cash-fund/promise', asyncHandlerWithValidation(async (req, res) => {
+  const data = promiseSchema.parse(req.body);
+
+  const [fund] = await db
+    .select({ id: cashFunds.id, isActive: cashFunds.isActive })
+    .from(cashFunds)
+    .where(eq(cashFunds.id, data.cashFundId))
+    .limit(1);
+
+  if (!fund) throw new ValidationError('Fondo no encontrado');
+  if (!fund.isActive) throw new ValidationError('Este fondo ya no está activo');
+
+  const [contribution] = await db
+    .insert(cashContributions)
+    .values({
+      cashFundId: data.cashFundId,
+      contributorName: data.contributorName,
+      amount: data.amount,
+      message: data.message || null,
+      status: 'promised',
+    })
+    .returning();
+
+  await db
+    .update(cashFunds)
+    .set({ collectedAmount: sql`${cashFunds.collectedAmount} + ${data.amount}` })
+    .where(eq(cashFunds.id, data.cashFundId));
+
+  res.status(201).json({ contribution });
 }));
 
 router.get('/cash-fund/:cashFundId/contributions', requireAuth, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {

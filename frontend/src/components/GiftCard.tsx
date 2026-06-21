@@ -1,8 +1,10 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
-import type { Gift } from '../types';
+import { apiClient } from '../services/api';
+import { showToast } from '../hooks/useToast';
+import type { Gift, GiftClaim } from '../types';
 
 interface GiftCardProps {
   gift: Gift;
@@ -19,10 +21,46 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
+  const [claims, setClaims] = useState<GiftClaim[]>(gift.claims || []);
+  const [showClaimForm, setShowClaimForm] = useState(false);
+  const [claimName, setClaimName] = useState('');
+  const [claimMessage, setClaimMessage] = useState('');
+  const [claiming, setClaiming] = useState(false);
+
+  useEffect(() => {
+    if (!gift.isGroupGift) return;
+    if (gift.claims && gift.claims.length > 0) {
+      setClaims(gift.claims);
+    } else {
+      apiClient.get<{ claims: GiftClaim[] }>(`/api/events/${gift.eventId}/gifts/${gift.id}/claims`)
+        .then((res) => setClaims(res.claims || []))
+        .catch(() => {});
+    }
+  }, [gift.isGroupGift, gift.eventId, gift.id, gift.claims]);
 
   const onImgError = () => setImgError(true);
 
-  if (gift.isClaimed) {
+  const handleGroupClaim = async () => {
+    if (!claimName.trim()) return;
+    setClaiming(true);
+    try {
+      const res = await apiClient.put<{ claim: GiftClaim }>(`/api/events/${gift.eventId}/gifts/${gift.id}/group-claim`, {
+        claimedBy: claimName.trim(),
+        message: claimMessage.trim() || undefined,
+      });
+      setClaims((prev) => [...prev, res.claim]);
+      setClaimName('');
+      setClaimMessage('');
+      setShowClaimForm(false);
+      showToast(`${claimName.trim()} se unió al regalo 🎉`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al unirte al regalo', 'error');
+    } finally {
+      setClaiming(false);
+    }
+  };
+
+  if (gift.isClaimed && !gift.isGroupGift) {
     return (
       <motion.div
         layout
@@ -121,22 +159,108 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         </div>
       </div>
 
-      {isAdmin && onDelete && (
-        <button
-          onClick={() => onDelete(gift.id)}
-          disabled={deletingId === gift.id}
-          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all cursor-pointer opacity-80 hover:opacity-100 disabled:opacity-30 z-10"
-          title="Eliminar regalo"
-        >
-          {deletingId === gift.id ? (
-            <span className="inline-block w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      {isAdmin && (
+        <div className="absolute top-4 right-4 flex gap-1 z-10">
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: !gift.isGroupGift });
+                showToast(res.gift.isGroupGift ? 'Regalo grupal activado 👥' : 'Regalo individual', 'success');
+                window.location.reload();
+              } catch (err) {
+                showToast(err instanceof Error ? err.message : 'Error', 'error');
+              }
+            }}
+            className={`p-2 rounded-full transition-all ${gift.isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'}`}
+            title={gift.isGroupGift ? 'Regalo grupal (varias personas)' : 'Hacer grupal (varias personas pueden unirse)'}
+          >
+            <span className="material-symbols-outlined text-base">group</span>
+          </button>
+          {onDelete && (
+            <button
+              onClick={() => onDelete(gift.id)}
+              disabled={deletingId === gift.id}
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all cursor-pointer disabled:opacity-30"
+              title="Eliminar regalo"
+            >
+              {deletingId === gift.id ? (
+                <span className="inline-block w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       )}
 
-      {onClaim && (
+      {/* Group Gift: Claims list */}
+      {gift.isGroupGift && claims.length > 0 && (
+        <div className="mt-4 space-y-1.5">
+          <p className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">group</span>
+            {claims.length} {claims.length === 1 ? 'persona' : 'personas'} participan
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {claims.map((c) => (
+              <span key={c.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-fixed/30 text-primary text-[11px] font-bold">
+                {c.claimedBy}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Buttons area */}
+      {gift.isGroupGift && !gift.isClaimed ? (
+        <div className="mt-4">
+          {!showClaimForm ? (
+            <button
+              onClick={() => setShowClaimForm(true)}
+              className="w-full bg-gradient-to-r from-secondary to-secondary-container text-on-secondary py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider hover:opacity-90 active:scale-[0.97]"
+            >
+              <span className="material-symbols-outlined text-base">group_add</span>
+              Unirme al grupo
+            </button>
+          ) : (
+            <div className="space-y-2 p-3 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30">
+              <input
+                type="text"
+                value={claimName}
+                onChange={(e) => setClaimName(e.target.value)}
+                placeholder="Tu nombre"
+                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                autoFocus
+              />
+              <input
+                type="text"
+                value={claimMessage}
+                onChange={(e) => setClaimMessage(e.target.value)}
+                placeholder="Mensaje (opcional)"
+                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowClaimForm(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleGroupClaim}
+                  disabled={claiming || !claimName.trim()}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-secondary to-secondary-container text-white text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center"
+                >
+                  {claiming ? (
+                    <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    'Unirme'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : onClaim && (
         <div className="mt-4">
           <button
             onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}

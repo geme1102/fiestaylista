@@ -80,4 +80,14 @@ router.delete('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'
   res.json(result);
 }));
 
+router.post('/:id/complete', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+  const result = await eventService.completeEvent(req.params.id as string, req.user!.userId);
+  res.json(result);
+}));
+
+router.post('/:id/reactivate', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+  const event = await eventService.reactivateEvent(req.params.id as string, req.user!.userId);
+  res.json({ event });
+}));
+
 export default router;

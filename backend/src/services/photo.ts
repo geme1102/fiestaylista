@@ -118,6 +118,24 @@ export async function deletePhoto(photoId: string) {
   return { success: true };
 }
 
+export async function toggleFeaturedPhoto(photoId: string) {
+  const [photo] = await db
+    .select()
+    .from(photosTable)
+    .where(and(eq(photosTable.id, photoId), isNull(photosTable.deletedAt)))
+    .limit(1);
+
+  if (!photo) throw new NotFoundError('Foto no encontrada');
+
+  const [updated] = await db
+    .update(photosTable)
+    .set({ isFeatured: !photo.isFeatured })
+    .where(eq(photosTable.id, photoId))
+    .returning();
+
+  return updated;
+}
+
 export async function getEventPhotos(eventId: string) {
   const eventPhotos = await db
     .select()

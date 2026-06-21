@@ -1,0 +1,122 @@
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { apiClient } from '../services/api';
+import { showToast } from '../hooks/useToast';
+
+interface GuestPhotoUploadProps {
+  eventId: string;
+  onUploaded: () => void;
+}
+
+export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [caption, setCaption] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleUpload = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/guest-upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al subir la imagen');
+      }
+      const { url } = await res.json();
+
+      await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
+        url,
+        caption: caption.trim() || undefined,
+      });
+
+      showToast('Foto subida 📸 ¡Gracias!', 'success');
+      setShowForm(false);
+      setCaption('');
+      setPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      onUploaded();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al subir la foto', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="mb-6">
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="w-full p-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center justify-between gap-3 hover:border-primary/50 hover:bg-primary-fixed/20 transition-all min-h-[56px] group"
+      >
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 1" }}>add_a_photo</span>
+          <span className="font-semibold text-sm text-on-surface-variant group-hover:text-primary transition-colors">
+            {showForm ? 'Cerrar' : '📸 ¿Tomaste fotos? Súbelas aquí'}
+          </span>
+        </div>
+        <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${showForm ? 'rotate-180' : ''}`}>expand_more</span>
+      </button>
+
+      {showForm && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-5 mt-2 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileSelect}
+            className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary-fixed file:text-primary hover:file:bg-primary-fixed/70 transition-all cursor-pointer"
+          />
+
+          {preview && (
+            <div className="relative rounded-xl overflow-hidden">
+              <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-xl" />
+            </div>
+          )}
+
+          <input
+            type="text"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="¿Qué quieres contar de esta foto? (opcional)"
+            className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+
+          <button
+            onClick={handleUpload}
+            disabled={uploading || !fileInputRef.current?.files?.[0]}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
+          >
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <span className="block w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Subiendo...
+              </span>
+            ) : (
+              'Subir foto 📸'
+            )}
+          </button>
+        </motion.div>
+      )}
+    </div>
+  );
+}

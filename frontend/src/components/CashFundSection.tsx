@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
+import { getCashFund, createContribution, getContributions, boostEvent, createPromise } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { formatCOP, validateRedirectUrl } from '../utils/format';
 import { useTurnstile } from '../hooks/useTurnstile';
@@ -288,6 +288,13 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
               </div>
             )}
 
+            {/* La Jarra — Admin bank info config */}
+            {isOwner && (
+              <div className="w-full mt-6 pt-4 border-t border-secondary/10">
+                <AdminBankConfig fund={fund} eventId={eventId} onUpdate={loadFund} />
+              </div>
+            )}
+
             {/* Payment Method Badges */}
             <div className="grid grid-cols-3 gap-2 mt-6 w-full">
               <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
@@ -408,6 +415,48 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
         </section>
       )}
 
+      {/* LA JARRA: Transferencia directa */}
+      {fund && fund.bankPhone && (
+        <section className="space-y-4 mt-8">
+          <h2 className="font-headline-md text-headline-md text-on-surface">💸 Transferencia Directa</h2>
+          <div className="rounded-3xl p-6 border border-secondary/20 shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(255,248,230,0.6), rgba(255,255,255,0.8))' }}>
+            <p className="text-sm text-on-surface-variant mb-4">
+              El anfitrión recibe transferencias directas. Usa los datos de abajo para enviar tu aporte y luego márcalo como enviado.
+            </p>
+            <div className="bg-white/60 rounded-2xl p-4 border border-secondary/10 mb-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-secondary">account_balance</span>
+                <div>
+                  <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
+                  <p className="font-bold text-on-surface">
+                    {fund.bankType === 'nequi' && 'Nequi'}
+                    {fund.bankType === 'daviplata' && 'Daviplata'}
+                    {fund.bankType === 'bancolombia' && 'Bancolombia'}
+                    {!['nequi', 'daviplata', 'bancolombia'].includes(fund.bankType || '') && (fund.bankType || 'Cuenta bancaria')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-secondary">smartphone</span>
+                <div>
+                  <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
+                  <p className="font-bold text-on-surface text-lg tracking-wider">{fund.bankPhone}</p>
+                </div>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(fund.bankPhone || ''); showToast('Número copiado 📋', 'success'); }}
+                  className="ml-auto p-2 rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all"
+                  aria-label="Copiar número"
+                >
+                  <span className="material-symbols-outlined text-base">content_copy</span>
+                </button>
+              </div>
+            </div>
+
+            {canContribute && <PromiseForm fundId={fund.id} loadFund={loadFund} />}
+          </div>
+        </section>
+      )}
+
       {/* SECTION 4: ESTADO CERRADO (Invitado) */}
       {!fund.isActive && !isOwner && (
         <section className="space-y-4 mt-8">
@@ -476,6 +525,160 @@ function ConfettiOverlay() {
         </div>
       ))}
     </motion.div>
+  );
+}
+
+function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId: string; onUpdate: () => void }) {
+  const [phone, setPhone] = useState(fund.bankPhone || '');
+  const [type, setType] = useState(fund.bankType || 'nequi');
+  const [saving, setSaving] = useState(false);
+  const [show, setShow] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { apiClient } = await import('../services/api');
+      await apiClient.put(`/api/events/${eventId}/cash-fund`, {
+        bankPhone: phone.trim() || null,
+        bankType: phone.trim() ? type : null,
+      });
+      showToast('Datos bancarios guardados ✅', 'success');
+      onUpdate();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al guardar', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={() => setShow(!show)}
+        className="flex items-center gap-2 text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors"
+      >
+        <span className="material-symbols-outlined text-base">account_balance</span>
+        {show ? 'Cerrar' : 'Configurar datos para transferencia directa'}
+      </button>
+      {show && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs text-on-surface-variant/70">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+            >
+              <option value="nequi">Nequi</option>
+              <option value="daviplata">Daviplata</option>
+              <option value="bancolombia">Bancolombia</option>
+            </select>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Número de teléfono"
+              className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all sm:col-span-2"
+            />
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-6 py-2.5 rounded-xl bg-secondary text-white font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[44px] flex items-center gap-2"
+          >
+            {saving ? (
+              <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            ) : (
+              'Guardar datos de transferencia'
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PromiseForm({ fundId, loadFund }: { fundId: string; loadFund: () => void }) {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !amount) return;
+    setSubmitting(true);
+    try {
+      await createPromise({
+        cashFundId: fundId,
+        contributorName: name.trim(),
+        amount: Number(amount),
+        message: message.trim() || undefined,
+      });
+      setDone(true);
+      showToast('¡Gracias por tu aporte! 💛 El anfitrión lo recibirá directo.', 'success');
+      loadFund();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al registrar tu aporte', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+        <span className="material-symbols-outlined text-emerald-600" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+        <p className="text-sm font-semibold text-emerald-800">¡Aporte registrado! El anfitrión recibirá la notificación.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <p className="text-sm font-bold text-on-surface">¿Ya transferiste? Regístralo aquí:</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Tu nombre"
+          className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+          required
+        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm font-bold">$</span>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Monto"
+            className="w-full pl-7 rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+            min="2000"
+            required
+          />
+        </div>
+      </div>
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Mensaje (opcional)"
+        className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+      />
+      <button
+        type="submit"
+        disabled={submitting || !name.trim() || !amount}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-secondary-container to-secondary text-white font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
+      >
+        {submitting ? (
+          <span className="block w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+        ) : (
+          '✅ Ya transferí'
+        )}
+      </button>
+    </form>
   );
 }
 

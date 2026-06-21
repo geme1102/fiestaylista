@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ShareButtons from '../components/ShareButtons';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
+import RsvpForm from '../components/RsvpForm';
+import GuestPhotoUpload from '../components/GuestPhotoUpload';
+import MessageWall from '../components/MessageWall';
+import PhotoSlideshow from '../components/PhotoSlideshow';
 import { ConfettiCanvas, type ConfettiCanvasRef } from '../components/ConfettiCanvas';
 import { useEventPage } from '../hooks/useEventPage';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
@@ -43,8 +47,10 @@ export default function EventGuest() {
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
     turnstileRef,
-    handleClaim, handleDownload,
+    handleClaim, handleDownload, reloadEvent,
   } = useEventPage();
+
+  const [slideshowIndex, setSlideshowIndex] = useState<number | null>(null);
 
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
@@ -286,7 +292,33 @@ export default function EventGuest() {
         </section>
 
         <div className={`max-w-4xl mx-auto px-4 -mt-6 relative z-10 ${easyReadMode ? 'py-8 space-y-10' : 'py-12 space-y-8'}`}>
+          {event.status === 'completed' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-6"
+            >
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-high border border-outline-variant/30 shadow-sm mb-4">
+                <span className="text-lg">🎉</span>
+                <span className="font-bold text-sm text-on-surface">Este evento ya fue</span>
+              </div>
+              <h2 className={`font-bold text-on-surface ${easyReadMode ? 'text-3xl' : 'text-2xl'}`}>¡Gracias a todos los que asistieron!</h2>
+              <p className="text-on-surface-variant mt-2">Revive los mejores momentos compartiendo y viendo las fotos del evento.</p>
+            </motion.div>
+          )}
+
+          {event.status !== 'completed' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+            >
+              <RsvpForm eventId={event.id} eventTitle={event.title} />
+            </motion.div>
+          )}
+
           {/* Gift List — primary action, shown first */}
+          {event.status !== 'completed' && (
           <div className={easyReadMode ? 'space-y-8' : ''}>
             <motion.div
               id="gift-list"
@@ -403,6 +435,7 @@ export default function EventGuest() {
               </motion.div>
             )}
           </div>
+          )}
 
           {/* Photo Gallery — secondary */}
           <motion.div
@@ -415,15 +448,27 @@ export default function EventGuest() {
               <h2 className={`font-semibold text-on-surface flex items-center gap-2 ${easyReadMode ? 'text-2xl' : 'text-lg'}`}>
                 <span>📸</span> Galería
               </h2>
+              {photos.length > 1 && (
+                <button
+                  onClick={() => setSlideshowIndex(0)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-xs font-bold text-on-surface-variant hover:bg-primary-fixed/30 hover:text-primary transition-all"
+                >
+                  <span className="material-symbols-outlined text-sm">slideshow</span>
+                  Presentación
+                </button>
+              )}
             </div>
+
+            <GuestPhotoUpload eventId={event.id} onUploaded={reloadEvent} />
 
             {photos.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {photos.map((photo) => (
+                {photos.map((photo, idx) => (
                   <motion.div
                     key={photo.id}
                     whileHover={{ scale: 1.03 }}
-                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group"
+                    onClick={() => setSlideshowIndex(idx)}
+                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group cursor-pointer"
                   >
                     <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
                     {photo.caption && (
@@ -444,7 +489,16 @@ export default function EventGuest() {
             )}
           </motion.div>
 
-          {/* Cash Fund — tertiary */}
+          {/* Message Wall */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+          >
+            <MessageWall eventId={event.id} />
+          </motion.div>
+
+          {event.status !== 'completed' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -452,6 +506,7 @@ export default function EventGuest() {
           >
             <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} />
           </motion.div>
+          )}
 
           <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
             <p>Hecho por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
@@ -464,6 +519,14 @@ export default function EventGuest() {
             <span className="font-label-md text-label-md">Inicio</span>
           </Link>
         </nav>
+
+        {slideshowIndex !== null && (
+          <PhotoSlideshow
+            photos={photos}
+            initialIndex={slideshowIndex}
+            onClose={() => setSlideshowIndex(null)}
+          />
+        )}
 
         {showSuccessModal && (
           <div

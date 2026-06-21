@@ -14,6 +14,8 @@ interface CashFundData {
   title?: string;
   description?: string;
   targetAmount?: number;
+  bankPhone?: string;
+  bankType?: string;
 }
 
 export async function createOrUpdateCashFund(eventId: string, _userId: string, data: CashFundData) {
@@ -31,6 +33,8 @@ export async function createOrUpdateCashFund(eventId: string, _userId: string, d
           title: data.title,
           description: data.description,
           targetAmount: data.targetAmount,
+          bankPhone: data.bankPhone,
+          bankType: data.bankType,
           updatedAt: new Date(),
         })
         .where(eq(cashFunds.id, existing[0].id))
@@ -45,6 +49,8 @@ export async function createOrUpdateCashFund(eventId: string, _userId: string, d
         title: data.title || 'Lluvia de sobres',
         description: data.description || null,
         targetAmount: data.targetAmount || null,
+        bankPhone: data.bankPhone || null,
+        bankType: data.bankType || null,
       })
       .onConflictDoNothing({ target: cashFunds.eventId })
       .returning();

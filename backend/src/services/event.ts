@@ -237,6 +237,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       title: eventsTable.title,
       eventType: eventsTable.eventType,
       slug: eventsTable.slug,
+      status: eventsTable.status,
       isActive: eventsTable.isActive,
       boostedUntil: eventsTable.boostedUntil,
       eventDate: eventsTable.eventDate,
@@ -294,6 +295,72 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     gifts: eventGifts,
     photos: eventPhotos,
   };
+}
+
+export async function completeEvent(eventId: string, userId: string) {
+  const [event] = await db
+    .select({ id: eventsTable.id, userId: eventsTable.userId, status: eventsTable.status })
+    .from(eventsTable)
+    .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
+    .limit(1);
+
+  if (!event) throw new NotFoundError('Evento no encontrado');
+  if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
+  if (event.status === 'completed') throw new ValidationError('El evento ya está finalizado');
+
+  await db
+    .update(eventsTable)
+    .set({ status: 'completed', updatedAt: new Date() })
+    .where(eq(eventsTable.id, eventId));
+
+  return { success: true };
+}
+
+export async function reactivateEvent(eventId: string, userId: string) {
+  const [event] = await db
+    .select({ id: eventsTable.id, userId: eventsTable.userId, status: eventsTable.status })
+    .from(eventsTable)
+    .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
+    .limit(1);
+
+  if (!event) throw new NotFoundError('Evento no encontrado');
+  if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
+  if (event.status !== 'completed') throw new ValidationError('El evento no está finalizado');
+
+  return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+
+    const [user] = await tx
+      .select({ tier: users.tier })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const tier = (user?.tier ?? 'free') as Tier;
+    const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
+
+    const [countResult] = await tx
+      .select({ count: sql<number>`count(*)` })
+      .from(eventsTable)
+      .where(and(
+        eq(eventsTable.userId, userId),
+        eq(eventsTable.status, 'active'),
+        isNull(eventsTable.deletedAt),
+      ));
+
+    const activeCount = Number(countResult?.count ?? 0);
+    if (activeCount >= limits.maxEvents) {
+      throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos activos en tu plan ${tier}`);
+    }
+
+    const [updated] = await tx
+      .update(eventsTable)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(eq(eventsTable.id, eventId))
+      .returning();
+
+    return updated;
+  });
 }
 
 export async function deleteEvent(eventId: string, _userId: string) {

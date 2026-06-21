@@ -9,7 +9,7 @@ import { useSSE } from './useSSE';
 import type { Gift, Photo, EventType } from '../types';
 
 interface GuestEvent {
-  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; isActive: boolean; createdAt: string;
+  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; status?: string; isActive: boolean; createdAt: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
 
@@ -242,5 +242,6 @@ export function useEventPage() {
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
     handleClaim, handleDownload,
+    reloadEvent: loadEvent,
   };
 }

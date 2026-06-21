@@ -17,6 +17,7 @@ export interface Event {
   eventType: EventType;
   hostPhone?: string;
   slug: string;
+  status?: string;
   isActive: boolean;
   giftCount?: number;
   photoCount?: number;
@@ -36,6 +37,16 @@ export interface Gift {
   name: string;
   isClaimed: boolean;
   claimedBy?: string;
+  isGroupGift?: boolean;
+  createdAt: string;
+  claims?: GiftClaim[];
+}
+
+export interface GiftClaim {
+  id: string;
+  giftId: string;
+  claimedBy: string;
+  message?: string;
   createdAt: string;
 }
 
@@ -44,6 +55,7 @@ export interface Photo {
   eventId: string;
   url: string;
   caption?: string;
+  isFeatured?: boolean;
   createdAt: string;
 }
 
@@ -72,6 +84,8 @@ export interface CashFund {
   targetAmount?: number;
   collectedAmount: number;
   isActive: boolean;
+  bankPhone?: string | null;
+  bankType?: string | null;
   createdAt: string;
 }
 

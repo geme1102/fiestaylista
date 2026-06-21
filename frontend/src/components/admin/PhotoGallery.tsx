@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, X } from 'lucide-react';
+import { Upload, Trash2, X, Star } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
 import { ConfirmModal } from '../ConfirmModal';
 import type { Photo } from '../../types';
@@ -20,12 +20,13 @@ interface PhotoGalleryProps {
   onDeleteConfirmClose: () => void;
   onSelectPreview: (photo: Photo | null) => void;
   selectedPhotoForPreview: Photo | null;
+  onToggleFeatured?: (photoId: string) => void;
 }
 
 export const PhotoGallery = memo(function PhotoGallery({
   photos, uploading, uploadProgress, uploadPercent, deletingPhoto, deletePhotoConfirm,
   fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
-  onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
+  onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview, onToggleFeatured,
 }: PhotoGalleryProps) {
   return (
     <>
@@ -67,17 +68,37 @@ export const PhotoGallery = memo(function PhotoGallery({
               >
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
 
+                {photo.isFeatured && (
+                  <div className="absolute top-3.5 left-3.5 bg-amber-400 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg">
+                    <Star className="w-3.5 h-3.5" fill="currentColor" />
+                  </div>
+                )}
+
                 <div className="absolute inset-2.5 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRequestDelete(photo.id);
-                    }}
-                    className="bg-white/90 hover:bg-white text-red-600 p-3 rounded-full shadow self-end cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                    title="Eliminar del catálogo"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-2 self-end">
+                    {onToggleFeatured && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFeatured(photo.id);
+                        }}
+                        className={`p-3 rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95 ${photo.isFeatured ? 'bg-amber-400 text-white' : 'bg-white/90 hover:bg-white text-amber-500'}`}
+                        title={photo.isFeatured ? 'Quitar destacada' : 'Marcar como destacada'}
+                      >
+                        <Star className="w-4 h-4" fill={photo.isFeatured ? 'currentColor' : 'none'} />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRequestDelete(photo.id);
+                      }}
+                      className="bg-white/90 hover:bg-white text-red-600 p-3 rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      title="Eliminar del catálogo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                   <span className="text-[10px] text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
                 </div>
 

@@ -1,6 +1,6 @@
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, sql, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts as giftsTable } from '../db/schema.js';
+import { users, events, gifts as giftsTable, giftClaims } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier } from '../types/index.js';
@@ -175,4 +175,47 @@ export async function getEventGifts(eventId: string) {
     .limit(101);
 
   return eventGifts;
+}
+
+export async function addGroupClaim(giftId: string, claimedBy: string, message?: string) {
+  const cleanedName = sanitize(claimedBy);
+  if (!cleanedName) throw new ValidationError('El nombre es requerido');
+
+  const [gift] = await db
+    .select({ isGroupGift: giftsTable.isGroupGift, isClaimed: giftsTable.isClaimed })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+
+  if (!gift) throw new NotFoundError('Regalo no encontrado');
+  if (!gift.isGroupGift) throw new ValidationError('Este regalo no es grupal');
+  if (gift.isClaimed) throw new ValidationError('Este regalo ya ha sido reservado por un grupo completo');
+
+  const [claim] = await db
+    .insert(giftClaims)
+    .values({ giftId, claimedBy: cleanedName, message: message || null })
+    .returning();
+
+  return { claim };
+}
+
+export async function getGiftClaims(giftId: string) {
+  const claims = await db
+    .select()
+    .from(giftClaims)
+    .where(eq(giftClaims.giftId, giftId))
+    .orderBy(desc(giftClaims.createdAt));
+
+  return claims;
+}
+
+export async function toggleGroupGift(giftId: string, isGroupGift: boolean) {
+  const [gift] = await db
+    .update(giftsTable)
+    .set({ isGroupGift })
+    .where(eq(giftsTable.id, giftId))
+    .returning();
+
+  if (!gift) throw new NotFoundError('Regalo no encontrado');
+  return gift;
 }

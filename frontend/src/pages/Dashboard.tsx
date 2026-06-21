@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCOP } from '../utils/format';
 import { cn } from '../utils/cn';
 import { ConfirmModal } from '../components/ConfirmModal';
+import InstallPwaBanner from '../components/InstallPwaBanner';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
 
@@ -226,6 +227,8 @@ export default function Dashboard() {
         </div>
       )}
 
+      <InstallPwaBanner />
+
       {events.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             {[
@@ -299,6 +302,12 @@ export default function Dashboard() {
                           <span className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-amber-200/50 shadow-sm">
                             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
                             BOOST
+                          </span>
+                        )}
+                        {event.status === 'completed' && (
+                          <span className="bg-primary-fixed/40 text-primary px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-primary/20 shadow-sm">
+                            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            FINALIZADO
                           </span>
                         )}
                       </div>

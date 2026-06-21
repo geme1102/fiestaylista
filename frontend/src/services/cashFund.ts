@@ -36,3 +36,7 @@ export function getContributions(cashFundId: string): Promise<{ contributions: C
 export function boostEvent(eventId: string): Promise<{ url?: string; message?: string; boostedUntil?: string }> {
   return apiClient.post<{ url?: string; message?: string; boostedUntil?: string }>(`/api/events/${eventId}/boost`);
 }
+
+export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string }): Promise<{ contribution: CashContribution }> {
+  return apiClient.post<{ contribution: CashContribution }>('/api/cash-fund/promise', data);
+}

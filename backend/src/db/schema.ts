@@ -29,6 +29,7 @@ export const events = pgTable('events', {
   eventType: text('event_type').notNull().default('BABY_SHOWER'),
   hostPhone: text('host_phone'),
   slug: text('slug').notNull().unique(),
+  status: text('status').notNull().default('active'),
   isActive: boolean('is_active').notNull().default(true),
   boostedUntil: timestamp('boosted_until', { mode: 'date' }),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
@@ -51,6 +52,7 @@ export const gifts = pgTable('gifts', {
   name: text('name').notNull(),
   isClaimed: boolean('is_claimed').notNull().default(false),
   claimedBy: text('claimed_by'),
+  isGroupGift: boolean('is_group_gift').notNull().default(false),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
@@ -59,11 +61,22 @@ export const gifts = pgTable('gifts', {
   eventIdNameUnique: unique('gifts_event_id_name_unique').on(table.eventId, table.name),
 }));
 
+export const giftClaims = pgTable('gift_claims', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  giftId: uuid('gift_id').notNull().references(() => gifts.id, { onDelete: 'cascade' }),
+  claimedBy: text('claimed_by').notNull(),
+  message: text('message'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+}, (table) => ({
+  giftIdIdx: index('gift_claims_gift_id_idx').on(table.giftId),
+}));
+
 export const photos = pgTable('photos', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   url: text('url').notNull(),
   caption: text('caption'),
+  isFeatured: boolean('is_featured').notNull().default(false),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
 }, (table) => ({
@@ -92,6 +105,8 @@ export const cashFunds = pgTable('cash_funds', {
   targetAmount: integer('target_amount'),
   collectedAmount: integer('collected_amount').notNull().default(0),
   isActive: boolean('is_active').notNull().default(true),
+  bankPhone: text('bank_phone'),
+  bankType: text('bank_type'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 });
@@ -159,6 +174,33 @@ export const platformFees = pgTable('platform_fees', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 }, (table) => ({
   contributionIdIdx: index('platform_fees_contribution_id_idx').on(table.contributionId),
+}));
+
+export const messages = pgTable('messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  authorName: text('author_name').notNull(),
+  message: text('message').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index('messages_event_id_idx').on(table.eventId),
+  createdAtIdx: index('messages_created_at_idx').on(table.createdAt),
+}));
+
+export const guests = pgTable('guests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  isConfirmed: boolean('is_confirmed').notNull().default(false),
+  companions: integer('companions').notNull().default(0),
+  dietaryRestrictions: text('dietary_restrictions'),
+  message: text('message'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index('guests_event_id_idx').on(table.eventId),
+  eventIdConfirmedIdx: index('guests_event_id_confirmed_idx').on(table.eventId, table.isConfirmed),
 }));
 
 export const emailTracking = pgTable('email_tracking', {
@@ -256,14 +298,24 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     fields: [events.id],
     references: [cashFunds.eventId],
   }),
+  guests: many(guests),
+  messages: many(messages),
   boostPayments: many(boostPayments),
   views: many(eventViews),
 }));
 
-export const giftsRelations = relations(gifts, ({ one }) => ({
+export const giftsRelations = relations(gifts, ({ one, many }) => ({
   event: one(events, {
     fields: [gifts.eventId],
     references: [events.id],
+  }),
+  claims: many(giftClaims),
+}));
+
+export const giftClaimsRelations = relations(giftClaims, ({ one }) => ({
+  gift: one(gifts, {
+    fields: [giftClaims.giftId],
+    references: [gifts.id],
   }),
 }));
 
@@ -293,6 +345,20 @@ export const cashContributionsRelations = relations(cashContributions, ({ one })
   cashFund: one(cashFunds, {
     fields: [cashContributions.cashFundId],
     references: [cashFunds.id],
+  }),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  event: one(events, {
+    fields: [messages.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const guestsRelations = relations(guests, ({ one }) => ({
+  event: one(events, {
+    fields: [guests.eventId],
+    references: [events.id],
   }),
 }));
 

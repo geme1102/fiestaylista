@@ -157,6 +157,38 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
+router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, next: NextFunction) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(new ValidationError('El archivo excede el tamaño máximo de 10MB'));
+        }
+        return next(new ValidationError(err.message));
+      }
+      return next(err);
+    }
+    try {
+      if (!req.file) {
+        throw new ValidationError('No se proporcionó ningún archivo');
+      }
+      const filePath = req.file.path;
+      const rawBuffer = await readFileHeader(filePath);
+      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
+      if (!valid) {
+        await cleanupFile(filePath);
+        throw new ValidationError('El archivo no es una imagen válida');
+      }
+      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
+      await cleanupFile(filePath);
+      res.status(201).json({ url });
+    } catch (error) {
+      if (req.file) cleanupFile(req.file.path);
+      next(error);
+    }
+  });
+});
+
 router.post('/guest', requireAuth, guestUploadLimiter, (req: AuthRequest, res: Response, next: NextFunction) => {
   upload.single('file')(req, res, async (err) => {
     if (err) {

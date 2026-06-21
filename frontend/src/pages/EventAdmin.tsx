@@ -19,9 +19,11 @@ import { validateRedirectUrl } from '../utils/format';
 import { ConfirmModal } from '../components/ConfirmModal';
 import GiftManagement from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
+import GuestsPanel from '../components/admin/GuestsPanel';
+import MessagesPanel from '../components/admin/MessagesPanel';
 
 interface AdminEvent {
-  id: string; title: string; eventType: EventType; slug: string; isActive: boolean; boostedUntil?: string;
+  id: string; title: string; eventType: EventType; slug: string; status?: string; isActive: boolean; boostedUntil?: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
 
@@ -63,6 +65,7 @@ export default function EventAdmin() {
 
   const [deletePhotoConfirm, setDeletePhotoConfirm] = useState<string | null>(null);
   const [addingGift, setAddingGift] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [deletingGiftId, setDeletingGiftId] = useState<string | null>(null);
   const [freeingGiftId, setFreeingGiftId] = useState<string | null>(null);
   const [updatingDetails, setUpdatingDetails] = useState(false);
@@ -239,6 +242,16 @@ export default function EventAdmin() {
     e.target.value = '';
   }, [id]);
 
+  const handleToggleFeatured = useCallback(async (photoId: string) => {
+    try {
+      const res = await apiClient.put<{ photo: Photo }>(`/api/events/${id}/photos/${photoId}/feature`);
+      setPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, isFeatured: res.photo.isFeatured } : p));
+      showToast(res.photo.isFeatured ? 'Foto destacada ⭐' : 'Foto no destacada', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al destacar foto', 'error');
+    }
+  }, [id]);
+
   const handleDeletePhoto = useCallback(async (photoId: string) => {
     setDeletePhotoConfirm(null);
     setDeletingPhoto(true);
@@ -252,6 +265,34 @@ export default function EventAdmin() {
       setDeletingPhoto(false);
     }
   }, [id]);
+
+  const handleComplete = useCallback(async () => {
+    if (!id || !event || completing) return;
+    setCompleting(true);
+    try {
+      await apiClient.post(`/api/events/${id}/complete`);
+      setEvent((prev) => prev ? { ...prev, status: 'completed' } : null);
+      showToast('Evento finalizado 🎉', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al finalizar evento', 'error');
+    } finally {
+      setCompleting(false);
+    }
+  }, [id, event, completing]);
+
+  const handleReactivate = useCallback(async () => {
+    if (!id || !event || completing) return;
+    setCompleting(true);
+    try {
+      const res = await apiClient.post<{ event: AdminEvent }>(`/api/events/${id}/reactivate`);
+      setEvent(res.event);
+      showToast('Evento reactivado', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al reactivar evento', 'error');
+    } finally {
+      setCompleting(false);
+    }
+  }, [id, event, completing]);
 
   const handleBoost = async () => {
     if (!id) return;
@@ -538,7 +579,41 @@ export default function EventAdmin() {
                 <div className={`w-[22px] h-[22px] bg-white rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-transform duration-300 transform ${event.isActive ? 'translate-x-[26px]' : 'translate-x-0'}`} />
               </button>
             </div>
+
+            {/* El Después — Complete/Reactivate */}
+            {event.status === 'completed' ? (
+              <button
+                onClick={handleReactivate}
+                disabled={completing}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-outline-variant/30 bg-surface hover:bg-surface-container-higher transition-all text-xs font-bold text-on-surface-variant hover:text-on-surface self-stretch sm:self-center min-h-[44px]"
+              >
+                <span className="material-symbols-outlined text-sm">undo</span>
+                Reactivar evento
+              </button>
+            ) : (
+              <button
+                onClick={handleComplete}
+                disabled={completing}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all text-xs font-bold text-primary self-stretch sm:self-center min-h-[44px]"
+              >
+                <span className="material-symbols-outlined text-sm">check_circle</span>
+                Finalizar evento
+              </button>
+            )}
           </div>
+
+          {/* El Después Banner */}
+          {event.status === 'completed' && (
+            <div className="bg-gradient-to-r from-primary-fixed/20 via-surface-container-low to-primary-fixed/20 border border-primary/10 rounded-2xl p-5 mt-6 flex items-start gap-4 shadow-sm">
+              <span className="text-2xl leading-none bg-primary-fixed/40 text-primary w-11 h-11 flex items-center justify-center rounded-2xl shadow-sm shrink-0">🎉</span>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-extrabold text-on-surface">Evento finalizado</span>
+                <span className="text-xs text-on-surface-variant font-medium mt-0.5">
+                  Los invitados ya no pueden apartar regalos ni usar La Jarra. La galería y el muro de mensajes siguen activos.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Lluvia de Sobres Banner */}
           {!isBoosted && !cashFund?.isActive && (
@@ -732,6 +807,10 @@ export default function EventAdmin() {
           onShowSuggestionsChange={setShowSuggestions}
         />
 
+        <GuestsPanel eventId={id ?? ''} />
+
+        <MessagesPanel eventId={id ?? ''} />
+
         <PhotoGallery
           photos={photos}
           uploading={uploading}
@@ -747,6 +826,7 @@ export default function EventAdmin() {
           onDeleteConfirmClose={() => setDeletePhotoConfirm(null)}
           onSelectPreview={setSelectedPhotoForPreview}
           selectedPhotoForPreview={selectedPhotoForPreview}
+          onToggleFeatured={handleToggleFeatured}
         />
       </div>
 
