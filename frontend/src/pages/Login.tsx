@@ -17,7 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigatedRef = useRef(false);
 
-  const { containerRef, token: turnstileToken } = useTurnstile();
+  const { containerRef, token: turnstileToken, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -164,6 +164,15 @@ export default function Login() {
               </button>
             </form>
 
+            {turnstileError && (
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 text-sm text-amber-800 mt-6">
+                <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">shield_person</span>
+                <div className="space-y-1">
+                  <p className="font-medium">Verificación de seguridad no disponible</p>
+                  <p className="text-amber-700/80">{turnstileError}</p>
+                </div>
+              </div>
+            )}
             <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
           </div>
         </div>

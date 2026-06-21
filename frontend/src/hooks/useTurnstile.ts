@@ -23,8 +23,10 @@ export function useTurnstile() {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const errorCountRef = useRef(0);
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -44,11 +46,22 @@ export function useTurnstile() {
         setReady(true);
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
-          callback: (t: string) => setToken(t),
+          callback: (t: string) => { setToken(t); setError(null); },
           'expired-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
           'error-callback': () => {
             setToken(null);
-            if (widgetId.current && window.turnstile) {
+            errorCountRef.current += 1;
+            if (errorCountRef.current >= 2 && widgetId.current && window.turnstile) {
+              try {
+                window.turnstile.remove(widgetId.current);
+              } catch {}
+              widgetId.current = window.turnstile.render(containerRef.current!, {
+                sitekey: SITE_KEY,
+                callback: (t: string) => { setToken(t); setError(null); },
+                'expired-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
+                appearance: 'interaction-only',
+              });
+            } else if (widgetId.current && window.turnstile) {
               window.turnstile.reset(widgetId.current);
               window.turnstile.execute(widgetId.current);
             }
@@ -56,7 +69,11 @@ export function useTurnstile() {
           appearance: 'execute',
         });
       }
-      if (++attempts > 50) clearInterval(interval);
+      if (++attempts > 50) {
+        clearInterval(interval);
+        setError('No se pudo cargar la verificación de seguridad. Desactiva tu bloqueador de anuncios o intenta con otro navegador.');
+        setReady(true);
+      }
     }, 200);
     return () => {
       clearInterval(interval);
@@ -68,6 +85,8 @@ export function useTurnstile() {
 
   const reset = useCallback(() => {
     setToken(null);
+    setError(null);
+    errorCountRef.current = 0;
     setReady(false);
     if (widgetId.current && window.turnstile) {
       window.turnstile.reset(widgetId.current);
@@ -76,5 +95,5 @@ export function useTurnstile() {
     resetTimerRef.current = setTimeout(() => setReady(true), 100);
   }, []);
 
-  return { containerRef, token, ready, reset };
+  return { containerRef, token, ready, reset, error };
 }
