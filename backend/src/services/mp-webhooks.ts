@@ -7,7 +7,7 @@ import * as cashFundService from './cashFund.js';
 import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 
-async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
+export async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
   const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
 

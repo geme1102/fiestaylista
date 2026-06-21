@@ -166,7 +166,7 @@ let refreshPromise: Promise<boolean> | null = null;
 let refreshAttempts = 0;
 let refreshCooldownTimer: ReturnType<typeof setTimeout> | null = null;
 
-async function tryRefreshToken(): Promise<boolean> {
+export async function tryRefreshToken(): Promise<boolean> {
   if (refreshAttempts >= 3) {
     return false;
   }

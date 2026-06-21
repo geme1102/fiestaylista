@@ -199,6 +199,38 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
   };
 }
 
+export async function searchPaymentsByRef(externalReference: string): Promise<{
+  id: string;
+  status: string;
+  transactionAmount: number;
+} | null> {
+  if (!client) return null;
+
+  try {
+    const result = await retryable(async () => {
+      const url = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}&limit=5`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
+      });
+      if (!res.ok) throw new Error(`MP API error: ${res.status}`);
+      return res.json() as Promise<{ results: Array<{ id: number; status: string; transaction_amount: number }> }>;
+    });
+
+    const results = result?.results ?? [];
+    const approved = results.find((p) => p.status === 'approved');
+    if (!approved) return null;
+
+    return {
+      id: String(approved.id),
+      status: approved.status,
+      transactionAmount: approved.transaction_amount,
+    };
+  } catch (err) {
+    console.error('[MP] Error searching payments by ref:', err);
+    return null;
+  }
+}
+
 export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   status: string;
   externalReference: string;

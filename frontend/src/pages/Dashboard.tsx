@@ -42,6 +42,8 @@ export default function Dashboard() {
 
   const tierRef = useRef(user?.tier);
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
+  const [showPaymentBanner, setShowPaymentBanner] = useState(false);
+  const [syncingPayment, setSyncingPayment] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -51,7 +53,7 @@ export default function Dashboard() {
     window.history.replaceState({}, '', cleanUrl);
 
     let attempts = 0;
-    const maxAttempts = 10;
+    const MAX_ATTEMPTS = 15;
     let cancelled = false;
 
     async function poll() {
@@ -59,19 +61,41 @@ export default function Dashboard() {
       attempts++;
       await refreshUser();
       if (cancelled) return;
-      if (tierRef.current === 'pro' || attempts >= maxAttempts) {
-        if (tierRef.current === 'pro') {
-          showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
-          queryClient.invalidateQueries({ queryKey: ['events'] });
-        }
-      } else {
-        setTimeout(poll, 1500);
+      if (tierRef.current === 'pro') {
+        showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
+        queryClient.invalidateQueries({ queryKey: ['events'] });
+        return;
       }
+      if (attempts >= MAX_ATTEMPTS) {
+        setShowPaymentBanner(true);
+        return;
+      }
+      const backoff = Math.min(1500 * Math.pow(2, attempts - 1), 30000);
+      setTimeout(poll, backoff);
     }
 
     const timer = setTimeout(poll, 1500);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [location.search, refreshUser, queryClient]);
+
+  const handlePaymentSync = async () => {
+    setSyncingPayment(true);
+    try {
+      const res = await apiClient.post<{ tier: string; synced: boolean; message: string }>('/api/subscriptions/sync');
+      if (res.synced || res.tier === 'pro') {
+        await refreshUser();
+        showToast(res.message || '¡Suscripción activada!', 'success');
+        setShowPaymentBanner(false);
+        queryClient.invalidateQueries({ queryKey: ['events'] });
+      } else {
+        showToast(res.message || 'No se encontró el pago. Si el problema persiste, contacta a soporte.', 'info');
+      }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al verificar el pago', 'error');
+    } finally {
+      setSyncingPayment(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,6 +204,27 @@ export default function Dashboard() {
                   <span className="hidden sm:inline">{eventCount >= limits.maxEvents ? 'Límite alcanzado' : 'Nuevo Evento'}</span>
                 </button>
       </div>
+
+      {showPaymentBanner && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">hourglass_top</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-amber-800">Verificando pago de Plan Pro</p>
+            <p className="text-xs text-amber-700/70 mt-0.5">Tu pago fue procesado pero estamos esperando la confirmación. Si ya pagaste, presiona el botón para verificar.</p>
+          </div>
+          <button
+            onClick={handlePaymentSync}
+            disabled={syncingPayment}
+            className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-all disabled:opacity-50 min-h-[44px] flex items-center gap-2"
+          >
+            {syncingPayment ? (
+              <><LoadingSpinner size="sm" /> Verificando</>
+            ) : (
+              'Verificar pago'
+            )}
+          </button>
+        </div>
+      )}
 
       {events.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">

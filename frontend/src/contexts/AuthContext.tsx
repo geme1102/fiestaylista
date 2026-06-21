@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, us
 import { useNavigate } from 'react-router-dom';
 import type { User, AuthResponse } from '../types';
 import { login as loginApi, register as registerApi, getMe } from '../services/auth';
-import { setTokens, clearTokens, getAccessToken, apiClient } from '../services/api';
+import { setTokens, clearTokens, getAccessToken, tryRefreshToken, apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 
 interface AuthContextValue {
@@ -29,25 +29,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    if (!getAccessToken()) {
-      setIsLoading(false);
-      return;
-    }
+    (async () => {
+      if (!getAccessToken()) {
+        const refreshed = await tryRefreshToken();
+        if (!refreshed) {
+          setIsLoading(false);
+          return;
+        }
+      }
 
-    getMe()
-      .then((res) => {
+      try {
+        const res = await getMe();
         if (res.isGuest) {
           clearTokens();
           setUser(null);
         } else {
           setUser(res.user);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
         showToast('Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.', 'error');
-      })
-      .finally(() => setIsLoading(false));
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {

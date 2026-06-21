@@ -173,7 +173,7 @@ export function startCronJobs(): void {
   cleanupExpiredWebhooks();
   runDaily();
 
-  const WEBHOOK_RETRY_MS = 30 * 60 * 1000;
+  const WEBHOOK_RETRY_MS = 60 * 1000;
 
   cronInterval = setInterval(() => {
     runDaily();

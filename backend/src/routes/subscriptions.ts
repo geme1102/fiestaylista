@@ -1,17 +1,18 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
+import * as mpWebhooks from '../services/mp-webhooks.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
-import { users } from '../db/schema.js';
+import { users, proPayments } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
@@ -46,6 +47,53 @@ router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLim
     data.cancelUrl,
   );
   res.json(result);
+}));
+
+router.post('/sync', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  const userId = req.user!.userId;
+
+  const sub = await subscriptionService.getCurrentSubscription(userId);
+  if (sub?.tier === 'pro' && sub?.status === 'active') {
+    res.json({ tier: 'pro', synced: false, message: 'Ya tienes Pro activo' });
+    return;
+  }
+
+  const [payment] = await db
+    .select()
+    .from(proPayments)
+    .where(eq(proPayments.userId, userId))
+    .orderBy(desc(proPayments.createdAt))
+    .limit(1);
+
+  if (payment) {
+    await subscriptionService.createOrUpdateSubscription(userId, {
+      mpSubscriptionId: null,
+      tier: 'pro',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + (payment.interval === 'year' ? 365 : 30) * 24 * 60 * 60 * 1000),
+    });
+    res.json({ tier: 'pro', synced: true, message: 'Suscripción activada' });
+    return;
+  }
+
+  const monthRef = `pro_${userId}_month`;
+  const yearRef = `pro_${userId}_year`;
+
+  const [monthPayment, yearPayment] = await Promise.all([
+    mercadopagoService.searchPaymentsByRef(monthRef),
+    mercadopagoService.searchPaymentsByRef(yearRef),
+  ]);
+
+  const found = monthPayment || yearPayment;
+  if (found) {
+    const interval = monthPayment ? 'month' : 'year';
+    await mpWebhooks.handleProPayment(found.id, userId, interval);
+    res.json({ tier: 'pro', synced: true, message: 'Suscripción activada después de verificar el pago en Mercado Pago' });
+    return;
+  }
+
+  res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Si el problema persiste, contacta a soporte.' });
 }));
 
 router.post('/cancel', requireAuth, cancelLimiter, asyncHandler(async (req: AuthRequest, res) => {
