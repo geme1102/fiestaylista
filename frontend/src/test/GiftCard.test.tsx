@@ -26,8 +26,13 @@ describe('GiftCard', () => {
     expect(screen.queryByText('María Pérez')).not.toBeInTheDocument();
   });
 
-  it('debería mostrar quién apartó el regalo', () => {
+  it('debería mostrar "Alguien ya apartó" para invitados', () => {
     render(<GiftCard gift={claimedGift} />);
+    expect(screen.getByText('Alguien ya apartó este regalo')).toBeInTheDocument();
+  });
+
+  it('debería mostrar quién apartó el regalo solo para admin', () => {
+    render(<GiftCard gift={claimedGift} isAdmin />);
     expect(screen.getByText('María Pérez')).toBeInTheDocument();
   });
 
