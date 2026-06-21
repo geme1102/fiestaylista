@@ -48,7 +48,7 @@ function verifyMpSignature(req: Request): boolean {
   if (!ts || !hash) return false;
 
   const tsNumber = parseInt(ts, 10);
-  if (isNaN(tsNumber) || Date.now() - tsNumber > 5 * 60 * 1000) {
+  if (isNaN(tsNumber) || Date.now() - tsNumber * 1000 > 5 * 60 * 1000) {
     log.warn('Firma con timestamp expirado o inválido, ignorando notificación');
     return false;
   }
