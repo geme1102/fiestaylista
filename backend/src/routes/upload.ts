@@ -10,6 +10,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
 import { ValidationError } from '../utils/errors.js';
 import { config } from '../config.js';
+import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
@@ -156,7 +157,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
-router.post('/guest', guestUploadLimiter, (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest', requireAuth, guestUploadLimiter, (req: AuthRequest, res: Response, next: NextFunction) => {
   upload.single('file')(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, X } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
@@ -21,7 +22,7 @@ interface PhotoGalleryProps {
   selectedPhotoForPreview: Photo | null;
 }
 
-export function PhotoGallery({
+export const PhotoGallery = memo(function PhotoGallery({
   photos, uploading, uploadProgress, uploadPercent, deletingPhoto, deletePhotoConfirm,
   fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview,
@@ -162,4 +163,4 @@ export function PhotoGallery({
       )}
     </>
   );
-}
+});

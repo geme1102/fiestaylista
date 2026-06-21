@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { cn } from '../utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar', destructive = true }: {
+export const ConfirmModal = memo(function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabel = 'Eliminar', destructive = true }: {
   message: string;
   onConfirm: () => void;
   onClose: () => void;
@@ -58,4 +59,4 @@ export function ConfirmModal({ message, onConfirm, onClose, loading, confirmLabe
       </motion.div>
     </AnimatePresence>
   );
-}
+});

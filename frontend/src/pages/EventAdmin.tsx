@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Pencil, ChevronDown, Share2, Eye,
+  ArrowLeft, Pencil, Share2, Eye,
   MessageSquare, Copy, Calendar, MapPin, Info,
   X, Check,
   ChevronRight, Home
@@ -13,7 +13,7 @@ import { getCashFund, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
-import { EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
+import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -514,16 +514,6 @@ export default function EventAdmin() {
                   )}
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setEditingDetails(true)}
-                  className="text-on-surface-variant text-xs font-bold mt-2 py-1.5 px-3.5 bg-surface-container-high hover:bg-surface-container-highest border border-primary/10 rounded-full inline-flex items-center gap-1.5 hover:text-on-surface transition-all cursor-pointer group"
-                >
-                  <span className="w-2 h-2 rounded-full bg-primary" />
-                  <span>Tipo: <span className="text-primary font-extrabold">{EVENT_LABELS[event.eventType]}</span></span>
-                  <ChevronDown className="w-3.5 h-3.5 text-primary group-hover:translate-y-0.5 transition-transform" />
-                </motion.button>
               </div>
             </div>
 
@@ -643,22 +633,6 @@ export default function EventAdmin() {
                 <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 <h3 className="text-gray-900 font-extrabold text-sm tracking-widest uppercase">Detalles del Evento</h3>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setEditingDetails(true);
-                  setTitleDraft(event.title);
-                  setTypeDraft(event.eventType);
-                  setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
-                  setLocationDraft(event.eventLocation ?? '');
-                  setNoteDraft(event.eventNote ?? '');
-                }}
-                className="bg-primary/5 hover:bg-primary/10 border border-primary/15 hover:border-primary/30 text-primary font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
-              >
-                <Pencil className="w-3.5 h-3.5 text-primary group-hover:rotate-12 transition-transform" />
-                <span>Editar Evento</span>
-              </motion.button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

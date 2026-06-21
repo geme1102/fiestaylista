@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, createContribution, getContributions, boostEvent } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
@@ -25,7 +25,7 @@ function getInitialsBg(name: string) {
   return INITIALS_COLORS[Math.abs(hash) % INITIALS_COLORS.length];
 }
 
-export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
+const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -443,7 +443,7 @@ export default function CashFundSection({ eventId, isOwner, ownerTier, easyRead 
       )}
     </div>
   );
-}
+});
 
 function ConfettiOverlay() {
   return (
@@ -509,3 +509,5 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
     </div>
   );
 }
+
+export default CashFundSection;

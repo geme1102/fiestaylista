@@ -6,6 +6,7 @@ interface CreateEventData {
   title: string;
   eventType: string;
   hostPhone?: string;
+  eventNote?: string;
 }
 
 export function createEvent(data: CreateEventData): Promise<{ event: Event }> {

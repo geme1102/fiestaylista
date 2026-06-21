@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { guestUploadLimiter, apiLimiter } from '../middleware/rateLimit.js';
+import { apiLimiter } from '../middleware/rateLimit.js';
 import * as photoService from '../services/photo.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
@@ -38,7 +38,7 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
   res.status(201).json({ photo });
 }));
 
-router.post('/guest', guestUploadLimiter, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/guest', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

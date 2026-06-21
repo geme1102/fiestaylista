@@ -39,9 +39,11 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           <div className="bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-300 text-amber-900 px-4 py-2.5 rounded-xl font-bold flex flex-col items-center justify-center gap-0.5 shadow-sm text-xs uppercase tracking-wider mb-3">
             <span className="text-[8px] text-amber-700 font-extrabold tracking-widest flex items-center gap-1">
               <span className="material-symbols-outlined text-sm text-amber-600">favorite</span>
-              APARTADO CON CARIÑO POR
+              {isAdmin ? 'APARTADO CON CARIÑO POR' : 'YA APARTADO'}
             </span>
-            <span className="text-on-surface font-black mt-0.5 text-xs md:text-sm">{gift.claimedBy}</span>
+            <span className="text-on-surface font-black mt-0.5 text-xs md:text-sm">
+              {isAdmin ? gift.claimedBy : 'Alguien ya apartó este regalo'}
+            </span>
           </div>
           {isAdmin && onFree && (
             <button

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import { cn } from '../utils/cn';
 
-export default function ShareButtons({ slug, title }: { slug: string; title: string }) {
+const ShareButtons = memo(function ShareButtons({ slug, title }: { slug: string; title: string }) {
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const url = `${window.location.origin}/e/${slug}`;
@@ -52,4 +52,6 @@ export default function ShareButtons({ slug, title }: { slug: string; title: str
       </button>
     </div>
   );
-}
+});
+
+export default ShareButtons;

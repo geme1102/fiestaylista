@@ -27,10 +27,8 @@ export function useEventPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [easyReadMode, setEasyReadMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const loadEventRef = useRef<() => Promise<void>>(undefined);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -179,39 +177,6 @@ export function useEventPage() {
     }
   }, [event, claimName]);
 
-  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !event) return;
-    if (!file.type.startsWith('image/')) {
-      showToast('Solo se permiten imágenes', 'error');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('La foto no puede superar los 10MB', 'error');
-      return;
-    }
-
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadRes = await apiClient.post<{ url: string }>('/api/upload/guest', formData);
-      const res = await apiClient.post<{ photo: Photo }>(`/api/events/${event.id}/photos/guest`, {
-        url: uploadRes.url,
-      });
-
-      setPhotos((prev) => [res.photo, ...prev]);
-      showToast('¡Foto subida con éxito! 📸', 'success');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir la foto. Verifica que sea una imagen válida e intenta de nuevo.';
-      showToast(msg, 'error');
-    } finally {
-      setUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  }, [event]);
-
   const handleDownload = useCallback(async (url: string) => {
     try {
       const response = await fetch(url);
@@ -272,11 +237,10 @@ export function useEventPage() {
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
     categoryFilter, setCategoryFilter,
-    uploadingPhoto,
-    inputRef, filterBarRef, fileInputRef,
+    inputRef, filterBarRef,
     turnstileRef,
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
-    handleClaim, handlePhotoUpload, handleDownload,
+    handleClaim, handleDownload,
   };
 }
