@@ -41,7 +41,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               <span className="material-symbols-outlined text-sm text-amber-600">favorite</span>
               APARTADO CON CARIÑO POR
             </span>
-            <span className="text-gray-900 font-black mt-0.5 text-xs md:text-sm">{gift.claimedBy}</span>
+            <span className="text-on-surface font-black mt-0.5 text-xs md:text-sm">{gift.claimedBy}</span>
           </div>
           {isAdmin && onFree && (
             <button
@@ -49,7 +49,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               disabled={freeingId === gift.id}
               className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30 py-2.5"
             >
-              {freeingId === gift.id ? '...' : 'Liberar obsequio'}
+              {freeingId === gift.id ? <span className="inline-block w-3 h-3 rounded-full border-2 border-red-400 border-t-transparent animate-spin" /> : 'Liberar obsequio'}
             </button>
           )}
         </div>
@@ -72,7 +72,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       data-testid={`gift-card-${gift.id}`}
-      className="bg-surface border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#a21b53]/25 group overflow-hidden text-left"
+      className="bg-surface border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/25 group overflow-hidden text-left"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-50/60 to-transparent rounded-bl-full pointer-events-none -z-10" />
 
@@ -104,16 +104,16 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <span className="bg-[#fef6ed] text-amber-700 text-[9px] font-extrabold py-0.5 px-2 rounded-full border border-amber-100">
               {category.label}
             </span>
-            <span className="text-[#a21b53] text-[9px] font-bold flex items-center gap-0.5">
+            <span className="text-primary text-[9px] font-bold flex items-center gap-0.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 fill-emerald-100 inline" />
               Verificado
             </span>
           </div>
 
-          <h4 className="text-base sm:text-lg font-extrabold text-gray-900 mt-2 tracking-tight group-hover:text-[#a21b53] transition-colors capitalize">
+          <h4 className="text-base sm:text-lg font-extrabold text-on-surface mt-2 tracking-tight group-hover:text-primary transition-colors capitalize">
             {gift.name}
           </h4>
-          <p className="text-gray-500 text-xs font-semibold leading-normal mt-0.5">
+          <p className="text-on-surface-variant/70 text-xs font-semibold leading-normal mt-0.5">
             Set de regalo ideal para {category.label.toLowerCase()}.
           </p>
         </div>
@@ -127,7 +127,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           title="Eliminar regalo"
         >
           {deletingId === gift.id ? (
-            <span className="text-xs font-bold">...</span>
+            <span className="inline-block w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
           ) : (
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           )}
@@ -142,7 +142,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.97] hover:scale-[1.01] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-base animate-bounce">card_giftcard</span>
-            {claimingId === gift.id ? '...' : 'Regalar este detalle'}
+            {claimingId === gift.id ? <span className="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : 'Regalar este detalle'}
           </button>
         </div>
       )}

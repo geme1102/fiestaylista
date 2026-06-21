@@ -26,6 +26,7 @@ export default function Account() {
   const { user, resendVerification, refreshUser, logout } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSub, setLoadingSub] = useState(true);
+  const [subError, setSubError] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -40,6 +41,7 @@ export default function Account() {
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
         showToast(message, 'error');
+        setSubError(true);
         if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
       })
       .finally(() => setLoadingSub(false));
@@ -154,6 +156,13 @@ export default function Account() {
           {loadingSub ? (
             <div className="flex justify-center py-8">
               <LoadingSpinner />
+            </div>
+          ) : subError ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-on-surface-variant mb-3">No pudimos cargar tu suscripción.</p>
+              <button onClick={() => { setLoadingSub(true); setSubError(false); getCurrentSubscription().then((res) => setSubscription(res.subscription)).catch(() => setSubError(true)).finally(() => setLoadingSub(false)); }} className="text-primary font-semibold text-sm underline hover:no-underline">
+                Reintentar
+              </button>
             </div>
           ) : (
             <>

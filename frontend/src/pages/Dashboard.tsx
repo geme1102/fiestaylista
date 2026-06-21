@@ -184,9 +184,9 @@ export default function Dashboard() {
       {events.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             {[
-              { label: 'Eventos', value: events.length, icon: 'calendar_month', stat: 'events' },
-              { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard', stat: 'gifts' },
-              { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings', stat: 'raised' },
+              { label: 'Eventos', value: events.length, icon: 'calendar_month', stat: 'events', subtitle: 'Total de celebraciones creadas' },
+              { label: 'Regalos', value: events.reduce((s, e) => s + (e.giftCount || 0), 0), icon: 'card_giftcard', stat: 'gifts', subtitle: 'Artículos en tus listas' },
+              { label: 'Recaudado', value: formatCOP(events.reduce((s, e) => s + (e.cashFund?.collectedAmount || 0), 0)), icon: 'savings', stat: 'raised', subtitle: 'Aportes por Lluvia de Sobres' },
             ].map((stat) => (
               <div key={stat.label} data-testid={`stat-${stat.stat}`} className="glass rounded-2xl p-5 md:p-6 flex items-center gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
@@ -195,6 +195,7 @@ export default function Dashboard() {
               <div className="min-w-0">
                 <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{stat.value}</p>
                 <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
+                <p className="text-[10px] text-on-surface-variant/40 mt-0.5">{stat.subtitle}</p>
               </div>
             </div>
           ))}
@@ -313,7 +314,7 @@ export default function Dashboard() {
                           className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center glass border border-outline-variant/30 rounded-xl text-red-300 hover:bg-red-50 hover:text-red-500 transition-all duration-200 disabled:opacity-50"
                           aria-label={`Eliminar ${event.title}`}
                         >
-                          {deleting === event.id ? '...' : <span className="material-symbols-outlined text-base">delete</span>}
+                          {deleting === event.id ? <span className="block w-4 h-4 rounded-full border-2 border-red-300 border-t-transparent animate-spin" /> : <span className="material-symbols-outlined text-base">delete</span>}
                         </button>
                       </div>
                     </div>
@@ -356,8 +357,40 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
   creating: boolean;
   handleCreate: (e: React.FormEvent) => Promise<void>;
 }) {
+  const [titleError, setTitleError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const validateTitle = (value: string) => {
+    if (value.length > 100) return 'El nombre no puede superar 100 caracteres';
+    return '';
+  };
+
+  const validatePhone = (value: string) => {
+    if (value && !/^(\+57)?[0-9]{7,10}$/.test(value.replace(/\s/g, ''))) return 'Ingresa un número válido en Colombia (+57 300 000 0000)';
+    return '';
+  };
+
+  const handleTitleChange = (value: string) => {
+    if (value.length <= 100) {
+      setFormData({ ...formData, title: value });
+      setTitleError(validateTitle(value));
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData({ ...formData, hostPhone: value });
+    setPhoneError(validatePhone(value));
+  };
+
   return (
-    <form className="space-y-6" onSubmit={handleCreate}>
+    <form className="space-y-6" onSubmit={(e) => {
+      const tErr = validateTitle(formData.title);
+      const pErr = validatePhone(formData.hostPhone);
+      setTitleError(tErr);
+      setPhoneError(pErr);
+      if (tErr || pErr || !formData.title.trim()) { e.preventDefault(); return; }
+      handleCreate(e);
+    }}> 
       <div>
         <label className="block text-sm font-bold mb-3">Tipo de evento</label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -383,18 +416,23 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 
       <div>
         <label htmlFor="title" className="block text-sm font-bold text-on-surface-variant mb-2">
-          Nombre del evento
+          Nombre del evento <span className="text-xs text-on-surface-variant/50">{formData.title.length}/100</span>
         </label>
         <input
           id="title"
           type="text"
           value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          onChange={(e) => handleTitleChange(e.target.value)}
+          className={cn(
+            'w-full rounded-xl border bg-surface text-on-surface px-4 py-3 outline-none focus:ring-2 transition-all',
+            titleError ? 'border-error focus:border-error focus:ring-error/20' : 'border-outline-variant focus:border-primary focus:ring-primary/20',
+          )}
           placeholder="Ej: Boda de María y Juan"
           autoComplete="off"
           autoFocus
+          maxLength={100}
         />
+        {titleError && <p className="text-xs text-error mt-1.5 font-medium">{titleError}</p>}
       </div>
 
       <div>
@@ -405,13 +443,17 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           id="phone"
           type="tel"
           value={formData.hostPhone}
-          onChange={(e) => setFormData({ ...formData, hostPhone: e.target.value })}
-          className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          onChange={(e) => handlePhoneChange(e.target.value)}
+          className={cn(
+            'w-full rounded-xl border bg-surface text-on-surface px-4 py-3 outline-none focus:ring-2 transition-all',
+            phoneError ? 'border-error focus:border-error focus:ring-error/20' : 'border-outline-variant focus:border-primary focus:ring-primary/20',
+          )}
           placeholder="+57 300 000 0000"
           autoComplete="tel"
           inputMode="tel"
           enterKeyHint="next"
         />
+        {phoneError && <p className="text-xs text-error mt-1.5 font-medium">{phoneError}</p>}
       </div>
 
       <button

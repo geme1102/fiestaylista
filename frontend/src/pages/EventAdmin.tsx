@@ -311,14 +311,67 @@ export default function EventAdmin() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6 py-10 px-4 max-w-4xl mx-auto mt-20">
-        <div className="h-8 bg-rose-100/50 rounded-2xl w-1/3" />
-        <div className="h-48 bg-rose-100/30 rounded-[32px]" />
-        <div className="grid md:grid-cols-2 gap-5">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 bg-rose-100/30 rounded-3xl" />
-          ))}
+      <div className="animate-pulse">
+        {/* Nav skeleton */}
+        <div className="flex items-center gap-4 mb-8 py-2">
+          <div className="w-11 h-11 bg-surface-container-high rounded-2xl" />
+          <div className="space-y-2">
+            <div className="h-3 w-24 bg-surface-container-high rounded" />
+            <div className="h-5 w-40 bg-surface-container-high rounded-lg" />
+          </div>
+          <div className="ml-auto flex items-center gap-2 bg-surface-container-high/50 px-3 py-1.5 rounded-full">
+            <div className="w-2.5 h-2.5 bg-surface-container-high rounded-full" />
+            <div className="h-3 w-28 bg-surface-container-high rounded" />
+          </div>
         </div>
+
+        {/* Breadcrumb skeleton */}
+        <div className="h-4 w-48 bg-surface-container-high rounded mb-6" />
+
+        {/* Main card skeleton */}
+        <div className="bg-surface/80 rounded-[32px] p-6 md:p-8 border border-white/70 mb-8">
+          {/* Card header */}
+          <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-primary/10">
+            <div className="flex items-center gap-[18px]">
+              <div className="w-[72px] h-[72px] bg-surface-container-high rounded-2xl" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-48 bg-surface-container-high rounded-lg" />
+                  <div className="w-9 h-9 bg-surface-container-high rounded-xl" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-20 bg-surface-container-high rounded-full" />
+                  <div className="h-6 w-16 bg-surface-container-high rounded-full" />
+                </div>
+                <div className="h-5 w-36 bg-surface-container-high rounded-full" />
+              </div>
+            </div>
+            {/* Toggle skeleton */}
+            <div className="flex items-center gap-4 bg-surface-container-high/30 p-3.5 rounded-2xl self-stretch sm:self-center">
+              <div className="space-y-1.5">
+                <div className="h-2.5 w-24 bg-surface-container-high rounded" />
+                <div className="h-3 w-20 bg-surface-container-high rounded" />
+              </div>
+              <div className="w-14 h-[30px] bg-surface-container-high rounded-full" />
+            </div>
+          </div>
+
+          {/* Action buttons skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
+            <div className="h-14 bg-surface-container-high rounded-2xl" />
+            <div className="h-14 bg-surface-container-high/50 rounded-2xl" />
+          </div>
+
+          {/* Details cards skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-primary/10">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-20 bg-surface-container-high/50 rounded-2xl" />
+            ))}
+          </div>
+        </div>
+
+        {/* Gift management skeleton */}
+        <div className="h-64 bg-surface-container-high/30 rounded-[32px]" />
       </div>
     );
   }
@@ -326,11 +379,11 @@ export default function EventAdmin() {
   if (!event) {
     return (
       <div className="text-center py-20 px-4">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-50 flex items-center justify-center text-4xl">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed-dim flex items-center justify-center text-4xl">
           😕
         </div>
-        <p className="text-gray-500 font-semibold mb-4">Evento no encontrado</p>
-        <Link to="/dashboard" className="text-[#a21b53] font-bold inline-block hover:underline">Volver al dashboard</Link>
+        <p className="text-on-surface-variant font-semibold mb-4">Evento no encontrado</p>
+        <Link to="/dashboard" className="text-primary font-bold inline-block hover:underline">Volver al dashboard</Link>
       </div>
     );
   }
@@ -358,12 +411,12 @@ export default function EventAdmin() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface text-[#2c1f24] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#a21b53]/20 selection:text-[#a21b53]">
+    <div className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-24 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
 
       {/* Ambient glow backgrounds */}
       <div className="absolute top-[-180px] left-[-150px] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-pink-300/30 to-rose-400/20 blur-[130px] pointer-events-none -z-10 animate-pulse duration-[12000ms]" />
       <div className="absolute top-[350px] right-[-150px] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-amber-200/25 to-pink-300/20 blur-[110px] pointer-events-none -z-10" />
-      <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-[#a21b53]/5 blur-[160px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[160px] pointer-events-none -z-10" />
 
       {/* Glossy Navigation Bar */}
       <nav className="sticky top-0 z-40 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 flex items-center justify-between">
@@ -372,23 +425,23 @@ export default function EventAdmin() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => navigate('/dashboard')}
-            className="p-2.5 hover:bg-[#a21b53]/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-[#a21b53] flex items-center justify-center bg-surface shadow-sm"
+            className="p-2.5 hover:bg-primary/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-primary flex items-center justify-center bg-surface shadow-sm"
             aria-label="Regresar"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </motion.button>
 
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest font-extrabold text-rose-400">PANEL DE CONTROL</span>
-            <h1 className="text-lg md:text-xl font-extrabold text-[#7e143f] tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
+            <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary/60">PANEL DE CONTROL</span>
+            <h1 className="text-lg md:text-xl font-extrabold text-primary tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
               {event?.title || 'Evento'}
             </h1>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 bg-rose-50 border border-rose-100/40 px-3.5 py-1.5 rounded-full shadow-sm">
+        <div className="hidden sm:flex items-center gap-2 bg-primary-fixed border border-primary/10 px-3.5 py-1.5 rounded-full shadow-sm">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] text-gray-600 font-extrabold tracking-wider uppercase">MODO EDICIÓN ACTIVO</span>
+          <span className="text-[10px] text-on-surface-variant font-extrabold tracking-wider uppercase">MODO EDICIÓN ACTIVO</span>
         </div>
       </nav>
 
@@ -399,8 +452,8 @@ export default function EventAdmin() {
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6 font-semibold px-2">
           <Link to="/dashboard" className="hover:text-rose-950 hover:underline transition-colors duration-200">Mis Eventos</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-          <span className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-[#a21b53] font-black shadow-sm flex items-center gap-1">
-            <Home className="w-3 h-3 text-[#a21b53]" />
+          <span className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-primary font-black shadow-sm flex items-center gap-1">
+            <Home className="w-3 h-3 text-primary" />
             {event.title}
           </span>
         </div>
@@ -419,13 +472,13 @@ export default function EventAdmin() {
                 {EVENT_ICONS[event.eventType]}
                 <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-[#a21b53] border border-white text-[7px] text-white font-bold items-center justify-center">★</span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border border-white text-[7px] text-white font-bold items-center justify-center">★</span>
                 </span>
               </motion.div>
 
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-1.5">
+                  <h2 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5">
                     {event.title}
                   </h2>
                   <motion.button
@@ -440,7 +493,7 @@ export default function EventAdmin() {
                       setLocationDraft(event.eventLocation ?? '');
                       setNoteDraft(event.eventNote ?? '');
                     }}
-                    className="p-2.5 text-pink-500 hover:text-white hover:bg-[#a21b53] rounded-xl transition-all cursor-pointer bg-white border border-[#a21b53]/15 shadow-sm flex items-center justify-center"
+                    className="p-2.5 text-primary hover:text-on-primary hover:bg-primary rounded-xl transition-all cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center"
                     title="Editar título del evento"
                   >
                     <Pencil className="w-[18px] h-[18px]" />
@@ -448,7 +501,7 @@ export default function EventAdmin() {
                 </div>
 
                 <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-xs font-bold text-pink-700 bg-pink-50 border border-pink-100/50 px-3 py-1 rounded-full">
+                  <span className="text-xs font-bold text-primary bg-primary-fixed border border-primary/10 px-3 py-1 rounded-full">
                     {gifts.length} regalos
                   </span>
                   {photos.length > 0 && (
@@ -462,19 +515,19 @@ export default function EventAdmin() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setEditingDetails(true)}
-                  className="text-gray-500 text-xs font-bold mt-2 py-1.5 px-3.5 bg-rose-50/50 hover:bg-rose-50 border border-rose-100/40 rounded-full inline-flex items-center gap-1.5 hover:text-gray-900 transition-all cursor-pointer group"
+                  className="text-on-surface-variant text-xs font-bold mt-2 py-1.5 px-3.5 bg-surface-container-high hover:bg-surface-container-highest border border-primary/10 rounded-full inline-flex items-center gap-1.5 hover:text-on-surface transition-all cursor-pointer group"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#a21b53]" />
-                  <span>Tipo: <span className="text-[#a21b53] font-extrabold">{EVENT_LABELS[event.eventType]}</span></span>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#a21b53] group-hover:translate-y-0.5 transition-transform" />
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span>Tipo: <span className="text-primary font-extrabold">{EVENT_LABELS[event.eventType]}</span></span>
+                  <ChevronDown className="w-3.5 h-3.5 text-primary group-hover:translate-y-0.5 transition-transform" />
                 </motion.button>
               </div>
             </div>
 
             {/* Active Toggle */}
-            <div className="flex items-center justify-between sm:justify-start gap-4 bg-surface border border-[#a21b53]/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
+            <div className="flex items-center justify-between sm:justify-start gap-4 bg-surface border border-primary/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
               <div className="flex flex-col text-left">
-                <span className="text-[9px] text-[#a21b53] font-extrabold tracking-widest uppercase">ESTADO DE EVENTO</span>
+                <span className="text-[9px] text-primary font-extrabold tracking-widest uppercase">ESTADO DE EVENTO</span>
                 <span className={`text-xs font-semibold tracking-wide ${event.isActive ? 'text-emerald-700 font-extrabold' : 'text-gray-400 font-medium'}`}>
                   {event.isActive ? '● ACTIVO EN LÍNEA' : '○ PAUSADO'}
                 </span>
@@ -483,11 +536,11 @@ export default function EventAdmin() {
               <button
               data-testid="toggle-event-status"
               onClick={() => setToggleConfirm(true)}
-              className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-[#c52367]' : 'bg-gray-200'}`}
+              className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
               aria-label="Cambiar estado del evento"
               >
                 {event.isActive && (
-                  <span className="absolute inset-0 bg-[#c52367] rounded-full blur-[2px] opacity-30 animate-pulse" />
+                  <span className="absolute inset-0 bg-primary rounded-full blur-[2px] opacity-30 animate-pulse" />
                 )}
                 <div className={`w-[22px] h-[22px] bg-white rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-transform duration-300 transform ${event.isActive ? 'translate-x-[26px]' : 'translate-x-0'}`} />
               </button>
@@ -548,11 +601,11 @@ export default function EventAdmin() {
               <motion.button
                 whileHover={{ y: -3, scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-[#a21b53] py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
+                className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-primary py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
                 <span>Vista Previa de Invitado</span>
-                <Eye className="w-[18px] h-[18px] text-[#a21b53] stroke-[2.2]" />
+                <Eye className="w-[18px] h-[18px] text-primary stroke-[2.2]" />
               </motion.button>
             </a>
           </div>
@@ -584,7 +637,7 @@ export default function EventAdmin() {
           <div className="mt-8 pt-6 border-t border-rose-100/20">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#a21b53]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 <h3 className="text-gray-900 font-extrabold text-sm tracking-widest uppercase">Detalles del Evento</h3>
               </div>
               <motion.button
@@ -598,21 +651,21 @@ export default function EventAdmin() {
                   setLocationDraft(event.eventLocation ?? '');
                   setNoteDraft(event.eventNote ?? '');
                 }}
-                className="bg-[#a21b53]/5 hover:bg-[#a21b53]/10 border border-[#a21b53]/15 hover:border-[#a21b53]/30 text-[#a21b53] font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
+                className="bg-primary/5 hover:bg-primary/10 border border-primary/15 hover:border-primary/30 text-primary font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-sm cursor-pointer group"
               >
-                <Pencil className="w-3.5 h-3.5 text-[#a21b53] group-hover:rotate-12 transition-transform" />
+                <Pencil className="w-3.5 h-3.5 text-primary group-hover:rotate-12 transition-transform" />
                 <span>Editar Evento</span>
               </motion.button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-surface border border-rose-100/30 rounded-2xl p-[18px] flex items-start gap-3.5 hover:bg-rose-50/20 transition-all shadow-sm">
-                <div className="p-2.5 bg-[#a21b53]/5 text-[#a21b53] rounded-xl shrink-0">
+                <div className="p-2.5 bg-primary/5 text-primary rounded-xl shrink-0">
                   <Calendar className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fecha y Hora</span>
-                  <span className="text-[#a21b53] text-[13px] font-extrabold leading-snug mt-1.5">
+                  <span className="text-primary text-[13px] font-extrabold leading-snug mt-1.5">
                     {event.eventDate ? formatDateTime(event.eventDate) : 'Sin definir'}
                   </span>
                 </div>
@@ -624,7 +677,7 @@ export default function EventAdmin() {
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Ubicación / Lugar</span>
-                  <span className="text-gray-800 text-[13px] font-extrabold leading-snug mt-1.5">{event.eventLocation || 'Sin definir'}</span>
+                  <span className="text-on-surface text-[13px] font-extrabold leading-snug mt-1.5">{event.eventLocation || 'Sin definir'}</span>
                 </div>
               </div>
 
@@ -754,7 +807,7 @@ export default function EventAdmin() {
                     type="text"
                     value={titleDraft}
                     onChange={(e) => setTitleDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold"
                     autoComplete="off"
                     enterKeyHint="next"
                     required
@@ -768,7 +821,7 @@ export default function EventAdmin() {
                       id="edit-type"
                       value={typeDraft}
                       onChange={(e) => setTypeDraft(e.target.value as EventType)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
                     >
                       {EVENT_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
@@ -783,7 +836,7 @@ export default function EventAdmin() {
                       type="datetime-local"
                       value={dateDraft}
                       onChange={(e) => setDateDraft(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
                     />
                   </div>
                 </div>
@@ -795,7 +848,7 @@ export default function EventAdmin() {
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-bold text-gray-700"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
                     placeholder="Ej: Salón de eventos, Ciudad"
                     autoComplete="street-address"
                     inputMode="text"
@@ -810,7 +863,7 @@ export default function EventAdmin() {
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#d87c9b]/25 bg-white font-semibold text-gray-700 resize-none"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-semibold text-gray-700 resize-none"
                     placeholder="Ej: No se aceptan regalos envueltos"
                   />
                 </div>
@@ -829,7 +882,7 @@ export default function EventAdmin() {
                     type="submit"
                     data-testid="save-event-changes"
                     disabled={updatingDetails}
-                    className="bg-[#c52367] hover:bg-[#a21b53] text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
+                    className="bg-primary hover:bg-primary text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
                   >
                     {updatingDetails ? '...' : 'Guardar Cambios'}
                   </motion.button>

@@ -92,7 +92,7 @@ export default function Onboarding() {
               <div className="text-center mb-4">
                 <span className="text-5xl">🎉</span>
               </div>
-              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 1 de 3</span>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Paso 1 de 2</span>
               <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-2 mt-2">¿Qué tipo de evento?</h2>
               <p className="text-on-surface-variant font-body-md">Selecciona la ocasión que vamos a celebrar.</p>
             </div>

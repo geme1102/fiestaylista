@@ -49,6 +49,7 @@ export default function Layout() {
                   <Link
                     key={item.path}
                     to={item.path}
+                    aria-label={item.label}
                     className={cn(
                       'px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center',
                       pathname === item.path
@@ -143,16 +144,17 @@ export default function Layout() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-safe rounded-t-xl">
         <div className="flex items-center justify-around h-16 px-4">
           {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
-                pathname === item.path
-                  ? 'text-primary after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
-                  : 'text-on-surface-variant/60 hover:text-primary',
-              )}
-            >
+              <Link
+                key={item.path}
+                to={item.path}
+                aria-label={item.label}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
+                  pathname === item.path
+                    ? 'text-primary after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
+                    : 'text-on-surface-variant/60 hover:text-primary',
+                )}
+              >
               <span className={cn(
                 'material-symbols-outlined text-lg',
                 pathname === item.path ? '' : '',
