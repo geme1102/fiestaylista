@@ -541,7 +541,7 @@ export default function EventAdmin() {
           </div>
 
           {/* Lluvia de Sobres Banner */}
-          {!isBoosted && user?.tier === 'free' && !cashFund?.isActive && (
+          {!isBoosted && !cashFund?.isActive && (
             <div className="bg-gradient-to-r from-[#fff5ee] via-[#fffbf7] to-[#fff5ee] border border-orange-200/20 rounded-2xl p-5 mt-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
               <div className="flex items-start md:items-center gap-4 text-amber-950">
                 <span className="text-2xl leading-none bg-amber-100 text-amber-700 w-11 h-11 flex items-center justify-center rounded-2xl shadow-sm border border-amber-200/40 shrink-0">⚡</span>
@@ -564,7 +564,11 @@ export default function EventAdmin() {
               className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
             >
               <span>Activar Lluvia de Sobres</span>
-                <span className="bg-amber-100/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">$10.000 COP</span>
+                {user?.tier === 'pro' ? (
+                  <span className="bg-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">GRATIS</span>
+                ) : (
+                  <span className="bg-amber-100/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">$10.000 COP</span>
+                )}
               </motion.button>
             </div>
           )}
@@ -890,7 +894,11 @@ export default function EventAdmin() {
                 Activar Lluvia de Sobres
               </h4>
               <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-semibold">
-                <strong>Pago único de $10.000 COP.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta por PSE, tarjeta o Nequi. Válido por 30 días.
+                {user?.tier === 'pro' ? (
+                  <>Gratuito para ti — <strong>incluido en tu plan PRO.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta por PSE, tarjeta o Nequi. Válido por 30 días.</>
+                ) : (
+                  <><strong>Pago único de $10.000 COP.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta por PSE, tarjeta o Nequi. Válido por 30 días.</>
+                )}
               </p>
 
               <div className="bg-amber-50/70 p-[18px] rounded-2xl border border-amber-200/50 text-left space-y-2.5">
@@ -908,7 +916,7 @@ export default function EventAdmin() {
                 </div>
               </div>
 
-              <p className="text-[10px] text-gray-400 font-semibold">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago. Pago único de $10.000 COP — no es una suscripción.</p>
+              <p className="text-[10px] text-gray-400 font-semibold">Comisión del 5% al retirar el dinero. Procesado por Mercado Pago. {user?.tier === 'pro' ? 'Sin costo de activación — incluido en tu plan PRO.' : 'Pago único de $10.000 COP — no es una suscripción.'}</p>
 
               <div className="flex flex-col gap-2.5 mt-2">
                 <motion.button
@@ -919,7 +927,7 @@ export default function EventAdmin() {
                   disabled={boostLoading}
                   className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
-                    {boostLoading ? '...' : 'PAGAR Y ACTIVAR — $10.000 COP'}
+                    {boostLoading ? '...' : user?.tier === 'pro' ? 'ACTIVAR GRATIS' : 'PAGAR Y ACTIVAR — $10.000 COP'}
                 </motion.button>
                 <button
                   onClick={() => setBoostModal(false)}

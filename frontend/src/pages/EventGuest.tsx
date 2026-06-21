@@ -7,29 +7,9 @@ import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import { ConfettiCanvas, type ConfettiCanvasRef } from '../components/ConfettiCanvas';
 import { useEventPage } from '../hooks/useEventPage';
-import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS, type EventType } from '../types';
+import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { apiClient } from '../services/api';
-
-const CURSIVE_TEXTS: Record<EventType, string> = {
-  WEDDING: 'Nuestra Historia comienza con un Sí...',
-  BABY_SHOWER: 'Dulce espera, amor infinito...',
-  BIRTHDAY: 'Risas, amigos y un año milagroso...',
-  BAPTISM: 'Guiado por la luz divina...',
-  COMMUNION: 'Luz y alegría en este reencuentro de fe...',
-  HOUSE_WARMING: 'Nuevo nido de amor, nuevas historias...',
-  OTHER: 'Celebrando juntos este momento especial...',
-};
-
-const INTRO_TEXTS: Record<EventType, string> = {
-  WEDDING: 'Te invitamos a ser parte del día más especial. Tu presencia y palabras de aliento son el regalo más valioso en este camino que iniciamos.',
-  BABY_SHOWER: '¡La cigüeña está en camino! Los invitamos a celebrar la dulce espera y preparar el nido para el milagro de una nueva vida llena de felicidad.',
-  BIRTHDAY: '¡A celebrar la vida! Un año más repleto de risas, aprendizajes y sueños por realizar. El mejor regalo es brindar rodeado de las personas que amo.',
-  BAPTISM: 'Un día consagrado a la fe y la gracia. Los invitamos a acompañarnos en la bendición de bautizo, iluminando los primeros pasos espirituales.',
-  COMMUNION: 'Unión sagrada bajo una misma luz de fe. Los invitamos a conmemorar este sacramento con un espíritu puro y feliz.',
-  HOUSE_WARMING: '¡Llaves nuevas y risas compartidas! Los invitamos a celebrar nuestro nuevo hogar, un nuevo capítulo para construir con el corazón.',
-  OTHER: 'Te invitamos a ser parte de este momento especial. Tu presencia y cariño son el mejor regalo.',
-};
 
 function sanitizeForJSON(str: string): string {
   return str.replace(/<\/script>/gi, '<\\/script>');
@@ -278,17 +258,9 @@ export default function EventGuest() {
                 )}
               </div>
 
-              <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-4 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
-                &ldquo;{CURSIVE_TEXTS[event.eventType]}&rdquo;
-              </p>
-
-              <p className="text-gray-600 font-medium max-w-xl leading-relaxed mb-8 text-xs md:text-sm">
-                {INTRO_TEXTS[event.eventType]}
-              </p>
-
               {displayNote && (
-                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mb-8 leading-relaxed text-center">
-                  {displayNote}
+                <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-8 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+                  &ldquo;{displayNote}&rdquo;
                 </p>
               )}
 

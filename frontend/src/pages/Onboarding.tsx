@@ -161,7 +161,7 @@ export default function Onboarding() {
               id="event-note"
               value={eventNote}
               onChange={(e) => setEventNote(e.target.value)}
-              placeholder="Escribe un mensaje personalizado para tus invitados (Ej: Con amor los esperamos en el baby shower de Daniel)"
+              placeholder="Escribe las palabras de bienvenida para tu evento — será lo primero que vean tus invitados al abrir la tarjeta"
               rows={3}
               maxLength={500}
               className="w-full bg-surface-container-high rounded-2xl p-4 text-sm text-on-surface font-medium placeholder:text-on-surface-variant/50 resize-none outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-8 border border-transparent focus:border-primary/20"
