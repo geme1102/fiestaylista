@@ -83,7 +83,7 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
 }));
 
 router.get('/me', requireAnyAuth, asyncHandler(async (req: AuthRequest, res) => {
-  if ((req.user as any)?.isGuest) {
+  if (req.user?.isGuest) {
     res.json({ user: null, isGuest: true });
     return;
   }

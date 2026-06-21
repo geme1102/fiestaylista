@@ -23,14 +23,14 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       status: 'active',
       currentPeriodStart: new Date(),
       currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
-    }, tx);
+    }, tx as unknown as typeof db);
 
     try {
       await tx
         .insert(proPayments)
         .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
-    } catch (err: any) {
-      if (err?.code === '23505') {
+    } catch (err: unknown) {
+      if ((err as Record<string, unknown>)?.code === '23505') {
         log.info(`PRO payment ${paymentId} already processed`);
         isFirstProcessing = false;
         return;
@@ -72,8 +72,8 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
       await tx
         .insert(boostPayments)
         .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
-    } catch (err: any) {
-      if (err?.code === '23505') {
+    } catch (err: unknown) {
+      if ((err as Record<string, unknown>)?.code === '23505') {
         log.info(`Boost payment ${paymentId} already processed`);
         return null;
       }

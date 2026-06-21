@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
@@ -8,7 +9,7 @@ import { publicStatsLimiter } from '../middleware/rateLimit.js';
 const router = Router();
 
 function cacheControl(seconds: number) {
-  return (_req: any, res: any, next: any) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     res.set('Cache-Control', `public, max-age=${seconds}, s-maxage=${seconds}`);
     next();
   };

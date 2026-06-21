@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../types/index.js';
 import { AppError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 
@@ -13,7 +14,7 @@ function logError(err: unknown, errorId: string, req?: Request): void {
     logData.method = req.method;
     logData.path = req.path;
     logData.ip = req.ip;
-    logData.userId = (req as any).user?.userId;
+    logData.userId = (req as AuthRequest).user?.userId;
   }
 
   logger.error(logData, err instanceof Error ? err.message : 'Error interno');

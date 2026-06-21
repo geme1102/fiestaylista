@@ -10,10 +10,10 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
   const [display, setDisplay] = useState(0);
   const startRef = useRef<number | null>(null);
   const fromRef = useRef(0);
+  const displayRef = useRef(0);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    fromRef.current = display;
+    fromRef.current = displayRef.current;
     startRef.current = null;
     let frame: number;
     const animate = (timestamp: number) => {
@@ -23,6 +23,7 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(fromRef.current + (value - fromRef.current) * easeOut);
       setDisplay(current);
+      displayRef.current = current;
       if (progress < 1) {
         frame = requestAnimationFrame(animate);
       }

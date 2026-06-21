@@ -1,10 +1,10 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import { UnauthorizedError } from '../utils/errors.js';
-import type { JwtPayload, GuestJwtPayload } from '../types/index.js';
+import type { AuthRequest, JwtPayload, GuestJwtPayload } from '../types/index.js';
 
-export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
 
@@ -33,7 +33,7 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
       throw new UnauthorizedError('Los tokens de invitado no tienen acceso a esta funcionalidad');
     }
 
-    (req as any).user = {
+    req.user = {
       userId: decoded.userId,
       email: decoded.email,
     };
@@ -56,7 +56,7 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
 }
 
-export function requireAnyAuth(req: Request, _res: Response, next: NextFunction): void {
+export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
 
@@ -80,7 +80,7 @@ export function requireAnyAuth(req: Request, _res: Response, next: NextFunction)
       }
     }
 
-    (req as any).user = {
+    req.user = {
       userId: decoded.userId,
       email: decoded.email,
       isGuest: 'isGuest' in decoded && (decoded as GuestJwtPayload).isGuest,
@@ -104,7 +104,7 @@ export function requireAnyAuth(req: Request, _res: Response, next: NextFunction)
   }
 }
 
-export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
 
@@ -131,7 +131,7 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
       }
     }
 
-    (req as any).user = {
+    req.user = {
       userId: decoded.userId,
       email: decoded.email,
     };

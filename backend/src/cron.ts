@@ -17,8 +17,9 @@ const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
     const acquired = await db.transaction(async (tx) => {
       const [result] = await tx.execute(sql`SELECT pg_try_advisory_lock(hashtext(${name})) as acquired`);
-      const locked = typeof result === 'object' && result !== null && (
-        (result as any).acquired === true ||
+      const row = result as Record<string, unknown>;
+      const locked = row !== null && (
+        row.acquired === true ||
         Array.isArray(result) && result[0] === true
       );
       if (!locked) return false;

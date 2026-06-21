@@ -30,10 +30,10 @@ export function serializeError(error: unknown): Error {
   if (typeof error === 'object' && error !== null) {
     const obj = error as Record<string, unknown>;
     const message = obj.message ?? JSON.stringify(obj);
-    const err = new Error(String(message));
-    if (typeof obj.status === 'number') (err as any).status = obj.status;
-    if (typeof obj.cause !== 'undefined') (err as any).cause = obj.cause;
-    try { (err as any).raw = JSON.stringify(obj); } catch { /* ignore */ }
+    const err = new Error(String(message)) as Error & Record<string, unknown>;
+    if (typeof obj.status === 'number') err.status = obj.status;
+    if (typeof obj.cause !== 'undefined') err.cause = obj.cause;
+    try { err.raw = JSON.stringify(obj); } catch { /* ignore */ }
     return err;
   }
   return new Error(String(error));
@@ -52,8 +52,8 @@ export async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promis
       return result;
     } catch (error) {
       lastError = serializeError(error);
-      const status = (error as any)?.status;
-      if (status !== undefined && status < 500) {
+      const status = (error as Record<string, unknown>)?.status;
+      if (status !== undefined && (status as number) < 500) {
         throw lastError;
       }
       if (attempt < maxRetries - 1) {
@@ -254,8 +254,8 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
     externalReference: info.external_reference ?? '',
     payerEmail: info.payer_email ?? '',
     reason: info.reason ?? '',
-    nextChargeDate: (info as any).next_charge_date || (info as any).scheduled_date || null,
-    dateCreated: (info as any).date_created || null,
+    nextChargeDate: (info as unknown as Record<string, unknown>).next_charge_date as string || (info as unknown as Record<string, unknown>).scheduled_date as string || null,
+    dateCreated: (info as unknown as Record<string, unknown>).date_created as string || null,
   };
 }
 

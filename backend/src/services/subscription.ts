@@ -19,7 +19,7 @@ interface UpsertData {
 export async function createOrUpdateSubscription(
   userId: string,
   data: UpsertData,
-  tx?: any,
+  tx?: typeof db,
 ) {
   const conn = tx || db;
   const [sub] = await conn

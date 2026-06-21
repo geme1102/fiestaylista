@@ -1,8 +1,8 @@
 import rateLimit from 'express-rate-limit';
-import type { Request } from 'express';
+import type { AuthRequest } from '../types/index.js';
 
-function keyGenerator(req: Request): string {
-  const userId = (req as any).user?.userId;
+function keyGenerator(req: AuthRequest): string {
+  const userId = req.user?.userId;
   const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
   return userId ? `user:${userId}:${ip}` : `ip:${ip}`;
 }

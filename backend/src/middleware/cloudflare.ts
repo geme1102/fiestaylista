@@ -29,7 +29,7 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
   const remoteIP = req.ip ?? req.socket.remoteAddress ?? '';
 
   if (connectingIP && typeof connectingIP === 'string' && isCloudflareIP(remoteIP)) {
-    (req as any).ip = connectingIP;
+    (req as Request & { ip: string }).ip = connectingIP;
   }
 
   next();
