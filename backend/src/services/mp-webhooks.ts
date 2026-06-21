@@ -39,14 +39,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     }
   });
 
-  if (!isFirstProcessing) {
-    const [existing] = await db
-      .select({ id: proPayments.id })
-      .from(proPayments)
-      .where(eq(proPayments.mpPaymentId, paymentId))
-      .limit(1);
-    if (!existing) return;
-  }
+  if (!isFirstProcessing) return;
 
   try {
     const [user] = await db

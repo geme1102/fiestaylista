@@ -1,5 +1,10 @@
 import rateLimit from 'express-rate-limit';
+import { randomUUID } from 'node:crypto';
 import type { AuthRequest } from '../types/index.js';
+
+function msg(text: string) {
+  return { error: text, errorId: randomUUID() };
+}
 
 function keyGenerator(req: AuthRequest): string {
   const userId = req.user?.userId;
@@ -13,7 +18,7 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiados intentos. Intenta de nuevo en un minuto.'),
 });
 
 export const apiLimiter = rateLimit({
@@ -22,7 +27,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
 
 export const uploadLimiter = rateLimit({
@@ -31,7 +36,7 @@ export const uploadLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas subidas de archivos. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas subidas de archivos. Intenta de nuevo en un minuto.'),
 });
 
 export const guestUploadLimiter = rateLimit({
@@ -40,7 +45,7 @@ export const guestUploadLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas subidas de invitado. Intenta de nuevo en un minuto.'),
 });
 
 export const resetLimiter = rateLimit({
@@ -49,7 +54,7 @@ export const resetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiados intentos. Intenta de nuevo en un minuto.'),
 });
 
 export const giftLimiter = rateLimit({
@@ -58,7 +63,7 @@ export const giftLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
 
 export const guestLimiter = rateLimit({
@@ -67,7 +72,7 @@ export const guestLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas cuentas guest. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas cuentas guest. Intenta de nuevo en un minuto.'),
 });
 
 export const refreshLimiter = rateLimit({
@@ -76,7 +81,7 @@ export const refreshLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiados intentos de refresco. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiados intentos de refresco. Intenta de nuevo en un minuto.'),
 });
 
 export const contributeLimiter = rateLimit({
@@ -85,7 +90,7 @@ export const contributeLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas contribuciones. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas contribuciones. Intenta de nuevo en un minuto.'),
 });
 
 export const consentLimiter = rateLimit({
@@ -94,7 +99,7 @@ export const consentLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
 
 export const arcoLimiter = rateLimit({
@@ -103,7 +108,7 @@ export const arcoLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes ARCO. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas solicitudes ARCO. Intenta de nuevo en un minuto.'),
 });
 
 export const paymentLimiter = rateLimit({
@@ -112,7 +117,7 @@ export const paymentLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiados intentos de pago. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiados intentos de pago. Intenta de nuevo en un minuto.'),
 });
 
 export const cancelLimiter = rateLimit({
@@ -121,7 +126,7 @@ export const cancelLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiados intentos de cancelación. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiados intentos de cancelación. Intenta de nuevo en un minuto.'),
 });
 
 export const viewLimiter = rateLimit({
@@ -130,7 +135,7 @@ export const viewLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas visitas. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas visitas. Intenta de nuevo en un minuto.'),
 });
 
 export const webhookLimiter = rateLimit({
@@ -139,7 +144,7 @@ export const webhookLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes de webhook' },
+  message: msg('Demasiadas solicitudes de webhook'),
 });
 
 export const publicStatsLimiter = rateLimit({
@@ -148,5 +153,5 @@ export const publicStatsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
-  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+  message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });

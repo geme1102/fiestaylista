@@ -65,6 +65,7 @@ export const photos = pgTable('photos', {
   url: text('url').notNull(),
   caption: text('caption'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
 }, (table) => ({
   eventIdIdx: index('photos_event_id_idx').on(table.eventId),
 }));

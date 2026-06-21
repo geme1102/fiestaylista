@@ -1,7 +1,9 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { gifts as giftsTable } from '../db/schema.js';
+import { users, events, gifts as giftsTable } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { TIER_LIMITS } from '../types/index.js';
+import type { Tier } from '../types/index.js';
 
 function sanitize(input: string): string {
   return input
@@ -16,12 +18,45 @@ export async function addGift(eventId: string, name: string) {
     throw new ValidationError('El nombre del regalo es requerido');
   }
 
-  const [gift] = await db
-    .insert(giftsTable)
-    .values({ eventId, name: cleaned })
-    .returning();
+  return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
 
-  return gift;
+    const [event] = await tx
+      .select({ userId: events.userId, isActive: events.isActive })
+      .from(events)
+      .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+      .limit(1);
+
+    if (!event) throw new NotFoundError('Evento no encontrado');
+    if (!event.isActive) throw new ValidationError('Este evento no está activo');
+
+    const [user] = await tx
+      .select({ tier: users.tier })
+      .from(users)
+      .where(eq(users.id, event.userId))
+      .limit(1);
+
+    const tier = (user?.tier as Tier) || 'free';
+    const limits = TIER_LIMITS[tier];
+    if (limits) {
+      const [countResult] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(giftsTable)
+        .where(and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt)));
+
+      const giftCount = Number(countResult?.count ?? 0);
+      if (giftCount >= limits.maxGiftsPerEvent) {
+        throw new ValidationError(`Has alcanzado el límite de ${limits.maxGiftsPerEvent} regalos por evento en tu plan ${tier}`);
+      }
+    }
+
+    const [gift] = await tx
+      .insert(giftsTable)
+      .values({ eventId, name: cleaned })
+      .returning();
+
+    return gift;
+  });
 }
 
 export async function updateGift(
@@ -45,7 +80,7 @@ export async function updateGift(
     updateData.claimedBy = null;
   }
 
-  const whereConditions = [eq(giftsTable.id, giftId)];
+  const whereConditions = [eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)];
   if (data.isClaimed === true) {
     whereConditions.push(eq(giftsTable.isClaimed, false));
   }
@@ -86,7 +121,7 @@ export async function claimGift(giftId: string, claimedBy: string) {
       isClaimed: true,
       claimedBy: cleanedName,
     })
-    .where(and(eq(giftsTable.id, giftId), eq(giftsTable.isClaimed, false)))
+    .where(and(eq(giftsTable.id, giftId), eq(giftsTable.isClaimed, false), isNull(giftsTable.deletedAt)))
     .returning();
 
   if (!updated) {
@@ -107,7 +142,7 @@ export async function releaseGift(giftId: string) {
   const [gift] = await db
     .update(giftsTable)
     .set({ isClaimed: false, claimedBy: null })
-    .where(eq(giftsTable.id, giftId))
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
     .returning();
 
   if (!gift) {

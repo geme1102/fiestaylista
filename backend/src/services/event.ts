@@ -129,7 +129,7 @@ export async function getEvent(eventId: string, userId: string) {
   const [event] = await db
     .select()
     .from(eventsTable)
-    .where(eq(eventsTable.id, eventId))
+    .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
     .limit(1);
 
   if (!event) {
@@ -297,10 +297,22 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
 }
 
 export async function deleteEvent(eventId: string, _userId: string) {
-  await db
-    .update(eventsTable)
-    .set({ deletedAt: new Date(), updatedAt: new Date() })
-    .where(eq(eventsTable.id, eventId));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(gifts)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)));
+
+    await tx
+      .update(photos)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(photos.eventId, eventId), isNull(photos.deletedAt)));
+
+    await tx
+      .update(eventsTable)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(eventsTable.id, eventId));
+  });
 
   return { success: true };
 }

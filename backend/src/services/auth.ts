@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { randomBytes, createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { users, refreshTokens } from '../db/schema.js';
@@ -43,11 +43,21 @@ async function persistRefreshToken(userId: string, token: string, client: DbClie
     .delete(refreshTokens)
     .where(and(
       eq(refreshTokens.userId, userId),
-      eq(refreshTokens.revoked, true),
+      or(sql`${refreshTokens.revoked} = true`, sql`${refreshTokens.expiresAt} < NOW()`),
     ));
 }
 
 async function consumeRefreshToken(token: string): Promise<JwtPayload> {
+  let decoded: JwtPayload;
+  try {
+    decoded = jwt.verify(token, config.JWT_REFRESH_SECRET) as JwtPayload;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new UnauthorizedError('Token de refresco expirado');
+    }
+    throw new UnauthorizedError('Token de refresco inválido');
+  }
+
   const tokenHash = hashToken(token);
 
   const [revoked] = await db
@@ -77,7 +87,6 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
     throw new UnauthorizedError('Token de refresco expirado');
   }
 
-  const decoded = jwt.verify(token, config.JWT_REFRESH_SECRET) as JwtPayload;
   return decoded;
 }
 
@@ -188,7 +197,7 @@ export async function login(
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
-    throw new UnauthorizedError('Las cuentas de invitado no pueden iniciar sesión');
+    throw new UnauthorizedError('Credenciales inválidas');
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -370,6 +379,8 @@ export async function resetPassword(token: string, newPassword: string): Promise
       updatedAt: new Date(),
     })
     .where(eq(users.id, user.id));
+
+  await revokeAllUserTokens(user.id);
 }
 
 export async function revokeAllUserTokens(userId: string): Promise<void> {

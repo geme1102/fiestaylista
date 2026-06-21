@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, type SQL } from 'drizzle-orm';
+import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, type PaginatedResult, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
@@ -92,7 +92,7 @@ export async function createContribution(
     const [slugs] = await tx
       .select({ slug: events.slug })
       .from(events)
-      .where(eq(events.id, fund.eventId))
+      .where(and(eq(events.id, fund.eventId), isNull(events.deletedAt)))
       .limit(1);
 
     const backUrl = `${config.FRONTEND_URL}/e/${slugs?.slug || fund.eventId}`;

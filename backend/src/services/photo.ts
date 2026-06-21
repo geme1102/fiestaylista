@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { v2 as cloudinary } from 'cloudinary';
 import { isIP } from 'node:net';
 import { db } from '../db/index.js';
@@ -69,7 +69,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
       const [countResult] = await tx
         .select({ count: sql<number>`count(*)::int` })
         .from(photosTable)
-        .where(eq(photosTable.eventId, eventId));
+        .where(and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt)));
 
       const photoCount = Number(countResult?.count ?? 0);
       if (photoCount >= limits.maxPhotosPerEvent) {
@@ -92,8 +92,9 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
 
 export async function deletePhoto(photoId: string) {
   const [photo] = await db
-    .delete(photosTable)
-    .where(eq(photosTable.id, photoId))
+    .update(photosTable)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(photosTable.id, photoId), isNull(photosTable.deletedAt)))
     .returning();
 
   if (!photo) {
@@ -121,7 +122,7 @@ export async function getEventPhotos(eventId: string) {
   const eventPhotos = await db
     .select()
     .from(photosTable)
-    .where(eq(photosTable.eventId, eventId))
+    .where(and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt)))
     .orderBy(photosTable.createdAt)
     .limit(101);
 

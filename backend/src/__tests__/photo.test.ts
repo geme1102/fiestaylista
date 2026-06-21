@@ -13,6 +13,7 @@ vi.mock('../db/index.js', () => ({
     delete: vi.fn(),
     from: vi.fn(),
     where: vi.fn(),
+    set: vi.fn(),
     for: vi.fn(),
     limit: vi.fn(),
     insert: vi.fn(),
@@ -154,7 +155,8 @@ describe('addPhoto', () => {
 
 describe('deletePhoto', () => {
   beforeEach(() => {
-    (db.delete as any).mockReturnThis();
+    (db.update as any).mockReturnThis();
+    (db as any).set.mockReturnThis();
     (db as any).where.mockReturnThis();
   });
 

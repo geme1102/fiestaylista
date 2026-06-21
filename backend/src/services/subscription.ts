@@ -53,12 +53,13 @@ export async function createOrUpdateSubscription(
   return sub;
 }
 
-async function deactivateExcessEvents(userId: string) {
+async function deactivateExcessEvents(userId: string, txClient?: typeof db) {
+  const conn = txClient || db;
   const FREE_MAX_EVENTS = TIER_LIMITS.free.maxEvents;
   const FREE_MAX_GIFTS = TIER_LIMITS.free.maxGiftsPerEvent;
   const FREE_MAX_PHOTOS = TIER_LIMITS.free.maxPhotosPerEvent;
 
-  const [countResult] = await db
+  const [countResult] = await conn
     .select({ count: sql<number>`count(*)` })
     .from(events)
     .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
@@ -68,7 +69,7 @@ async function deactivateExcessEvents(userId: string) {
 
   const excess = activeCount - FREE_MAX_EVENTS;
 
-  const toDeactivate = await db
+  const toDeactivate = await conn
     .select({ id: events.id })
     .from(events)
     .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)))
@@ -77,20 +78,20 @@ async function deactivateExcessEvents(userId: string) {
 
   const ids = toDeactivate.map(e => e.id);
   if (ids.length > 0) {
-    await db
+    await conn
       .update(events)
       .set({ isActive: false, updatedAt: new Date() })
       .where(inArray(events.id, ids));
   }
 
   // Trim excess gifts and photos in remaining active events
-  const remainingEvents = await db
+  const remainingEvents = await conn
     .select({ id: events.id })
     .from(events)
     .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
 
   for (const ev of remainingEvents) {
-    const [giftCountResult] = await db
+    const [giftCountResult] = await conn
       .select({ count: sql<number>`count(*)` })
       .from(gifts)
       .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)));
@@ -98,7 +99,7 @@ async function deactivateExcessEvents(userId: string) {
     const giftCount = Number(giftCountResult?.count ?? 0);
     if (giftCount > FREE_MAX_GIFTS) {
       const giftExcess = giftCount - FREE_MAX_GIFTS;
-      const toDelete = await db
+      const toDelete = await conn
         .select({ id: gifts.id })
         .from(gifts)
         .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)))
@@ -107,31 +108,31 @@ async function deactivateExcessEvents(userId: string) {
 
       const giftIds = toDelete.map(g => g.id);
       if (giftIds.length > 0) {
-        await db
+        await conn
           .update(gifts)
           .set({ deletedAt: new Date() })
           .where(inArray(gifts.id, giftIds));
       }
     }
 
-    const [photoCountResult] = await db
+    const [photoCountResult] = await conn
       .select({ count: sql<number>`count(*)` })
       .from(photos)
-      .where(and(eq(photos.eventId, ev.id)));
+      .where(and(eq(photos.eventId, ev.id), isNull(photos.deletedAt)));
 
     const photoCount = Number(photoCountResult?.count ?? 0);
     if (photoCount > FREE_MAX_PHOTOS) {
       const photoExcess = photoCount - FREE_MAX_PHOTOS;
-      const toDelete = await db
+      const toDelete = await conn
         .select({ id: photos.id })
         .from(photos)
-        .where(eq(photos.eventId, ev.id))
+        .where(and(eq(photos.eventId, ev.id), isNull(photos.deletedAt)))
         .orderBy(asc(photos.createdAt))
         .limit(photoExcess);
 
       const photoIds = toDelete.map(p => p.id);
       if (photoIds.length > 0) {
-        await db.delete(photos).where(inArray(photos.id, photoIds));
+        await conn.update(photos).set({ deletedAt: new Date() }).where(inArray(photos.id, photoIds));
       }
     }
   }
@@ -162,18 +163,16 @@ export async function cancelSubscription(userId: string, immediate = false) {
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })
         .where(eq(users.id, userId));
+
+      try {
+        await deactivateExcessEvents(userId, tx as unknown as typeof db);
+      } catch (err) {
+        log.error({ err }, `Error desactivando eventos tras cancelación para ${userId}:`);
+      }
     }
 
     return s;
   });
-
-  if (immediate) {
-    try {
-      await deactivateExcessEvents(userId);
-    } catch (err) {
-      log.error({ err }, `Error desactivando eventos tras cancelación para ${userId}:`);
-    }
-  }
 
   return sub;
 }
@@ -198,14 +197,12 @@ export async function updateSubscriptionStatus(
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })
         .where(eq(users.id, userId));
+
+      await deactivateExcessEvents(userId, tx as unknown as typeof db);
     }
 
     return s;
   });
-
-  if (status === 'incomplete') {
-    await deactivateExcessEvents(userId);
-  }
 
   return sub;
 }
@@ -253,12 +250,12 @@ export async function expireStaleSubscriptions(): Promise<number> {
         .where(inArray(users.id, userIds));
     }
 
+    for (const uid of userIds) {
+      await deactivateExcessEvents(uid, tx as unknown as typeof db);
+    }
+
     return { count: allToDowngrade.length, userIds };
   });
-
-  for (const uid of result.userIds) {
-    await deactivateExcessEvents(uid);
-  }
 
   return result.count;
 }

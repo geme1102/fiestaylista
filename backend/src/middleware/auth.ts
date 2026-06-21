@@ -134,6 +134,7 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
+      isGuest: 'isGuest' in decoded && (decoded as GuestJwtPayload).isGuest,
     };
 
     next();

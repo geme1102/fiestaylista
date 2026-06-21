@@ -1,7 +1,7 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
-import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
+import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
@@ -29,7 +29,7 @@ const registerSchema = z.object({
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').transform(s => s.trim()),
 });
 
 const loginSchema = z.object({
@@ -124,7 +124,7 @@ router.post('/reset-password', resetLimiter, asyncHandlerWithValidation(async (r
   res.json({ success: true });
 }));
 
-router.post('/logout', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.post('/logout', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
   await authService.revokeAllUserTokens(req.user!.userId);
   const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', { path: '/api/auth/refresh' });

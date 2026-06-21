@@ -1,5 +1,5 @@
 import type { Response, NextFunction } from 'express';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts, photos } from '../db/schema.js';
 import { ForbiddenError, NotFoundError } from '../utils/errors.js';
@@ -27,7 +27,7 @@ export async function requireEventOwnership(
     const [event] = await db
       .select({ ownerId: events.userId })
       .from(events)
-      .where(eq(events.id, rawId))
+      .where(and(eq(events.id, rawId), isNull(events.deletedAt)))
       .limit(1);
 
     if (!event) {

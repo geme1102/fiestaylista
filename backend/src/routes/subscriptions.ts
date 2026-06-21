@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
-import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
+import { paymentLimiter, cancelLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
@@ -29,6 +29,10 @@ const checkoutSchema = z.object({
   cancelUrl: z.string().url('URL de cancelación inválida'),
 });
 
+const cancelSchema = z.object({
+  password: z.string().min(1, 'Contraseña requerida para confirmar'),
+});
+
 router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = checkoutSchema.parse(req.body);
 
@@ -52,7 +56,7 @@ router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLim
   res.json(result);
 }));
 
-router.post('/sync', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const userId = req.user!.userId;
 
   const sub = await subscriptionService.getCurrentSubscription(userId);
@@ -99,11 +103,8 @@ router.post('/sync', requireAuth, asyncHandler(async (req: AuthRequest, res) => 
   res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Si el problema persiste, contacta a soporte.' });
 }));
 
-router.post('/cancel', requireAuth, cancelLimiter, asyncHandler(async (req: AuthRequest, res) => {
-  const password = req.headers['x-password'] as string | undefined;
-  if (!password) {
-    throw new ValidationError('Contraseña requerida para confirmar');
-  }
+router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const { password } = cancelSchema.parse(req.body);
 
   const [user] = await db
     .select({ passwordHash: users.passwordHash })
@@ -124,7 +125,7 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandler(async (req: Auth
     try {
       await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
     } catch (err) {
-      log.error({ err }, 'Error al cancelar en MercadoPago:');
+      log.error({ err }, 'Error al cancelar en MercadoPago - la suscripción local se canceló pero MP podría seguir cobrando:');
     }
   }
   await subscriptionService.cancelSubscription(req.user!.userId);
