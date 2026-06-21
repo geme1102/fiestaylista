@@ -4,7 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
-import { db, sql } from './db/index.js';
+import { sql } from './db/index.js';
 import type { AppRequest } from './types/index.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -34,14 +34,8 @@ import publicRouter from './routes/public.js';
 import cashRouter from './routes/cash.js';
 import boostRouter from './routes/boost.js';
 import arcoRouter from './routes/arco.js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
 import { startCronJobs, stopCronJobs } from './cron.js';
 import { stopSSEScavenger } from './routes/gifts.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -190,9 +184,8 @@ if (sentryEnabled) {
 }
 app.use(errorHandler);
 
-const migrationsFolder = resolve(__dirname, '../src/db/migrations');
 try {
-  await migrate(db, { migrationsFolder });
+  await sql`ALTER TABLE photos ADD COLUMN IF NOT EXISTS deleted_at timestamp`;
   logger.info('Migraciones aplicadas correctamente');
 } catch (err) {
   logger.fatal({ err }, 'Error aplicando migraciones');
