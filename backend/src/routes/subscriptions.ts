@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
@@ -25,7 +25,7 @@ const checkoutSchema = z.object({
   cancelUrl: z.string().url('URL de cancelación inválida'),
 });
 
-router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = checkoutSchema.parse(req.body);
 
   const allowedOrigin = config.FRONTEND_URL.replace(/\/+$/, '');

@@ -67,7 +67,7 @@ export default function Pricing() {
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const { containerRef, token: turnstileToken, ready: turnstileReady } = useTurnstile();
+  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -102,9 +102,10 @@ export default function Pricing() {
         await new Promise(r => setTimeout(r, 200));
         if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
       }
-      if (!token) {
-        showToast('No se pudo verificar que no eres un robot. Recarga e intenta de nuevo.', 'error');
-        return;
+      if (!token && turnstileError) {
+        showToast(`Verificación de seguridad no disponible. ${turnstileError} Puedes continuar, pero si el problema persiste desactiva tu bloqueador de anuncios.`, 'info');
+      } else if (!token) {
+        showToast('Verificación de seguridad no disponible. Continuando...', 'info');
       }
     }
     setSelectedTier(tier);
@@ -120,7 +121,7 @@ export default function Pricing() {
       const interval = yearly ? 'year' : 'month';
       const successUrl = `${window.location.origin}/dashboard?pro=activated`;
       const cancelUrl = `${window.location.origin}/pricing`;
-      const res = await createCheckoutSession(tier as 'pro', successUrl, cancelUrl, interval, token);
+      const res = await createCheckoutSession(tier as 'pro', successUrl, cancelUrl, interval, token ?? undefined);
       clearTimeout(safetyTimer);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
