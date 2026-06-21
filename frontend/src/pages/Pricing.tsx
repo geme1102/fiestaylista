@@ -248,7 +248,7 @@ export default function Pricing() {
           </div>
 
           {/* Turnstile (invisible) */}
-          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+          <div ref={containerRef} className="fixed bottom-0 right-0 z-50" />
 
           {/* Pricing Cards */}
           <section className="md:max-w-5xl mx-auto px-4">

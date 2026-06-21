@@ -12,6 +12,7 @@ declare global {
       }) => string;
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
+      execute: (widgetId: string) => void;
     };
   }
 }
@@ -45,7 +46,13 @@ export function useTurnstile() {
           sitekey: SITE_KEY,
           callback: (t: string) => setToken(t),
           'expired-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
-          'error-callback': () => { setToken(null); if (widgetId.current) window.turnstile?.reset(widgetId.current); },
+          'error-callback': () => {
+            setToken(null);
+            if (widgetId.current && window.turnstile) {
+              window.turnstile.reset(widgetId.current);
+              window.turnstile.execute(widgetId.current);
+            }
+          },
           appearance: 'execute',
         });
       }
