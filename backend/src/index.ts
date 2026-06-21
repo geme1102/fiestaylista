@@ -9,6 +9,7 @@ import type { AppRequest } from './types/index.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/error.js';
+import { cloudflareIP } from './middleware/cloudflare.js';
 import authRouter from './routes/auth.js';
 import eventsRouter from './routes/events.js';
 import giftsRouter from './routes/gifts.js';
@@ -26,13 +27,14 @@ import { stopSSEScavenger } from './routes/gifts.js';
 
 const app = express();
 
-app.set('trust proxy', 1);
+app.set('trust proxy', 0);
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
   (req as AppRequest).requestId = randomUUID();
   next();
 });
 
+app.use(cloudflareIP);
 app.use(requestLogger);
 
 app.use(cors({

@@ -1,11 +1,8 @@
 import { eq, and, sql, desc, inArray, type SQL } from 'drizzle-orm';
-import { Resend } from 'resend';
 import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';
 import { config } from '../config.js';
-import { sendReminderEmail } from './email.js';
-
-const resendClient = config.RESEND_API_KEY ? new Resend(config.RESEND_API_KEY) : null;
+import { sendReminderEmail, sendRawEmail, isEmailConfigured } from './email.js';
 
 function getBaseUrl(): string {
   return config.FRONTEND_URL;
@@ -164,36 +161,36 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
         }
 
         try {
-          if (daysSinceRegistration === 7 && user.tier === 'free' && !sent.has('day7_cash_fund_upsell') && resendClient) {
+          if (daysSinceRegistration === 7 && user.tier === 'free' && !sent.has('day7_cash_fund_upsell') && isEmailConfigured()) {
             const hasFund = userEvs.some(ev => hasCashFundSet.has(ev.id));
             if (!hasFund) {
-              const result = await resendClient.emails.send({
-                from: config.FROM_EMAIL,
-                to: user.email,
-                subject: 'Recibe aportes económicos con Lluvia de Sobres 💰',
-                html: `
-                  <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-                    <div style="text-align:center;margin-bottom:16px">
-                      <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#10b981,#059669);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
-                      <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+              try {
+                await sendRawEmail({
+                  from: config.FROM_EMAIL,
+                  to: user.email,
+                  subject: 'Recibe aportes económicos con Lluvia de Sobres 💰',
+                  html: `
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                      <div style="text-align:center;margin-bottom:16px">
+                        <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#10b981,#059669);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+                        <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+                      </div>
+                      <h1 style="color:#1f2937;font-size:20px">Tus invitados pueden aportar dinero en efectivo</h1>
+                      <p style="color:#6b7280;margin:16px 0">Con Lluvia de Sobres, tus invitados pueden hacer aportes económicos directos a tu evento desde cualquier lugar. Es seguro, fácil y transparente.</p>
+                      <p style="color:#6b7280;margin:16px 0">La comisión es del 5% tanto en plan Gratis como en Pro.</p>
+                      <div style="text-align:center;margin:24px 0">
+                        <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#10b981,#059669);color:white;text-decoration:none;border-radius:12px;font-weight:600">Activar Lluvia de Sobres</a>
+                      </div>
+                      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+                      <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
                     </div>
-                    <h1 style="color:#1f2937;font-size:20px">Tus invitados pueden aportar dinero en efectivo</h1>
-                    <p style="color:#6b7280;margin:16px 0">Con Lluvia de Sobres, tus invitados pueden hacer aportes económicos directos a tu evento desde cualquier lugar. Es seguro, fácil y transparente.</p>
-                    <p style="color:#6b7280;margin:16px 0">La comisión es del 5% tanto en plan Gratis como en Pro.</p>
-                    <div style="text-align:center;margin:24px 0">
-                      <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#10b981,#059669);color:white;text-decoration:none;border-radius:12px;font-weight:600">Activar Lluvia de Sobres</a>
-                    </div>
-                    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
-                    <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
-                  </div>
-                `,
-              });
-              if (result.error) {
-                if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Resend error día 7 para ${user.email}:`, result.error);
-              } else {
+                  `,
+                });
                 markBatch.push({ userId: user.id, type: 'day7_cash_fund_upsell' });
                 if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 7: Upsell cash fund - ${user.email}`);
                 processed++;
+              } catch (err) {
+                if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 7 para ${user.email}:`, err);
               }
             }
           }
@@ -202,42 +199,42 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
         }
 
         try {
-          if (daysSinceRegistration === 14 && user.tier === 'free' && resendClient && !sent.has('day14_pro_upsell')) {
-            const result = await resendClient.emails.send({
-              from: config.FROM_EMAIL,
-              to: user.email,
-              subject: 'Actualiza a Pro y obtén más espacio 🚀',
-              html: `
-                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-                  <div style="text-align:center;margin-bottom:16px">
-                    <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
-                    <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+          if (daysSinceRegistration === 14 && user.tier === 'free' && isEmailConfigured() && !sent.has('day14_pro_upsell')) {
+            try {
+              await sendRawEmail({
+                from: config.FROM_EMAIL,
+                to: user.email,
+                subject: 'Actualiza a Pro y obtén más espacio 🚀',
+                html: `
+                  <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                    <div style="text-align:center;margin-bottom:16px">
+                      <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+                      <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+                    </div>
+                    <h1 style="color:#1f2937;font-size:20px">Lleva tu evento al siguiente nivel</h1>
+                    <p style="color:#6b7280;margin:16px 0">Con el plan Pro obtienes:</p>
+                    <ul style="color:#6b7280;margin:16px 0">
+                      <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
+                      <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
+                      <li style="margin-bottom:8px">✅ 15 fotos por evento</li>
+                      <li style="margin-bottom:8px">✅ Estadísticas de tu evento</li>
+                      <li style="margin-bottom:8px">✅ Lluvia de Sobres incluida sin costo extra</li>
+                      <li style="margin-bottom:8px">✅ Tus invitados te avisan por WhatsApp al apartar</li>
+                    </ul>
+                    <p style="color:#6b7280;margin:16px 0">Todo por solo $24.990/mes COP. 5% de comisión en todos los planes.</p>
+                    <div style="text-align:center;margin:24px 0">
+                      <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver Planes</a>
+                    </div>
+                    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+                    <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
                   </div>
-                  <h1 style="color:#1f2937;font-size:20px">Lleva tu evento al siguiente nivel</h1>
-                  <p style="color:#6b7280;margin:16px 0">Con el plan Pro obtienes:</p>
-                  <ul style="color:#6b7280;margin:16px 0">
-                    <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
-                    <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
-                    <li style="margin-bottom:8px">✅ 15 fotos por evento</li>
-                    <li style="margin-bottom:8px">✅ Estadísticas de tu evento</li>
-                    <li style="margin-bottom:8px">✅ Lluvia de Sobres incluida sin costo extra</li>
-                    <li style="margin-bottom:8px">✅ Tus invitados te avisan por WhatsApp al apartar</li>
-                  </ul>
-                  <p style="color:#6b7280;margin:16px 0">Todo por solo $24.990/mes COP. 5% de comisión en todos los planes.</p>
-                  <div style="text-align:center;margin:24px 0">
-                    <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver Planes</a>
-                  </div>
-                  <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
-                  <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
-                </div>
-              `,
-            });
-            if (result.error) {
-              if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Resend error día 14 para ${user.email}:`, result.error);
-            } else {
+                `,
+              });
               markBatch.push({ userId: user.id, type: 'day14_pro_upsell' });
               if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 14: Upsell Pro - ${user.email}`);
               processed++;
+            } catch (err) {
+              if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 14 para ${user.email}:`, err);
             }
           }
         } catch (err) {

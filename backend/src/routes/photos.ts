@@ -7,6 +7,7 @@ import * as photoService from '../services/photo.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router({ mergeParams: true });
 
@@ -17,7 +18,7 @@ const createPhotoSchema = z.object({
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
 
-router.get('/', apiLimiter, asyncHandler(async (req, res) => {
+router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -26,7 +27,7 @@ router.get('/', apiLimiter, asyncHandler(async (req, res) => {
   res.json({ photos });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -37,7 +38,7 @@ router.post('/', requireAuth, requireEventOwnership, asyncHandlerWithValidation(
   res.status(201).json({ photo });
 }));
 
-router.post('/guest', guestUploadLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/guest', guestUploadLimiter, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -47,7 +48,7 @@ router.post('/guest', guestUploadLimiter, asyncHandlerWithValidation(async (req,
   res.status(201).json({ photo });
 }));
 
-router.delete('/:photoId', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:photoId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('photoId'), asyncHandler(async (req: AuthRequest, res) => {
   const photoId = req.params.photoId as string | undefined;
   if (!photoId) {
     throw new ValidationError('ID de la foto requerido');

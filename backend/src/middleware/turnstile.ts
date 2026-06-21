@@ -13,6 +13,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
 
     if (!config.TURNSTILE_SECRET_KEY) {
       if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        console.warn('[Turnstile] Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo');
         next();
         return;
       }
@@ -36,6 +37,7 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
 
     if (!config.TURNSTILE_SECRET_KEY) {
       if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        console.warn('[Turnstile] Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo (optional)');
         next();
         return;
       }

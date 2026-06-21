@@ -10,6 +10,7 @@ import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
@@ -64,7 +65,7 @@ const claimGiftSchema = z.object({
   claimedBy: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
 });
 
-router.get('/', giftLimiter, (_req, res, next) => { res.set('Cache-Control', 'public, max-age=30, s-maxage=60'); next(); }, asyncHandler(async (req, res) => {
+router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => { res.set('Cache-Control', 'public, max-age=30, s-maxage=60'); next(); }, asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -73,7 +74,7 @@ router.get('/', giftLimiter, (_req, res, next) => { res.set('Cache-Control', 'pu
   res.json({ gifts });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), (req: AuthRequest, res: Response, next: NextFunction) => {
   const eventId = req.params.eventId;
   if (!eventId) return next(new ValidationError('ID del evento requerido'));
   checkGiftLimit(eventId)(req, res, next);
@@ -85,7 +86,7 @@ router.post('/', requireAuth, requireEventOwnership, (req: AuthRequest, res: Res
   res.status(201).json({ gift });
 }));
 
-router.put('/:giftId', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/:giftId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = updateGiftSchema.parse(req.body);
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
@@ -95,7 +96,7 @@ router.put('/:giftId', requireAuth, requireEventOwnership, asyncHandlerWithValid
   res.json({ gift });
 }));
 
-router.put('/:giftId/claim', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
+router.put('/:giftId/claim', contributeLimiter, verifyTurnstileOptional, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
@@ -125,7 +126,7 @@ router.put('/:giftId/claim', contributeLimiter, verifyTurnstileOptional, asyncHa
   res.json({ gift });
 }));
 
-router.put('/:giftId/free', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+router.put('/:giftId/free', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
     throw new ValidationError('ID del regalo requerido');
@@ -134,7 +135,7 @@ router.put('/:giftId/free', requireAuth, requireEventOwnership, asyncHandler(asy
   res.json({ gift });
 }));
 
-router.delete('/:giftId', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:giftId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
     throw new ValidationError('ID del regalo requerido');
@@ -143,7 +144,7 @@ router.delete('/:giftId', requireAuth, requireEventOwnership, asyncHandler(async
   res.json(result);
 }));
 
-router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -156,7 +157,7 @@ router.post('/sse-token', requireAuth, asyncHandler(async (req: AuthRequest, res
   res.json({ token: sseToken });
 }));
 
-router.post('/public-sse-token', apiLimiter, asyncHandler(async (req, res) => {
+router.post('/public-sse-token', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

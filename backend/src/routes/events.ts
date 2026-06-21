@@ -9,6 +9,7 @@ import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
 
@@ -62,19 +63,19 @@ router.get('/slug/:slug', viewLimiter, (_req, res, next) => { res.set('Cache-Con
   res.json(result);
 }));
 
-router.get('/:id', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/:id', requireAuth, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.id as string;
   const result = await eventService.getEvent(eventId, req.user!.userId);
   res.json({ event: result });
 }));
 
-router.put('/:id', requireAuth, requireEventOwnership, checkActiveEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), checkActiveEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = updateEventSchema.parse(req.body) as UpdateEventData;
   const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
   res.json({ event });
 }));
 
-router.delete('/:id', requireAuth, requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const result = await eventService.deleteEvent(req.params.id as string, req.user!.userId);
   res.json(result);
 }));

@@ -17,6 +17,10 @@ export function isEmailConfigured(): boolean {
   return resend !== null;
 }
 
+export async function sendRawEmail(options: { from: string; to: string; subject: string; html: string }): Promise<void> {
+  return sendEmail(options);
+}
+
 async function sendEmail(options: { from: string; to: string; subject: string; html: string }): Promise<void> {
   if (!resend) {
     throw new Error('Email service not configured: RESEND_API_KEY is missing');

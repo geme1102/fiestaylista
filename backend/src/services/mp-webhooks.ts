@@ -11,8 +11,10 @@ async function handleProPayment(paymentId: string, userId: string, interval: str
   const periodDays = interval === 'year' ? 365 : 30;
   const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
 
-  const result = await db.transaction(async (tx) => {
-    const sub = await subscriptionService.createOrUpdateSubscription(userId, {
+  let isFirstProcessing = true;
+
+  await db.transaction(async (tx) => {
+    await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: null,
       tier: 'pro',
       status: 'active',
@@ -27,28 +29,34 @@ async function handleProPayment(paymentId: string, userId: string, interval: str
     } catch (err: any) {
       if (err?.code === '23505') {
         console.log(`[MP] PRO payment ${paymentId} already processed`);
-        return null;
+        isFirstProcessing = false;
+        return;
       }
       throw err;
     }
-
-    return sub;
   });
 
-  if (result) {
-    try {
-      const [user] = await db
-        .select({ email: users.email, name: users.name })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-      if (user) {
-        const period = interval === 'year' ? 'anual' : 'mensual';
-        await emailService.sendProConfirmationEmail(user.email, user.name, period);
-      }
-    } catch (err) {
-      console.error(`[MP] Error enviando email de confirmación PRO para ${userId}:`, err);
+  if (!isFirstProcessing) {
+    const [existing] = await db
+      .select({ id: proPayments.id })
+      .from(proPayments)
+      .where(eq(proPayments.mpPaymentId, paymentId))
+      .limit(1);
+    if (!existing) return;
+  }
+
+  try {
+    const [user] = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (user) {
+      const period = interval === 'year' ? 'anual' : 'mensual';
+      await emailService.sendProConfirmationEmail(user.email, user.name, period);
     }
+  } catch (err) {
+    console.error(`[MP] Error enviando email de confirmación PRO para ${userId}:`, err);
   }
 }
 
@@ -56,30 +64,36 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
   const eventId = ref.slice(6);
   if (!eventId) return;
 
-  try {
-    await db
-      .insert(boostPayments)
-      .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
-  } catch (err: any) {
-    if (err?.code === '23505') {
-      console.log(`[MP] Boost payment ${paymentId} already processed`);
-      return;
+  const result = await db.transaction(async (tx) => {
+    try {
+      await tx
+        .insert(boostPayments)
+        .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
+    } catch (err: any) {
+      if (err?.code === '23505') {
+        console.log(`[MP] Boost payment ${paymentId} already processed`);
+        return null;
+      }
+      throw err;
     }
-    throw err;
+
+    await tx
+      .update(events)
+      .set({
+        boostedUntil: sql`GREATEST(COALESCE(${events.boostedUntil}, NOW()), NOW()) + INTERVAL '30 days'`,
+        updatedAt: new Date(),
+      })
+      .where(eq(events.id, eventId));
+
+    return true;
+  });
+
+  if (result) {
+    await db
+      .insert(cashFunds)
+      .values({ eventId, title: 'Lluvia de sobres', isActive: true })
+      .onConflictDoNothing({ target: cashFunds.eventId });
   }
-
-  await db
-    .update(events)
-    .set({
-      boostedUntil: sql`GREATEST(COALESCE(${events.boostedUntil}, NOW()), NOW()) + INTERVAL '30 days'`,
-      updatedAt: new Date(),
-    })
-    .where(eq(events.id, eventId));
-
-  await db
-    .insert(cashFunds)
-    .values({ eventId, title: 'Lluvia de sobres', isActive: true })
-    .onConflictDoNothing({ target: cashFunds.eventId });
 }
 
 async function revertBoostPayment(paymentId: string, ref: string): Promise<void> {
@@ -132,7 +146,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       const parts = ref.split('_');
       const userId = parts[1];
       const interval = parts[2] || 'month';
-      if (!userId) return;
+      if (!userId || !/^(month|year)$/.test(interval)) return;
       const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
       const diff = Math.abs(info.transactionAmount - expectedAmount);
       if (diff > 1 && diff / expectedAmount > 0.01) {

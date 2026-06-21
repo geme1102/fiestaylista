@@ -12,6 +12,7 @@ import { ValidationError, ForbiddenError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { cashFunds, events } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
 
@@ -28,7 +29,7 @@ const contributeSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
-router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -37,7 +38,7 @@ router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, asy
   res.json({ cashFund: fund });
 }));
 
-router.get('/events/:eventId/cash-fund', asyncHandler(async (req, res) => {
+router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -60,7 +61,7 @@ router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstile, asyncHa
   res.status(201).json(result);
 }));
 
-router.get('/cash-fund/:cashFundId/contributions', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/cash-fund/:cashFundId/contributions', requireAuth, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {
   const cashFundId = req.params.cashFundId as string;
   if (!cashFundId) throw new ValidationError('ID del fondo requerido');
 

@@ -9,10 +9,11 @@ import * as mercadopagoService from '../services/mercadopago.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
 
-router.post('/events/:eventId/boost', requireAuth, paymentLimiter, asyncHandler(async (req: AuthRequest, res) => {
+router.post('/events/:eventId/boost', requireAuth, paymentLimiter, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = String(req.params.eventId);
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -39,7 +40,7 @@ router.post('/events/:eventId/boost', requireAuth, paymentLimiter, asyncHandler(
   res.json(result);
 }));
 
-router.get('/events/:eventId/boost-status', asyncHandler(async (req, res) => {
+router.get('/events/:eventId/boost-status', validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = String(req.params.eventId);
   const [event] = await db
     .select({ boostedUntil: events.boostedUntil })

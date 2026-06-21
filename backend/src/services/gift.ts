@@ -28,27 +28,18 @@ export async function updateGift(
   giftId: string,
   data: { isClaimed?: boolean; claimedBy?: string | null },
 ) {
-  const [existing] = await db
-    .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed, claimedBy: giftsTable.claimedBy })
-    .from(giftsTable)
-    .where(eq(giftsTable.id, giftId))
-    .limit(1);
-
-  if (!existing) {
-    throw new NotFoundError('Regalo no encontrado');
-  }
-
-  if (data.isClaimed === true && existing.isClaimed && existing.claimedBy !== data.claimedBy) {
-    throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
-  }
-
-  if (data.isClaimed === true && !data.claimedBy) {
-    throw new ValidationError('Debes especificar quién reserva el regalo');
-  }
-
   const updateData: Record<string, unknown> = {};
-  if (data.isClaimed !== undefined) updateData.isClaimed = data.isClaimed;
-  if (data.claimedBy !== undefined) updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
+
+  if (data.isClaimed !== undefined) {
+    updateData.isClaimed = data.isClaimed;
+    if (data.isClaimed && !data.claimedBy) {
+      throw new ValidationError('Debes especificar quién reserva el regalo');
+    }
+  }
+
+  if (data.claimedBy !== undefined) {
+    updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
+  }
 
   if (data.isClaimed === false) {
     updateData.claimedBy = null;
@@ -65,8 +56,19 @@ export async function updateGift(
     .where(and(...whereConditions))
     .returning();
 
-  if (data.isClaimed === true && !gift) {
-    throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+  if (!gift) {
+    const [existing] = await db
+      .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed })
+      .from(giftsTable)
+      .where(eq(giftsTable.id, giftId))
+      .limit(1);
+    if (!existing) {
+      throw new NotFoundError('Regalo no encontrado');
+    }
+    if (data.isClaimed === true) {
+      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+    }
+    throw new NotFoundError('Regalo no encontrado');
   }
 
   return gift;

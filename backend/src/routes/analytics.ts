@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTier, requireActiveSubscription } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.post('/analytics/view', viewLimiter, asyncHandler(async (req: Request, re
   }
 }));
 
-router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), requireActiveSubscription(), asyncHandler(async (req: AuthRequest, res: Response, next) => {
+router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), requireActiveSubscription(), validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res: Response, next) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user!.userId;
