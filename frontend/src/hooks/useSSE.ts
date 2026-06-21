@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getAccessToken } from '../services/api';
 
 interface SSEOptions {
   eventId: string;
@@ -33,7 +34,11 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
       let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
       try {
         const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-        const tokenRes = await fetch(`${baseUrl}${sseTokenEndpoint}`, { method: 'POST', credentials: 'include' });
+        const tokenRes = await fetch(`${baseUrl}${sseTokenEndpoint}`, {
+          method: 'POST',
+          headers: getAccessToken() ? { 'Authorization': `Bearer ${getAccessToken()}` } : {},
+          credentials: 'include',
+        });
         if (!tokenRes.ok || cancelledRef.current) return;
         let token: string;
         try { ({ token } = await tokenRes.json()); } catch { return; }

@@ -282,6 +282,31 @@ export default function EventAdmin() {
 
   const [toggleConfirm, setToggleConfirm] = useState(false);
 
+  const suggestions = useMemo(() => {
+    if (!event) return [];
+    return GIFT_SUGGESTIONS[event.eventType] || [];
+  }, [event]);
+  const filteredSuggestions = useMemo(() => {
+    if (!newGiftName) return suggestions;
+    const q = newGiftName.toLowerCase();
+    return suggestions.filter((s) =>
+      s.toLowerCase().includes(q) &&
+      !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
+    );
+  }, [suggestions, newGiftName, gifts]);
+  const isBoosted = useMemo(() =>
+    !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
+    [event]
+  );
+
+  const formatDateTime = useCallback((dateStr: string) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const date = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return `${date} ${time}`;
+  }, []);
+
   const toggleActive = async () => {
     if (toggling) return;
     const prevActive = event?.isActive;
@@ -387,28 +412,6 @@ export default function EventAdmin() {
       </div>
     );
   }
-
-  const suggestions = useMemo(() => GIFT_SUGGESTIONS[event.eventType] || [], [event.eventType]);
-  const filteredSuggestions = useMemo(() => {
-    if (!newGiftName) return suggestions;
-    const q = newGiftName.toLowerCase();
-    return suggestions.filter((s) =>
-      s.toLowerCase().includes(q) &&
-      !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
-    );
-  }, [suggestions, newGiftName, gifts]);
-  const isBoosted = useMemo(() =>
-    !!(event.boostedUntil && new Date(event.boostedUntil) > new Date()),
-    [event.boostedUntil]
-  );
-
-  const formatDateTime = useCallback((dateStr: string) => {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const date = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  }, []);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-24 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
