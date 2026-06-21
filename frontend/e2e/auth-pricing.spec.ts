@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { dismissCookieBanner } from './utils/cookie-consent';
+import { mockTurnstile } from './mocks/turnstile.mock';
 
 test.describe('Register Page', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
+    await mockTurnstile(page);
     await page.goto('/register');
   });
 
@@ -11,7 +15,7 @@ test.describe('Register Page', () => {
     await expect(page.locator('#name')).toBeVisible();
     await expect(page.locator('#email')).toBeVisible();
     await expect(page.locator('#password')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Crear Cuenta' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Empezar gratis' })).toBeVisible();
   });
 
   test('shows password strength indicator when typing', async ({ page }) => {
@@ -23,7 +27,7 @@ test.describe('Register Page', () => {
   });
 
   test('validates required fields on submit', async ({ page }) => {
-    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
+    await page.getByRole('button', { name: 'Empezar gratis' }).click();
     await expect(page.getByText('Completa todos los campos')).toBeVisible({ timeout: 5000 });
   });
 
@@ -31,7 +35,7 @@ test.describe('Register Page', () => {
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('short');
-    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
+    await page.getByRole('button', { name: 'Empezar gratis' }).click();
     await expect(page.getByText('al menos 8 caracteres')).toBeVisible({ timeout: 5000 });
   });
 
@@ -39,7 +43,7 @@ test.describe('Register Page', () => {
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('StrongPass1');
-    await page.getByRole('button', { name: 'Crear Cuenta' }).click();
+    await page.getByRole('button', { name: 'Empezar gratis' }).click();
     await expect(page.getByText('Debes aceptar los términos y la política de privacidad')).toBeVisible({ timeout: 5000 });
   });
 
@@ -51,7 +55,9 @@ test.describe('Register Page', () => {
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
+    await mockTurnstile(page);
     await page.goto('/login');
   });
 
@@ -79,7 +85,9 @@ test.describe('Login Page', () => {
 
 test.describe('Pricing Page', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
+    await mockTurnstile(page);
     await page.goto('/pricing');
   });
 
@@ -91,17 +99,17 @@ test.describe('Pricing Page', () => {
 
   test('shows yearly discount toggle', async ({ page }) => {
     await page.getByText('Anual').click();
-    await expect(page.getByText('Ahorra 33%')).toBeVisible();
+    await expect(page.getByText('Ahorra 4%')).toBeVisible();
   });
 
   test('Empezar Gratis redirects to register when not authenticated', async ({ page }) => {
     await page.getByRole('button', { name: 'Empezar Gratis' }).click();
-    await expect(page).toHaveURL('/register');
+    await expect(page).toHaveURL(/\/register\?plan=free/);
   });
 
   test('Actualizar a Pro redirects to register when not authenticated', async ({ page }) => {
     await page.getByText('Actualizar a Pro').click();
-    await expect(page).toHaveURL('/register');
+    await expect(page).toHaveURL(/\/register\?plan=pro/);
   });
 
   test('renders FAQ section', async ({ page }) => {
@@ -110,6 +118,10 @@ test.describe('Pricing Page', () => {
 });
 
 test.describe('Navigation Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
+  });
+
   test('landing page links to pricing', async ({ page }) => {
     await page.goto('/');
     await page.getByText('Ver Planes').waitFor({ timeout: 10000 });

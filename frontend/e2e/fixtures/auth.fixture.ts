@@ -3,6 +3,7 @@ import { MOCK_USERS } from '../config/constants';
 import { mockAuthenticatedUser } from '../mocks/auth.mock';
 import { mockEventsApi } from '../mocks/events.mock';
 import { mockTurnstile } from '../mocks/turnstile.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 type AuthFixture = {
   authenticatedPage: Page;
@@ -10,6 +11,7 @@ type AuthFixture = {
 
 export const test = base.extend<AuthFixture>({
   authenticatedPage: async ({ page }, use) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthenticatedUser(page);
     await mockEventsApi(page);

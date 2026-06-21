@@ -3,9 +3,11 @@ import { ForgotPasswordPage } from '../pages/forgot-password.page';
 import { ResetPasswordPage } from '../pages/reset-password.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockAuthApi } from '../mocks/auth.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Password Reset', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthApi(page);
   });

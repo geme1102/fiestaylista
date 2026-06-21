@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { dismissCookieBanner } from './utils/cookie-consent';
 
 test.describe('Fiesta y Lista', () => {
+  test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
+  });
+
   test('landing page loads and shows title', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('La forma más fácil de')).toBeVisible({ timeout: 10000 });

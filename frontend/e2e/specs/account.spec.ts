@@ -3,9 +3,11 @@ import { AccountPage } from '../pages/account.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockAuthenticatedUser } from '../mocks/auth.mock';
 import { mockPaymentsApi } from '../mocks/payments.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Account Management', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthenticatedUser(page);
     await mockPaymentsApi(page);

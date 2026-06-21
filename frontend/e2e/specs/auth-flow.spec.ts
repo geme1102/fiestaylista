@@ -5,9 +5,11 @@ import { NavbarPageObject } from '../pages/components/navbar.po';
 import { MOCK_USERS } from '../config/constants';
 import { mockAuthApi } from '../mocks/auth.mock';
 import { mockTurnstile } from '../mocks/turnstile.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Auth Flow', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthApi(page);
   });
@@ -66,6 +68,7 @@ test.describe('Auth Flow', () => {
   });
 
   test('A8 - Ruta protegida redirige a login', async ({ page }) => {
+    await page.route('**/api/auth/me', route => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'No autorizado' }) }));
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/login\?redirect/);
   });

@@ -1,8 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { LandingPage } from '../pages/landing.page';
 import { BottomNavPageObject } from '../pages/components/bottom-nav.po';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Responsive Mobile', () => {
+  test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
+  });
+
   test.use({ viewport: { width: 375, height: 667 } });
 
   test('M1 - Landing mobile muestra bottom nav', async ({ page }) => {

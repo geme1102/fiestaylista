@@ -2,9 +2,11 @@ import { test, expect } from '@playwright/test';
 import { PricingPage } from '../pages/pricing.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockPaymentsApi } from '../mocks/payments.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Pricing & Payment', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
   });
 

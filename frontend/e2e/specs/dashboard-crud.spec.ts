@@ -3,9 +3,11 @@ import { DashboardPage } from '../pages/dashboard.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockAuthenticatedUser } from '../mocks/auth.mock';
 import { mockEventsApi } from '../mocks/events.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Dashboard CRUD', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthenticatedUser(page);
   });

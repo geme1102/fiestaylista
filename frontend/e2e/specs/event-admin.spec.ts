@@ -3,9 +3,11 @@ import { EventAdminPage } from '../pages/event-admin.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockAuthenticatedUser } from '../mocks/auth.mock';
 import { mockEventsApi } from '../mocks/events.mock';
+import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Event Admin', () => {
   test.beforeEach(async ({ page }) => {
+    await dismissCookieBanner(page);
     await mockTurnstile(page);
     await mockAuthenticatedUser(page);
     await mockEventsApi(page);
