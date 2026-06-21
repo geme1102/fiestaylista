@@ -9,6 +9,9 @@ import { requireTier, requireActiveSubscription } from '../middleware/subscripti
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Analytics');
 
 const router = Router();
 
@@ -40,7 +43,7 @@ router.post('/analytics/view', viewLimiter, asyncHandler(async (req: Request, re
 
     res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('[Analytics] Error registrando vista:', err);
+    log.error({ err }, 'Error registrando vista:');
     res.status(200).json({ ok: true });
   }
 }));

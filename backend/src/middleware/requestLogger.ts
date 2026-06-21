@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { AppRequest } from '../types/index.js';
+import { logger } from '../utils/logger.js';
 
 export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
@@ -7,23 +8,21 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   res.on('finish', () => {
     const duration = Date.now() - start;
     const appReq = req as AppRequest;
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
 
-    const logEntry: Record<string, unknown> = {
-      type: 'request',
+    const logData: Record<string, unknown> = {
       requestId: appReq.requestId,
       method: req.method,
       path: req.path,
       status: res.statusCode,
       duration,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'] || '-',
     };
 
     if (appReq.user?.userId) {
-      logEntry.userId = appReq.user.userId;
+      logData.userId = appReq.user.userId;
     }
 
-    console.log(JSON.stringify(logEntry));
+    logger[level](logData, `${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
   });
 
   next();

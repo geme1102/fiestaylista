@@ -10,6 +10,18 @@ import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/error.js';
 import { cloudflareIP } from './middleware/cloudflare.js';
+import * as Sentry from '@sentry/node';
+import { logger } from './utils/logger.js';
+
+const sentryEnabled = !!config.SENTRY_DSN;
+if (sentryEnabled) {
+  Sentry.init({
+    dsn: config.SENTRY_DSN,
+    environment: config.NODE_ENV,
+    tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 0,
+  });
+  logger.info('Sentry inicializado');
+}
 import authRouter from './routes/auth.js';
 import eventsRouter from './routes/events.js';
 import giftsRouter from './routes/gifts.js';
@@ -98,23 +110,50 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Rutas públicas (sin rate limit)
 app.use('/api', publicRouter);
 
+const startTime = Date.now();
+
 app.get('/api/health', apiLimiter, async (_req, res) => {
+  const checks: Record<string, { status: string; latency?: number }> = {};
+  let healthy = true;
+
+  // Database check
+  const dbStart = Date.now();
   try {
     await sql`SELECT 1`;
-    res.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      environment: config.NODE_ENV,
-      database: 'connected',
-    });
+    checks.database = { status: 'connected', latency: Date.now() - dbStart };
   } catch {
-    res.status(503).json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      environment: config.NODE_ENV,
-      database: 'disconnected',
-    });
+    checks.database = { status: 'disconnected' };
+    healthy = false;
   }
+
+  // Mercado Pago check (solo en producción si hay token)
+  if (config.MERCADO_PAGO_ACCESS_TOKEN && config.NODE_ENV === 'production') {
+    const mpStart = Date.now();
+    try {
+      const { MercadoPagoConfig } = await import('mercadopago');
+      new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
+      checks.mercadopago = { status: 'connected', latency: Date.now() - mpStart };
+    } catch {
+      checks.mercadopago = { status: 'error', latency: Date.now() - mpStart };
+    }
+  } else {
+    checks.mercadopago = { status: config.MERCADO_PAGO_ACCESS_TOKEN ? 'skipped' : 'not_configured' };
+  }
+
+  const statusCode = healthy ? 200 : 503;
+  res.status(statusCode).json({
+    status: healthy ? 'ok' : 'degraded',
+    timestamp: new Date().toISOString(),
+    environment: config.NODE_ENV,
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    version: '1.0.0',
+    services: {
+      sentry: sentryEnabled ? 'configured' : 'not_configured',
+      resend: config.RESEND_API_KEY ? 'configured' : 'not_configured',
+      cloudinary: config.CLOUDINARY_CLOUD_NAME ? 'configured' : 'not_configured',
+    },
+    checks,
+  });
 });
 
 app.get('/health', apiLimiter, (_req, res) => {
@@ -140,17 +179,13 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
+if (sentryEnabled) {
+  Sentry.setupExpressErrorHandler(app);
+}
 app.use(errorHandler);
 
 const server = app.listen(config.PORT, () => {
-  console.log(`\n  🎉 Fiesta y Lista API`);
-  console.log(`  ─────────────────────`);
-  console.log(`  Ambiente: ${config.NODE_ENV}`);
-  console.log(`  Puerto:   ${config.PORT}`);
-  console.log(`  URL:      http://localhost:${config.PORT}`);
-  console.log(`  Frontend: ${config.FRONTEND_URL}`);
-  console.log(`  Backend:  ${config.BACKEND_URL}`);
-  console.log(`  MP Notif: ${config.BACKEND_URL}/api/webhooks/mercadopago\n`);
+  logger.info({ port: config.PORT, environment: config.NODE_ENV, frontend: config.FRONTEND_URL, backend: config.BACKEND_URL }, 'Servidor iniciado');
 
   startCronJobs();
 });
@@ -158,19 +193,19 @@ const server = app.listen(config.PORT, () => {
 const SHUTDOWN_TIMEOUT = 10_000;
 
 function gracefulShutdown(signal: string) {
-  console.log(`\n  Recibido ${signal}. Cerrando servidor...`);
+  logger.warn({ signal }, 'Cerrando servidor...');
   stopSSEScavenger();
   stopCronJobs();
 
   server.close(() => {
     sql.end({ timeout: 5 }).then(() => {
-      console.log('  Conexiones cerradas correctamente.');
+      logger.info('Conexiones cerradas correctamente.');
       process.exit(0);
     });
   });
 
   setTimeout(() => {
-    console.error('  Timeout de cierre forzado.');
+    logger.error('Timeout de cierre forzado.');
     process.exit(1);
   }, SHUTDOWN_TIMEOUT);
 }
@@ -179,12 +214,12 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 process.on('uncaughtException', (error) => {
-  console.error('[Fatal] Excepción no capturada:', error);
+  logger.fatal({ err: error }, 'Excepción no capturada');
   gracefulShutdown('uncaughtException');
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[Fatal] Promesa rechazada no capturada:', reason);
+  logger.fatal({ err: reason }, 'Promesa rechazada no capturada');
   gracefulShutdown('unhandledRejection');
 });
 

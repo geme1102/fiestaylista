@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode, createRef } from 'react';
+import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -26,19 +27,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    const errorReport = {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-    };
-    if (import.meta.env.DEV) console.error('[ErrorBoundary]', JSON.stringify(errorReport));
-    try {
-      if (typeof (window as unknown as Record<string, unknown>).reportError === 'function') {
-        (window as unknown as Record<string, (data: unknown) => void>).reportError(errorReport);
-      }
-    } catch {} // eslint-disable-line no-empty
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack, url: window.location.href } });
+    if (import.meta.env.DEV) console.error('[ErrorBoundary]', error.message);
   }
 
   componentDidUpdate(_prevProps: Props, prevState: State) {

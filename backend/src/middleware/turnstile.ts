@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { config } from '../config.js';
 import { ValidationError } from '../utils/errors.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Turnstile');
 
 interface TurnstileResponse {
   success: boolean;
@@ -13,7 +16,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
 
     if (!config.TURNSTILE_SECRET_KEY) {
       if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
-        console.warn('[Turnstile] Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo');
+        log.warn('Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo');
         next();
         return;
       }
@@ -37,7 +40,7 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
 
     if (!config.TURNSTILE_SECRET_KEY) {
       if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
-        console.warn('[Turnstile] Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo (optional)');
+        log.warn('Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo (optional)');
         next();
         return;
       }
@@ -78,7 +81,7 @@ async function verifyToken(token: string): Promise<void> {
 
   if (!data.success) {
     const codes = data['error-codes']?.join(', ') ?? 'desconocido';
-    console.warn('[Turnstile] Verificación fallida:', codes);
+    log.warn({ codes }, 'Verificación fallida:');
     throw new ValidationError(`No se pudo verificar que no eres un robot (${codes})`);
   }
 }

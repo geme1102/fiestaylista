@@ -7,6 +7,9 @@ import { users, events, gifts, photos, cashFunds, cashContributions, subscriptio
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('ARCO');
 
 export async function getUserData(userId: string) {
   const [user] = await db
@@ -91,9 +94,9 @@ export async function deleteUserAccount(userId: string) {
   if (activeSubscription?.mpSubscriptionId) {
     try {
       await cancelPreapproval(activeSubscription.mpSubscriptionId);
-      console.log(`[ARCO] Subscripción MP cancelada: ${activeSubscription.mpSubscriptionId}`);
+      log.info(`Subscripción MP cancelada: ${activeSubscription.mpSubscriptionId}`);
     } catch (err) {
-      console.error('[ARCO] Error cancelando subscripción MP:', err);
+      log.error({ err }, 'Error cancelando subscripción MP:');
     }
   }
 
@@ -128,7 +131,7 @@ export async function deleteUserAccount(userId: string) {
       );
       for (const result of results) {
         if (result.status === 'rejected') {
-          console.error('[ARCO] Error deleting Cloudinary image:', result.reason);
+          log.error({ err: result.reason }, 'Error deleting Cloudinary image:');
         }
       }
     }

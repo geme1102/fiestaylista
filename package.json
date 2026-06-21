@@ -12,6 +12,8 @@
     "db:generate": "cd backend && npm run db:generate",
     "db:migrate": "cd backend && npm run db:migrate",
     "db:push": "cd backend && npm run db:push",
+    "db:backup": "bash scripts/backup-db.sh",
+    "db:restore": "bash scripts/restore-db.sh",
     "test": "cd backend && npm test && cd ../frontend && npm test",
     "test:e2e": "cd frontend && npm run test:e2e",
     "prepare": "husky",

@@ -6,6 +6,9 @@ import * as subscriptionService from './subscription.js';
 import * as cashFundService from './cashFund.js';
 import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('MP');
 
 export async function handleProPayment(paymentId: string, userId: string, interval: string): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
@@ -28,7 +31,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
         .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval });
     } catch (err: any) {
       if (err?.code === '23505') {
-        console.log(`[MP] PRO payment ${paymentId} already processed`);
+        log.info(`PRO payment ${paymentId} already processed`);
         isFirstProcessing = false;
         return;
       }
@@ -56,7 +59,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       await emailService.sendProConfirmationEmail(user.email, user.name, period);
     }
   } catch (err) {
-    console.error(`[MP] Error enviando email de confirmación PRO para ${userId}:`, err);
+    log.error({ err }, `Error enviando email de confirmación PRO para ${userId}:`);
   }
 }
 
@@ -71,7 +74,7 @@ async function handleBoostPayment(paymentId: string, ref: string): Promise<void>
         .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
     } catch (err: any) {
       if (err?.code === '23505') {
-        console.log(`[MP] Boost payment ${paymentId} already processed`);
+        log.info(`Boost payment ${paymentId} already processed`);
         return null;
       }
       throw err;
@@ -134,7 +137,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
     if (info.status === 'approved') {
       const diff = Math.abs(info.transactionAmount - config.BOOST_PRICE_CENTS);
       if (diff > 1 && diff / config.BOOST_PRICE_CENTS > 0.01) {
-        console.error(`[MP] Monto de boost inválido: esperado ${config.BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
+        log.error(`Monto de boost inválido: esperado ${config.BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
         return;
       }
       await handleBoostPayment(paymentId, ref);
@@ -150,7 +153,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       const expectedAmount = interval === 'year' ? config.PRO_YEARLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS;
       const diff = Math.abs(info.transactionAmount - expectedAmount);
       if (diff > 1 && diff / expectedAmount > 0.01) {
-        console.error(`[MP] Monto de PRO inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
+        log.error(`Monto de PRO inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
         return;
       }
       await handleProPayment(paymentId, userId, interval);
@@ -170,11 +173,11 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       if (contribution) {
         const diff = Math.abs(info.transactionAmount - contribution.amount);
         if (diff > 1 && diff / contribution.amount > 0.01) {
-          console.error(`[MP] Monto de contribución inválido: esperado ${contribution.amount}, recibido ${info.transactionAmount}`);
+          log.error(`Monto de contribución inválido: esperado ${contribution.amount}, recibido ${info.transactionAmount}`);
           return;
         }
       } else {
-        console.warn(`[MP] Contribución no encontrada para ref: ${ref}, paymentId: ${paymentId}`);
+        log.warn(`Contribución no encontrada para ref: ${ref}, paymentId: ${paymentId}`);
       }
       await cashFundService.completeContribution(ref, paymentId);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {

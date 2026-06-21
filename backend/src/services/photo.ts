@@ -6,6 +6,9 @@ import { photos as photosTable, events, users } from '../db/schema.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Photo');
 
 function isPrivateHostname(hostname: string): boolean {
   const lower = hostname.toLowerCase();
@@ -107,7 +110,7 @@ export async function deletePhoto(photoId: string) {
         ),
       ]);
     } catch (err) {
-      console.error('[Photo] Error al eliminar de Cloudinary:', err);
+      log.error({ err }, 'Error al eliminar de Cloudinary:');
     }
   }
 

@@ -1,6 +1,10 @@
 import { Resend } from 'resend';
 import { config } from '../config.js';
 
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Email');
+
 let resend: Resend | null = null;
 
 if (config.RESEND_API_KEY) {
@@ -28,7 +32,7 @@ async function sendEmail(options: { from: string; to: string; subject: string; h
   try {
     await resend.emails.send(options);
   } catch (err) {
-    console.error('[Email] Error sending email:', err);
+    log.error({ err }, 'Error sending email:');
     throw new Error(
       `Failed to send email: ${err instanceof Error ? err.message : 'Unknown error'}`,
     );

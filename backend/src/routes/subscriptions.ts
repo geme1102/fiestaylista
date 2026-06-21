@@ -14,6 +14,9 @@ import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users, proPayments } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Subscriptions');
 
 const router = Router();
 
@@ -121,7 +124,7 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandler(async (req: Auth
     try {
       await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
     } catch (err) {
-      console.error('Error al cancelar en MercadoPago:', err);
+      log.error({ err }, 'Error al cancelar en MercadoPago:');
     }
   }
   await subscriptionService.cancelSubscription(req.user!.userId);

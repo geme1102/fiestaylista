@@ -66,6 +66,7 @@ cd ../frontend && npm install
 | `VITE_API_URL` | Sí | URL del backend (ej: `http://localhost:3001`) |
 | `VITE_TURNSTILE_SITE_KEY` | Prod | Site key de Cloudflare Turnstile |
 | `VITE_APP_URL` | No | URL base de la app (para E2E tests) |
+| `VITE_SENTRY_DSN` | No | DSN de Sentry para monitoreo de errores frontend |
 
 ### Turnstile — Claves de Desarrollo
 
@@ -149,7 +150,7 @@ fiesta-y-lista/
 │       │   ├── subscription.ts # Gestión de suscripciones
 │       │   └── ...             # Otros servicios
 │       ├── types/              # TypeScript types
-│       └── utils/              # Utilidades (errores, paginación, slug)
+│       └── utils/              # Utilidades (errores, paginación, slug, logger)
 ├── frontend/
 │   └── src/
 │       ├── components/         # Componentes React reutilizables
@@ -161,6 +162,25 @@ fiesta-y-lista/
 ├── .github/workflows/ci.yml   # CI/CD pipeline
 └── README.md
 ```
+
+## Monitoreo
+
+- **Sentry** (`@sentry/node` + `@sentry/react`): Rastreo de errores en backend y frontend. Configurar `SENTRY_DSN` (backend) y `VITE_SENTRY_DSN` (frontend) para activar.
+- **Logs estructurados** (Pino): Backend usa `pino` con formato JSON en producción y pretty-print en desarrollo. `createModuleLogger()` para logs con contexto por módulo.
+- **Health check**: `GET /api/health` — verifica DB, estado de servicios externos y uptime.
+- **Shutdown graceful**: Captura `SIGTERM/SIGINT`, cierra conexiones DB y cron jobs en máximo 10s.
+
+## Infraestructura
+
+- **Backend**: Railway (`railway.toml` define healthcheck en `/api/health`, restart automático)
+- **Frontend**: Netlify con SPA fallback y proxy inverso para `/api/*`
+- **Base de datos**: PostgreSQL 17 en Railway. Backups automáticos vía Railway + script manual:
+  ```bash
+  npm run db:backup          # Crea dump en ./backups/
+  npm run db:restore <file>  # Restaura desde un backup
+  ```
+- **Preview deployments**: Cada PR genera una vista previa automática en Netlify
+- **Monitoreo de uptime**: Recomendado configurar [Better Uptime](https://betteruptime.com) o [Upptime](https://upptime.js.org) apuntando a `https://fiestaylista.com/api/health`
 
 ## Seguridad
 

@@ -1,6 +1,9 @@
 import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago';
 import { config } from '../config.js';
 import type { Tier } from '../types/index.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('MP');
 
 let client: MercadoPagoConfig | null = null;
 
@@ -226,7 +229,7 @@ export async function searchPaymentsByRef(externalReference: string): Promise<{
       transactionAmount: approved.transaction_amount,
     };
   } catch (err) {
-    console.error('[MP] Error searching payments by ref:', err);
+    log.error({ err }, 'Error searching payments by ref:');
     return null;
   }
 }

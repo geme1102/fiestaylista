@@ -2,6 +2,9 @@ import { eq, sql, and, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts, users, emailTracking } from '../db/schema.js';
 import { sendReminderEmail } from './email.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Reminder');
 
 const REMINDER_COOLDOWN_DAYS = 7 as const;
 
@@ -62,7 +65,7 @@ export async function processReminders(): Promise<ReminderResult> {
       });
       reminded++;
     } catch (error) {
-      console.error(`[Reminder] Error enviando email a ${row.userEmail}:`, error);
+      log.error({ error }, `Error enviando email a ${row.userEmail}:`);
     }
   }
 

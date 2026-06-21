@@ -6,6 +6,9 @@ import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
 import { cleanupStaleContributions } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
+import { createModuleLogger } from './utils/logger.js';
+
+const log = createModuleLogger('Cron');
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
@@ -24,15 +27,15 @@ const runWithLock = async (name: string, fn: () => Promise<void>) => {
       return true;
     });
     if (!acquired) {
-      console.log(`[Cron] Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
+      log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
     }
   } catch (error) {
-    console.error(`[Cron] Error en lock para ${name}:`, error);
+    log.error({ error }, `Error en lock para ${name}:`);
   }
 };
 
 export function startCronJobs(): void {
-  console.log('[Cron] Iniciando jobs programados...');
+  log.info('Iniciando jobs programados...');
 
   const DAILY_MS = 24 * 60 * 60 * 1000;
 
@@ -41,37 +44,37 @@ export function startCronJobs(): void {
       try {
         const result = await processReminders();
         if (result.processed > 0) {
-          console.log(`[Cron] Recordatorios: ${result.reminded}/${result.processed} eventos procesados`);
+          log.info(`Recordatorios: ${result.reminded}/${result.processed} eventos procesados`);
         }
       } catch (error) {
-        console.error('[Cron] Error en recordatorios:', error);
+        log.error({ error }, 'Error en recordatorios:');
       }
 
       try {
         const result = await processEmailSequence();
         if (result.processed > 0) {
-          console.log(`[Cron] Email sequence: ${result.processed} emails enviados`);
+          log.info(`Email sequence: ${result.processed} emails enviados`);
         }
       } catch (error) {
-        console.error('[Cron] Error en email sequence:', error);
+        log.error({ error }, 'Error en email sequence:');
       }
 
       try {
         const expired = await expireStaleSubscriptions();
         if (expired > 0) {
-          console.log(`[Cron] Suscripciones expiradas: ${expired}`);
+          log.info(`Suscripciones expiradas: ${expired}`);
         }
       } catch (error) {
-        console.error('[Cron] Error expirando suscripciones:', error);
+        log.error({ error }, 'Error expirando suscripciones:');
       }
 
       try {
         const staleCount = await cleanupStaleContributions();
         if (staleCount > 0) {
-          console.log(`[Cron] Contribuciones expiradas: ${staleCount}`);
+          log.info(`Contribuciones expiradas: ${staleCount}`);
         }
       } catch (error) {
-        console.error('[Cron] Error limpiando contribuciones:', error);
+        log.error({ error }, 'Error limpiando contribuciones:');
       }
     });
   };
@@ -111,7 +114,7 @@ export function startCronJobs(): void {
           }
         }
       } catch (error) {
-        console.error('[Cron] Error en retry de webhooks:', error);
+        log.error({ error }, 'Error en retry de webhooks:');
       }
     });
   };
@@ -122,10 +125,10 @@ export function startCronJobs(): void {
         .delete(failedWebhooks)
         .where(sql`${failedWebhooks.createdAt} < NOW() - INTERVAL '7 days' AND ${failedWebhooks.status} = 'completed'`);
       if (result && result.length > 0) {
-        console.log(`[Cron] Limpieza de webhooks completados: ${result.length}`);
+        log.info(`Limpieza de webhooks completados: ${result.length}`);
       }
     } catch (error) {
-      console.error('[Cron] Error en limpieza:', error);
+      log.error({ error }, 'Error en limpieza:');
     }
   };
 
@@ -135,7 +138,7 @@ export function startCronJobs(): void {
         .delete(refreshTokens)
         .where(sql`${refreshTokens.expiresAt} < NOW()`);
     } catch (error) {
-      console.error('[Cron] Error limpiando refresh tokens:', error);
+      log.error({ error }, 'Error limpiando refresh tokens:');
     }
   };
 
@@ -145,10 +148,10 @@ export function startCronJobs(): void {
         .delete(eventViews)
         .where(sql`${eventViews.viewedAt} < NOW() - INTERVAL '90 days'`);
       if (result.length > 0) {
-        console.log(`[Cron] Viejas vistas de eventos limpiadas: ${result.length}`);
+        log.info(`Viejas vistas de eventos limpiadas: ${result.length}`);
       }
     } catch (error) {
-      console.error('[Cron] Error limpiando event_views:', error);
+      log.error({ error }, 'Error limpiando event_views:');
     }
   };
 
@@ -158,10 +161,10 @@ export function startCronJobs(): void {
         .delete(auditLogs)
         .where(sql`${auditLogs.createdAt} < NOW() - INTERVAL '180 days'`);
       if (result.length > 0) {
-        console.log(`[Cron] Audit logs viejos limpiados: ${result.length}`);
+        log.info(`Audit logs viejos limpiados: ${result.length}`);
       }
     } catch (error) {
-      console.error('[Cron] Error limpiando audit_logs:', error);
+      log.error({ error }, 'Error limpiando audit_logs:');
     }
   };
 
@@ -187,7 +190,7 @@ export function startCronJobs(): void {
     retryFailedWebhooks();
   }, WEBHOOK_RETRY_MS);
 
-  console.log('[Cron] Jobs iniciados correctamente');
+  log.info('Jobs iniciados correctamente');
 }
 
 export function stopCronJobs(): void {
@@ -199,5 +202,5 @@ export function stopCronJobs(): void {
     clearInterval(webhookRetryInterval);
     webhookRetryInterval = null;
   }
-  console.log('[Cron] Jobs detenidos');
+  log.info('Jobs detenidos');
 }

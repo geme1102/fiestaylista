@@ -4,6 +4,9 @@ import { subscriptions as subsTable, users, events, gifts, photos } from '../db/
 import { NotFoundError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Subscription');
 
 interface UpsertData {
   mpSubscriptionId: string | null;
@@ -168,7 +171,7 @@ export async function cancelSubscription(userId: string, immediate = false) {
     try {
       await deactivateExcessEvents(userId);
     } catch (err) {
-      console.error(`[Subscription] Error desactivando eventos tras cancelación para ${userId}:`, err);
+      log.error({ err }, `Error desactivando eventos tras cancelación para ${userId}:`);
     }
   }
 

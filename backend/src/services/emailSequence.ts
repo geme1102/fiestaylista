@@ -3,6 +3,9 @@ import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';
 import { config } from '../config.js';
 import { sendReminderEmail, sendRawEmail, isEmailConfigured } from './email.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('EmailSeq');
 
 function getBaseUrl(): string {
   return config.FRONTEND_URL;
@@ -35,7 +38,7 @@ async function markEmailSentBatch(records: { userId: string; type: string }[]): 
   } catch (err: unknown) {
     const pgErr = err as { code?: string } | null;
     if (pgErr?.code !== '23505') {
-      console.error('[EmailSeq] Error marcando email como enviado:', err);
+      log.error({ err }, 'Error marcando email como enviado:');
       throw err;
     }
   }
@@ -51,7 +54,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
 
   while (batchCount < MAX_BATCHES) {
     if (Date.now() - startTime > MAX_EXECUTION_TIME_MS) {
-      console.log(`[EmailSeq] Tiempo máximo de ejecución alcanzado (${MAX_EXECUTION_TIME_MS}ms). Abortando.`);
+      log.info(`Tiempo máximo de ejecución alcanzado (${MAX_EXECUTION_TIME_MS}ms). Abortando.`);
       break;
     }
 
@@ -114,7 +117,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
 
     for (let i = 0; i < rows.length; i += MICRO_BATCH_SIZE) {
       if (Date.now() - startTime > MAX_EXECUTION_TIME_MS) {
-        console.log(`[EmailSeq] Tiempo máximo de ejecución alcanzado durante micro-batch. Abortando.`);
+        log.info(`Tiempo máximo de ejecución alcanzado durante micro-batch. Abortando.`);
         break;
       }
 
@@ -131,11 +134,11 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
             const ev = userEvs[0];
             await sendReminderEmail(user.email, ev.title, ev.slug, 0);
             markBatch.push({ userId: user.id, type: 'day1_share' });
-            if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 1: Recordatorio compartir - ${user.email}`);
+            if (config.NODE_ENV !== 'production') log.info(`Día 1: Recordatorio compartir - ${user.email}`);
             processed++;
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 1 para ${user.email}:`, err);
+          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 1 para ${user.email}:`);
         }
 
         try {
@@ -152,12 +155,12 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
             if (totalUnclaimed > 0) {
               await sendReminderEmail(user.email, mostUnclaimedEv.title, mostUnclaimedEv.slug, totalUnclaimed);
               markBatch.push({ userId: user.id, type: 'day3_loss_aversion' });
-              if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 3: Loss aversion - ${user.email}`);
+              if (config.NODE_ENV !== 'production') log.info(`Día 3: Loss aversion - ${user.email}`);
               processed++;
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 3 para ${user.email}:`, err);
+          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 3 para ${user.email}:`);
         }
 
         try {
@@ -187,15 +190,15 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                   `,
                 });
                 markBatch.push({ userId: user.id, type: 'day7_cash_fund_upsell' });
-                if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 7: Upsell cash fund - ${user.email}`);
+                if (config.NODE_ENV !== 'production') log.info(`Día 7: Upsell cash fund - ${user.email}`);
                 processed++;
               } catch (err) {
-                if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 7 para ${user.email}:`, err);
+if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 7 para ${user.email}:`);
               }
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 7 para ${user.email}:`, err);
+          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 7 para ${user.email}:`);
         }
 
         try {
@@ -231,14 +234,14 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                 `,
               });
               markBatch.push({ userId: user.id, type: 'day14_pro_upsell' });
-              if (config.NODE_ENV !== 'production') console.log(`[EmailSeq] Día 14: Upsell Pro - ${user.email}`);
+              if (config.NODE_ENV !== 'production') log.info(`Día 14: Upsell Pro - ${user.email}`);
               processed++;
             } catch (err) {
-              if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 14 para ${user.email}:`, err);
+if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 14 para ${user.email}:`);
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') console.error(`[EmailSeq] Error día 14 para ${user.email}:`, err);
+          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 14 para ${user.email}:`);
         }
       }
 

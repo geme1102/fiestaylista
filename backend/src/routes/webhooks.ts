@@ -8,6 +8,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Webhook');
 
 const mpWebhookPayloadSchema = z.object({
   id: z.string().optional(),
@@ -30,7 +33,7 @@ function verifyMpSignature(req: Request): boolean {
 
   const webhookSecret = config.MERCADO_PAGO_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error('[MP Webhook] MERCADO_PAGO_WEBHOOK_SECRET no configurado');
+    log.error('MERCADO_PAGO_WEBHOOK_SECRET no configurado');
     return false;
   }
 
@@ -46,13 +49,13 @@ function verifyMpSignature(req: Request): boolean {
 
   const tsNumber = parseInt(ts, 10);
   if (isNaN(tsNumber) || Date.now() - tsNumber > 5 * 60 * 1000) {
-    console.warn('[MP Webhook] Firma con timestamp expirado o inválido, ignorando notificación');
+    log.warn('Firma con timestamp expirado o inválido, ignorando notificación');
     return false;
   }
 
   // req.body es un Buffer gracias a express.raw() montado en index.ts
   if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-    console.warn('[MP Webhook] Body ausente o no es Buffer');
+    log.warn('Body ausente o no es Buffer');
     return false;
   }
 
@@ -95,7 +98,7 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
       id: parsed.id || parsed.data?.id || (req.query.id as string),
     };
   } catch (err) {
-    console.error('[MP Webhook] Error parsing webhook body:', err);
+    log.error({ err }, 'Error parsing webhook body:');
     return {
       topic: req.query.topic as string,
       id: req.query.id as string,
@@ -107,7 +110,7 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
   const info = extractTopicId(req);
 
   if (!verifyMpSignature(req)) {
-    console.warn('[MP Webhook] Firma inválida, ignorando notificación');
+    log.warn('Firma inválida, ignorando notificación');
     if (info.topic && info.id) {
       try {
         await db.insert(failedWebhooks).values({
@@ -119,7 +122,7 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
           nextRetryAt: new Date(Date.now() + 60 * 1000),
         });
       } catch (dbError) {
-        console.error('[MP Webhook] Error guardando failed webhook:', dbError);
+        log.error({ err: dbError }, 'Error guardando failed webhook:');
       }
     }
     res.status(401).json({ received: false, error: 'Firma inválida' });
@@ -141,7 +144,7 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
     res.status(200).json({ received: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[MP Webhook] Error:', errorMessage);
+    log.error({ error: errorMessage }, 'Error:');
 
     try {
       await db.insert(failedWebhooks).values({
@@ -153,7 +156,7 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
         nextRetryAt: new Date(Date.now() + 60 * 1000),
       });
     } catch (dbError) {
-      console.error('[MP Webhook] Error guardando failed webhook:', dbError);
+      log.error({ err: dbError }, 'Error guardando failed webhook:');
     }
 
     const isTransient = !(error instanceof ValidationError || error instanceof NotFoundError);

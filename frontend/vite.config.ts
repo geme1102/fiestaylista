@@ -10,13 +10,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      selfDestroying: true,
       includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'favicon-48x48.png', 'logo.png', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/icon-*.png'],
       manifest: {
         name: 'Fiesta y Lista',
         short_name: 'FiestaL',
         description: 'Crea y comparte listas de regalos para tus eventos especiales',
-        theme_color: '#ec4899',
+        theme_color: '#b10e6b',
         background_color: '#fdf2f8',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -28,10 +27,15 @@ export default defineConfig({
           { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
           { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        categories: ['events', 'lifestyle', 'social'],
+        lang: 'es-CO',
+        dir: 'ltr',
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
@@ -39,6 +43,15 @@ export default defineConfig({
             options: {
               cacheName: 'api-cache',
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+              networkTimeoutSeconds: 5,
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
         ],

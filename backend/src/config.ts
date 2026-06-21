@@ -95,4 +95,5 @@ export const config = {
   BOOST_PRICE_CENTS: parseInt(process.env.BOOST_PRICE_CENTS || '10000', 10),
   CONTRIBUTION_EXPIRY_HOURS: parseInt(process.env.CONTRIBUTION_EXPIRY_HOURS || '24', 10),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
+  SENTRY_DSN: process.env.SENTRY_DSN || '',
 } as const;

@@ -1,41 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors.js';
-import { config } from '../config.js';
-
-function toSerializable(err: unknown): Record<string, unknown> {
-  if (err instanceof Error) {
-    const obj: Record<string, unknown> = { message: err.message, name: err.name };
-    if (config.NODE_ENV === 'development') obj.stack = err.stack;
-    for (const key of Object.keys(err as any)) {
-      if (!['message', 'name', 'stack'].includes(key)) {
-        try { obj[key] = JSON.parse(JSON.stringify((err as any)[key])); } catch { obj[key] = String((err as any)[key]); }
-      }
-    }
-    return obj;
-  }
-  if (typeof err === 'object' && err !== null) {
-    try { return JSON.parse(JSON.stringify(err)); } catch { return { value: String(err) }; }
-  }
-  return { value: String(err) };
-}
+import { logger } from '../utils/logger.js';
 
 function logError(err: unknown, errorId: string, req?: Request): void {
-  const errorLog: Record<string, unknown> = {
+  const logData: Record<string, unknown> = {
     errorId,
-    timestamp: new Date().toISOString(),
-    environment: config.NODE_ENV,
-    error: toSerializable(err),
+    err,
   };
 
   if (req) {
-    errorLog.method = req.method;
-    errorLog.path = req.path;
-    errorLog.ip = req.ip;
-    errorLog.userId = (req as any).user?.userId;
+    logData.method = req.method;
+    logData.path = req.path;
+    logData.ip = req.ip;
+    logData.userId = (req as any).user?.userId;
   }
 
-  console.error(JSON.stringify(errorLog));
+  logger.error(logData, err instanceof Error ? err.message : 'Error interno');
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {

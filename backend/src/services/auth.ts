@@ -8,6 +8,9 @@ import { config } from '../config.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
 import type { JwtPayload } from '../types/index.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Auth');
 
 interface TokenPair {
   accessToken: string;
@@ -64,7 +67,7 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
       throw new UnauthorizedError('Token de refresco inválido');
     }
     if (existing.revoked) {
-      console.warn(`[Security] Intento de reuso de refresh token para usuario ${existing.userId}. Revocando todas las sesiones.`);
+      log.warn(`Intento de reuso de refresh token para usuario ${existing.userId}. Revocando todas las sesiones.`);
       await db
         .update(refreshTokens)
         .set({ revoked: true })
@@ -157,10 +160,10 @@ export async function register(
       await sendVerificationEmail(user.email, verificationToken);
       emailSent = true;
     } else {
-      console.warn('[Auth] Email service not configured — verification email not sent');
+      log.warn('Email service not configured — verification email not sent');
     }
   } catch (err) {
-    console.error('[Auth] Error al enviar email de verificación:', err);
+    log.error({ err }, 'Error al enviar email de verificación:');
   }
 
   return {
@@ -300,7 +303,7 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
   try {
     await sendVerificationEmail(user.email, verificationToken);
   } catch (err) {
-    console.error('[Auth] Error al reenviar email de verificación:', err);
+    log.error({ err }, 'Error al reenviar email de verificación:');
     throw new ValidationError('No se pudo enviar el correo de verificación. Intenta de nuevo más tarde.');
   }
 }
@@ -317,7 +320,7 @@ export async function forgotPassword(email: string): Promise<void> {
   }
 
   if (!isEmailConfigured()) {
-    console.error('[Auth] No se puede enviar email de restablecimiento: RESEND_API_KEY no configurada');
+    log.error('No se puede enviar email de restablecimiento: RESEND_API_KEY no configurada');
     throw new ValidationError('El servicio de correo no está configurado. Contacta al administrador.');
   }
 
@@ -336,7 +339,7 @@ export async function forgotPassword(email: string): Promise<void> {
       .update(users)
       .set({ resetToken: null, resetTokenExpires: null, updatedAt: new Date() })
       .where(eq(users.id, user.id));
-    console.error('[Auth] Error al enviar email de restablecimiento:', err);
+    log.error({ err }, 'Error al enviar email de restablecimiento:');
     throw new ValidationError('No se pudo enviar el correo de restablecimiento. Intenta de nuevo más tarde.');
   }
 }
