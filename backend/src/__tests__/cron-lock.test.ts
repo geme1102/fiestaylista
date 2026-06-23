@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('../config.js', () => ({ config: { NODE_ENV: 'test' } }));
+
 vi.mock('../db/index.js', () => ({
   db: {
     transaction: vi.fn(),
