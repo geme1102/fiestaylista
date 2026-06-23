@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
 import { sql } from './db/index.js';
+import { runMigrations } from './db/migrate.js';
 import type { AppRequest } from './types/index.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -189,58 +190,7 @@ if (sentryEnabled) {
 app.use(errorHandler);
 
 try {
-  await sql`ALTER TABLE photos ADD COLUMN IF NOT EXISTS deleted_at timestamp`;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS "guests" (
-      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
-      "name" text NOT NULL,
-      "email" text,
-      "phone" text,
-      "is_confirmed" boolean NOT NULL DEFAULT false,
-      "companions" integer NOT NULL DEFAULT 0,
-      "dietary_restrictions" text,
-      "message" text,
-      "created_at" timestamp DEFAULT now() NOT NULL
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS "guests_event_id_idx" ON "guests"("event_id")`;
-  await sql`CREATE INDEX IF NOT EXISTS "guests_event_id_confirmed_idx" ON "guests"("event_id", "is_confirmed")`;
-
-  await sql`ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_phone" text`;
-  await sql`ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_type" text`;
-
-  await sql`ALTER TABLE "gifts" ADD COLUMN IF NOT EXISTS "is_group_gift" boolean NOT NULL DEFAULT false`;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS "gift_claims" (
-      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      "gift_id" uuid NOT NULL REFERENCES "gifts"("id") ON DELETE CASCADE,
-      "claimed_by" text NOT NULL,
-      "message" text,
-      "created_at" timestamp DEFAULT now() NOT NULL
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS "gift_claims_gift_id_idx" ON "gift_claims"("gift_id")`;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS "messages" (
-      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
-      "author_name" text NOT NULL,
-      "message" text NOT NULL,
-      "created_at" timestamp DEFAULT now() NOT NULL
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS "messages_event_id_idx" ON "messages"("event_id")`;
-  await sql`CREATE INDEX IF NOT EXISTS "messages_created_at_idx" ON "messages"("created_at")`;
-
-  await sql`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "status" text NOT NULL DEFAULT 'active'`;
-  await sql`ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "is_featured" boolean NOT NULL DEFAULT false`;
-  await sql`CREATE INDEX IF NOT EXISTS "photos_is_featured_idx" ON "photos"("is_featured")`;
-
-  logger.info('Migraciones aplicadas correctamente');
+  await runMigrations();
 } catch (err) {
   logger.fatal({ err }, 'Error aplicando migraciones');
   process.exit(1);

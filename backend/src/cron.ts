@@ -13,23 +13,24 @@ const log = createModuleLogger('Cron');
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
 
-const runWithLock = async (name: string, fn: () => Promise<void>) => {
+export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
-    const acquired = await db.transaction(async (tx) => {
-      const [result] = await tx.execute(sql`SELECT pg_try_advisory_lock(hashtext(${name})) as acquired`);
+    await db.transaction(async (tx) => {
+      const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(hashtext(${name})) as acquired`);
       const row = result as Record<string, unknown>;
-      const locked = row !== null && (
+      const acquired = row !== null && (
         row.acquired === true ||
         Array.isArray(result) && result[0] === true
       );
-      if (!locked) return false;
+      if (!acquired) {
+        log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
+        return;
+      }
+      // pg_try_advisory_xact_lock es TRANSACCIONAL: se libera automáticamente al
+      // hacer commit o rollback. Así, si fn() lanza, el lock NUNCA se filtra
+      // (a diferencia del pg_advisory_unlock manual de sesión usado antes).
       await fn();
-      await tx.execute(sql`SELECT pg_advisory_unlock(hashtext(${name}))`);
-      return true;
     });
-    if (!acquired) {
-      log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
-    }
   } catch (error) {
     log.error({ error }, `Error en lock para ${name}:`);
   }

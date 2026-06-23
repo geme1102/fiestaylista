@@ -4,6 +4,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   isGuest?: boolean;
+  type?: 'access';
 }
 
 export interface GuestJwtPayload extends JwtPayload {

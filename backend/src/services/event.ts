@@ -101,7 +101,7 @@ export async function getUserEvents(userId: string) {
         count: sql<number>`count(*)::int`,
       })
       .from(photos)
-      .where(inArray(photos.eventId, eventIds))
+      .where(and(inArray(photos.eventId, eventIds), isNull(photos.deletedAt)))
       .groupBy(photos.eventId),
     db
       .select({
@@ -150,7 +150,7 @@ export async function getEvent(eventId: string, userId: string) {
     db
       .select()
       .from(photos)
-      .where(eq(photos.eventId, eventId))
+      .where(and(eq(photos.eventId, eventId), isNull(photos.deletedAt)))
       .orderBy(photos.createdAt)
       .limit(101),
   ]);
@@ -280,8 +280,8 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     15,
   );
   const photoConditions = photoCursor
-    ? and(eq(photos.eventId, event.id), photoCursor)
-    : eq(photos.eventId, event.id);
+    ? and(eq(photos.eventId, event.id), isNull(photos.deletedAt), photoCursor)
+    : and(eq(photos.eventId, event.id), isNull(photos.deletedAt));
 
   const eventPhotos = await db
     .select()

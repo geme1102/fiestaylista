@@ -4,6 +4,18 @@ import { config } from '../config.js';
 import { UnauthorizedError } from '../utils/errors.js';
 import type { AuthRequest, JwtPayload, GuestJwtPayload } from '../types/index.js';
 
+// Tokens SSE (EventSource) se firman con JWT_SECRET pero deben servir ÚNICAMENTE
+// para el endpoint /subscribe. Si se presentan como access token en cualquier
+// otro endpoint, deben rechazarse para evitar escalamiento de privilegios.
+function isSseToken(decoded: unknown): boolean {
+  return (
+    typeof decoded === 'object' &&
+    decoded !== null &&
+    'scope' in decoded &&
+    (decoded as { scope?: unknown }).scope === 'sse'
+  );
+}
+
 export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
@@ -27,6 +39,10 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
       } catch {
         throw new UnauthorizedError('Token inválido');
       }
+    }
+
+    if (isSseToken(decoded)) {
+      throw new UnauthorizedError('Token inválido');
     }
 
     if ('isGuest' in decoded && (decoded as GuestJwtPayload).isGuest) {
@@ -80,6 +96,10 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
       }
     }
 
+    if (isSseToken(decoded)) {
+      throw new UnauthorizedError('Token inválido');
+    }
+
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
@@ -129,6 +149,11 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
         next();
         return;
       }
+    }
+
+    if (isSseToken(decoded)) {
+      next();
+      return;
     }
 
     req.user = {

@@ -1,5 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import ipaddr from 'ipaddr.js';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('CloudflareIP');
 
 const CLOUDFLARE_V4: string[] = [
   '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
@@ -24,12 +27,43 @@ function isCloudflareIP(ip: string): boolean {
   }
 }
 
+function isPrivateOrLocal(ip: string): boolean {
+  try {
+    const addr = ipaddr.parse(ip);
+    const range = addr.range();
+    return range === 'private' || range === 'loopback' || range === 'linkLocal' || range === 'uniqueLocal';
+  } catch {
+    return false;
+  }
+}
+
+// Diagnóstico de "trust proxy": si req.ip termina siendo una IP privada/interna,
+// significa que Express no está resolviendo la IP real del cliente detrás del proxy
+// (Netlify/Railway). Eso colapsaría el rate-limiting y el límite de SSE por IP.
+let lastProxyWarnAt = 0;
+const PROXY_WARN_THROTTLE_MS = 60_000;
+
 export function cloudflareIP(req: Request, _res: Response, next: NextFunction): void {
   const connectingIP = req.headers['cf-connecting-ip'];
   const remoteIP = req.ip ?? req.socket.remoteAddress ?? '';
 
   if (connectingIP && typeof connectingIP === 'string' && isCloudflareIP(remoteIP)) {
     (req as Request & { ip: string }).ip = connectingIP;
+  }
+
+  const resolvedIP = req.ip ?? '';
+  if (resolvedIP && isPrivateOrLocal(resolvedIP)) {
+    const now = Date.now();
+    if (now - lastProxyWarnAt > PROXY_WARN_THROTTLE_MS) {
+      lastProxyWarnAt = now;
+      log.warn({
+        resolvedIP,
+        socketRemoteAddress: req.socket.remoteAddress,
+        xForwardedFor: req.headers['x-forwarded-for'],
+        cfConnectingIp: req.headers['cf-connecting-ip'] ?? null,
+        xNfClientIp: req.headers['x-nf-client-ip'] ?? null,
+      }, 'req.ip es una IP privada/interna: el rate-limiting y SSE por IP pueden estar colapsados. Revisa el valor de "trust proxy" detrás de tu proxy (Netlify/Railway).');
+    }
   }
 
   next();

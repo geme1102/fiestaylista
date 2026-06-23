@@ -91,7 +91,7 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
 }
 
 async function issueTokenPair(userId: string, email: string, client: DbClient = db): Promise<TokenPair> {
-  const payload: JwtPayload = { userId, email };
+  const payload: JwtPayload = { userId, email, type: 'access' };
 
   const accessToken = jwt.sign(payload, config.JWT_SECRET, {
     expiresIn: config.ACCESS_TOKEN_EXPIRY as jwt.SignOptions['expiresIn'],

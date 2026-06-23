@@ -99,6 +99,13 @@
       "when": 1782055315264,
       "tag": "0013_dashing_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782055400000,
+      "tag": "0014_consolidate_inline_migrations",
+      "breakpoints": true
     }
   ]
 }

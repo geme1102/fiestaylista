@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
@@ -10,7 +10,7 @@ import * as cashFundService from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
 import { db } from '../db/index.js';
-import { cashFunds, cashContributions, events } from '../db/schema.js';
+import { cashFunds, events } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 
@@ -27,7 +27,7 @@ const createFundSchema = z.object({
 const contributeSchema = z.object({
   cashFundId: z.string().uuid('ID de fondo inválido'),
   contributorName: z.string().min(1, 'Tu nombre es requerido').max(100),
-  amount: z.number().int().min(2000, 'El monto mínimo es $2,000 COP').max(500000, 'El monto máximo es $5.000.00'),
+  amount: z.number().int().min(2000, 'El monto mínimo es $2,000 COP').max(500000, 'El monto máximo es $5.000.000'),
   message: z.string().max(500).optional(),
 });
 
@@ -62,7 +62,8 @@ router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHand
     res.json({ cashFund: null });
     return;
   }
-  res.json({ cashFund: fund });
+  const promisedTotal = await cashFundService.getPromisedAmount(fund.id);
+  res.json({ cashFund: fund, promisedTotal });
 }));
 
 router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
@@ -76,35 +77,15 @@ router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstileOptional,
   res.status(201).json(result);
 }));
 
-router.post('/cash-fund/promise', asyncHandlerWithValidation(async (req, res) => {
+router.post('/cash-fund/promise', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
   const data = promiseSchema.parse(req.body);
-
-  const [fund] = await db
-    .select({ id: cashFunds.id, isActive: cashFunds.isActive })
-    .from(cashFunds)
-    .where(eq(cashFunds.id, data.cashFundId))
-    .limit(1);
-
-  if (!fund) throw new ValidationError('Fondo no encontrado');
-  if (!fund.isActive) throw new ValidationError('Este fondo ya no está activo');
-
-  const [contribution] = await db
-    .insert(cashContributions)
-    .values({
-      cashFundId: data.cashFundId,
-      contributorName: data.contributorName,
-      amount: data.amount,
-      message: data.message || null,
-      status: 'promised',
-    })
-    .returning();
-
-  await db
-    .update(cashFunds)
-    .set({ collectedAmount: sql`${cashFunds.collectedAmount} + ${data.amount}` })
-    .where(eq(cashFunds.id, data.cashFundId));
-
-  res.status(201).json({ contribution });
+  const result = await cashFundService.createPromise(
+    data.cashFundId,
+    data.contributorName,
+    data.amount,
+    data.message,
+  );
+  res.status(201).json(result);
 }));
 
 router.get('/cash-fund/:cashFundId/contributions', requireAuth, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {

@@ -52,11 +52,11 @@ startSSEScavenger();
 
 const router = Router({ mergeParams: true });
 
-const createGiftSchema = z.object({
+export const createGiftSchema = z.object({
   name: z.string().min(1, 'El nombre del regalo es requerido').max(200, 'El nombre es demasiado largo'),
 });
 
-const updateGiftSchema = z.object({
+export const updateGiftSchema = z.object({
   isClaimed: z.boolean().optional(),
   claimedBy: z.string().nullable().optional(),
 });
@@ -223,7 +223,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
     return;
   }
 
-  const authToken = req.headers.authorization?.replace('Bearer ', '') || req.query.token as string;
+  const authToken = req.headers.authorization?.replace('Bearer ', '');
   if (!authToken) {
     res.status(401).json({ error: 'Token requerido para suscripción SSE' });
     return;

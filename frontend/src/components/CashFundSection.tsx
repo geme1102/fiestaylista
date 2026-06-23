@@ -27,6 +27,7 @@ function getInitialsBg(name: string) {
 
 const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
   const [fund, setFund] = useState<CashFund | null>(null);
+  const [promisedTotal, setPromisedTotal] = useState(0);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [contributing, setContributing] = useState(false);
@@ -51,6 +52,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
     try {
       const res = await getCashFund(eventId);
       setFund(res.cashFund);
+      setPromisedTotal(res.promisedTotal ?? 0);
       if (res.cashFund) {
         const contribRes = await getContributions(res.cashFund.id);
         setContributions(contribRes.contributions.filter((c) => c.status === 'completed'));
@@ -265,6 +267,12 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
                   className="h-full bg-gradient-to-r from-secondary-container to-secondary shimmer-bg rounded-full"
                 />
               </div>
+              {promisedTotal > 0 && (
+                <p className="text-xs text-on-surface-variant pt-1">
+                  <span className="font-semibold">+ {formatCOP(promisedTotal)} prometido</span>
+                  <span className="text-on-surface-variant/70"> (aportes por confirmar)</span>
+                </p>
+              )}
             </div>
 
             {/* Recent Contributions */}

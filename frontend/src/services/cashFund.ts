@@ -14,8 +14,8 @@ interface ContributeResult {
   contributionId: string;
 }
 
-export function getCashFund(eventId: string): Promise<{ cashFund: CashFund | null }> {
-  return apiClient.get<{ cashFund: CashFund | null }>(`/api/events/${eventId}/cash-fund`);
+export function getCashFund(eventId: string): Promise<{ cashFund: CashFund | null; promisedTotal?: number }> {
+  return apiClient.get<{ cashFund: CashFund | null; promisedTotal?: number }>(`/api/events/${eventId}/cash-fund`);
 }
 
 export function createContribution(data: ContributeData): Promise<ContributeResult> {
@@ -37,6 +37,6 @@ export function boostEvent(eventId: string): Promise<{ url?: string; message?: s
   return apiClient.post<{ url?: string; message?: string; boostedUntil?: string }>(`/api/events/${eventId}/boost`);
 }
 
-export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string }): Promise<{ contribution: CashContribution }> {
-  return apiClient.post<{ contribution: CashContribution }>('/api/cash-fund/promise', data);
+export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string; turnstileToken?: string }): Promise<{ contribution: CashContribution; promisedTotal: number }> {
+  return apiClient.post<{ contribution: CashContribution; promisedTotal: number }>('/api/cash-fund/promise', data);
 }
