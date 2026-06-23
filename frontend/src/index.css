@@ -639,55 +639,23 @@ button, a, input, select, textarea, [role="button"] {
 }
 
 @media (pointer: coarse) {
-  button, a, [role="button"], .btn-like {
+  /* Área táctil mínima 44x44 — excepto elementos con .touch-compact */
+  button:not(.touch-compact), a:not(.touch-compact), [role="button"]:not(.touch-compact), .btn-like:not(.touch-compact) {
     min-height: 44px;
     min-width: 44px;
   }
-  /* Remove stuck hover states on touch devices */
-  .hover\:bg-surface-container-highest:hover,
-  .hover\:bg-black\/5:hover,
-  .hover\:bg-red-50:hover,
-  .hover\:bg-surface-container-low:hover,
-  .hover\:bg-primary-fixed:hover,
-  .hover\:bg-rose-50\/50:hover {
-    background-color: transparent;
+
+  /* Prevenir auto-zoom en iOS Safari al enfocar inputs (requiere font-size >= 16px) */
+  input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+  input[type="password"], input[type="search"], input[type="url"], input[type="date"],
+  input[type="datetime-local"], select, textarea {
+    font-size: 16px;
   }
-  .hover\:shadow-lg:hover,
-  .hover\:shadow-md:hover,
-  .hover\:shadow-xl:hover {
-    box-shadow: none;
-  }
-  .hover\:scale-105:hover,
-  .hover\:scale-\[1\.03\]:hover,
-  .hover\:scale-\[1\.01\]:hover,
-  .hover\:scale-110:hover {
-    transform: none;
-  }
-  .hover\:-translate-y-0\.5:hover,
-  .hover\:translate-x-1:hover {
-    transform: none;
-  }
-  .hover\:opacity-90:hover,
-  .hover\:opacity-100:hover {
-    opacity: inherit;
-  }
-  .hover\:text-primary:hover,
-  .hover\:text-red-500:hover {
-    color: inherit;
-  }
-  .hover\:border-primary:hover,
-  .hover\:border-\[#a21b53\]\/30:hover {
-    border-color: inherit;
-  }
-  .group:hover .group-hover\:opacity-100,
-  .group\/link:hover .group-hover\/link\:opacity-100 {
-    opacity: inherit;
-  }
-  .group:hover .group-hover\:translate-x-1,
-  .group\/link:hover .group-hover\/link\:translate-x-1 {
-    transform: none;
-  }
-  .group:hover .group-hover\:scale-110 {
-    transform: none;
+
+  /* Reset universal de hover states en dispositivos táctiles */
+  @media (hover: none) {
+    *:hover {
+      transform: none !important;
+    }
   }
 }

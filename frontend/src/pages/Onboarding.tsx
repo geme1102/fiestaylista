@@ -80,7 +80,7 @@ export default function Onboarding() {
       </header>
 
       {/* Wizard Content */}
-      <main className="relative w-full h-screen overflow-hidden" id="wizard-container">
+      <main className="relative w-full min-h-[100dvh] overflow-y-auto" id="wizard-container">
         {/* Step 1: Event Type */}
         <motion.section
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"

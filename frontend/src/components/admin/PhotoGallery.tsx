@@ -74,7 +74,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                   </div>
                 )}
 
-                <div className="absolute inset-2.5 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
+                <div className="absolute inset-2.5 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
                   <div className="flex gap-2 self-end">
                     {onToggleFeatured && (
                       <button

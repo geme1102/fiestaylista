@@ -36,39 +36,34 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     {!hideCta && (
             <>
               {isAuthenticated ? (
-                <div className="hidden md:flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <button
                     type="button"
                     data-testid="logout-button"
                     onClick={logout}
-                    className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
+                    className="hidden sm:inline-block text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >
                     Cerrar Sesión
                   </button>
-                  <div className="flex items-center gap-3 pl-4 border-l border-outline/20">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-highest border-2 border-primary/20 flex items-center justify-center overflow-hidden">
-                      <span className="material-symbols-outlined text-primary">person</span>
-                    </div>
-                    <Link
-                      to="/dashboard"
-                      data-testid="dashboard-link"
-                      className="bg-primary/10 text-primary px-6 py-2.5 rounded-full text-label-md font-label-md hover:bg-primary/20 active:scale-95 transition-all duration-200"
-                    >
-                      Ir al Dashboard
-                    </Link>
-                  </div>
+                  <Link
+                    to="/dashboard"
+                    data-testid="dashboard-link"
+                    className="bg-primary/10 text-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md hover:bg-primary/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                  >
+                    Dashboard
+                  </Link>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <Link
                     to="/login"
-                    className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+                    className="hidden sm:inline-block text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
                   >
-                    Entrar a mi Evento
+                    Entrar
                   </Link>
                   <Link
                     to="/register"
-                    className="relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200"
+                    className="relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
                     <div className="absolute inset-0 animate-shimmer" />

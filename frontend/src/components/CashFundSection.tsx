@@ -268,9 +268,9 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
               <p className="font-body-md text-body-md text-on-surface-variant mb-6">Tu aporte es el mejor regalo para nuestro futuro hogar.</p>
             )}
               <div className="w-full space-y-2 mb-8">
-              <div className="flex justify-between text-xs font-bold text-secondary uppercase tracking-tighter">
-                <span>{formatCOP(fund.collectedAmount)} de {formatCOP(fund.targetAmount || 0)}</span>
-                <span>{Math.round(progressPercent)}%</span>
+              <div className="flex flex-wrap justify-between gap-1 text-xs font-bold text-secondary uppercase tracking-tighter">
+                <span className="min-w-0 truncate">{formatCOP(fund.collectedAmount)} / {formatCOP(fund.targetAmount || 0)}</span>
+                <span className="shrink-0">{Math.round(progressPercent)}%</span>
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
                 <motion.div

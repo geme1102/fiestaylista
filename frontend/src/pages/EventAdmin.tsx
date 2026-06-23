@@ -562,11 +562,11 @@ export default function EventAdmin() {
                 </span>
               </motion.div>
 
-              <div>
-                <div className="flex items-center gap-2.5">
-                  <h2 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5">
-                    {event.title}
-                  </h2>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5 truncate">
+                      {event.title}
+                    </h2>
                   <motion.button
                     data-testid="edit-event-button"
                     whileHover={{ scale: 1.15, rotate: 15 }}
@@ -612,7 +612,7 @@ export default function EventAdmin() {
               <button
               data-testid="toggle-event-status"
               onClick={() => setToggleConfirm(true)}
-              className={`relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
+              className={`touch-compact relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
               aria-label="Cambiar estado del evento"
               >
                 {event.isActive && (
@@ -860,7 +860,7 @@ export default function EventAdmin() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-surface rounded-[32px] max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative overflow-hidden"
+              className="bg-surface rounded-[32px] max-w-lg w-full max-h-[90dvh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative"
             >
               <div className="absolute top-0 right-0 w-36 h-36 bg-pink-100/40 rounded-full blur-3xl -z-10 pointer-events-none" />
 
@@ -1057,7 +1057,7 @@ export default function EventAdmin() {
       )}
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
+      <nav className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
         <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>

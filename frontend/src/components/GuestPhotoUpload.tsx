@@ -82,7 +82,8 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/*"
+            capture="environment"
             onChange={handleFileSelect}
             className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary-fixed file:text-primary hover:file:bg-primary-fixed/70 transition-all cursor-pointer"
           />

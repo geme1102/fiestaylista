@@ -5,7 +5,7 @@ import { getCurrentSubscription } from '../services/mercadopago';
 import { apiClient } from '../services/api';
 import { TIER_LIMITS, type Subscription } from '../types';
 import { showToast } from '../hooks/useToast';
-import { formatDate } from '../utils/format';
+import { formatDate, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { AchievementsStrip } from '../components/AchievementsStrip';
 import { useAchievements } from '../hooks/useAchievements';
@@ -250,7 +250,7 @@ export default function Account() {
                               successUrl,
                               cancelUrl,
                             });
-                            window.location.href = res.url;
+                            window.location.href = validateRedirectUrl(res.url);
                           } catch {
                             showToast('Error al iniciar el proceso de pago', 'error');
                           }

@@ -337,12 +337,12 @@ export default function Dashboard() {
                         </div>
 
                         {fund ? (
-                          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200/30 flex items-center justify-between shadow-sm">
-                            <div className="flex items-center gap-2.5 text-sm font-bold text-amber-700">
-                              <span className="material-symbols-outlined text-base">savings</span>
-                              Recaudado: {formatCOP(fund.collectedAmount)}
+                          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200/30 flex items-center justify-between gap-2 shadow-sm">
+                            <div className="flex items-center gap-2.5 text-sm font-bold text-amber-700 min-w-0 truncate">
+                              <span className="material-symbols-outlined text-base shrink-0">savings</span>
+                              <span className="truncate">{formatCOP(fund.collectedAmount)}</span>
                             </div>
-                            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-widest bg-amber-100/50 px-2 py-0.5 rounded-md">COP</span>
+                            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-widest bg-amber-100/50 px-2 py-0.5 rounded-md shrink-0">COP</span>
                           </div>
                         ) : (
                           <Link

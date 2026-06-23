@@ -113,8 +113,8 @@ export default function Statistics() {
           <div className="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-xl text-primary">savings</span>
           </div>
-          <div>
-            <p className="text-xl md:text-2xl font-bold text-on-surface">{formatCOP(totalRaised)}</p>
+          <div className="min-w-0">
+            <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{formatCOP(totalRaised)}</p>
             <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">Recaudado</p>
           </div>
         </div>
