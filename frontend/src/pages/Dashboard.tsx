@@ -195,15 +195,25 @@ export default function Dashboard() {
             </span>
           </div>
         </div>
+                {eventCount >= limits.maxEvents ? (
+                  <button
+                    onClick={() => navigate('/pricing')}
+                    data-testid="upgrade-cta"
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-gold-light text-white rounded-full font-semibold shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 animate-pulse-cta"
+                  >
+                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
+                    <span>Desbloquear más eventos</span>
+                  </button>
+                ) : (
                 <button
                   onClick={() => setShowCreateModal(true)}
                   data-testid="new-event-button"
-                  disabled={eventCount >= limits.maxEvents}
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
                 >
-                  <span className="material-symbols-outlined text-lg">{eventCount >= limits.maxEvents ? 'lock' : 'add'}</span>
-                  <span className="hidden sm:inline">{eventCount >= limits.maxEvents ? 'Límite alcanzado' : 'Nuevo Evento'}</span>
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  <span className="hidden sm:inline">Nuevo Evento</span>
                 </button>
+                )}
       </div>
 
       {showPaymentBanner && (

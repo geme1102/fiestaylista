@@ -73,6 +73,19 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
     };
   }, [loadFund]);
 
+  const milestoneCelebratedRef = useRef(false);
+  useEffect(() => {
+    if (!fund?.targetAmount || fund.targetAmount <= 0) return;
+    const reached = fund.collectedAmount >= fund.targetAmount;
+    if (reached && !milestoneCelebratedRef.current) {
+      milestoneCelebratedRef.current = true;
+      setShowConfetti(true);
+      showToast('🌟 ¡Meta de recaudación alcanzada!', 'success');
+      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+      confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 4000);
+    }
+  }, [fund?.collectedAmount, fund?.targetAmount]);
+
   const handleContribute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fund || contributing) return;

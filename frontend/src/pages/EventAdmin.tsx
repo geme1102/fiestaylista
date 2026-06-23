@@ -17,6 +17,9 @@ import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from 
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
+import { ProductTour, type TourStep } from '../components/ui/ProductTour';
+import { useAchievements } from '../hooks/useAchievements';
 import GiftManagement from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
 import GuestsPanel from '../components/admin/GuestsPanel';
@@ -71,8 +74,46 @@ export default function EventAdmin() {
   const [updatingDetails, setUpdatingDetails] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
   const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
-  const [showCoach, setShowCoach] = useState(true);
+  const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const setupChecklist: SetupChecklist = useMemo(() => ({
+    hasGifts: gifts.length > 0,
+    hasThreeGifts: gifts.length >= 3,
+    hasDate: !!event?.eventDate,
+    hasLocation: !!event?.eventLocation,
+    hasNote: !!event?.eventNote,
+    hasPhotos: photos.length > 0,
+    hasCashFund: !!cashFund?.isActive || !!event?.boostedUntil,
+    hasRsvp: gifts.some((g) => g.isClaimed),
+    hasBeenShared: id ? localStorage.getItem(`fy_shared_${id}`) === 'true' : false,
+  }), [gifts, photos, event, cashFund, id]);
+
+  const setupPercent = useMemo(() => {
+    const weights = { hasGifts: 15, hasThreeGifts: 10, hasDate: 15, hasLocation: 10, hasNote: 10, hasPhotos: 10, hasCashFund: 10, hasRsvp: 10, hasBeenShared: 10 };
+    return Math.min(Object.entries(setupChecklist).reduce((sum, [k, v]) => sum + (v ? weights[k as keyof typeof weights] : 0), 0), 100);
+  }, [setupChecklist]);
+
+  useEffect(() => {
+    evaluateAchievements({
+      eventCount: 1,
+      totalGifts: gifts.length,
+      maxGiftsInEvent: gifts.length,
+      cashFundActive: !!cashFund?.isActive,
+      totalMessages: 0,
+      photoCount: photos.length,
+      maxPhotos: TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent,
+      eventViews: 0,
+      isPro: user?.tier === 'pro',
+      setupComplete: setupPercent >= 100,
+    });
+  }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements]);
+
+  const tourSteps: TourStep[] = useMemo(() => [
+    { target: '[data-tour="add-gift"]', title: 'Añade regalos', body: 'Escribe lo que quieres recibir o elige de nuestras sugerencias rápidas. ¡Tu lista se arma en segundos!', cta: 'Entendido', requireClick: false, placement: 'bottom' },
+    { target: '[data-tour="share"]', title: 'Comparte tu enlace', body: 'Envía tu lista por WhatsApp o copia el enlace. Tus invitados NO necesitan registrarse — ven la lista y apartan al instante.', cta: 'Genial', placement: 'bottom' },
+    { target: '[data-tour="preview"]', title: 'Vista previa', body: 'Mira exactamente lo que verán tus invitados. Abre tu evento público en una pestaña nueva.', cta: '¡Perfecto!', placement: 'bottom' },
+  ], []);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -367,6 +408,7 @@ export default function EventAdmin() {
 
   const copyShareLink = () => {
     if (!event) return;
+    if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
     const url = `${window.location.origin}/e/${event.slug}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast('¡Enlace exclusivo copiado al portapapeles! 🔗', 'success');
@@ -655,6 +697,7 @@ export default function EventAdmin() {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 const url = `${window.location.origin}/e/${event.slug}`;
+                if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
                 if (navigator.share) {
                   navigator.share({ title: event.title, url });
                 } else {
@@ -662,6 +705,7 @@ export default function EventAdmin() {
                 }
               }}
               data-testid="share-event-button"
+              data-tour="share"
               className="group relative bg-[#1c1a1f] hover:bg-black text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_10px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-white/10"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
@@ -674,6 +718,7 @@ export default function EventAdmin() {
                 whileHover={{ y: -3, scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-primary py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
+              data-tour="preview"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
                 <span>Vista Previa de Invitado</span>
@@ -687,7 +732,10 @@ export default function EventAdmin() {
             <motion.button
               whileHover={{ scale: 1.12, rotate: -5 }}
               whileTap={{ scale: 0.88 }}
-              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank')}
+              onClick={() => {
+                if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
+                window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank');
+              }}
               className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
               title="Compartir por WhatsApp"
             >
@@ -750,45 +798,18 @@ export default function EventAdmin() {
           </div>
         </section>
 
-        {showCoach && gifts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative bg-gradient-to-r from-pink-50 via-white to-amber-50 border border-pink-100/50 rounded-3xl p-6 mb-8 shadow-sm overflow-hidden"
-          >
-            <div className="absolute -top-6 -right-6 w-24 h-24 bg-pink-100/40 rounded-full blur-2xl pointer-events-none" />
-            <button
-              onClick={() => setShowCoach(false)}
-              className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white/60 transition-all cursor-pointer"
-              aria-label="Cerrar guía"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="flex items-start gap-2 mb-4">
-              <span className="text-xl">🚀</span>
-              <div>
-                <h3 className="font-extrabold text-gray-800 text-sm tracking-tight">¡Tu evento está creado! Sigue estos pasos:</h3>
-                <p className="text-xs text-gray-500 mt-0.5">En menos de 5 minutos tendrás tu lista lista para compartir.</p>
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-3 mt-4">
-              {[
-                { step: 1, icon: '🎁', title: 'Agrega regalos', desc: 'Escribe lo que quieres recibir o elige sugerencias rápidas.', color: 'bg-pink-100 text-pink-700 border-pink-200' },
-                { step: 2, icon: '🔗', title: 'Comparte el enlace', desc: 'Envía tu lista por WhatsApp, redes o copia el link.', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-                { step: 3, icon: '🎉', title: 'Recibe confirmaciones', desc: 'Tus invitados apartan regalos sin registrarse, en tiempo real.', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-              ].map((item) => (
-                <div key={item.step} className={`rounded-2xl p-4 border ${item.color} flex flex-col items-start text-left gap-2`}>
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <p className="font-extrabold text-sm">{item.title}</p>
-                    <p className="text-xs opacity-80 mt-0.5">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+        {setupPercent < 100 && (
+          <div className="mb-8">
+            <EventReadyBar
+              checklist={setupChecklist}
+              onAction={(hint) => showToast(`Pendiente: ${hint}`, 'info')}
+            />
+          </div>
         )}
 
+        <ProductTour steps={tourSteps} storageKey={`fy_tour_event_${id}`} />
+
+        <div data-tour="add-gift">
         <GiftManagement
           gifts={gifts}
           addingGift={addingGift}
@@ -806,6 +827,7 @@ export default function EventAdmin() {
           onNewGiftNameChange={setNewGiftName}
           onShowSuggestionsChange={setShowSuggestions}
         />
+        </div>
 
         <GuestsPanel eventId={id ?? ''} />
 

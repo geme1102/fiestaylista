@@ -1,0 +1,73 @@
+import { useCallback } from 'react';
+import { showToast } from './useToast';
+
+export interface Achievement {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  check: (ctx: AchievementContext) => boolean;
+}
+
+export interface AchievementContext {
+  eventCount: number;
+  totalGifts: number;
+  maxGiftsInEvent: number;
+  cashFundActive: boolean;
+  totalMessages: number;
+  photoCount: number;
+  maxPhotos: number;
+  eventViews: number;
+  isPro: boolean;
+  setupComplete: boolean;
+}
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_event', label: 'Primer Evento', icon: 'celebration', description: 'Creaste tu primer evento', check: (c) => c.eventCount >= 1 },
+  { id: 'gift_master', label: 'Maestro de Regalos', icon: 'redeem', description: '10 regalos en un evento', check: (c) => c.maxGiftsInEvent >= 10 },
+  { id: 'cash_rain', label: 'Lluvia de Sobres', icon: 'savings', description: 'Activaste el fondo monetario', check: (c) => c.cashFundActive },
+  { id: 'social_host', label: 'Anfitrión Social', icon: 'chat_bubble', description: 'Recibiste 5 mensajes', check: (c) => c.totalMessages >= 5 },
+  { id: 'gallery_full', label: 'Galería Completa', icon: 'photo_library', description: 'Llenaste el álbum', check: (c) => c.photoCount >= c.maxPhotos && c.maxPhotos > 0 },
+  { id: 'viral', label: 'Viral', icon: 'trending_up', description: '50 visitas a tu evento', check: (c) => c.eventViews >= 50 },
+  { id: 'premium', label: 'Lista Premium', icon: 'star', description: 'Mejoraste a Pro', check: (c) => c.isPro },
+  { id: 'all_set', label: 'Evento Redondo', icon: 'verified', description: 'Evento 100% listo', check: (c) => c.setupComplete },
+];
+
+const STORAGE_KEY = 'fy_achievements_unlocked';
+
+function getUnlocked(): Set<string> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return new Set(stored ? JSON.parse(stored) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function useAchievements() {
+  const evaluate = useCallback((ctx: AchievementContext) => {
+    const previouslyUnlocked = getUnlocked();
+    const newlyUnlocked: Achievement[] = [];
+
+    for (const ach of ACHIEVEMENTS) {
+      if (ach.check(ctx) && !previouslyUnlocked.has(ach.id)) {
+        newlyUnlocked.push(ach);
+      }
+    }
+
+    if (newlyUnlocked.length > 0) {
+      const all = new Set([...previouslyUnlocked, ...newlyUnlocked.map((a) => a.id)]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...all]));
+
+      for (const ach of newlyUnlocked) {
+        showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');
+      }
+    }
+
+    return { newlyUnlocked, allUnlocked: getUnlocked() };
+  }, []);
+
+  const getEarned = useCallback((): Set<string> => getUnlocked(), []);
+
+  return { evaluate, getEarned, allAchievements: ACHIEVEMENTS };
+}

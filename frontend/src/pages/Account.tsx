@@ -7,6 +7,8 @@ import { TIER_LIMITS, type Subscription } from '../types';
 import { showToast } from '../hooks/useToast';
 import { formatDate } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { AchievementsStrip } from '../components/AchievementsStrip';
+import { useAchievements } from '../hooks/useAchievements';
 
 const AVATAR_MAP: Record<string, string> = {
   'avatar-1.png': '/illustrations/avatar-1.png',
@@ -108,6 +110,8 @@ export default function Account() {
     }
   };
 
+  const { getEarned, allAchievements } = useAchievements();
+
   if (!user) return null;
 
   const limits = TIER_LIMITS[user.tier];
@@ -115,7 +119,16 @@ export default function Account() {
 
   return (
     <div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-on-surface mb-8">Mi Cuenta</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-on-surface mb-6">Mi Cuenta</h1>
+
+      <div className="rounded-2xl p-6 glass-card-premium mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="material-symbols-outlined text-xl text-gold">emoji_events</span>
+          <h2 className="text-sm font-bold text-on-surface tracking-wide">TUS LOGROS</h2>
+          <span className="text-xs text-on-surface-variant ml-auto">{getEarned().size}/{allAchievements.length} desbloqueados</span>
+        </div>
+        <AchievementsStrip unlockedIds={getEarned()} />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="rounded-2xl p-6 sm:p-8 glass-card-premium">

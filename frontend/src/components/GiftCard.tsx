@@ -22,6 +22,8 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
   const [claims, setClaims] = useState<GiftClaim[]>(gift.claims || []);
+  const [isGroupGift, setIsGroupGift] = useState(gift.isGroupGift);
+  const [togglingGroup, setTogglingGroup] = useState(false);
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimName, setClaimName] = useState('');
   const [claimMessage, setClaimMessage] = useState('');
@@ -60,7 +62,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
     }
   };
 
-  if (gift.isClaimed && !gift.isGroupGift) {
+  if (gift.isClaimed && !isGroupGift) {
     return (
       <motion.div
         layout
@@ -163,16 +165,22 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         <div className="absolute top-4 right-4 flex gap-1 z-10">
           <button
             onClick={async () => {
+              const prev = isGroupGift;
+              setIsGroupGift(!prev);
+              setTogglingGroup(true);
               try {
-                const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: !gift.isGroupGift });
+                const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: !prev });
                 showToast(res.gift.isGroupGift ? 'Regalo grupal activado 👥' : 'Regalo individual', 'success');
-                window.location.reload();
               } catch (err) {
+                setIsGroupGift(prev);
                 showToast(err instanceof Error ? err.message : 'Error', 'error');
+              } finally {
+                setTogglingGroup(false);
               }
             }}
-            className={`p-2 rounded-full transition-all ${gift.isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'}`}
-            title={gift.isGroupGift ? 'Regalo grupal (varias personas)' : 'Hacer grupal (varias personas pueden unirse)'}
+            disabled={togglingGroup}
+            className={`p-2 rounded-full transition-all ${isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'} disabled:opacity-50`}
+            title={isGroupGift ? 'Regalo grupal (varias personas)' : 'Hacer grupal (varias personas pueden unirse)'}
           >
             <span className="material-symbols-outlined text-base">group</span>
           </button>
@@ -194,7 +202,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       )}
 
       {/* Group Gift: Claims list */}
-      {gift.isGroupGift && claims.length > 0 && (
+      {isGroupGift && claims.length > 0 && (
         <div className="mt-4 space-y-1.5">
           <p className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider flex items-center gap-1">
             <span className="material-symbols-outlined text-sm">group</span>
@@ -211,7 +219,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       )}
 
       {/* Buttons area */}
-      {gift.isGroupGift && !gift.isClaimed ? (
+      {isGroupGift && !gift.isClaimed ? (
         <div className="mt-4">
           {!showClaimForm ? (
             <button
