@@ -166,7 +166,9 @@ export async function register(
   let emailSent = false;
   try {
     if (isEmailConfigured()) {
-      await sendVerificationEmail(user.email, verificationToken);
+      sendVerificationEmail(user.email, verificationToken)
+        .then(() => { emailSent = true; })
+        .catch((err) => log.error({ err }, 'Error enviando email de verificación:'));
       emailSent = true;
     } else {
       log.warn('Email service not configured — verification email not sent');
@@ -182,6 +184,8 @@ export async function register(
   };
 }
 
+const DUMMY_HASH = '$2a$12$OOQOQOQOQOQOQOQOQOQOQeQOQOQOQOQOQOQOQOQOQOQOQOQOQ';
+
 export async function login(
   email: string,
   password: string,
@@ -193,10 +197,12 @@ export async function login(
     .limit(1);
 
   if (!user) {
+    await bcrypt.compare(password, DUMMY_HASH);
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
+    await bcrypt.compare(password, DUMMY_HASH);
     throw new UnauthorizedError('Credenciales inválidas');
   }
 

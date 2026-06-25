@@ -28,4 +28,14 @@ router.get('/public/stats', publicStatsLimiter, cacheControl(300), asyncHandler(
   });
 }));
 
+router.get('/public/events', publicStatsLimiter, cacheControl(3600), asyncHandler(async (_req, res) => {
+  const rows = await db
+    .select({ slug: events.slug, updatedAt: events.updatedAt })
+    .from(events)
+    .where(sql`${events.isActive} = true AND ${events.deletedAt} IS NULL AND ${events.status} = 'active'`)
+    .limit(500);
+
+  res.json(rows.map((r) => r.slug).filter(Boolean));
+}));
+
 export default router;

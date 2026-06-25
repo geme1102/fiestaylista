@@ -104,7 +104,7 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
 }));
 
 router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const { password } = cancelSchema.parse(req.body);
+  const password = (req.headers['x-password'] as string) || cancelSchema.parse(req.body).password;
 
   const [user] = await db
     .select({ passwordHash: users.passwordHash })

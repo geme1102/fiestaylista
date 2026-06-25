@@ -49,7 +49,8 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       .limit(1);
     if (user) {
       const period = interval === 'year' ? 'anual' : 'mensual';
-      await emailService.sendProConfirmationEmail(user.email, user.name, period);
+      emailService.sendProConfirmationEmail(user.email, user.name, period)
+        .catch((err) => log.error({ err }, `Error enviando email de confirmación PRO para ${userId}:`));
     }
   } catch (err) {
     log.error({ err }, `Error enviando email de confirmación PRO para ${userId}:`);
@@ -96,28 +97,30 @@ async function revertBoostPayment(paymentId: string, ref: string): Promise<void>
   const eventId = ref.slice(6);
   if (!eventId) return;
 
-  const [payment] = await db
-    .update(boostPayments)
-    .set({ status: 'refunded' })
-    .where(and(
-      eq(boostPayments.mpPaymentId, paymentId),
-      ne(boostPayments.status, 'refunded'),
-    ))
-    .returning({ id: boostPayments.id });
+  await db.transaction(async (tx) => {
+    const [payment] = await tx
+      .update(boostPayments)
+      .set({ status: 'refunded' })
+      .where(and(
+        eq(boostPayments.mpPaymentId, paymentId),
+        ne(boostPayments.status, 'refunded'),
+      ))
+      .returning({ id: boostPayments.id });
 
-  if (!payment) return;
+    if (!payment) return;
 
-  await db
-    .update(events)
-    .set({
-      boostedUntil: sql`CASE
-        WHEN ${events.boostedUntil} IS NULL OR ${events.boostedUntil} <= NOW() THEN NULL
-        WHEN ${events.boostedUntil} - INTERVAL '30 days' <= NOW() THEN NULL
-        ELSE ${events.boostedUntil} - INTERVAL '30 days'
-      END`,
-      updatedAt: new Date(),
-    })
-    .where(eq(events.id, eventId));
+    await tx
+      .update(events)
+      .set({
+        boostedUntil: sql`CASE
+          WHEN ${events.boostedUntil} IS NULL OR ${events.boostedUntil} <= NOW() THEN NULL
+          WHEN ${events.boostedUntil} - INTERVAL '30 days' <= NOW() THEN NULL
+          ELSE ${events.boostedUntil} - INTERVAL '30 days'
+        END`,
+        updatedAt: new Date(),
+      })
+      .where(eq(events.id, eventId));
+  });
 }
 
 export async function handlePaymentNotification(paymentId: string): Promise<void> {
@@ -220,6 +223,6 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   } else if (info.status === 'cancelled') {
     await subscriptionService.cancelSubscription(userId);
   } else if (info.status === 'past_due') {
-    await subscriptionService.cancelSubscription(userId);
+    await subscriptionService.cancelSubscription(userId, true);
   }
 }

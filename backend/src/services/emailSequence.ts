@@ -138,7 +138,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
             processed++;
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 1 para ${user.email}:`);
+          log.error({ err }, `Error día 1 para ${user.email}:`);
         }
 
         try {
@@ -160,7 +160,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 3 para ${user.email}:`);
+          log.error({ err }, `Error día 3 para ${user.email}:`);
         }
 
         try {
@@ -193,12 +193,12 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
                 if (config.NODE_ENV !== 'production') log.info(`Día 7: Upsell cash fund - ${user.email}`);
                 processed++;
               } catch (err) {
-if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 7 para ${user.email}:`);
+log.error({ err }, `Error día 7 para ${user.email}:`);
               }
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 7 para ${user.email}:`);
+          log.error({ err }, `Error día 7 para ${user.email}:`);
         }
 
         try {
@@ -237,11 +237,11 @@ if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 7 para ${us
               if (config.NODE_ENV !== 'production') log.info(`Día 14: Upsell Pro - ${user.email}`);
               processed++;
             } catch (err) {
-if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 14 para ${user.email}:`);
+log.error({ err }, `Error día 14 para ${user.email}:`);
             }
           }
         } catch (err) {
-          if (config.NODE_ENV !== 'production') log.error({ err }, `Error día 14 para ${user.email}:`);
+          log.error({ err }, `Error día 14 para ${user.email}:`);
         }
       }
 
