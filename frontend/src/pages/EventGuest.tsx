@@ -407,7 +407,7 @@ export default function EventGuest() {
               </div>
             )}
 
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="wait">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredGifts.map((gift) => (
                   <GiftCard
@@ -431,7 +431,7 @@ export default function EventGuest() {
                   <span>💝</span>
                   Ya apartados ({claimedGifts.length})
                 </h3>
-                <AnimatePresence mode="popLayout">
+                <AnimatePresence mode="wait">
                   <div className="space-y-2">
                     {claimedGifts.map((gift) => (
                       <GiftCard
