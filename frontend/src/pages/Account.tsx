@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription } from '../services/mercadopago';
@@ -36,6 +36,13 @@ export default function Account() {
   const [deletePassword, setDeletePassword] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     getCurrentSubscription()
@@ -102,7 +109,7 @@ export default function Account() {
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setDeletePassword('');
-      setTimeout(() => { logout(); }, 2000);
+      deleteTimerRef.current = setTimeout(() => { logout(); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {

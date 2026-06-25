@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
@@ -108,6 +108,13 @@ export default function ArcoRights() {
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<'rectify' | 'oppose' | null>(null);
   const [formDetails, setFormDetails] = useState('');
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    };
+  }, []);
 
   const content = lang === 'es' ? ES : EN;
 
@@ -140,7 +147,7 @@ export default function ArcoRights() {
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteModal(false);
       setDeletePassword('');
-      setTimeout(() => { navigate('/'); }, 2000);
+      navTimerRef.current = setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
