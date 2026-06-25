@@ -15,38 +15,7 @@ import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
-import { emitGiftClaimed } from '../services/notifications.js';
-
-const clients = new Map<string, Set<Response>>();
-
-// SSE scavenger: limpia conexiones abandonadas cada 5 minutos
-const SSE_SCAVENGER_INTERVAL_MS = 5 * 60 * 1000;
-let scavengerTimer: ReturnType<typeof setInterval> | null = null;
-
-function startSSEScavenger() {
-  if (scavengerTimer) return;
-  scavengerTimer = setInterval(() => {
-    for (const [eventId, eventClients] of clients) {
-      for (const client of eventClients) {
-        try {
-          client.write(':ping\n\n');
-        } catch {
-          eventClients.delete(client);
-        }
-      }
-      if (eventClients.size === 0) {
-        clients.delete(eventId);
-      }
-    }
-  }, SSE_SCAVENGER_INTERVAL_MS);
-}
-
-function stopSSEScavenger() {
-  if (scavengerTimer) {
-    clearInterval(scavengerTimer);
-    scavengerTimer = null;
-  }
-}
+import { emitGiftClaimed, subscribeClient, unsubscribeClient, getClientCount, startSSEScavenger } from '../services/notifications.js';
 
 startSSEScavenger();
 
@@ -114,14 +83,6 @@ router.put('/:giftId/claim', contributeLimiter, verifyTurnstileOptional, validat
   };
 
   emitGiftClaimed(data);
-
-  const eventClients = clients.get(data.eventId);
-  if (eventClients) {
-    const payload = `data: ${JSON.stringify(data)}\n\n`;
-    for (const client of eventClients) {
-      try { client.write(payload); } catch { /* cliente desconectado */ }
-    }
-  }
 
   res.json({ gift });
 }));
@@ -247,8 +208,8 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
     return;
   }
 
-  const currentConnections = clients.get(eventId);
-  if (currentConnections && currentConnections.size >= SSE_MAX_CONNECTIONS_PER_EVENT) {
+  const currentConnections = getClientCount(eventId);
+  if (currentConnections >= SSE_MAX_CONNECTIONS_PER_EVENT) {
     res.status(429).json({ error: 'Demasiadas conexiones SSE para este evento' });
     return;
   }
@@ -262,10 +223,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
 
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
-  if (!clients.has(eventId)) {
-    clients.set(eventId, new Set());
-  }
-  clients.get(eventId)!.add(res);
+  subscribeClient(eventId, res);
   sseIpCount.set(clientIp, ipConnections + 1);
 
   const keepAlive = setInterval(() => {
@@ -279,13 +237,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
   const cleanup = () => {
     clearInterval(keepAlive);
     clearTimeout(connectionTimeout);
-    const eventClients = clients.get(eventId);
-    if (eventClients) {
-      eventClients.delete(res);
-      if (eventClients.size === 0) {
-        clients.delete(eventId);
-      }
-    }
+    unsubscribeClient(eventId, res);
     const current = sseIpCount.get(clientIp) ?? 0;
     if (current <= 1) {
       sseIpCount.delete(clientIp);
@@ -300,4 +252,3 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
 }));
 
 export default router;
-export { stopSSEScavenger };

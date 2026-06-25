@@ -133,6 +133,12 @@ export function useEventPage() {
         g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
       ));
     },
+    onMessagePosted: () => {
+      loadEvent();
+    },
+    onPhotoUploaded: () => {
+      loadEvent();
+    },
   });
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {

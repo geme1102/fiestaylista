@@ -38,7 +38,7 @@ import arcoRouter from './routes/arco.js';
 import guestsRouter from './routes/guests.js';
 import messagesRouter from './routes/messages.js';
 import { startCronJobs, stopCronJobs } from './cron.js';
-import { stopSSEScavenger } from './routes/gifts.js';
+import { stopSSEScavenger } from './services/notifications.js';
 
 const app = express();
 

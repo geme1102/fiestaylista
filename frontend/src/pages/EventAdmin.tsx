@@ -155,6 +155,12 @@ export default function EventAdmin() {
         g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
       ));
     },
+    onMessagePosted: () => {
+      if (loadEvent) loadEvent();
+    },
+    onPhotoUploaded: () => {
+      if (loadEvent) loadEvent();
+    },
   });
 
   const handleAddGift = useCallback(async () => {

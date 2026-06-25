@@ -6,6 +6,7 @@ import { requireEventOwnership } from '../middleware/ownership.js';
 import { apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as photoService from '../services/photo.js';
+import { emitPhotoUploaded } from '../services/notifications.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
@@ -39,6 +40,14 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
 
   const data = createPhotoSchema.parse(req.body);
   const photo = await photoService.addPhoto(eventId, data.url, data.caption);
+
+  emitPhotoUploaded({
+    eventId,
+    photoUrl: data.url,
+    uploadedBy: 'El anfitrión',
+    timestamp: new Date().toISOString(),
+  });
+
   res.status(201).json({ photo });
 }));
 
@@ -49,6 +58,13 @@ router.post('/guest', requireAuth, requireEventOwnership, validateUuidParam('eve
   }
   const data = createPhotoSchema.parse(req.body);
   const photo = await photoService.addPhoto(eventId, data.url, data.caption);
+
+  emitPhotoUploaded({
+    eventId,
+    photoUrl: data.url,
+    uploadedBy: 'El anfitrión',
+    timestamp: new Date().toISOString(),
+  });
   res.status(201).json({ photo });
 }));
 
@@ -71,6 +87,14 @@ router.post('/guest-upload', apiLimiter, verifyTurnstile, validateUuidParam('eve
 
   const data = guestPhotoSchema.parse(req.body);
   const photo = await photoService.addPhoto(eventId, data.url, data.caption);
+
+  emitPhotoUploaded({
+    eventId,
+    photoUrl: data.url,
+    uploadedBy: data.caption || 'Un invitado',
+    timestamp: new Date().toISOString(),
+  });
+
   res.status(201).json({ photo });
 }));
 

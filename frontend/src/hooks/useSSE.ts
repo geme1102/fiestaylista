@@ -5,19 +5,28 @@ interface SSEOptions {
   eventId: string;
   sseTokenEndpoint: string;
   onGiftClaimed?: (data: { giftId: string; giftName: string; claimedBy: string }) => void;
+  onMessagePosted?: (data: { authorName: string; messagePreview: string }) => void;
+  onPhotoUploaded?: (data: { photoUrl: string; uploadedBy: string }) => void;
   maxRetries?: number;
   initialRetryDelay?: number;
   onConnected?: () => void;
   onDisconnected?: () => void;
 }
 
-export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 5, initialRetryDelay = 1000, onConnected, onDisconnected }: SSEOptions) {
+export function useSSE({
+  eventId, sseTokenEndpoint, onGiftClaimed, onMessagePosted, onPhotoUploaded,
+  maxRetries = 5, initialRetryDelay = 1000, onConnected, onDisconnected,
+}: SSEOptions) {
   const cancelledRef = useRef(false);
   const sseConnectedRef = useRef(false);
   const onGiftClaimedRef = useRef(onGiftClaimed);
+  const onMessagePostedRef = useRef(onMessagePosted);
+  const onPhotoUploadedRef = useRef(onPhotoUploaded);
   const onConnectedRef = useRef(onConnected);
   const onDisconnectedRef = useRef(onDisconnected);
   onGiftClaimedRef.current = onGiftClaimed;
+  onMessagePostedRef.current = onMessagePosted;
+  onPhotoUploadedRef.current = onPhotoUploaded;
   onConnectedRef.current = onConnected;
   onDisconnectedRef.current = onDisconnected;
 
@@ -76,7 +85,14 @@ export function useSSE({ eventId, sseTokenEndpoint, onGiftClaimed, maxRetries = 
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.type === 'connected') continue;
-                if (data.giftId && data.claimedBy) {
+                if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
+                  onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
+                } else if (data.type === 'message:posted') {
+                  onMessagePostedRef.current?.({ authorName: data.authorName, messagePreview: data.messagePreview });
+                } else if (data.type === 'photo:uploaded') {
+                  onPhotoUploadedRef.current?.({ photoUrl: data.photoUrl, uploadedBy: data.uploadedBy });
+                } else if (data.giftId && data.claimedBy) {
+                  // fallback para mensajes antiguos sin type
                   onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
                 }
               } catch { /* ignore parse errors */ }

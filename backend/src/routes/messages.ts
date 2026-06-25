@@ -8,6 +8,7 @@ import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { events, messages } from '../db/schema.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
+import { emitMessagePosted } from '../services/notifications.js';
 
 const router = Router();
 
@@ -46,6 +47,13 @@ router.post('/events/:eventId/messages', apiLimiter, validateUuidParam('eventId'
     .insert(messages)
     .values({ eventId, authorName: data.authorName, message: data.message })
     .returning();
+
+  emitMessagePosted({
+    eventId,
+    authorName: data.authorName,
+    messagePreview: data.message.slice(0, 80),
+    timestamp: msg.createdAt?.toISOString() ?? new Date().toISOString(),
+  });
 
   res.status(201).json({ message: msg });
 }));

@@ -144,10 +144,16 @@ export default function EventGuest() {
         <meta property="og:url" content={`https://fiestaylista.com/e/${event.slug}`} />
         <meta property="og:locale" content="es_CO" />
         {photos.length > 0 && (
-          <meta property="og:image" content={photos[0].url} />
+          <>
+            <meta property="og:image" content={photos[0].url} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={`Lista de regalos: ${event.title}`} />
+          </>
         )}
         <meta name="twitter:title" content={`${event.title} - Fiesta y Lista`} />
         <meta name="twitter:description" content={`Lista de regalos para ${event.title}. ${EVENT_LABELS[event.eventType]}.`} />
+        <meta name="twitter:card" content="summary_large_image" />
         {photos.length > 0 && (
           <meta name="twitter:image" content={photos[0].url} />
         )}
@@ -161,6 +167,10 @@ export default function EventGuest() {
             "url": `https://fiestaylista.com/e/${event.slug}`,
             "inLanguage": "es-CO",
             "isAccessibleForFree": true,
+            ...(event.eventDate ? { "startDate": event.eventDate } : {}),
+            ...(event.eventLocation ? { "location": { "@type": "Place", "name": sanitizeForJSON(event.eventLocation) } } : {}),
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
             "organizer": {
               "@type": "Person",
               "name": sanitizeForJSON(event.title.split(' ')[0] || "Anfitrión")
