@@ -19,6 +19,8 @@ function highlightTarget(selector: string): DOMRect | null {
 }
 
 const PADDING = 8;
+const TOOLTIP_WIDTH = 280;
+const TOOLTIP_HEIGHT = 180;
 
 export function ProductTour({
   steps,
@@ -121,13 +123,49 @@ export function ProductTour({
   const placement = step.placement ?? 'bottom';
 
   const tooltipStyle: React.CSSProperties = rect
-    ? placement === 'top'
-      ? { top: rect.top - PADDING, left: rect.left + rect.width / 2, transform: 'translate(-50%, -100%)' }
-      : placement === 'left'
-        ? { top: rect.top + rect.height / 2, left: rect.left - PADDING, transform: 'translate(-100%, -50%)' }
-        : placement === 'right'
-          ? { top: rect.top + rect.height / 2, left: rect.right + PADDING, transform: 'translate(0, -50%)' }
-          : { top: rect.bottom + PADDING, left: rect.left + rect.width / 2, transform: 'translate(-50%, 0)' }
+    ? (() => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const p = placement;
+        let top = 0;
+        let left = 0;
+        let translateX = '-50%';
+        let translateY = '0';
+
+        if (p === 'top') {
+          top = rect.top - PADDING - TOOLTIP_HEIGHT;
+          left = rect.left + rect.width / 2;
+          translateY = '-100%';
+          if (top < PADDING) {
+            top = rect.bottom + PADDING;
+            translateY = '0';
+          }
+        } else if (p === 'bottom') {
+          top = rect.bottom + PADDING;
+          left = rect.left + rect.width / 2;
+          translateY = '0';
+        } else if (p === 'left') {
+          top = rect.top + rect.height / 2;
+          left = rect.left - PADDING;
+          translateX = '-100%';
+          translateY = '-50%';
+        } else {
+          top = rect.top + rect.height / 2;
+          left = rect.right + PADDING;
+          translateX = '0';
+          translateY = '-50%';
+        }
+
+        if (p === 'top' || p === 'bottom') {
+          if (top + TOOLTIP_HEIGHT > vh - PADDING) {
+            top = Math.max(PADDING, vh - TOOLTIP_HEIGHT - PADDING);
+          }
+          top = Math.max(PADDING, top);
+          left = Math.max(TOOLTIP_WIDTH / 2 + PADDING, Math.min(left, vw - TOOLTIP_WIDTH / 2 - PADDING));
+        }
+
+        return { top, left, transform: `translate(${translateX}, ${translateY})` };
+      })()
     : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
   const cutout = rect
@@ -141,7 +179,7 @@ export function ProductTour({
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={step.title}>
       {rect && (
         <div
-          className="absolute pointer-events-none transition-all duration-300"
+          className="absolute pointer-events-none transition-all duration-150"
           style={{
             top: rect.top - PADDING,
             left: rect.left - PADDING,
@@ -159,7 +197,7 @@ export function ProductTour({
           initial={{ opacity: 0, scale: 0.9, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ type: 'spring', stiffness: 600, damping: 40 }}
           className="absolute z-[101]"
           style={tooltipStyle}
         >
