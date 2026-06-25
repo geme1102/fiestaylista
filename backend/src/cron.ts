@@ -17,18 +17,12 @@ export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
     await db.transaction(async (tx) => {
       const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(hashtext(${name})) as acquired`);
-      const row = result as Record<string, unknown>;
-      const acquired = row !== null && (
-        row.acquired === true ||
-        Array.isArray(result) && result[0] === true
-      );
+      const row = Array.isArray(result) ? result[0] : result;
+      const acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
       if (!acquired) {
         log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
         return;
       }
-      // pg_try_advisory_xact_lock es TRANSACCIONAL: se libera automáticamente al
-      // hacer commit o rollback. Así, si fn() lanza, el lock NUNCA se filtra
-      // (a diferencia del pg_advisory_unlock manual de sesión usado antes).
       await fn();
     });
   } catch (error) {

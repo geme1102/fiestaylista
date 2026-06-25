@@ -1,4 +1,4 @@
-import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
+import { eq, and, isNull, sql, desc, inArray, type SQL } from 'drizzle-orm';
 import { type PaginationParams, type PaginatedResult, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events, users, platformFees } from '../db/schema.js';
@@ -257,6 +257,9 @@ export async function createContribution(
       .update(cashContributions)
       .set({ status: 'failed' })
       .where(eq(cashContributions.id, result.contribution.id));
+    await db
+      .delete(platformFees)
+      .where(eq(platformFees.contributionId, result.contribution.id));
     throw err;
   }
 
@@ -265,6 +268,9 @@ export async function createContribution(
       .update(cashContributions)
       .set({ status: 'failed' })
       .where(eq(cashContributions.id, result.contribution.id));
+    await db
+      .delete(platformFees)
+      .where(eq(platformFees.contributionId, result.contribution.id));
     throw new ValidationError('No se pudo generar la URL de pago');
   }
 
@@ -322,6 +328,10 @@ export async function revertContribution(contributionId: string): Promise<void> 
         updatedAt: new Date(),
       })
       .where(eq(cashFunds.id, contribution.cashFundId));
+
+    await tx
+      .delete(platformFees)
+      .where(eq(platformFees.contributionId, contribution.id));
   });
 }
 
@@ -331,6 +341,13 @@ export async function cleanupStaleContributions(): Promise<number> {
     .set({ status: 'expired' })
     .where(sql`${cashContributions.status} = 'pending' AND ${cashContributions.createdAt} < NOW() - (${config.CONTRIBUTION_EXPIRY_HOURS} * INTERVAL '1 hour')`)
     .returning({ id: cashContributions.id });
+
+  const ids = result.map(r => r.id);
+  if (ids.length > 0) {
+    await db
+      .delete(platformFees)
+      .where(inArray(platformFees.contributionId, ids));
+  }
 
   return result.length;
 }

@@ -181,22 +181,24 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
   const cleanedName = sanitize(claimedBy);
   if (!cleanedName) throw new ValidationError('El nombre es requerido');
 
-  const [gift] = await db
-    .select({ isGroupGift: giftsTable.isGroupGift, isClaimed: giftsTable.isClaimed })
-    .from(giftsTable)
-    .where(eq(giftsTable.id, giftId))
-    .limit(1);
+  return await db.transaction(async (tx) => {
+    const [gift] = await tx
+      .select({ isGroupGift: giftsTable.isGroupGift, isClaimed: giftsTable.isClaimed })
+      .from(giftsTable)
+      .where(eq(giftsTable.id, giftId))
+      .limit(1);
 
-  if (!gift) throw new NotFoundError('Regalo no encontrado');
-  if (!gift.isGroupGift) throw new ValidationError('Este regalo no es grupal');
-  if (gift.isClaimed) throw new ValidationError('Este regalo ya ha sido reservado por un grupo completo');
+    if (!gift) throw new NotFoundError('Regalo no encontrado');
+    if (!gift.isGroupGift) throw new ValidationError('Este regalo no es grupal');
+    if (gift.isClaimed) throw new ValidationError('Este regalo ya ha sido reservado por un grupo completo');
 
-  const [claim] = await db
-    .insert(giftClaims)
-    .values({ giftId, claimedBy: cleanedName, message: message || null })
-    .returning();
+    const [claim] = await tx
+      .insert(giftClaims)
+      .values({ giftId, claimedBy: cleanedName, message: message || null })
+      .returning();
 
-  return { claim };
+    return { claim };
+  });
 }
 
 export async function getGiftClaims(giftId: string) {

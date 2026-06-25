@@ -41,6 +41,8 @@ function createMockTx() {
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
     innerJoin: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    execute: vi.fn().mockResolvedValue(undefined),
     limit: vi.fn(),
     returning: vi.fn(),
   };
@@ -176,6 +178,7 @@ describe('completeContribution / revertContribution (C5) — atomicidad', () => 
 
     expect(txUsed).toBe(true);
     expect(tx.update).toHaveBeenCalledTimes(2);
+    expect(tx.delete).toHaveBeenCalledTimes(1);
   });
 });
 

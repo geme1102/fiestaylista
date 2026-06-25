@@ -30,6 +30,12 @@ export default function GoldStars({ count = 5, size = 14 }: GoldStarsProps) {
   const [showParticles, setShowParticles] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   return (
     <span
       className="inline-flex gap-0.5 relative"

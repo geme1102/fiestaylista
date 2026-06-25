@@ -41,6 +41,7 @@ interface MockTx {
   set: ReturnType<typeof vi.fn>;
   innerJoin: ReturnType<typeof vi.fn>;
   for: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
   returning: ReturnType<typeof vi.fn>;
   execute: ReturnType<typeof vi.fn>;
@@ -58,6 +59,7 @@ function createMockTx(): MockTx {
     set: vi.fn().mockReturnThis(),
     innerJoin: vi.fn().mockReturnThis(),
     for: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
     limit: vi.fn(),
     returning: vi.fn(),
     execute: vi.fn().mockResolvedValue(undefined),
@@ -167,6 +169,9 @@ describe('cleanupStaleContributions', () => {
     };
 
     vi.mocked(db.update).mockReturnValue(mockUpdate as unknown as ReturnType<typeof db.update>);
+    vi.mocked(db.delete).mockReturnValue({
+      where: vi.fn().mockResolvedValue(undefined),
+    } as any);
 
     const count = await cleanupStaleContributions();
     expect(count).toBe(2);

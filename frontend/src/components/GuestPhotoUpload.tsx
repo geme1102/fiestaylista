@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -15,9 +15,16 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (preview) URL.revokeObjectURL(preview);
     setPreview(URL.createObjectURL(file));
   };
 
