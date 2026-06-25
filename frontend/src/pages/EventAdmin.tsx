@@ -719,18 +719,19 @@ export default function EventAdmin() {
               <span>Compartir con Invitados</span>
             </motion.button>
 
-            <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer">
-              <motion.button
-                whileHover={{ y: -3, scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-primary py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
+            <motion.a
+              href={`/e/${event.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative w-full bg-surface/45 hover:bg-surface/70 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(162,27,83,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] hover:shadow-[0_12px_40px_rgba(162,27,83,0.08),inset_0_1px_1px_rgba(255,255,255,1)] text-primary py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden"
               data-tour="preview"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
-                <span>Vista Previa de Invitado</span>
-                <Eye className="w-[18px] h-[18px] text-primary stroke-[2.2]" />
-              </motion.button>
-            </a>
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+              <span>Vista Previa de Invitado</span>
+              <Eye className="w-[18px] h-[18px] text-primary stroke-[2.2]" />
+            </motion.a>
           </div>
 
           {/* Utility Buttons */}

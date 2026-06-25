@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstileOptional } from '../middleware/turnstile.js';
@@ -68,17 +68,30 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   const [payment] = await db
     .select()
     .from(proPayments)
-    .where(eq(proPayments.userId, userId))
+    .where(and(
+      eq(proPayments.userId, userId),
+      eq(proPayments.status, 'completed'),
+      sql`${proPayments.createdAt} >= NOW() - INTERVAL '37 days'`,
+    ))
     .orderBy(desc(proPayments.createdAt))
     .limit(1);
 
   if (payment) {
+    const periodDays = payment.interval === 'year' ? 365 : 30;
+    const periodStart = payment.createdAt ?? new Date();
+    const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
+
+    if (periodEnd <= new Date()) {
+      res.json({ tier: 'free', synced: false, message: 'Tu pago ya expiró. Suscríbete de nuevo para continuar con Pro.' });
+      return;
+    }
+
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: null,
       tier: 'pro',
       status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + (payment.interval === 'year' ? 365 : 30) * 24 * 60 * 60 * 1000),
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
     });
     res.json({ tier: 'pro', synced: true, message: 'Suscripción activada' });
     return;

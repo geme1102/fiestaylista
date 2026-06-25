@@ -9,6 +9,7 @@ import { db } from '../db/index.js';
 import { events, messages } from '../db/schema.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { emitMessagePosted } from '../services/notifications.js';
+import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
   res.json({ messages: eventMessages });
 }));
 
-router.post('/events/:eventId/messages', apiLimiter, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/events/:eventId/messages', apiLimiter, verifyTurnstileOptional, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 

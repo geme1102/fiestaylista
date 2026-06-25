@@ -43,6 +43,7 @@ interface MockTx {
   for: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
   returning: ReturnType<typeof vi.fn>;
+  execute: ReturnType<typeof vi.fn>;
   _callCount?: number;
 }
 
@@ -59,6 +60,7 @@ function createMockTx(): MockTx {
     for: vi.fn().mockReturnThis(),
     limit: vi.fn(),
     returning: vi.fn(),
+    execute: vi.fn().mockResolvedValue(undefined),
   };
 }
 

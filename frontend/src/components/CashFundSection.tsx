@@ -183,6 +183,11 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
     setAmount('');
   };
 
+  const recentContributions = useMemo(() =>
+    contributions.slice(-MAX_RECENT_CONTRIBUTIONS).reverse(),
+    [contributions]
+  );
+
   if (loading) {
     return (
       <div className={`mb-12 rounded-2xl bg-surface-container-high animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
@@ -220,11 +225,6 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
   const progressPercent = fund.targetAmount && fund.targetAmount > 0
     ? Math.min((fund.collectedAmount / fund.targetAmount) * 100, 100)
     : 0;
-
-  const recentContributions = useMemo(() =>
-    contributions.slice(-MAX_RECENT_CONTRIBUTIONS).reverse(),
-    [contributions]
-  );
 
   return (
     <div className="mb-12 relative">

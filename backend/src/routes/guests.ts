@@ -10,6 +10,7 @@ import { db } from '../db/index.js';
 import { guests } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
+import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 
 const router = Router();
 
@@ -35,7 +36,7 @@ router.get('/events/:eventId/guests', requireAuth, requireEventOwnership, valida
   res.json({ guests: eventGuests });
 }));
 
-router.post('/events/:eventId/rsvp', validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/events/:eventId/rsvp', verifyTurnstileOptional, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 

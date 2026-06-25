@@ -111,20 +111,6 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
 
   if (!verifyMpSignature(req)) {
     log.warn('Firma inválida, ignorando notificación');
-    if (info.topic && info.id) {
-      try {
-        await db.insert(failedWebhooks).values({
-          topic: info.topic,
-          resourceId: info.id,
-          errorMessage: 'Firma inválida',
-          retryCount: 0,
-          lastAttemptAt: new Date(),
-          nextRetryAt: new Date(Date.now() + 60 * 1000),
-        });
-      } catch (dbError) {
-        log.error({ err: dbError }, 'Error guardando failed webhook:');
-      }
-    }
     res.status(401).json({ received: false, error: 'Firma inválida' });
     return;
   }

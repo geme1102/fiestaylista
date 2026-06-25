@@ -171,6 +171,8 @@ export async function createContribution(
   }
 
   const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${cashFundId} || ':' || ${cleanedName}))`);
+
     const [fund] = await tx
       .select()
       .from(cashFunds)

@@ -136,7 +136,7 @@ export default function ArcoRights() {
   const handleDeleteAccount = async () => {
     setLoading(true);
     try {
-      await apiClient.post('/api/auth/arco/delete-account', { password: deletePassword });
+      await apiClient.post('/api/auth/arco/delete-account', {}, { headers: { 'x-password': deletePassword } });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteModal(false);
       setDeletePassword('');

@@ -487,7 +487,7 @@ export default function EventGuest() {
                       </div>
                     )}
                     <button
-                      onClick={() => handleDownload(photo.url)}
+                      onClick={(e) => { e.stopPropagation(); handleDownload(photo.url); }}
                       className="absolute top-2 right-2 w-11 h-11 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity active:scale-90"
                       aria-label="Descargar foto"
                     >
