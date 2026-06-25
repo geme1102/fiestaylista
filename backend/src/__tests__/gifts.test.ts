@@ -4,7 +4,14 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('../config.js', () => ({ config: { JWT_SECRET: 'test' } }));
 vi.mock('../db/index.js', () => ({ db: {}, sql: {} }));
 vi.mock('../db/schema.js', () => ({ events: {} }));
-vi.mock('../services/notifications.js', () => ({ emitGiftClaimed: vi.fn() }));
+vi.mock('../services/notifications.js', () => ({
+  emitGiftClaimed: vi.fn(),
+  subscribeClient: vi.fn(),
+  unsubscribeClient: vi.fn(),
+  getClientCount: vi.fn(() => 0),
+  startSSEScavenger: vi.fn(),
+  stopSSEScavenger: vi.fn(),
+}));
 vi.mock('../services/gift.js', () => ({}));
 vi.mock('../middleware/rateLimit.js', () => ({
   giftLimiter: vi.fn((_req, _res, next) => next()),
