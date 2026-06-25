@@ -483,6 +483,10 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .animate-spin, .animate-ping {
+    animation-duration: inherit !important;
+    animation-iteration-count: inherit !important;
+  }
 }
 
 body {

@@ -72,7 +72,7 @@ export default function Onboarding() {
         </div>
         <button
           onClick={() => { if (window.confirm('¿Salir del asistente? Puedes crear tu primer evento desde el panel principal.')) skip(); }}
-          className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-90 transition-transform"
+          className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-90 transition-transform p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Salir del asistente"
         >
           close
@@ -214,7 +214,7 @@ export default function Onboarding() {
               </button>
             </div>
             <div className="text-center mt-4">
-              <button onClick={skip} disabled={creating} className="text-xs text-on-surface-variant hover:text-primary transition-colors disabled:opacity-40 underline">
+              <button onClick={skip} disabled={creating} className="text-xs text-on-surface-variant hover:text-primary transition-colors disabled:opacity-40 underline py-2.5 min-h-[44px]">
                 Saltar este paso
               </button>
             </div>

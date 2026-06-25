@@ -89,7 +89,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <button
               onClick={() => onFree(gift.id)}
               disabled={freeingId === gift.id}
-              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30 py-2.5"
+              className="text-gray-400 hover:text-red-500 font-bold text-[9px] uppercase tracking-widest transition-all underline cursor-pointer disabled:opacity-30 py-2.5 min-h-[44px]"
             >
               {freeingId === gift.id ? <span className="inline-block w-3 h-3 rounded-full border-2 border-red-400 border-t-transparent animate-spin" /> : 'Liberar obsequio'}
             </button>
@@ -179,8 +179,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               }
             }}
             disabled={togglingGroup}
-            className={`p-2 rounded-full transition-all ${isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'} disabled:opacity-50`}
+            className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-all ${isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'} disabled:opacity-50`}
             title={isGroupGift ? 'Regalo grupal (varias personas)' : 'Hacer grupal (varias personas pueden unirse)'}
+            aria-label={isGroupGift ? 'Alternar regalo grupal' : 'Alternar regalo grupal'}
           >
             <span className="material-symbols-outlined text-base">group</span>
           </button>
@@ -188,8 +189,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <button
               onClick={() => onDelete(gift.id)}
               disabled={deletingId === gift.id}
-              className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all cursor-pointer disabled:opacity-30"
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-all cursor-pointer disabled:opacity-30"
               title="Eliminar regalo"
+              aria-label="Eliminar regalo"
             >
               {deletingId === gift.id ? (
                 <span className="inline-block w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />

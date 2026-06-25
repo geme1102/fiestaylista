@@ -143,7 +143,7 @@ export default function CookieBanner() {
 
       {/* CONFIGURATION OVERLAY */}
       {showConfig && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6" id="cookie-settings" onKeyDown={(e) => { if (e.key === 'Escape') saveConfig(); }}>
+        <div role="dialog" aria-modal="true" aria-label="Configuración de privacidad" className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6" id="cookie-settings" onKeyDown={(e) => { if (e.key === 'Escape') saveConfig(); }}>
           <div className="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onClick={saveConfig} />
           <div className="relative bg-surface p-8 md:p-10 rounded-[40px] shadow-2xl w-full max-w-lg space-y-8 animate-fade-in border border-outline-variant/30">
             <div className="space-y-2 text-center">

@@ -110,7 +110,7 @@ export const EventReadyBar = memo(function EventReadyBar({
               onClick={() => !done && onAction?.(item.hint)}
               disabled={done}
               className={cn(
-                'touch-compact inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold transition-all',
+                'touch-compact inline-flex items-center gap-1 px-2 py-1 min-h-[44px] rounded-full text-[11px] font-semibold transition-all',
                 done
                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                   : 'bg-surface-container-low text-on-surface-variant/60 border border-outline-variant hover:border-primary/30 hover:text-primary cursor-pointer',

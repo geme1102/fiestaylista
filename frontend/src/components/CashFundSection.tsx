@@ -465,7 +465,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
                 </div>
                 <button
                   onClick={() => { navigator.clipboard.writeText(fund.bankPhone || ''); showToast('Número copiado 📋', 'success'); }}
-                  className="ml-auto p-2 rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all"
+                  className="ml-auto p-2 min-h-[44px] min-w-[44px] rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all flex items-center justify-center"
                   aria-label="Copiar número"
                 >
                   <span className="material-symbols-outlined text-base">content_copy</span>

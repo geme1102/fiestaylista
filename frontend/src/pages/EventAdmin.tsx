@@ -587,6 +587,7 @@ export default function EventAdmin() {
                     }}
                     className="p-2.5 text-primary hover:text-on-primary hover:bg-primary rounded-xl transition-all cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center"
                     title="Editar título del evento"
+                    aria-label="Editar título del evento"
                   >
                     <Pencil className="w-[18px] h-[18px]" />
                   </motion.button>
@@ -618,7 +619,7 @@ export default function EventAdmin() {
               <button
               data-testid="toggle-event-status"
               onClick={() => setToggleConfirm(true)}
-              className={`touch-compact relative w-14 h-[30px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
+              className={`touch-compact relative w-14 h-11 min-h-[44px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
               aria-label="Cambiar estado del evento"
               >
                 {event.isActive && (
@@ -745,6 +746,7 @@ export default function EventAdmin() {
               }}
               className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
               title="Compartir por WhatsApp"
+              aria-label="Compartir por WhatsApp"
             >
               <MessageSquare className="w-[22px] h-[22px] fill-white" />
             </motion.button>
@@ -755,6 +757,7 @@ export default function EventAdmin() {
               onClick={copyShareLink}
               className="w-11 h-11 bg-white hover:bg-rose-50/50 border border-rose-100/40 flex items-center justify-center rounded-full text-gray-700 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
               title="Copiar enlace"
+              aria-label="Copiar enlace"
             >
               <Copy className="w-5 h-5 text-gray-500 stroke-[2.2]" />
             </motion.button>
@@ -862,7 +865,14 @@ export default function EventAdmin() {
       {/* Edit Details Modal */}
       <AnimatePresence>
         {editingDetails && (
-          <div role="dialog" aria-modal="true" aria-label="Editar información del evento" className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Editar información del evento"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onKeyDown={(e) => { if (e.key === 'Escape') setEditingDetails(false); }}
+            onClick={(e) => { if (e.target === e.currentTarget) setEditingDetails(false); }}
+          >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -986,7 +996,14 @@ export default function EventAdmin() {
       {/* Lluvia de Sobres / Boost Modal */}
       <AnimatePresence>
         {boostModal && (
-          <div role="dialog" aria-modal="true" aria-label="Activar Lluvia de Sobres" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Activar Lluvia de Sobres"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onKeyDown={(e) => { if (e.key === 'Escape') setBoostModal(false); }}
+            onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}
+          >
             <motion.div
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1041,7 +1058,7 @@ export default function EventAdmin() {
                 <button
                   onClick={() => setBoostModal(false)}
                   disabled={boostLoading}
-                  className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-1.5 font-extrabold cursor-pointer disabled:opacity-50"
+                  className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-3 font-extrabold cursor-pointer disabled:opacity-50 min-h-[44px]"
                 >
                   Ahora no, gracias
                 </button>

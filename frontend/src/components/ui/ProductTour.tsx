@@ -211,7 +211,8 @@ export function ProductTour({
               </div>
               <button
                 onClick={skip}
-                className="text-on-surface-variant/50 hover:text-on-surface transition-colors"
+                onKeyDown={(e) => { if (e.key === 'Escape') skip(); }}
+                className="text-on-surface-variant/50 hover:text-on-surface transition-colors p-3 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Cerrar tour"
               >
                 <span className="material-symbols-outlined text-base">close</span>

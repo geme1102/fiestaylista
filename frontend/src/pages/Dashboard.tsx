@@ -592,6 +592,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
       aria-label="Crear nuevo evento"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
       <motion.div
         ref={scrollRef}

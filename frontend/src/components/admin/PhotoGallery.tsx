@@ -84,6 +84,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                         }}
                         className={`p-3 rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95 ${photo.isFeatured ? 'bg-amber-400 text-white' : 'bg-white/90 hover:bg-white text-amber-500'}`}
                         title={photo.isFeatured ? 'Quitar destacada' : 'Marcar como destacada'}
+                        aria-label={photo.isFeatured ? 'Quitar destacada' : 'Marcar como destacada'}
                       >
                         <Star className="w-4 h-4" fill={photo.isFeatured ? 'currentColor' : 'none'} />
                       </button>
@@ -95,6 +96,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                       }}
                       className="bg-white/90 hover:bg-white text-red-600 p-3 rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95"
                       title="Eliminar del catálogo"
+                      aria-label="Eliminar foto"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -144,6 +146,7 @@ export const PhotoGallery = memo(function PhotoGallery({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onSelectPreview(null)}
+            onKeyDown={(e) => { if (e.key === 'Escape') onSelectPreview(null); }}
             role="dialog"
             aria-modal="true"
             aria-label="Vista previa de foto"
@@ -153,6 +156,7 @@ export const PhotoGallery = memo(function PhotoGallery({
               <button
                 onClick={() => onSelectPreview(null)}
                 className="bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-all shrink-0 cursor-pointer"
+                aria-label="Cerrar vista previa"
               >
                 <X className="w-6 h-6" />
               </button>

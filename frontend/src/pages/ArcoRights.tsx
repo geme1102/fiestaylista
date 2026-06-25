@@ -249,7 +249,13 @@ export default function ArcoRights() {
             </div>
 
             {showForm && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowForm(false)}>
+              <div
+                role="dialog"
+                aria-modal="true"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+                onClick={() => setShowForm(false)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
+              >
                 <form
                   onSubmit={handleSubmitRequest}
                   className="bg-surface rounded-2xl p-8 w-full max-w-md shadow-2xl"
@@ -339,7 +345,14 @@ export default function ArcoRights() {
       </div>
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={content.cancel.title}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteModal(false); setDeletePassword(''); } }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteModal(false); setDeletePassword(''); } }}
+        >
           <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">{content.cancel.title}</h3>
             <p className="text-sm text-on-surface-variant">{content.cancel.confirm}</p>

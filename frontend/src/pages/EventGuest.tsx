@@ -190,7 +190,7 @@ export default function EventGuest() {
             <button
               data-testid="scroll-to-gifts"
               onClick={() => document.getElementById('gift-list')?.scrollIntoView({ behavior: 'smooth' })}
-              className="material-symbols-outlined text-primary cursor-pointer"
+              className="material-symbols-outlined text-primary cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Ir a la lista de regalos"
             >
               shopping_bag
@@ -461,7 +461,7 @@ export default function EventGuest() {
               {photos.length > 1 && (
                 <button
                   onClick={() => setSlideshowIndex(0)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-xs font-bold text-on-surface-variant hover:bg-primary-fixed/30 hover:text-primary transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-full bg-surface-container-high text-xs font-bold text-on-surface-variant hover:bg-primary-fixed/30 hover:text-primary transition-all"
                 >
                   <span className="material-symbols-outlined text-sm">slideshow</span>
                   Presentación

@@ -37,7 +37,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
       <div className="flex items-center justify-between px-4 py-3 z-10">
         <button
           onClick={onClose}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+          className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
           aria-label="Cerrar"
         >
           <span className="material-symbols-outlined">close</span>
@@ -52,7 +52,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
             a.download = `foto-${current + 1}`;
             a.click();
           }}
-          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+          className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
           aria-label="Descargar"
         >
           <span className="material-symbols-outlined">download</span>
