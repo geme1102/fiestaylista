@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
 
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockApiClientPost = vi.hoisted(() => vi.fn());
-const mockTurnstile = vi.hoisted(() => ({ containerRef: { current: null }, token: null, ready: true, error: null }));
+const mockTurnstile = vi.hoisted(() => ({ containerRef: { current: null }, token: null as string | null, ready: true, error: null }));
 
-vi.mock('../hooks/useToast', () => ({ showToast: (...args: unknown[]) => mockShowToast(...args) }));
-vi.mock('../services/api', () => ({ apiClient: { post: (...args: unknown[]) => mockApiClientPost(...args) } }));
+vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
+vi.mock('../services/api', () => ({ apiClient: { post: mockApiClientPost } }));
 vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => mockTurnstile }));
 vi.mock('../components/LoadingSpinner', () => ({ default: () => <div data-testid="loading-spinner" /> }));
 vi.mock('../components/AuthBottomNav', () => ({ default: () => <div data-testid="auth-bottom-nav" /> }));

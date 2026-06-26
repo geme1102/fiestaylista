@@ -6,15 +6,15 @@ const mockGetEventBySlug = vi.hoisted(() => vi.fn());
 const mockApiClientPut = vi.hoisted(() => vi.fn());
 const mockApiClientPost = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
-const mockTurnstileToken = vi.hoisted(() => vi.fn(() => null));
-const mockGetGiftCategory = vi.hoisted(() => vi.fn((name: string) => ({ label: 'Regalo', color: 'bg-blue-500' })));
+const mockTurnstileToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | null>(() => null));
+const mockGetGiftCategory = vi.hoisted(() => vi.fn((_name: string) => ({ label: 'Regalo', color: 'bg-blue-500' })));
 const mockUseSSE = vi.hoisted(() => vi.fn());
 
-vi.mock('../services/events', () => ({ getEventBySlug: (...args: unknown[]) => mockGetEventBySlug(...args) }));
-vi.mock('../services/api', () => ({ apiClient: { put: (...args: unknown[]) => mockApiClientPut(...args), post: (...args: unknown[]) => mockApiClientPost(...args), get: vi.fn() } }));
-vi.mock('../hooks/useToast', () => ({ showToast: (...args: unknown[]) => mockShowToast(...args) }));
+vi.mock('../services/events', () => ({ getEventBySlug: mockGetEventBySlug }));
+vi.mock('../services/api', () => ({ apiClient: { put: mockApiClientPut, post: mockApiClientPost, get: vi.fn() } }));
+vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
 vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken() }) }));
-vi.mock('../data/giftEmojis', () => ({ getGiftCategory: (...args: unknown[]) => mockGetGiftCategory(...args) }));
+vi.mock('../data/giftEmojis', () => ({ getGiftCategory: mockGetGiftCategory }));
 vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
 
 let mockSlug: string | undefined = 'mi-evento';

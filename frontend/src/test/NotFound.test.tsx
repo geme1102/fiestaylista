@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import React from 'react';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));

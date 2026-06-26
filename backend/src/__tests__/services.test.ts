@@ -71,7 +71,7 @@ function queryMock(selectResults: any[][] = []) {
   q.insert = vi.fn(() => ({ values: vi.fn(() => ({ onConflictDoNothing: vi.fn(() => ({ returning: vi.fn(() => Promise.resolve(q._insertResult)) })), returning: vi.fn(() => Promise.resolve(q._insertResult)) })) }));
   q.update = vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn(() => Promise.resolve(q._updateResult)) })) })) }));
   Object.defineProperty(q, 'then', {
-    value: (resolve: Function) => {
+    value: (resolve: (value: any[] | PromiseLike<any[]>) => void) => {
       const r = selectIdx < selectResults.length ? selectResults[selectIdx] : [];
       selectIdx++;
       return Promise.resolve(r).then(resolve);
@@ -115,8 +115,8 @@ describe('Auth Service', () => {
       const { db } = await import('../db/index.js');
       const { login } = await import('../services/auth.js');
       vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'u1', email: 'test@test.com', name: 'T', tier: 'free', emailVerified: true, createdAt: new Date(), passwordHash: 'hash' }]]));
-      vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
-      vi.mocked(db.delete).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+      vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) } as any);
+      vi.mocked(db.delete).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) } as any);
       const result = await login('test@test.com', 'password123');
       expect(result.user.email).toBe('test@test.com');
     });

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
 const mockGetCurrentSubscription = vi.hoisted(() => vi.fn());
@@ -10,9 +9,9 @@ const mockFormatDate = vi.hoisted(() => vi.fn(() => '1 ene 2024'));
 const mockUseAchievements = vi.hoisted(() => vi.fn(() => ({ getEarned: () => new Set(), allAchievements: [] })));
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
-vi.mock('../services/mercadopago', () => ({ getCurrentSubscription: (...args: unknown[]) => mockGetCurrentSubscription(...args) }));
-vi.mock('../hooks/useToast', () => ({ showToast: (...args: unknown[]) => mockShowToast(...args) }));
-vi.mock('../utils/format', () => ({ formatDate: (...args: unknown[]) => mockFormatDate(...args), validateRedirectUrl: (url: string) => url }));
+vi.mock('../services/mercadopago', () => ({ getCurrentSubscription: mockGetCurrentSubscription }));
+vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
+vi.mock('../utils/format', () => ({ formatDate: mockFormatDate, validateRedirectUrl: (url: string) => url }));
 vi.mock('../hooks/useAchievements', () => ({ useAchievements: () => mockUseAchievements() }));
 vi.mock('../components/LoadingSpinner', () => ({ default: () => <div data-testid="loading-spinner" /> }));
 vi.mock('../components/AchievementsStrip', () => ({ AchievementsStrip: () => <div data-testid="achievements-strip" /> }));

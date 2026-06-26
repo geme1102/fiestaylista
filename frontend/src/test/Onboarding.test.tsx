@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
 const mockNavigate = vi.hoisted(() => vi.fn());

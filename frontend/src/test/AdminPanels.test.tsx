@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockApiClientGet = vi.hoisted(() => vi.fn());
@@ -13,8 +13,8 @@ import { PhotoGallery } from '../components/admin/PhotoGallery';
 afterEach(() => vi.clearAllMocks());
 
 const sampleGifts = [
-  { id: 'g-1', name: 'Olla', isClaimed: false, category: 'cocina' },
-  { id: 'g-2', name: 'Cobija', isClaimed: true, claimedBy: 'Maria', category: 'bebe' },
+  { id: 'g-1', eventId: 'evt-1', name: 'Olla', isClaimed: false, category: 'cocina', createdAt: '2025-01-01' },
+  { id: 'g-2', eventId: 'evt-1', name: 'Cobija', isClaimed: true, claimedBy: 'Maria', category: 'bebe', createdAt: '2025-01-01' },
 ];
 
 describe('GiftManagement', () => {
@@ -117,7 +117,7 @@ describe('MessagesPanel', () => {
 describe('PhotoGallery', () => {
   const defaultPhotoProps = {
     photos: [
-      { id: 'p-1', url: 'https://cdn.test/photo.jpg', caption: 'Foto 1', uploadedBy: 'Ana', isFeatured: false },
+      { id: 'p-1', eventId: 'evt-1', url: 'https://cdn.test/photo.jpg', caption: 'Foto 1', uploadedBy: 'Ana', isFeatured: false, createdAt: '2025-01-01' },
     ],
     uploading: false,
     uploadProgress: null,

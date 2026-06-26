@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import type { Request, Response, NextFunction } from 'express';
 
@@ -273,7 +273,6 @@ const mockArcoService = vi.hoisted(() => ({
 vi.mock('../services/arco.js', () => mockArcoService);
 
 const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', boostedUntil: null, viewCount: 0, createdAt: new Date(), updatedAt: new Date() }));
-const mockUserData = vi.hoisted(() => ({ id: 'user-1', email: 'test@test.com', name: 'Test', tier: 'free', passwordHash: '$2a$10$hash', emailVerified: true, createdAt: new Date() }));
 
 const mockNotifications = vi.hoisted(() => ({
   emitGiftClaimed: vi.fn(),

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 
 vi.mock('../config.js', () => ({
   config: {
@@ -37,7 +37,7 @@ describe('Error Handler', () => {
 
   it('handles AppError with specific status code', async () => {
     const { errorHandler } = await import('../middleware/error.js');
-    const { NotFoundError, ValidationError } = await import('../utils/errors.js');
+    const { NotFoundError } = await import('../utils/errors.js');
 
     const req = {} as Request;
     const json = vi.fn();
@@ -65,14 +65,12 @@ describe('Error Handler', () => {
 
 describe('Auth Middleware', () => {
   let requireAuth: any, requireAnyAuth: any, optionalAuth: any, UnauthorizedError: any;
-  let config: any;
 
   beforeEach(async () => {
     const mod = await import('../middleware/auth.js');
     requireAuth = mod.requireAuth;
     requireAnyAuth = mod.requireAnyAuth;
     optionalAuth = mod.optionalAuth;
-    config = (await import('../config.js')).config;
     UnauthorizedError = (await import('../utils/errors.js')).UnauthorizedError;
   });
 

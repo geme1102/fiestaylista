@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const mockLoginApi = vi.hoisted(() => vi.fn());
@@ -7,27 +7,27 @@ const mockRegisterApi = vi.hoisted(() => vi.fn());
 const mockGetMe = vi.hoisted(() => vi.fn());
 const mockSetTokens = vi.hoisted(() => vi.fn());
 const mockClearTokens = vi.hoisted(() => vi.fn());
-const mockGetAccessToken = vi.hoisted(() => vi.fn(() => null));
-const mockTryRefreshToken = vi.hoisted(() => vi.fn(() => false));
+const mockGetAccessToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | null>(() => null));
+const mockTryRefreshToken = vi.hoisted(() => vi.fn<(...args: any[]) => any>(() => false));
 const mockApiClientPost = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock('../services/auth', () => ({
-  login: (...args: unknown[]) => mockLoginApi(...args),
-  register: (...args: unknown[]) => mockRegisterApi(...args),
-  getMe: (...args: unknown[]) => mockGetMe(...args),
+  login: mockLoginApi,
+  register: mockRegisterApi,
+  getMe: mockGetMe,
 }));
 
 vi.mock('../services/api', () => ({
-  setTokens: (...args: unknown[]) => mockSetTokens(...args),
-  clearTokens: (...args: unknown[]) => mockClearTokens(...args),
-  getAccessToken: (...args: unknown[]) => mockGetAccessToken(...args),
-  tryRefreshToken: (...args: unknown[]) => mockTryRefreshToken(...args),
+  setTokens: mockSetTokens,
+  clearTokens: mockClearTokens,
+  getAccessToken: mockGetAccessToken,
+  tryRefreshToken: mockTryRefreshToken,
   apiClient: { post: mockApiClientPost },
 }));
 
-vi.mock('../hooks/useToast', () => ({ showToast: (...args: unknown[]) => mockShowToast(...args) }));
+vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -36,7 +36,7 @@ vi.mock('react-router-dom', async () => {
 
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
-function TestConsumer({ onReady }: { onReady: (ctx: ReturnType<typeof useAuth>) => void }) {
+function TestConsumer({ onReady: _onReady }: { onReady: (ctx: ReturnType<typeof useAuth>) => void }) {
   const ctx = useAuth();
   return (
     <div>
