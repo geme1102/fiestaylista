@@ -9,7 +9,8 @@ import { TIER_LIMITS } from '../types';
 
 const SUGGESTED_AMOUNTS = [30000, 50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
-const MAX_AMOUNT = 5000000;
+export const MIN_AMOUNT = 2000;
+export const MAX_AMOUNT = 5000000;
 
 const INITIALS_COLORS = ['bg-secondary-fixed text-secondary', 'bg-primary-fixed text-primary', 'bg-tertiary-fixed text-tertiary'];
 
@@ -92,7 +93,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
 
     const rawAmount = selectedAmount || amount;
     const parsedAmount = typeof rawAmount === 'string' ? Number(rawAmount) : rawAmount;
-    if (!Number.isInteger(parsedAmount) || parsedAmount < 2000) {
+    if (!Number.isInteger(parsedAmount) || parsedAmount < MIN_AMOUNT) {
       showToast('El monto mínimo es $2,000 COP', 'error');
       return;
     }

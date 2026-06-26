@@ -1,22 +1,25 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { AuthResponse } from '../types';
 
-// BUG-16: Toasts should replace instead of stacking
-describe('BUG-16: useToast reemplaza en lugar de apilar', () => {
-  it('debería llevar un contador de último toast para dismiss', () => {
-    let lastToastId: string | number | null = null;
-    const dismiss = vi.fn();
-    const toast = vi.fn((_msg: string, _opts?: unknown) => {
-      if (lastToastId !== null) dismiss(lastToastId);
-      const id = Math.random().toString();
-      lastToastId = id;
-      return id;
-    });
+const mockToast = vi.hoisted(() => {
+  const dismiss = vi.fn();
+  const info = vi.fn(() => 'toast-id');
+  const success = vi.fn(() => 'toast-id');
+  const error = vi.fn(() => 'toast-id');
+  return { dismiss, info, success, error };
+});
 
-    toast('Primer mensaje');
-    toast('Segundo mensaje');
-    expect(dismiss).toHaveBeenCalledTimes(1);
-    expect(toast).toHaveBeenCalledTimes(2);
+vi.mock('sonner', () => ({ toast: mockToast }));
+
+// BUG-16: Toasts should replace instead of stacking (real import)
+describe('BUG-16: useToast reemplaza en lugar de apilar', () => {
+  it('debería llamar dismiss antes de mostrar nuevo toast', async () => {
+    const { showToast } = await import('../hooks/useToast');
+
+    showToast('Primer mensaje', 'info');
+    showToast('Segundo mensaje', 'info');
+
+    expect(mockToast.dismiss).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -39,12 +42,18 @@ describe('BUG-17: Validación de formato de email', () => {
   });
 });
 
-// BUG-14: CashFund amount validation
+// BUG-14: CashFund amount validation (real imports)
 describe('BUG-14: Validación de monto máximo CashFund', () => {
-  const MAX_AMOUNT = 5000000;
-  const MIN_AMOUNT = 2000;
+  it('debería usar constantes reales de CashFundSection', async () => {
+    const { MIN_AMOUNT, MAX_AMOUNT } = await import('../components/CashFundSection');
 
-  it('debería permitir montos dentro del rango', () => {
+    expect(MIN_AMOUNT).toBe(2000);
+    expect(MAX_AMOUNT).toBe(5000000);
+  });
+
+  it('debería validar rangos correctamente', async () => {
+    const { MIN_AMOUNT, MAX_AMOUNT } = await import('../components/CashFundSection');
+
     const validate = (amt: number) => {
       if (!Number.isInteger(amt) || amt < MIN_AMOUNT) return 'MIN_ERROR';
       if (amt > MAX_AMOUNT) return 'MAX_ERROR';
@@ -54,22 +63,7 @@ describe('BUG-14: Validación de monto máximo CashFund', () => {
     expect(validate(2000)).toBe('OK');
     expect(validate(50000)).toBe('OK');
     expect(validate(5000000)).toBe('OK');
-  });
-
-  it('debería rechazar montos sobre el máximo', () => {
-    const validate = (amt: number) => {
-      if (amt > MAX_AMOUNT) return 'MAX_ERROR';
-      return 'OK';
-    };
     expect(validate(5000001)).toBe('MAX_ERROR');
-    expect(validate(9999999)).toBe('MAX_ERROR');
-  });
-
-  it('debería rechazar montos bajo el mínimo', () => {
-    const validate = (amt: number) => {
-      if (!Number.isInteger(amt) || amt < MIN_AMOUNT) return 'MIN_ERROR';
-      return 'OK';
-    };
     expect(validate(0)).toBe('MIN_ERROR');
     expect(validate(1999)).toBe('MIN_ERROR');
     expect(validate(50.5)).toBe('MIN_ERROR');
@@ -109,33 +103,24 @@ describe('BUG-23: localStorage con try/catch', () => {
   });
 });
 
-// BUG-15: Password strength feedback
+// BUG-15: Password strength feedback (real import)
 describe('BUG-15: getPasswordStrength', () => {
-  function getPasswordStrength(pw: string) {
-    let score = 0;
-    if (pw.length >= 8) score++;
-    if (/[a-z]/.test(pw)) score++;
-    if (/[A-Z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^a-zA-Z0-9]/.test(pw)) score++;
-    if (score <= 1) return { score, label: 'Débil' as const };
-    if (score <= 3) return { score, label: 'Media' as const };
-    return { score, label: 'Fuerte' as const };
-  }
-
-  it('debería retornar Débil para contraseñas muy simples', () => {
+  it('debería retornar Débil para contraseñas muy simples', async () => {
+    const { getPasswordStrength } = await import('../utils/passwordStrength');
     const result = getPasswordStrength('abc');
     expect(result.label).toBe('Débil');
     expect(result.score).toBeLessThanOrEqual(2);
   });
 
-  it('debería retornar Media para contraseñas moderadas', () => {
+  it('debería retornar Media para contraseñas moderadas', async () => {
+    const { getPasswordStrength } = await import('../utils/passwordStrength');
     const result = getPasswordStrength('Abcdef1');
     expect(result.label).toBe('Media');
     expect(result.score).toBe(3);
   });
 
-  it('debería retornar Fuerte para contraseñas complejas', () => {
+  it('debería retornar Fuerte para contraseñas complejas', async () => {
+    const { getPasswordStrength } = await import('../utils/passwordStrength');
     const result = getPasswordStrength('Abcdef1!');
     expect(result.label).toBe('Fuerte');
     expect(result.score).toBe(5);
@@ -314,7 +299,7 @@ describe('BUG-7: Coincidencia de intentos de polling Turnstile', () => {
   });
 });
 
-// BUG-8: Auth toast on restore failure
+// BUG-8: Toast on restore failure
 describe('BUG-8: Toast en fallo de restauración de sesión', () => {
   it('debería mostrar un toast cuando getMe falla', async () => {
     const toastMessages: string[] = [];
@@ -345,9 +330,7 @@ describe('BUG-20: Una sola navegación tras login', () => {
       navigate('/dashboard');
     };
 
-    // Simulate login
     handleLogin();
-    // <Navigate> should NOT fire because navigatedRef.current is true
     if (!navigatedRef.current) navigate('/dashboard');
 
     expect(navigateCount).toBe(1);

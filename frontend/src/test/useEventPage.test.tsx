@@ -1,0 +1,235 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+const mockGetEventBySlug = vi.hoisted(() => vi.fn());
+const mockApiClientPut = vi.hoisted(() => vi.fn());
+const mockApiClientPost = vi.hoisted(() => vi.fn());
+const mockShowToast = vi.hoisted(() => vi.fn());
+const mockTurnstileToken = vi.hoisted(() => vi.fn(() => null));
+const mockGetGiftCategory = vi.hoisted(() => vi.fn((name: string) => ({ label: 'Regalo', color: 'bg-blue-500' })));
+const mockUseSSE = vi.hoisted(() => vi.fn());
+
+vi.mock('../services/events', () => ({ getEventBySlug: (...args: unknown[]) => mockGetEventBySlug(...args) }));
+vi.mock('../services/api', () => ({ apiClient: { put: (...args: unknown[]) => mockApiClientPut(...args), post: (...args: unknown[]) => mockApiClientPost(...args), get: vi.fn() } }));
+vi.mock('../hooks/useToast', () => ({ showToast: (...args: unknown[]) => mockShowToast(...args) }));
+vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken() }) }));
+vi.mock('../data/giftEmojis', () => ({ getGiftCategory: (...args: unknown[]) => mockGetGiftCategory(...args) }));
+vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
+
+let mockSlug: string | undefined = 'mi-evento';
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useParams: () => ({ slug: mockSlug }),
+  };
+});
+
+import { useEventPage } from '../hooks/useEventPage';
+
+const testEvent = {
+  id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento',
+  isActive: true, createdAt: '2025-01-01',
+};
+
+const testGifts = [
+  { id: 'g-1', name: 'Olla', isClaimed: false, category: 'cocina' },
+  { id: 'g-2', name: 'Cobija', isClaimed: true, claimedBy: 'Maria', category: 'bebe' },
+];
+
+const testPhotos = [{ id: 'p-1', url: 'https://cdn.test/photo.jpg', uploadedBy: 'Ana' }];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockSlug = 'mi-evento';
+  mockTurnstileToken.mockReturnValue('tok-1');
+  mockGetEventBySlug.mockResolvedValue({ event: testEvent, gifts: testGifts, photos: testPhotos });
+  mockGetGiftCategory.mockImplementation((name: string) => {
+    const map: Record<string, { label: string; color: string }> = {
+      Olla: { label: 'Cocina', color: 'bg-red-500' },
+      Cobija: { label: 'Bebé', color: 'bg-blue-500' },
+    };
+    return map[name] ?? { label: 'Regalo', color: 'bg-gray-500' };
+  });
+});
+
+afterEach(() => { vi.restoreAllMocks(); });
+
+function renderEventPageHook() {
+  return renderHook(() => useEventPage(), {
+    wrapper: ({ children }: { children: React.ReactNode }) => <MemoryRouter>{children}</MemoryRouter>,
+  });
+}
+
+describe('useEventPage', () => {
+  it('loads event and gifts on mount', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event?.title).toBe('Mi Evento');
+    });
+    expect(result.current.gifts).toHaveLength(2);
+    expect(result.current.photos).toHaveLength(1);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('sets error when event is inactive', async () => {
+    mockGetEventBySlug.mockResolvedValue({ event: { ...testEvent, isActive: false }, gifts: [], photos: [] });
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Este evento no está disponible');
+    });
+    expect(result.current.loading).toBe(false);
+    expect(result.current.event).toBeNull();
+  });
+
+  it('sets error when slug is invalid', async () => {
+    mockGetEventBySlug.mockRejectedValue(new Error('Not found'));
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Not found');
+    });
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('remaps Sesión expirada to Evento no encontrado', async () => {
+    mockGetEventBySlug.mockRejectedValue(new Error('Sesión expirada'));
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Evento no encontrado');
+    });
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('does not load when slug is undefined', async () => {
+    mockSlug = undefined;
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(true);
+    });
+    expect(mockGetEventBySlug).not.toHaveBeenCalled();
+  });
+
+  it('separates available and claimed gifts', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.availableGifts).toHaveLength(1);
+    });
+    expect(result.current.availableGifts[0].id).toBe('g-1');
+    expect(result.current.claimedGifts).toHaveLength(1);
+    expect(result.current.claimedGifts[0].id).toBe('g-2');
+  });
+
+  it('updates gift list when SSE claims a gift', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.gifts).toHaveLength(2);
+    });
+
+    const sseCallbacks = mockUseSSE.mock.calls[0][0];
+    act(() => {
+      sseCallbacks.onGiftClaimed({ giftId: 'g-1', giftName: 'Olla', claimedBy: 'Pedro' });
+    });
+
+    expect(result.current.gifts[0].isClaimed).toBe(true);
+    expect(result.current.gifts[0].claimedBy).toBe('Pedro');
+  });
+
+  it('handleClaim: shakes when no claimName', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setClaimName(''); });
+    await act(async () => { result.current.handleClaim('g-1', 'Olla'); });
+
+    expect(result.current.shaking).toBe(true);
+    expect(mockApiClientPut).not.toHaveBeenCalled();
+  });
+
+  it('handleClaim: claims gift successfully', async () => {
+    mockApiClientPut.mockResolvedValue({ gift: { id: 'g-1', name: 'Olla', isClaimed: true, claimedBy: 'Test' } });
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setClaimName('Test'); });
+    await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
+
+    expect(mockApiClientPut).toHaveBeenCalledWith(
+      '/api/events/evt-1/gifts/g-1/claim',
+      { claimedBy: 'Test', turnstileToken: 'tok-1' }
+    );
+    expect(mockShowToast).toHaveBeenCalledWith('¡Olla apartado! 🎉', 'success');
+    expect(result.current.claimingId).toBeNull();
+  });
+
+  it('handleClaim: shows already-claimed error', async () => {
+    mockApiClientPut.mockRejectedValue(new Error('El regalo ya ha sido reservado'));
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setClaimName('Test'); });
+    await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
+
+    expect(mockShowToast).toHaveBeenCalledWith('Este regalo ya fue apartado por otra persona', 'error');
+  });
+
+  it('handleClaim: shows generic error', async () => {
+    mockApiClientPut.mockRejectedValue(new Error('Network error'));
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setClaimName('Test'); });
+    await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
+
+    expect(mockShowToast).toHaveBeenCalledWith('Error al apartar el regalo. Intenta de nuevo.', 'error');
+  });
+
+  it('filters gifts by category', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.gifts).toHaveLength(2);
+    });
+
+    act(() => { result.current.setCategoryFilter('Cocina'); });
+
+    expect(result.current.filteredGifts).toHaveLength(1);
+    expect(result.current.filteredGifts[0].name).toBe('Olla');
+  });
+
+  it('returns all available gifts when no category filter', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.availableGifts).toHaveLength(1);
+    });
+    expect(result.current.filteredGifts).toEqual(result.current.availableGifts);
+  });
+});

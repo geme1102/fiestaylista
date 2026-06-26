@@ -7,18 +7,7 @@ import { useTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
 import AuthBottomNav from '../components/AuthBottomNav';
-
-function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[a-z]/.test(pw)) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^a-zA-Z0-9]/.test(pw)) score++;
-  if (score <= 1) return { score, label: 'Débil', color: 'bg-red-500' };
-  if (score <= 3) return { score, label: 'Media', color: 'bg-amber-500' };
-  return { score, label: 'Fuerte', color: 'bg-green-500' };
-}
+import { getPasswordStrength } from '../utils/passwordStrength';
 
 function PasswordStrengthBar({ password }: { password: string }) {
   const { score, label, color } = getPasswordStrength(password);

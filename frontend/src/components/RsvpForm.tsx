@@ -17,7 +17,7 @@ export default function RsvpForm({ eventId }: RsvpFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
