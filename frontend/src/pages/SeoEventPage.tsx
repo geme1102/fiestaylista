@@ -25,7 +25,7 @@ const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: strin
     faq: [
       { q: '¿Cómo creo mi lista de baby shower?', a: 'Le pones nombre a tu evento, eliges "Baby Shower" y empiezas a agregar los regalos que quieres recibir. Puedes usar nuestras sugerencias o poner los tuyos. Todo en menos de 2 minutos.' },
       { q: '¿Los invitados pueden dar plata en vez de regalo?', a: 'Sí, con Lluvia de Sobres tus invitados te pueden hacer aportes en dinero directo. Tú decides si va para los pañales, la cuna o lo que más necesites.' },
-      { q: '¿Esto es gratis de verdad?', a: 'Sí, el plan gratis incluye 2 eventos, hasta 10 regalos por evento y 3 fotos. Sin tarjeta de crédito, sin compromiso.' },
+      { q: '¿Esto es gratis de verdad?', a: 'Sí, el plan gratis incluye 1 evento, hasta 15 regalos por evento y 3 fotos. Sin tarjeta de crédito, sin compromiso.' },
     ],
   },
   boda: {
@@ -90,7 +90,7 @@ const SEO_CONTENT: Record<string, { icon: string; title: string; subtitle: strin
     ],
     faq: [
       { q: '¿Qué regalos puedo pedir para una comunión?', a: 'Reloj, cadena, joyería, libros, ropa, mochilas o aportes en dinero. Tú sabes lo que necesita el niño o niña.' },
-      { q: '¿Puedo hacer más de una lista?', a: 'En el plan gratis puedes tener hasta 2 eventos. Si necesitas más, el plan Pro te da hasta 20 eventos para toda la familia.' },
+      { q: '¿Puedo hacer más de una lista?', a: 'El plan gratis incluye 1 evento. Si necesitas más regalos, el plan Pro te da 100 regalos por evento.' },
     ],
   },
 };
@@ -185,8 +185,8 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
           </div>
 
           <div className="mt-16 flex flex-wrap items-center justify-center gap-6 text-xs text-on-surface-variant">
-            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">lock</span> Pagos seguros con Mercado Pago</span>
-            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">credit_card</span> PSE, Nequi y Daviplata</span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">account_balance</span> Transferencia directa al anfitrión</span>
+            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">how_to_reg</span> Registra tu aporte voluntariamente</span>
             <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">shield</span> Datos protegidos</span>
           </div>
         </div>

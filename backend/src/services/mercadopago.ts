@@ -1,6 +1,5 @@
 import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago';
 import { config } from '../config.js';
-import type { Tier } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('MP');
@@ -9,13 +8,6 @@ let client: MercadoPagoConfig | null = null;
 
 if (config.MERCADO_PAGO_ACCESS_TOKEN) {
   client = new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
-}
-
-function getPrice(tier: Tier, interval: 'month' | 'year'): number {
-  if (tier === 'pro') {
-    return interval === 'month' ? config.PRO_MONTHLY_PRICE_CENTS : config.PRO_YEARLY_PRICE_CENTS;
-  }
-  return 0;
 }
 
 export function mpNotificationUrl(): string {
@@ -75,7 +67,7 @@ export async function createProPreference(
     throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
   }
 
-  const amount = getPrice('pro', interval);
+  const amount = interval === 'month' ? config.PRO_MONTHLY_PRICE_CENTS : config.PRO_YEARLY_PRICE_CENTS;
   const preference = new Preference(client);
   const result = await retryable(() => preference.create({
     body: {
@@ -93,83 +85,6 @@ export async function createProPreference(
       },
       auto_return: 'approved',
       external_reference: `pro_${userId}_${interval}`,
-    },
-  }));
-
-  const initPoint = result.init_point;
-  if (!initPoint) {
-    throw new Error('No se pudo generar la URL de pago');
-  }
-
-  return { url: initPoint };
-}
-
-export async function createContributionPreference(
-  contributionId: string,
-  contributorName: string,
-  amountInCents: number,
-  cashFundTitle: string,
-  backUrl: string,
-): Promise<{ redirectUrl: string }> {
-  if (!client) {
-    throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
-  }
-
-  const preference = new Preference(client);
-  const result = await retryable(() => preference.create({
-    body: {
-      items: [{
-        id: `contrib_${contributionId}`,
-        title: cashFundTitle || 'Contribución - Lluvia de Sobres',
-        quantity: 1,
-        unit_price: amountInCents,
-        currency_id: 'COP',
-      }],
-      payer: { name: contributorName },
-      back_urls: {
-        success: backUrl,
-        failure: backUrl,
-        pending: backUrl,
-      },
-      auto_return: 'approved',
-      external_reference: contributionId,
-    },
-  }));
-
-  const initPoint = result.init_point;
-  if (!initPoint) {
-    throw new Error('No se pudo generar la URL de pago');
-  }
-
-  return { redirectUrl: initPoint };
-}
-
-export async function createBoostPreference(
-  eventId: string,
-  _userId: string,
-  successUrl: string,
-): Promise<{ url: string }> {
-  if (!client) {
-    throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
-  }
-
-  const preference = new Preference(client);
-  const result = await retryable(() => preference.create({
-    body: {
-      items: [{
-        id: `boost_${eventId}`,
-        title: 'Boost de evento - Fiesta y Lista',
-        quantity: 1,
-        unit_price: config.BOOST_PRICE_CENTS,
-        currency_id: 'COP',
-      }],
-      back_urls: {
-        success: successUrl,
-        failure: successUrl,
-        pending: successUrl,
-      },
-      auto_return: 'approved',
-      external_reference: `boost_${eventId}`,
     },
   }));
 

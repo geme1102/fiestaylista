@@ -1,9 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
 
-import { requireAuth } from '../middleware/auth.js';
-import { requireEventOwnership } from '../middleware/ownership.js';
 import { contributeLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
@@ -11,8 +8,11 @@ import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { cashFunds, events } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requireEventOwnership } from '../middleware/ownership.js';
 
 const router = Router();
 
@@ -22,13 +22,6 @@ const createFundSchema = z.object({
   targetAmount: z.number().int().min(0).optional(),
   bankPhone: z.string().max(20).optional().nullable(),
   bankType: z.string().max(20).optional().nullable(),
-});
-
-const contributeSchema = z.object({
-  cashFundId: z.string().uuid('ID de fondo inválido'),
-  contributorName: z.string().min(1, 'Tu nombre es requerido').max(100),
-  amount: z.number().int().min(2000, 'El monto mínimo es $2,000 COP').max(500000, 'El monto máximo es $5.000.000'),
-  message: z.string().max(500).optional(),
 });
 
 const promiseSchema = z.object({
@@ -58,23 +51,7 @@ router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHand
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
   const fund = await cashFundService.getCashFund(eventId);
-  if (!fund) {
-    res.json({ cashFund: null });
-    return;
-  }
-  const promisedTotal = await cashFundService.getPromisedAmount(fund.id);
-  res.json({ cashFund: fund, promisedTotal });
-}));
-
-router.post('/cash-fund/contribute', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
-  const data = contributeSchema.parse(req.body);
-  const result = await cashFundService.createContribution(
-    data.cashFundId,
-    data.contributorName,
-    data.amount,
-    data.message,
-  );
-  res.status(201).json(result);
+  res.json({ cashFund: fund || null });
 }));
 
 router.post('/cash-fund/promise', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {

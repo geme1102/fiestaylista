@@ -15,9 +15,8 @@ vi.mock('../config.js', () => ({
     RESEND_API_KEY: '',
     FROM_EMAIL: 'test@test.com',
     PORT: 3001,
-    PRO_MONTHLY_PRICE_CENTS: 24990,
-    PRO_YEARLY_PRICE_CENTS: 288000,
-    BOOST_PRICE_CENTS: 10000,
+    PRO_MONTHLY_PRICE_CENTS: 59900,
+    PRO_YEARLY_PRICE_CENTS: 660000,
   },
 }));
 

@@ -31,28 +31,6 @@ describe('cashFund service', () => {
     expect(result.cashFund?.id).toBe('cf-1');
   });
 
-  it('createContribution posts to /api/cash-fund/contribute', async () => {
-    mockPost.mockResolvedValue({ redirectUrl: 'https://mpago.test/pay', contributionId: 'c-1' });
-    const { createContribution } = await import('../services/cashFund');
-
-    const result = await createContribution({
-      cashFundId: 'cf-1',
-      contributorName: 'Maria',
-      amount: 50000,
-      message: 'Felicidades!',
-      turnstileToken: 'tok-1',
-    });
-
-    expect(mockPost).toHaveBeenCalledWith('/api/cash-fund/contribute', {
-      cashFundId: 'cf-1',
-      contributorName: 'Maria',
-      amount: 50000,
-      message: 'Felicidades!',
-      turnstileToken: 'tok-1',
-    });
-    expect(result.redirectUrl).toBe('https://mpago.test/pay');
-  });
-
   it('getContributions fetches contributions for fund', async () => {
     mockGet.mockResolvedValue({ contributions: [{ id: 'ct-1', amount: 50000 }] });
     const { getContributions } = await import('../services/cashFund');
@@ -73,7 +51,7 @@ describe('cashFund service', () => {
   });
 
   it('createPromise posts promise to /api/cash-fund/promise', async () => {
-    mockPost.mockResolvedValue({ contribution: { id: 'c-1', amount: 100000 }, promisedTotal: 500000 });
+    mockPost.mockResolvedValue({ contribution: { id: 'c-1', amount: 100000 }, cashFund: { id: 'cf-1', collectedAmount: 100000 } });
     const { createPromise } = await import('../services/cashFund');
 
     const result = await createPromise({

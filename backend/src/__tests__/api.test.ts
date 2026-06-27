@@ -15,9 +15,8 @@ vi.mock('../config.js', () => ({
     RESEND_API_KEY: '',
     FROM_EMAIL: 'test@test.com',
     PORT: 3001,
-    PRO_MONTHLY_PRICE_CENTS: 24990,
-    PRO_YEARLY_PRICE_CENTS: 288000,
-    BOOST_PRICE_CENTS: 10000,
+    PRO_MONTHLY_PRICE_CENTS: 59900,
+    PRO_YEARLY_PRICE_CENTS: 660000,
     CLOUDINARY_CLOUD_NAME: '',
     CLOUDINARY_API_KEY: '',
     CLOUDINARY_API_SECRET: '',
@@ -40,6 +39,7 @@ function queryBuilder(initialResult: any = []) {
   qb.insert = vi.fn(() => qb);
   qb.update = vi.fn(() => qb);
   qb.delete = vi.fn(() => qb);
+  qb.onConflictDoNothing = vi.fn(() => qb);
   return qb;
 }
 
@@ -230,7 +230,6 @@ vi.mock('../services/photo.js', () => mockPhotoService);
 const mockCashFundService = vi.hoisted(() => ({
   getCashFund: vi.fn(),
   createOrUpdateCashFund: vi.fn(),
-  createContribution: vi.fn(),
   createPromise: vi.fn(),
   getContributions: vi.fn(),
   getPromisedAmount: vi.fn(),
@@ -240,7 +239,6 @@ vi.mock('../services/cashFund.js', () => mockCashFundService);
 
 const mockMercadopagoService = vi.hoisted(() => ({
   createProPreference: vi.fn(),
-  createBoostPreference: vi.fn(),
   cancelPreapproval: vi.fn(),
   searchPaymentsByRef: vi.fn(),
 }));
@@ -753,16 +751,6 @@ describe('Cash Fund Routes', () => {
     const res = await request(app).get('/api/events/evt-1/cash-fund');
     expect(res.status).toBe(200);
   });
-
-  it('POST /api/cash-fund/contribute - contribute', async () => {
-    mockCashFundService.createContribution.mockResolvedValue({ url: 'https://mpago.test/pay' });
-
-    const res = await request(app)
-      .post('/api/cash-fund/contribute')
-      .send({ cashFundId: '550e8400-e29b-41d4-a716-446655440000', contributorName: 'Guest', amount: 20000 });
-
-    expect(res.status).toBe(201);
-  });
 });
 
 describe('Boost Routes', () => {
@@ -772,15 +760,12 @@ describe('Boost Routes', () => {
     vi.clearAllMocks();
   });
 
-  it('POST /api/events/:eventId/boost - create boost checkout', async () => {
-    mockMercadopagoService.createBoostPreference.mockResolvedValue({ url: 'https://mpago.test/boost' });
-
+  it('POST /api/events/:eventId/boost - activate cash fund', async () => {
     const res = await request(app)
       .post('/api/events/evt-1/boost')
       .set(auth);
 
     expect(res.status).toBe(200);
-    expect(res.body.url).toBeDefined();
   });
 
   it('GET /api/events/:eventId/boost-status - get boost status', async () => {

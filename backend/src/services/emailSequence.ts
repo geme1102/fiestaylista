@@ -217,14 +217,14 @@ log.error({ err }, `Error día 7 para ${user.email}:`);
                     <h1 style="color:#1f2937;font-size:20px">Lleva tu evento al siguiente nivel</h1>
                     <p style="color:#6b7280;margin:16px 0">Con el plan Pro obtienes:</p>
                     <ul style="color:#6b7280;margin:16px 0">
-                      <li style="margin-bottom:8px">✅ Hasta 20 eventos</li>
-                      <li style="margin-bottom:8px">✅ 50 regalos por evento</li>
-                      <li style="margin-bottom:8px">✅ 15 fotos por evento</li>
+                      <li style="margin-bottom:8px">✅ 1 evento</li>
+                      <li style="margin-bottom:8px">✅ 100 regalos por evento</li>
+                      <li style="margin-bottom:8px">✅ 20 fotos por evento</li>
                       <li style="margin-bottom:8px">✅ Estadísticas de tu evento</li>
-                      <li style="margin-bottom:8px">✅ Lluvia de Sobres incluida sin costo extra</li>
+                      <li style="margin-bottom:8px">✅ Lluvia de Sobres: tus invitados reportan sus aportes</li>
                       <li style="margin-bottom:8px">✅ Tus invitados te avisan por WhatsApp al apartar</li>
                     </ul>
-                    <p style="color:#6b7280;margin:16px 0">Todo por solo $24.990/mes COP. 5% de comisión en todos los planes.</p>
+                    <p style="color:#6b7280;margin:16px 0">Todo por solo $59.900/mes COP.</p>
                     <div style="text-align:center;margin:24px 0">
                       <a href="${getBaseUrl()}/pricing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver Planes</a>
                     </div>

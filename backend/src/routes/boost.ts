@@ -1,11 +1,9 @@
 import { Router } from 'express';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { events, users, cashFunds } from '../db/schema.js';
+import { events, cashFunds } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter } from '../middleware/rateLimit.js';
-import { config } from '../config.js';
-import * as mercadopagoService from '../services/mercadopago.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
@@ -31,27 +29,10 @@ router.post('/events/:eventId/boost', requireAuth, paymentLimiter, validateUuidP
     return;
   }
 
-  const [user] = await db
-    .select({ tier: users.tier })
-    .from(users)
-    .where(eq(users.id, req.user!.userId))
-    .limit(1);
-
-  if (user?.tier === 'pro') {
-    const boostedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    await db.update(events).set({ boostedUntil: sql`${boostedUntil}::timestamp` }).where(eq(events.id, eventId));
-    await db.insert(cashFunds).values({ eventId, title: 'Lluvia de sobres', isActive: true }).onConflictDoNothing({ target: cashFunds.eventId });
-    res.json({ message: 'Lluvia de sobres activada con éxito ⚡💰', boostedUntil });
-    return;
-  }
-
-  const successUrl = `${config.FRONTEND_URL}/event/${eventId}?boosted=1`;
-  const result = await mercadopagoService.createBoostPreference(
-    eventId,
-    req.user!.userId,
-    successUrl,
-  );
-  res.json(result);
+  const boostedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  await db.update(events).set({ boostedUntil: sql`${boostedUntil}::timestamp` }).where(eq(events.id, eventId));
+  await db.insert(cashFunds).values({ eventId, title: 'Lluvia de sobres', isActive: true }).onConflictDoNothing({ target: cashFunds.eventId });
+  res.json({ message: 'Lluvia de sobres activada con éxito ⚡💰', boostedUntil });
 }));
 
 router.get('/events/:eventId/boost-status', validateUuidParam('eventId'), asyncHandler(async (req, res) => {

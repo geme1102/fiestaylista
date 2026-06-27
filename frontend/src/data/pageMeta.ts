@@ -14,7 +14,7 @@ export const PAGE_META: Record<string, { title: string; desc: string; keywords?:
   },
   '/pricing': {
     title: 'Planes - Fiesta y Lista',
-    desc: 'Plan gratis y Pro desde $24.990/mes. Sin tarjeta de crédito. Hasta 20 eventos, 50 regalos por evento y Lluvia de Sobres incluida.',
+    desc: 'Plan gratis y Pro desde $59.900/mes. Sin tarjeta de crédito. Incluye 1 evento, 100 regalos y Lluvia de Sobres.',
     keywords: 'fiestaylista planes, lista de regalos precios, plan pro, suscripción',
   },
   '/dashboard': {

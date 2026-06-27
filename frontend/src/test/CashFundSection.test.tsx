@@ -1,27 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import CashFundSection from '../components/CashFundSection';
 
 const mockGetCashFund = vi.hoisted(() => vi.fn());
-const mockCreateContribution = vi.hoisted(() => vi.fn());
 const mockGetContributions = vi.hoisted(() => vi.fn());
+const mockCreatePromise = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
-const mockTurnstile = vi.hoisted(() => vi.fn(() => ({ containerRef: { current: null }, token: 'mock-token' })));
 
 vi.mock('../services/cashFund', () => ({
   getCashFund: mockGetCashFund,
-  createContribution: mockCreateContribution,
   getContributions: mockGetContributions,
   boostEvent: vi.fn(),
-  createPromise: vi.fn(),
+  createPromise: mockCreatePromise,
 }));
 
 vi.mock('../hooks/useToast', () => ({
   showToast: mockShowToast,
 }));
 
-vi.mock('../hooks/useTurnstile', () => ({
-  useTurnstile: mockTurnstile,
+vi.mock('../utils/format', () => ({
+  formatCOP: (v: number) => `$${v.toLocaleString('es-CO')} COP`,
 }));
 
 const activeFund = {
@@ -40,77 +38,61 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function waitForForm(container: HTMLElement) {
-  await waitFor(() => {
-    const form = container.querySelector('form');
-    expect(form).toBeTruthy();
-  });
-  return container.querySelector('form')!;
-}
-
 describe('CashFundSection', () => {
-  it('shows contribution form when user is not owner', async () => {
-    render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" />);
+  it('shows promise form register for guests', async () => {
+    render(<CashFundSection eventId="event-1" isOwner={false} guestName="Maria" />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Otro valor')).toBeInTheDocument();
-    });
-    expect(screen.getByPlaceholderText('Ej. Familia Rodríguez')).toBeInTheDocument();
-  });
-
-  it('hides contribution form for event owner', async () => {
-    render(<CashFundSection eventId="event-1" isOwner={true} ownerTier="free" />);
-
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Otro valor')).not.toBeInTheDocument();
+      expect(screen.getByText('Ya transferiste? Regístralo aquí')).toBeInTheDocument();
     });
   });
 
-  it('validates amount below minimum', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
-    const form = await waitForForm(container);
-
-    fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '500' } });
-    fireEvent.submit(form);
-
-    expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('$2,000'), 'error');
-  });
-
-  it('validates amount above maximum', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
-    const form = await waitForForm(container);
-
-    fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '9999999' } });
-    fireEvent.submit(form);
-
-    expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('$5'), 'error');
-  });
-
-  it('validates non-integer amount', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
-    const form = await waitForForm(container);
-
-    fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '2500.50' } });
-    fireEvent.submit(form);
-
-    expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('$2,000'), 'error');
-  });
-
-  it('calls createContribution with valid data', async () => {
-    mockCreateContribution.mockResolvedValue({ redirect: 'https://mpago.la/test' });
-    delete (window as any).location;
-    (window as any).location = { href: '' };
-
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
-    const form = await waitForForm(container);
-
-    fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '50000' } });
-    fireEvent.submit(form);
+  it('hides promise form for event owner', async () => {
+    render(<CashFundSection eventId="event-1" isOwner={true} guestName="Maria" />);
 
     await waitFor(() => {
-      expect(mockCreateContribution).toHaveBeenCalledWith(
-        expect.objectContaining({ contributorName: 'Maria', amount: 50000 })
-      );
+      expect(screen.queryByText('Ya transferiste? Regístralo aquí')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows progress bar with collected amount', async () => {
+    mockGetCashFund.mockResolvedValue({ cashFund: { ...activeFund, collectedAmount: 50000 }, promisedTotal: 0 });
+
+    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} />);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('$50.000');
+    });
+  });
+
+  it('shows boost activation for owner when no fund exists', async () => {
+    mockGetCashFund.mockResolvedValue({ cashFund: null, promisedTotal: 0 });
+
+    render(<CashFundSection eventId="event-1" isOwner={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Activar gratis')).toBeInTheDocument();
+    });
+  });
+
+  it('shows boost activation for owner when fund exists but inactive', async () => {
+    mockGetCashFund.mockResolvedValue({ cashFund: { ...activeFund, isActive: false }, promisedTotal: 0 });
+
+    render(<CashFundSection eventId="event-1" isOwner={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Activar')).toBeInTheDocument();
+    });
+  });
+
+  it('shows bank account info when configured', async () => {
+    mockGetCashFund.mockResolvedValue({ cashFund: { ...activeFund, bankPhone: '3001234567', bankType: 'nequi' }, promisedTotal: 0 });
+
+    render(<CashFundSection eventId="event-1" isOwner={false} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Nequi')).toBeInTheDocument();
+      expect(screen.getByText('3001234567')).toBeInTheDocument();
     });
   });
 });

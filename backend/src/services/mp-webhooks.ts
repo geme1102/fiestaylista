@@ -1,9 +1,8 @@
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { events, users, boostPayments, proPayments, cashContributions, cashFunds } from '../db/schema.js';
+import { users, proPayments } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
-import * as cashFundService from './cashFund.js';
 import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -57,90 +56,13 @@ export async function handleProPayment(paymentId: string, userId: string, interv
   }
 }
 
-async function handleBoostPayment(paymentId: string, ref: string): Promise<void> {
-  const eventId = ref.slice(6);
-  if (!eventId) return;
-
-  const result = await db.transaction(async (tx) => {
-    try {
-      await tx
-        .insert(boostPayments)
-        .values({ eventId, mpPaymentId: paymentId, amount: config.BOOST_PRICE_CENTS });
-    } catch (err: unknown) {
-      if ((err as Record<string, unknown>)?.code === '23505') {
-        log.info(`Boost payment ${paymentId} already processed`);
-        return null;
-      }
-      throw err;
-    }
-
-    await tx
-      .update(events)
-      .set({
-        boostedUntil: sql`GREATEST(COALESCE(${events.boostedUntil}, NOW()), NOW()) + INTERVAL '30 days'`,
-        updatedAt: new Date(),
-      })
-      .where(eq(events.id, eventId));
-
-    return true;
-  });
-
-  if (result) {
-    await db
-      .insert(cashFunds)
-      .values({ eventId, title: 'Lluvia de sobres', isActive: true })
-      .onConflictDoNothing({ target: cashFunds.eventId });
-  }
-}
-
-async function revertBoostPayment(paymentId: string, ref: string): Promise<void> {
-  const eventId = ref.slice(6);
-  if (!eventId) return;
-
-  await db.transaction(async (tx) => {
-    const [payment] = await tx
-      .update(boostPayments)
-      .set({ status: 'refunded' })
-      .where(and(
-        eq(boostPayments.mpPaymentId, paymentId),
-        ne(boostPayments.status, 'refunded'),
-      ))
-      .returning({ id: boostPayments.id });
-
-    if (!payment) return;
-
-    await tx
-      .update(events)
-      .set({
-        boostedUntil: sql`CASE
-          WHEN ${events.boostedUntil} IS NULL OR ${events.boostedUntil} <= NOW() THEN NULL
-          WHEN ${events.boostedUntil} - INTERVAL '30 days' <= NOW() THEN NULL
-          ELSE ${events.boostedUntil} - INTERVAL '30 days'
-        END`,
-        updatedAt: new Date(),
-      })
-      .where(eq(events.id, eventId));
-  });
-}
-
 export async function handlePaymentNotification(paymentId: string): Promise<void> {
   const info = await fetchPaymentInfo(paymentId);
   const ref = info.externalReference;
 
   if (!ref) return;
 
-  if (ref.startsWith('boost_')) {
-    if (info.status === 'approved') {
-      const diff = Math.abs(info.transactionAmount - config.BOOST_PRICE_CENTS);
-      if (diff > 1 && diff / config.BOOST_PRICE_CENTS > 0.01) {
-        log.error(`Monto de boost inválido: esperado ${config.BOOST_PRICE_CENTS}, recibido ${info.transactionAmount}`);
-        return;
-      }
-      await handleBoostPayment(paymentId, ref);
-    } else if (info.status === 'refunded' || info.status === 'charged_back') {
-      await revertBoostPayment(paymentId, ref);
-    }
-  } else if (ref.startsWith('pro_')) {
+  if (ref.startsWith('pro_')) {
     if (info.status === 'approved') {
       const parts = ref.split('_');
       const userId = parts[1];
@@ -157,27 +79,6 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       const parts = ref.split('_');
       const userId = parts[1];
       if (userId) await subscriptionService.cancelSubscription(userId, true);
-    }
-  } else {
-    if (info.status === 'approved') {
-      const [contribution] = await db
-        .select({ amount: cashContributions.amount })
-        .from(cashContributions)
-        .where(eq(cashContributions.id, ref))
-        .limit(1);
-
-      if (contribution) {
-        const diff = Math.abs(info.transactionAmount - contribution.amount);
-        if (diff > 1 && diff / contribution.amount > 0.01) {
-          log.error(`Monto de contribución inválido: esperado ${contribution.amount}, recibido ${info.transactionAmount}`);
-          return;
-        }
-      } else {
-        log.warn(`Contribución no encontrada para ref: ${ref}, paymentId: ${paymentId}`);
-      }
-      await cashFundService.completeContribution(ref, paymentId);
-    } else if (info.status === 'refunded' || info.status === 'charged_back') {
-      await cashFundService.revertContribution(ref);
     }
   }
 }

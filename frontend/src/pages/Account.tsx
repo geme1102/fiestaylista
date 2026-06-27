@@ -209,10 +209,6 @@ export default function Account() {
                   <span className="text-on-surface-variant">Fotos por evento</span>
                   <span className="text-on-surface font-medium">{limits.maxPhotosPerEvent}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">Comisión Lluvia de Sobres</span>
-                  <span className="text-on-surface font-medium">{limits.cashFundCommission}%</span>
-                </div>
               </div>
 
               {user.tier === 'free' && (

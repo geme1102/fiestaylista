@@ -1,16 +1,11 @@
 import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCashFund, createContribution, getContributions, boostEvent, createPromise } from '../services/cashFund';
+import { getCashFund, getContributions, boostEvent, createPromise } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
-import { formatCOP, validateRedirectUrl } from '../utils/format';
-import { useTurnstile } from '../hooks/useTurnstile';
+import { formatCOP } from '../utils/format';
 import type { CashFund, CashContribution } from '../types';
-import { TIER_LIMITS } from '../types';
 
-const SUGGESTED_AMOUNTS = [30000, 50000, 100000, 200000];
 const MAX_RECENT_CONTRIBUTIONS = 5;
-export const MIN_AMOUNT = 2000;
-export const MAX_AMOUNT = 5000000;
 
 const INITIALS_COLORS = ['bg-secondary-fixed text-secondary', 'bg-primary-fixed text-primary', 'bg-tertiary-fixed text-tertiary'];
 
@@ -26,26 +21,16 @@ function getInitialsBg(name: string) {
   return INITIALS_COLORS[Math.abs(hash) % INITIALS_COLORS.length];
 }
 
-const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerTier, easyRead, guestName }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean; guestName?: string }) {
+const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRead, guestName }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean; guestName?: string }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [promisedTotal, setPromisedTotal] = useState(0);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
   const [loading, setLoading] = useState(true);
-  const [contributing, setContributing] = useState(false);
   const [boostModal, setBoostModal] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
-
-  const [amount, setAmount] = useState('');
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { containerRef, token: turnstileToken } = useTurnstile();
-  const turnstileTokenRef = useRef(turnstileToken);
-  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
-  const [turnstileBlocked, setTurnstileBlocked] = useState(false);
 
-  const commission = TIER_LIMITS[ownerTier as keyof typeof TIER_LIMITS]?.cashFundCommission ?? 5;
   const canContribute = !isOwner && fund?.isActive;
 
   const loadFund = useCallback(async () => {
@@ -54,8 +39,12 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
       setFund(res.cashFund);
       setPromisedTotal(res.promisedTotal ?? 0);
       if (res.cashFund) {
-        const contribRes = await getContributions(res.cashFund.id);
-        setContributions(contribRes.contributions.filter((c) => c.status === 'completed'));
+        try {
+          const contribRes = await getContributions(res.cashFund.id);
+          setContributions(contribRes.contributions.filter((c) => c.status === 'promised'));
+        } catch {
+          // guests cannot see contributions list, that's fine
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al cargar la Lluvia de Sobres. Recarga la página e intenta de nuevo.';
@@ -86,100 +75,18 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
     }
   }, [fund?.collectedAmount, fund?.targetAmount]);
 
-  const handleContribute = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fund || contributing) return;
-
-    const rawAmount = selectedAmount || amount;
-    const parsedAmount = typeof rawAmount === 'string' ? Number(rawAmount) : rawAmount;
-    if (!Number.isInteger(parsedAmount) || parsedAmount < MIN_AMOUNT) {
-      showToast('El monto mínimo es $2,000 COP', 'error');
-      return;
-    }
-    if (parsedAmount > MAX_AMOUNT) {
-      showToast(`El monto máximo es $${MAX_AMOUNT.toLocaleString('es-CO')} COP`, 'error');
-      return;
-    }
-    const amountInCents = parsedAmount;
-    if (!guestName?.trim()) {
-      showToast('Escribe tu nombre', 'error');
-      return;
-    }
-
-    let token = turnstileToken;
-    if (!token) {
-      for (let i = 0; i < 25; i++) {
-        await new Promise(r => setTimeout(r, 200));
-        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
-      }
-    }
-
-    if (!token) {
-      setTurnstileBlocked(true);
-      showToast('No se pudo verificar que no eres un robot. Si usas un bloqueador de anuncios, desactívalo o intenta con otro navegador.', 'error');
-      return;
-    }
-
-    setContributing(true);
-    try {
-      const result = await createContribution({
-        cashFundId: fund.id,
-        contributorName: guestName!.trim(),
-        amount: amountInCents,
-        message: message.trim() || undefined,
-        turnstileToken: token ?? undefined,
-      });
-
-      if (result.redirectUrl) {
-        const validatedUrl = validateRedirectUrl(result.redirectUrl);
-        if (validatedUrl) {
-          window.location.href = validatedUrl;
-        } else {
-          showToast('URL de pago inválida', 'error');
-        }
-        return;
-      }
-
-      setShowConfetti(true);
-      confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 3000);
-      showToast('¡Gracias por tu contribución! 💛', 'success');
-      setAmount('');
-      setSelectedAmount(null);
-      setMessage('');
-      loadFund();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al procesar tu aporte. Verifica tus datos e intenta de nuevo.', 'error');
-    } finally {
-      setContributing(false);
-    }
-  };
-
   const handleBoost = async () => {
     setBoostLoading(true);
     try {
-      const result = await boostEvent(eventId);
-      if (result.url) {
-        const validatedUrl = validateRedirectUrl(result.url);
-        if (validatedUrl) {
-          window.location.href = validatedUrl;
-        } else {
-          showToast('URL de pago inválida', 'error');
-        }
-      } else {
-        showToast('Evento boosteado 🚀', 'success');
-        setBoostModal(false);
-        loadFund();
-      }
+      await boostEvent(eventId);
+      showToast('Lluvia de sobres activada 🚀', 'success');
+      setBoostModal(false);
+      loadFund();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
       setBoostLoading(false);
     }
-  };
-
-  const selectAmount = (_btn: HTMLElement, amt: number) => {
-    setSelectedAmount(amt);
-    setAmount('');
   };
 
   const recentContributions = useMemo(() =>
@@ -209,7 +116,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
               onClick={() => setBoostModal(true)}
               className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
             >
-              Activar por $10.000 COP
+              Activar gratis
             </button>
           </div>
           {boostModal && (
@@ -315,15 +222,15 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
               </div>
             )}
 
-            {/* Payment Method Badges */}
+            {/* Badges */}
             <div className="grid grid-cols-3 gap-2 mt-6 w-full">
               <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
-                <span className="material-symbols-outlined text-secondary text-lg mb-1">payments</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Mercado Pago</span>
+                <span className="material-symbols-outlined text-secondary text-lg mb-1">account_balance</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Transferencia Directa</span>
               </div>
               <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">verified_user</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">100% Garantizado</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">100% Confiable</span>
               </div>
               <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">savings</span>
@@ -334,141 +241,45 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
         </motion.div>
       </section>
 
-      {/* Turnstile (invisible) */}
-      <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
-      {turnstileBlocked && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-start gap-2">
-          <span className="material-symbols-outlined text-lg shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-          <span>No se pudo verificar que no eres un robot. Si usas un bloqueador de anuncios, desactívalo o intenta con otro navegador.</span>
-        </div>
-      )}
-
-      {/* SECTION 2: FORMULARIO DE APORTE */}
+      {/* SECTION 2: FORMULARIO DE APORTE (Honor system) */}
       {canContribute && (
         <section className="space-y-4 mt-8">
-          <h2 className="font-headline-md text-headline-md text-on-surface">Realiza tu Aporte</h2>
-          <div className="bg-surface rounded-3xl p-6 shadow-sm border border-surface-variant space-y-6">
-            <div className="space-y-3">
-              <p className="font-label-md text-label-md text-on-surface-variant">Selecciona un monto:</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {SUGGESTED_AMOUNTS.map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={(e) => selectAmount(e.currentTarget, amt)}
-                    className={`p-3 rounded-2xl border font-bold transition-all active:scale-95 ${
-                      selectedAmount === amt
-                        ? 'border-secondary bg-gradient-to-br from-secondary-container to-secondary text-white scale-105 shadow-md'
-                        : 'border-surface-variant text-on-surface hover:bg-surface-container'
-                    }`}
-                  >
-                    {formatCOP(amt).replace('$', '').replace('COP', '').trim()}K
-                  </button>
-                ))}
-              </div>
-            </div>
-            <form onSubmit={handleContribute} className="space-y-4">
-              <div className="relative">
-                <label htmlFor="custom-amount" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Monto Personalizado</label>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">$</span>
-                  <input
-                    id="custom-amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => { setAmount(e.target.value); setSelectedAmount(null); }}
-                    placeholder="Otro valor"
-                    min="2000"
-                    inputMode="numeric"
-                    enterKeyHint="next"
-                    className="w-full pl-8 pr-4 py-3 rounded-xl border border-surface-variant focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-surface-container-low"
-                  />
-                </div>
-              </div>
-              <div className="relative">
-                <label htmlFor="contributor-name" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Tu Nombre</label>
-                <input
-                  id="contributor-name"
-                  type="text"
-                  value={guestName ?? ''}
-                  readOnly
-                  placeholder="Ej. Familia Rodríguez"
-                  autoComplete="name"
-                  className="w-full px-4 py-3 rounded-xl border border-surface-variant bg-surface-container-high text-on-surface/70 outline-none cursor-default"
-                />
-              </div>
-              <div className="relative">
-                <label htmlFor="contributor-message" className="block text-xs font-bold text-on-surface-variant mb-1 ml-1 uppercase">Mensaje de Felicitación</label>
-                <textarea
-                  id="contributor-message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Escribe un mensaje especial para los anfitriones..."
-                  rows={3}
-                  maxLength={500}
-                  className="w-full px-4 py-3 rounded-xl border border-surface-variant focus:ring-2 focus:ring-primary outline-none bg-surface-container-low resize-none"
-                />
-                <p className="text-[10px] text-right text-on-surface-variant mt-1">Máximo 500 caracteres</p>
-              </div>
-              <button
-                type="submit"
-                disabled={contributing}
-                className="w-full bg-gradient-to-r from-secondary-container to-secondary text-white font-bold py-4 rounded-2xl shadow-lg shadow-secondary/20 shimmer-bg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>mail</span>
-                {contributing ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Procesando...</span> : 'Enviar mi aporte'}
-              </button>
-              <div className="pt-4 border-t border-surface-variant flex flex-col items-center gap-3">
-                <p className="text-[10px] text-center text-on-surface-variant max-w-[200px]">
-                  Comisión <span className="font-bold">{commission}%</span> de Fiesta y Lista por procesar el pago. Transacción segura con Mercado Pago.
-                </p>
-                <div className="flex items-center grayscale opacity-60">
-                  <span className="text-xs font-bold text-on-surface-variant">Mercado Pago</span>
-                </div>
-              </div>
-            </form>
-          </div>
-        </section>
-      )}
-
-      {/* LA JARRA: Transferencia directa */}
-      {fund && fund.bankPhone && (
-        <section className="space-y-4 mt-8">
-          <h2 className="font-headline-md text-headline-md text-on-surface">💸 Transferencia Directa</h2>
+          <h2 className="font-headline-md text-headline-md text-on-surface">Ya transferiste? Regístralo aquí</h2>
           <div className="rounded-3xl p-6 border border-secondary/20 shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(255,248,230,0.6), rgba(255,255,255,0.8))' }}>
             <p className="text-sm text-on-surface-variant mb-4">
-              El anfitrión recibe transferencias directas. Usa los datos de abajo para enviar tu aporte y luego márcalo como enviado.
+              Envía tu aporte directo a la cuenta del anfitrión y luego regístralo aquí para que aparezca en la lista.
             </p>
-            <div className="bg-white/60 rounded-2xl p-4 border border-secondary/10 mb-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary">account_balance</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
-                  <p className="font-bold text-on-surface">
-                    {fund.bankType === 'nequi' && 'Nequi'}
-                    {fund.bankType === 'daviplata' && 'Daviplata'}
-                    {fund.bankType === 'bancolombia' && 'Bancolombia'}
-                    {!['nequi', 'daviplata', 'bancolombia'].includes(fund.bankType || '') && (fund.bankType || 'Cuenta bancaria')}
-                  </p>
+            {fund.bankPhone && (
+              <div className="bg-white/60 rounded-2xl p-4 border border-secondary/10 mb-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-secondary">account_balance</span>
+                  <div>
+                    <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
+                    <p className="font-bold text-on-surface">
+                      {fund.bankType === 'nequi' && 'Nequi'}
+                      {fund.bankType === 'daviplata' && 'Daviplata'}
+                      {fund.bankType === 'bancolombia' && 'Bancolombia'}
+                      {!['nequi', 'daviplata', 'bancolombia'].includes(fund.bankType || '') && (fund.bankType || 'Cuenta bancaria')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-secondary">smartphone</span>
+                  <div>
+                    <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
+                    <p className="font-bold text-on-surface text-lg tracking-wider">{fund.bankPhone}</p>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(fund.bankPhone || ''); showToast('Número copiado 📋', 'success'); }}
+                    className="ml-auto p-2 min-h-[44px] min-w-[44px] rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all flex items-center justify-center"
+                    aria-label="Copiar número"
+                  >
+                    <span className="material-symbols-outlined text-base">content_copy</span>
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary">smartphone</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
-                  <p className="font-bold text-on-surface text-lg tracking-wider">{fund.bankPhone}</p>
-                </div>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(fund.bankPhone || ''); showToast('Número copiado 📋', 'success'); }}
-                  className="ml-auto p-2 min-h-[44px] min-w-[44px] rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all flex items-center justify-center"
-                  aria-label="Copiar número"
-                >
-                  <span className="material-symbols-outlined text-base">content_copy</span>
-                </button>
-              </div>
-            </div>
-
-            {canContribute && <PromiseForm fundId={fund.id} loadFund={loadFund} guestName={guestName} />}
+            )}
+            <PromiseForm fundId={fund.id} loadFund={loadFund} guestName={guestName} />
           </div>
         </section>
       )}
@@ -707,7 +518,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
       >
         <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
         <p className="text-sm text-on-surface-variant mb-4">
-          Activa el Cash Fund para este evento durante 30 días por solo <strong className="text-on-surface">$10.000 COP</strong>.
+          Activa el Cash Fund para este evento durante 30 días <strong className="text-on-surface">gratis</strong>.
         </p>
         <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
           <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
@@ -719,7 +530,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">
-            {loading ? '...' : 'Pagar $10.000 COP'}
+            {loading ? '...' : 'Activar gratis'}
           </button>
         </div>
       </motion.div>

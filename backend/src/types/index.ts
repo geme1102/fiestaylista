@@ -29,13 +29,11 @@ export interface TierLimits {
   maxEvents: number;
   maxGiftsPerEvent: number;
   maxPhotosPerEvent: number;
-  analytics: boolean;
-  cashFundCommission: number;
 }
 
 export const TIER_LIMITS: Record<Tier, TierLimits> = {
-  free: { maxEvents: 2, maxGiftsPerEvent: 10, maxPhotosPerEvent: 3, analytics: false, cashFundCommission: 5 },
-  pro: { maxEvents: 20, maxGiftsPerEvent: 50, maxPhotosPerEvent: 15, analytics: true, cashFundCommission: 5 },
+  free: { maxEvents: 1, maxGiftsPerEvent: 15, maxPhotosPerEvent: 3 },
+  pro: { maxEvents: 1, maxGiftsPerEvent: 100, maxPhotosPerEvent: 20 },
 };
 
 export const TIER_ORDER: Record<Tier, number> = {

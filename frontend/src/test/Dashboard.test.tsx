@@ -160,14 +160,6 @@ describe('Dashboard', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
-  it('new event button opens create modal', async () => {
-    renderDashboard([mockSingleEvent]);
-    await waitFor(() => expect(screen.getByTestId('new-event-button')).toBeTruthy());
-
-    fireEvent.click(screen.getByTestId('new-event-button'));
-    expect(screen.getByRole('dialog')).toBeTruthy();
-  });
-
   it('shows upgrade CTA when at event limit', async () => {
     renderDashboard(mockEvents);
     await waitFor(() => {

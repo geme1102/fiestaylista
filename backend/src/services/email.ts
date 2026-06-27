@@ -109,10 +109,10 @@ export async function sendProConfirmationEmail(email: string, name: string, inte
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin:16px 0">
           <p style="margin:0;color:#991b1b;font-size:14px"><strong>Qué incluye:</strong></p>
           <ul style="margin:8px 0 0;padding-left:20px;color:#991b1b;font-size:14px">
-            <li>Eventos ilimitados</li>
-            <li>Lista de regalos sin límite de fotos</li>
-            <li>Prioridad en boost de eventos</li>
-            <li>Sin límite de invitados</li>
+            <li>1 evento</li>
+            <li>100 regalos por evento</li>
+            <li>20 fotos por evento</li>
+            <li>Lluvia de Sobres: tus invitados reportan sus aportes</li>
           </ul>
         </div>
         <div style="text-align:center;margin:24px 0">

@@ -17,25 +17,25 @@ const PLANS = [
     yearlyPrice: 0,
     popular: false,
     features: [
-      { text: '2 eventos de por vida', included: true },
-      { text: '10 regalos por evento', included: true },
+      { text: '1 evento', included: true },
+      { text: '15 regalos por evento', included: true },
       { text: '3 fotos por evento', included: true },
       { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
-      { text: 'Lluvia de Sobres (5% comisión al retirar)', included: true },
+      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
     ],
   },
   {
     tier: 'pro' as const,
     name: 'Pro',
-    price: 24990,
-    yearlyPrice: 288000,
+    price: 59900,
+    yearlyPrice: 660000,
     popular: true,
     badge: 'MÁS ELEGIDO',
     features: [
-      { text: '20 eventos', included: true },
-      { text: '50 regalos por evento', included: true },
-      { text: '15 fotos por evento', included: true },
-      { text: 'Lluvia de Sobres (5% comisión al retirar)', included: true },
+      { text: '1 evento', included: true },
+      { text: '100 regalos por evento', included: true },
+      { text: '20 fotos por evento', included: true },
+      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
       { text: 'Panel de estadísticas con gráficas', included: true },
       { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
     ],
@@ -52,11 +52,10 @@ const ALL_INCLUDED = [
 ];
 
 const FAQS = [
-  { q: '¿Cómo retiro el dinero que me den los invitados?', a: 'Solicitas el retiro desde tu panel y lo recibes en tu cuenta bancaria en Colombia. El proceso tarda de 24 a 48 horas hábiles.' },
-  { q: '¿Cuántos regalos puedo agregar?', a: 'En el plan Gratis puedes agregar hasta 10 regalos por evento. En el plan Pro son hasta 50 regalos por evento. Si necesitas más, el Pro te da bastante espacio.' },
-  { q: '¿Con qué pueden pagar mis invitados?', a: 'Tus invitados pueden pagar con tarjeta de crédito, PSE, Nequi o Daviplata. Todo a través de Mercado Pago, la plataforma más usada en Colombia.' },
-  { q: '¿Puedo empezar gratis y luego actualizar?', a: 'Sí, empiezas sin pagar nada. Cuando quieras más eventos o regalos, actualizas a Pro y listo. Sin contratos ni permanencia.' },
-  { q: '¿Es seguro para mis invitados?', a: 'Sí, usamos Mercado Pago con encriptación bancaria. Tus invitados pueden pagar tranquilos, sus datos están protegidos.' },
+  { q: '¿Cómo retiro el dinero que me den los invitados?', a: 'La Lluvia de Sobres funciona por transferencia directa: tus invitados envían su aporte a tu cuenta Nequi, Bancolombia o Daviplata. La app solo muestra cuánto han reportado. Tú recibes el dinero directamente.' },
+  { q: '¿Cuántos regalos puedo agregar?', a: 'En el plan Gratis puedes agregar hasta 15 regalos por evento. En el plan Pro son hasta 100 regalos por evento. Ambos planes incluyen 1 evento.' },
+  { q: '¿Puedo empezar gratis y luego actualizar?', a: 'Sí, empiezas sin pagar nada. Cuando quieras más regalos, actualizas a Pro y listo. Sin contratos ni permanencia.' },
+  { q: '¿Es seguro para mis invitados?', a: 'Manejan su dinero directamente con su banco. Tus invitados transfieren a tu cuenta sin intermediarios.' },
 ];
 
 export default function Pricing() {
@@ -143,25 +142,25 @@ export default function Pricing() {
     <>
       <Helmet>
         <title>Planes - Fiesta y Lista</title>
-        <meta name="description" content="Planes de Fiesta y Lista: plan gratis y Pro desde $24.990/mes. Sin tarjeta de crédito para empezar. Crea listas de regalos ilimitadas." />
+        <meta name="description" content="Planes de Fiesta y Lista: plan gratis y Pro desde $59.900/mes. Sin tarjeta de crédito para empezar. Crea tu lista de regalos." />
         <meta name="keywords" content="fiestaylista planes, lista de regalos precios, plan pro, suscripción, lista de regalos Colombia" />
         <meta property="og:title" content="Planes - Fiesta y Lista" />
-        <meta property="og:description" content="Planes de Fiesta y Lista: gratis y Pro desde $24.990/mes. Crea listas de regalos para baby showers, bodas y cumpleaños." />
+        <meta property="og:description" content="Planes de Fiesta y Lista: gratis y Pro desde $59.900/mes. Crea listas de regalos para baby showers, bodas y cumpleaños." />
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
-        <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis y Pro desde $24.990/mes." />
+        <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis y Pro desde $59.900/mes." />
         <link rel="canonical" href="https://fiestaylista.com/pricing" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
             "name": "Fiesta y Lista Pro",
-            "description": "Plan Pro de Fiesta y Lista con 20 eventos, 50 regalos por evento y Lluvia de Sobres incluida.",
+            "description": "Plan Pro de Fiesta y Lista con 1 evento, 100 regalos por evento y Lluvia de Sobres incluida.",
             "url": "https://fiestaylista.com/pricing",
             "offers": [
               {
                 "@type": "Offer",
                 "name": "Plan Mensual Pro",
-                "price": "24990",
+                "price": "59900",
                 "priceCurrency": "COP",
                 "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 "availability": "https://schema.org/InStock",
@@ -170,7 +169,7 @@ export default function Pricing() {
               {
                 "@type": "Offer",
                 "name": "Plan Anual Pro",
-                "price": "288000",
+                "price": "660000",
                 "priceCurrency": "COP",
                 "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 "availability": "https://schema.org/InStock",
@@ -243,7 +242,7 @@ export default function Pricing() {
             </div>
             {yearly && (
               <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-caption text-caption">
-                Ahorra 4%
+                Ahorra 8%
               </span>
             )}
           </div>

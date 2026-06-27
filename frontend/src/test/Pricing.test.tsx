@@ -61,13 +61,13 @@ describe('Pricing', () => {
   it('shows monthly by default', () => {
     renderPricing();
     expect(screen.getByText('$0')).toBeTruthy();
-    expect(screen.getByText('$24.990')).toBeTruthy();
+    expect(screen.getByText('$59.900')).toBeTruthy();
   });
 
   it('toggles to yearly pricing', () => {
     renderPricing();
     fireEvent.click(screen.getByTestId('pricing-toggle-yearly'));
-    expect(screen.getByText('$288.000')).toBeTruthy();
+    expect(screen.getByText('$660.000')).toBeTruthy();
   });
 
   it('shows badge on Pro card', () => {
@@ -114,6 +114,6 @@ describe('Pricing', () => {
     renderPricing();
     const faqQuestion = screen.getByText('¿Cómo retiro el dinero que me den los invitados?');
     fireEvent.click(faqQuestion.closest('[class*="glass-card"]')!);
-    expect(screen.getByText(/Solicitas el retiro desde tu panel/)).toBeTruthy();
+    expect(screen.getByText(/transferencia directa/)).toBeTruthy();
   });
 });

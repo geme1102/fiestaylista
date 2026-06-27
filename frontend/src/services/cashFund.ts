@@ -1,32 +1,8 @@
 import { apiClient } from './api';
 import type { CashFund, CashContribution } from '../types';
 
-interface ContributeData {
-  cashFundId: string;
-  contributorName: string;
-  amount: number;
-  message?: string;
-  turnstileToken?: string;
-}
-
-interface ContributeResult {
-  redirectUrl: string;
-  contributionId: string;
-}
-
 export function getCashFund(eventId: string): Promise<{ cashFund: CashFund | null; promisedTotal?: number }> {
   return apiClient.get<{ cashFund: CashFund | null; promisedTotal?: number }>(`/api/events/${eventId}/cash-fund`);
-}
-
-export function createContribution(data: ContributeData): Promise<ContributeResult> {
-  const { amount, cashFundId, contributorName, message, turnstileToken } = data;
-  return apiClient.post<ContributeResult>('/api/cash-fund/contribute', {
-    cashFundId,
-    contributorName,
-    amount,
-    message,
-    turnstileToken,
-  });
 }
 
 export function getContributions(cashFundId: string): Promise<{ contributions: CashContribution[] }> {
@@ -37,6 +13,6 @@ export function boostEvent(eventId: string): Promise<{ url?: string; message?: s
   return apiClient.post<{ url?: string; message?: string; boostedUntil?: string }>(`/api/events/${eventId}/boost`);
 }
 
-export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string; turnstileToken?: string }): Promise<{ contribution: CashContribution; promisedTotal: number }> {
-  return apiClient.post<{ contribution: CashContribution; promisedTotal: number }>('/api/cash-fund/promise', data);
+export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string; turnstileToken?: string }): Promise<{ contribution: CashContribution; cashFund: CashFund }> {
+  return apiClient.post<{ contribution: CashContribution; cashFund: CashFund }>('/api/cash-fund/promise', data);
 }

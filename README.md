@@ -54,10 +54,8 @@ cd ../frontend && npm install
 | `CLOUDINARY_CLOUD_NAME` | No | Nombre del cloud de Cloudinary |
 | `CLOUDINARY_API_KEY` | No | API key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | No | API secret de Cloudinary |
-| `PRO_MONTHLY_PRICE_CENTS` | No | Precio mensual Pro en centavos (default: 24990) |
-| `PRO_YEARLY_PRICE_CENTS` | No | Precio anual Pro en centavos (default: 288000) |
-| `BOOST_PRICE_CENTS` | No | Precio del boost en centavos (default: 10000) |
-| `CONTRIBUTION_EXPIRY_HOURS` | No | Horas antes de expirar contribuciones (default: 24) |
+| `PRO_MONTHLY_PRICE_CENTS` | No | Precio mensual Pro en centavos (default: 59900) |
+| `PRO_YEARLY_PRICE_CENTS` | No | Precio anual Pro en centavos (default: 660000) |
 
 ### Frontend — Variables de Entorno
 

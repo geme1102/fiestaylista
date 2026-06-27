@@ -42,34 +42,6 @@ describe('BUG-17: Validación de formato de email', () => {
   });
 });
 
-// BUG-14: CashFund amount validation (real imports)
-describe('BUG-14: Validación de monto máximo CashFund', () => {
-  it('debería usar constantes reales de CashFundSection', async () => {
-    const { MIN_AMOUNT, MAX_AMOUNT } = await import('../components/CashFundSection');
-
-    expect(MIN_AMOUNT).toBe(2000);
-    expect(MAX_AMOUNT).toBe(5000000);
-  });
-
-  it('debería validar rangos correctamente', async () => {
-    const { MIN_AMOUNT, MAX_AMOUNT } = await import('../components/CashFundSection');
-
-    const validate = (amt: number) => {
-      if (!Number.isInteger(amt) || amt < MIN_AMOUNT) return 'MIN_ERROR';
-      if (amt > MAX_AMOUNT) return 'MAX_ERROR';
-      return 'OK';
-    };
-
-    expect(validate(2000)).toBe('OK');
-    expect(validate(50000)).toBe('OK');
-    expect(validate(5000000)).toBe('OK');
-    expect(validate(5000001)).toBe('MAX_ERROR');
-    expect(validate(0)).toBe('MIN_ERROR');
-    expect(validate(1999)).toBe('MIN_ERROR');
-    expect(validate(50.5)).toBe('MIN_ERROR');
-  });
-});
-
 // BUG-23: localStorage try/catch
 describe('BUG-23: localStorage con try/catch', () => {
   it('debería manejar localStorage.getItem con error', () => {

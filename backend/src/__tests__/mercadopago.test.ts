@@ -11,9 +11,8 @@ vi.mock('../config.js', () => ({
     MERCADO_PAGO_ACCESS_TOKEN: 'test-token',
     BACKEND_URL: 'https://api.test.com',
     FRONTEND_URL: 'http://localhost:5173',
-    PRO_MONTHLY_PRICE_CENTS: 24990,
-    PRO_YEARLY_PRICE_CENTS: 288000,
-    BOOST_PRICE_CENTS: 10000,
+    PRO_MONTHLY_PRICE_CENTS: 59900,
+    PRO_YEARLY_PRICE_CENTS: 660000,
     NODE_ENV: 'test',
   },
 }));
@@ -154,7 +153,7 @@ describe('createProPreference', () => {
     expect(mockPreferenceCreate).toHaveBeenCalledTimes(1);
     const body = mockPreferenceCreate.mock.calls[0][0].body;
     expect(body.external_reference).toBe('pro_user-1_month');
-    expect(body.items[0].unit_price).toBe(24990);
+    expect(body.items[0].unit_price).toBe(59900);
   });
 
   it('uses yearly price for year interval', async () => {
@@ -168,7 +167,7 @@ describe('createProPreference', () => {
     expect(result).toEqual({ url: 'https://mp.com/pay/456' });
     const body = mockPreferenceCreate.mock.calls[0][0].body;
     expect(body.external_reference).toBe('pro_user-1_year');
-    expect(body.items[0].unit_price).toBe(288000);
+    expect(body.items[0].unit_price).toBe(660000);
   });
 
   it('throws if no init_point returned', async () => {

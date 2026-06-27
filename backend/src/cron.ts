@@ -4,7 +4,6 @@ import { failedWebhooks, refreshTokens, eventViews, auditLogs } from './db/schem
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions } from './services/subscription.js';
-import { cleanupStaleContributions } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import { createModuleLogger } from './utils/logger.js';
 
@@ -62,15 +61,6 @@ export function startCronJobs(): void {
         }
       } catch (error) {
         log.error({ error }, 'Error expirando suscripciones:');
-      }
-
-      try {
-        const staleCount = await cleanupStaleContributions();
-        if (staleCount > 0) {
-          log.info(`Contribuciones expiradas: ${staleCount}`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error limpiando contribuciones:');
       }
     });
   };
