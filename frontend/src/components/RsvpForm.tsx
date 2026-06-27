@@ -5,10 +5,10 @@ import { apiClient } from '../services/api';
 interface RsvpFormProps {
   eventId: string;
   eventTitle: string;
+  guestName: string;
 }
 
-export default function RsvpForm({ eventId }: RsvpFormProps) {
-  const [name, setName] = useState('');
+export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [companions, setCompanions] = useState(0);
@@ -22,7 +22,7 @@ export default function RsvpForm({ eventId }: RsvpFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    if (!guestName.trim()) {
       setError('El nombre es obligatorio');
       return;
     }
@@ -30,7 +30,7 @@ export default function RsvpForm({ eventId }: RsvpFormProps) {
     setError('');
     try {
       await apiClient.post(`/api/events/${eventId}/rsvp`, {
-        name: name.trim(),
+        name: guestName.trim(),
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
         companions,
@@ -95,12 +95,11 @@ export default function RsvpForm({ eventId }: RsvpFormProps) {
                 <input
                   id="rsvp-name"
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={guestName}
+                  readOnly
+                  className="w-full rounded-xl border border-outline-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
                   placeholder="Ej: María Pérez"
                   autoComplete="name"
-                  required
                 />
               </div>
 
@@ -180,7 +179,7 @@ export default function RsvpForm({ eventId }: RsvpFormProps) {
 
               <button
                 type="submit"
-                disabled={submitting || !name.trim()}
+                disabled={submitting || !guestName.trim()}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
               >
                 {submitting ? (

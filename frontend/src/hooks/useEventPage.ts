@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
@@ -21,7 +21,9 @@ export function useEventPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
-  const [claimName, setClaimName] = useState('');
+  const [guestName, setGuestName] = useState(() => {
+    try { return localStorage.getItem(`guestName:${slug}`) ?? ''; } catch { return ''; }
+  });
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -38,6 +40,15 @@ export function useEventPage() {
   const { containerRef: turnstileRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+
+  const slugRef = useRef(slug);
+  slugRef.current = slug;
+
+  useLayoutEffect(() => {
+    if (guestName && slugRef.current) {
+      try { localStorage.setItem(`guestName:${slugRef.current}`, guestName); } catch {}
+    }
+  }, [guestName]);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -142,7 +153,7 @@ export function useEventPage() {
   });
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
-    if (!event || !claimName.trim()) {
+    if (!event || !guestName.trim()) {
       inputRef.current?.focus();
       inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setShaking(true);
@@ -161,7 +172,7 @@ export function useEventPage() {
     setClaimingId(giftId);
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event.id}/gifts/${giftId}/claim`, {
-        claimedBy: claimName.trim(),
+        claimedBy: guestName.trim(),
         turnstileToken: token ?? undefined,
       });
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
@@ -169,7 +180,6 @@ export function useEventPage() {
       setShowSuccessModal(true);
       clearTimeout(confettiTimerRef.current);
       confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 3000);
-      setClaimName('');
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
@@ -181,7 +191,7 @@ export function useEventPage() {
     } finally {
       setClaimingId(null);
     }
-  }, [event, claimName]);
+  }, [event, guestName]);
 
   const handleDownload = useCallback(async (url: string) => {
     try {
@@ -239,7 +249,7 @@ export function useEventPage() {
 
   return {
     event, gifts, photos, loading, error,
-    claimingId, claimName, setClaimName, shaking,
+    claimingId, guestName, setGuestName, shaking,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
     categoryFilter, setCategoryFilter,

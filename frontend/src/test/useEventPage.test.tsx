@@ -154,7 +154,7 @@ describe('useEventPage', () => {
       expect(result.current.event).toBeTruthy();
     });
 
-    act(() => { result.current.setClaimName(''); });
+    act(() => { result.current.setGuestName(''); });
     await act(async () => { result.current.handleClaim('g-1', 'Olla'); });
 
     expect(result.current.shaking).toBe(true);
@@ -170,7 +170,7 @@ describe('useEventPage', () => {
       expect(result.current.event).toBeTruthy();
     });
 
-    act(() => { result.current.setClaimName('Test'); });
+    act(() => { result.current.setGuestName('Test'); });
     await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
 
     expect(mockApiClientPut).toHaveBeenCalledWith(
@@ -190,7 +190,7 @@ describe('useEventPage', () => {
       expect(result.current.event).toBeTruthy();
     });
 
-    act(() => { result.current.setClaimName('Test'); });
+    act(() => { result.current.setGuestName('Test'); });
     await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
 
     expect(mockShowToast).toHaveBeenCalledWith('Este regalo ya fue apartado por otra persona', 'error');
@@ -205,7 +205,7 @@ describe('useEventPage', () => {
       expect(result.current.event).toBeTruthy();
     });
 
-    act(() => { result.current.setClaimName('Test'); });
+    act(() => { result.current.setGuestName('Test'); });
     await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
 
     expect(mockShowToast).toHaveBeenCalledWith('Error al apartar el regalo. Intenta de nuevo.', 'error');

@@ -21,7 +21,7 @@ beforeEach(() => {
   mockUseEventPage.mockReturnValue({
     event: { id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento', isActive: true, createdAt: '2025-01-01' },
     gifts: [], photos: [], loading: false, error: null,
-    claimingId: null, claimName: '', setClaimName: vi.fn(), shaking: false,
+    claimingId: null, guestName: '', setGuestName: vi.fn(), shaking: false,
     showConfetti: false, showSuccessModal: false, setShowSuccessModal: vi.fn(),
     easyReadMode: false, setEasyReadMode: vi.fn(),
     categoryFilter: null, setCategoryFilter: vi.fn(),

@@ -12,13 +12,13 @@ interface Message {
 
 interface MessageWallProps {
   eventId: string;
+  guestName: string;
 }
 
-export default function MessageWall({ eventId }: MessageWallProps) {
+export default function MessageWall({ eventId, guestName }: MessageWallProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [authorName, setAuthorName] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +26,7 @@ export default function MessageWall({ eventId }: MessageWallProps) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`);
+        const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`, { skipAuthRedirect: true });
         if (!cancelled) setMessages(res.messages || []);
       } catch {
         /* ignore */
@@ -39,11 +39,11 @@ export default function MessageWall({ eventId }: MessageWallProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName.trim() || !newMessage.trim()) return;
+    if (!guestName.trim() || !newMessage.trim()) return;
     setSubmitting(true);
     try {
       const res = await apiClient.post<{ message: Message }>(`/api/events/${eventId}/messages`, {
-        authorName: authorName.trim(),
+        authorName: guestName.trim(),
         message: newMessage.trim(),
       });
       setMessages((prev) => [res.message, ...prev]);
@@ -90,11 +90,10 @@ export default function MessageWall({ eventId }: MessageWallProps) {
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
               <input
                 type="text"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
+                value={guestName}
+                readOnly
                 placeholder="Tu nombre"
-                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                required
+                className="w-full rounded-xl border border-outline-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
               />
               <textarea
                 value={newMessage}
@@ -106,7 +105,7 @@ export default function MessageWall({ eventId }: MessageWallProps) {
               />
               <button
                 type="submit"
-                disabled={submitting || !authorName.trim() || !newMessage.trim()}
+                disabled={submitting || !guestName.trim() || !newMessage.trim()}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
               >
                 {submitting ? (

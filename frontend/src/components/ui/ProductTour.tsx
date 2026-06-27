@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,7 +20,7 @@ function highlightTarget(selector: string): DOMRect | null {
 
 const PADDING = 8;
 const TOOLTIP_WIDTH = 280;
-const TOOLTIP_HEIGHT = 180;
+const GUESSED_HEIGHT = 180;
 
 export function ProductTour({
   steps,
@@ -38,6 +38,8 @@ export function ProductTour({
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [waitingForClick, setWaitingForClick] = useState(false);
   const observerRef = useRef<MutationObserver | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
 
   const start = useCallback(() => {
     if (localStorage.getItem(storageKey) === 'done') return;
@@ -98,7 +100,10 @@ export function ProductTour({
 
   useEffect(() => {
     const onResize = () => {
-      if (active) updateRect(steps[stepIndex]?.target);
+      if (active) {
+        updateRect(steps[stepIndex]?.target);
+        setMeasuredHeight(null);
+      }
     };
     window.addEventListener('resize', onResize);
     window.addEventListener('scroll', onResize, true);
@@ -108,6 +113,14 @@ export function ProductTour({
       observerRef.current?.disconnect();
     };
   }, [active, stepIndex, steps, updateRect]);
+
+  const tooltipHeight = measuredHeight ?? GUESSED_HEIGHT;
+
+  useLayoutEffect(() => {
+    if (!tooltipRef.current) return;
+    const h = tooltipRef.current.getBoundingClientRect().height;
+    if (h !== measuredHeight) setMeasuredHeight(h);
+  }, [stepIndex, active]);
 
   const skip = useCallback(() => {
     localStorage.setItem(storageKey, 'done');
@@ -125,15 +138,16 @@ export function ProductTour({
   const tooltipStyle: React.CSSProperties = rect
     ? (() => {
         const vw = window.innerWidth;
-        const vh = window.innerHeight;
+        const vh = window.visualViewport?.height ?? window.innerHeight;
         const p = placement;
+        const th = tooltipHeight;
         let top = 0;
         let left = 0;
         let translateX = '-50%';
         let translateY = '0';
 
         if (p === 'top') {
-          top = rect.top - PADDING - TOOLTIP_HEIGHT;
+          top = rect.top - PADDING - th;
           left = rect.left + rect.width / 2;
           translateY = '-100%';
           if (top < PADDING) {
@@ -156,12 +170,16 @@ export function ProductTour({
           translateY = '-50%';
         }
 
+        const maxTop = vh - th - PADDING;
         if (p === 'top' || p === 'bottom') {
-          if (top + TOOLTIP_HEIGHT > vh - PADDING) {
-            top = Math.max(PADDING, vh - TOOLTIP_HEIGHT - PADDING);
+          if (top + th > vh - PADDING) {
+            top = Math.max(PADDING, maxTop);
           }
           top = Math.max(PADDING, top);
           left = Math.max(TOOLTIP_WIDTH / 2 + PADDING, Math.min(left, vw - TOOLTIP_WIDTH / 2 - PADDING));
+        }
+        if (p === 'left' || p === 'right') {
+          top = Math.max(PADDING, Math.min(top, vh - th - PADDING));
         }
 
         return { top, left, transform: `translate(${translateX}, ${translateY})` };
@@ -201,7 +219,10 @@ export function ProductTour({
           className="absolute z-[101]"
           style={tooltipStyle}
         >
-          <div className="w-[280px] glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20">
+          <div
+            ref={tooltipRef}
+            className="w-[280px] max-h-[calc(100dvh-2rem)] overflow-y-auto pb-safe glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
+          >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary text-xs font-bold">
@@ -236,7 +257,7 @@ export function ProductTour({
               ) : (
                 <button
                   onClick={advance}
-                  className="px-4 py-2 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow"
+                  className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow"
                 >
                   {isLast ? '¡Listo! 🎉' : step.cta ?? 'Siguiente'}
                 </button>

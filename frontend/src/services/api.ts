@@ -27,6 +27,7 @@ interface RequestOptions {
   params?: Record<string, string>;
   timeout?: number;
   signal?: AbortSignal;
+  skipAuthRedirect?: boolean;
 }
 
 async function request<T>(method: HttpMethod, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
@@ -117,7 +118,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
           }
         } else {
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && !options?.skipAuthRedirect) {
             window.location.href = '/login';
           }
           throw new Error('Sesión expirada. Serás redirigido al inicio de sesión.');

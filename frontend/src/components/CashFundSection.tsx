@@ -26,7 +26,7 @@ function getInitialsBg(name: string) {
   return INITIALS_COLORS[Math.abs(hash) % INITIALS_COLORS.length];
 }
 
-const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerTier, easyRead }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean }) {
+const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerTier, easyRead, guestName }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean; guestName?: string }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [promisedTotal, setPromisedTotal] = useState(0);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
@@ -35,7 +35,6 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
   const [boostModal, setBoostModal] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
 
-  const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -102,7 +101,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
       return;
     }
     const amountInCents = parsedAmount;
-    if (!name.trim()) {
+    if (!guestName?.trim()) {
       showToast('Escribe tu nombre', 'error');
       return;
     }
@@ -125,7 +124,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
     try {
       const result = await createContribution({
         cashFundId: fund.id,
-        contributorName: name.trim(),
+        contributorName: guestName!.trim(),
         amount: amountInCents,
         message: message.trim() || undefined,
         turnstileToken: token ?? undefined,
@@ -144,7 +143,6 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
       setShowConfetti(true);
       confettiTimeoutRef.current = setTimeout(() => setShowConfetti(false), 3000);
       showToast('¡Gracias por tu contribución! 💛', 'success');
-      setName('');
       setAmount('');
       setSelectedAmount(null);
       setMessage('');
@@ -392,15 +390,11 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
                 <input
                   id="contributor-name"
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={guestName ?? ''}
+                  readOnly
                   placeholder="Ej. Familia Rodríguez"
                   autoComplete="name"
-                  inputMode="text"
-                  autoCapitalize="words"
-                  enterKeyHint="go"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-surface-variant focus:ring-2 focus:ring-primary outline-none bg-surface-container-low"
+                  className="w-full px-4 py-3 rounded-xl border border-surface-variant bg-surface-container-high text-on-surface/70 outline-none cursor-default"
                 />
               </div>
               <div className="relative">
@@ -474,7 +468,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, ownerT
               </div>
             </div>
 
-            {canContribute && <PromiseForm fundId={fund.id} loadFund={loadFund} />}
+            {canContribute && <PromiseForm fundId={fund.id} loadFund={loadFund} guestName={guestName} />}
           </div>
         </section>
       )}
@@ -620,8 +614,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
   );
 }
 
-function PromiseForm({ fundId, loadFund }: { fundId: string; loadFund: () => void }) {
-  const [name, setName] = useState('');
+function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund: () => void; guestName?: string }) {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -629,12 +622,12 @@ function PromiseForm({ fundId, loadFund }: { fundId: string; loadFund: () => voi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !amount) return;
+    if (!guestName?.trim() || !amount) return;
     setSubmitting(true);
     try {
       await createPromise({
         cashFundId: fundId,
-        contributorName: name.trim(),
+        contributorName: guestName!.trim(),
         amount: Number(amount),
         message: message.trim() || undefined,
       });
@@ -663,11 +656,10 @@ function PromiseForm({ fundId, loadFund }: { fundId: string; loadFund: () => voi
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={guestName ?? ''}
+          readOnly
           placeholder="Tu nombre"
-          className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
-          required
+          className="w-full rounded-xl border border-surface-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
         />
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm font-bold">$</span>
@@ -691,7 +683,7 @@ function PromiseForm({ fundId, loadFund }: { fundId: string; loadFund: () => voi
       />
       <button
         type="submit"
-        disabled={submitting || !name.trim() || !amount}
+        disabled={submitting || !guestName?.trim() || !amount}
         className="w-full py-3 rounded-xl bg-gradient-to-r from-secondary-container to-secondary text-white font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
       >
         {submitting ? (

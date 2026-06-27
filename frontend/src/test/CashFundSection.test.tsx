@@ -67,7 +67,7 @@ describe('CashFundSection', () => {
   });
 
   it('validates amount below minimum', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" />);
+    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
     const form = await waitForForm(container);
 
     fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '500' } });
@@ -77,7 +77,7 @@ describe('CashFundSection', () => {
   });
 
   it('validates amount above maximum', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" />);
+    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
     const form = await waitForForm(container);
 
     fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '9999999' } });
@@ -87,7 +87,7 @@ describe('CashFundSection', () => {
   });
 
   it('validates non-integer amount', async () => {
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" />);
+    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
     const form = await waitForForm(container);
 
     fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '2500.50' } });
@@ -101,10 +101,9 @@ describe('CashFundSection', () => {
     delete (window as any).location;
     (window as any).location = { href: '' };
 
-    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" />);
+    const { container } = render(<CashFundSection eventId="event-1" isOwner={false} ownerTier="free" guestName="Maria" />);
     const form = await waitForForm(container);
 
-    fireEvent.change(screen.getByPlaceholderText('Ej. Familia Rodríguez'), { target: { value: 'Maria' } });
     fireEvent.change(screen.getByPlaceholderText('Otro valor'), { target: { value: '50000' } });
     fireEvent.submit(form);
 

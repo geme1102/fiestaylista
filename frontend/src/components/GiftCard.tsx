@@ -15,9 +15,10 @@ interface GiftCardProps {
   freeingId?: string | null;
   deletingId?: string | null;
   isAdmin?: boolean;
+  guestName?: string;
 }
 
-const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, freeingId, deletingId, isAdmin }: GiftCardProps) {
+const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, freeingId, deletingId, isAdmin, guestName }: GiftCardProps) {
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
@@ -225,7 +226,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         <div className="mt-4">
           {!showClaimForm ? (
             <button
-              onClick={() => setShowClaimForm(true)}
+              onClick={() => { setClaimName(guestName ?? ''); setShowClaimForm(true); }}
               className="w-full bg-gradient-to-r from-secondary to-secondary-container text-on-secondary py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider hover:opacity-90 active:scale-[0.97]"
             >
               <span className="material-symbols-outlined text-base">group_add</span>

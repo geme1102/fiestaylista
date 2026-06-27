@@ -39,7 +39,7 @@ function EmptyGiftState() {
 export default function EventGuest() {
   const {
     event, gifts, photos, loading, error,
-    claimingId, claimName, setClaimName, shaking,
+    claimingId, guestName, setGuestName, shaking,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
     categoryFilter, setCategoryFilter,
@@ -54,8 +54,8 @@ export default function EventGuest() {
 
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
-  const claimNameRef = useRef(claimName);
-  claimNameRef.current = claimName;
+  const claimNameRef = useRef(guestName);
+  claimNameRef.current = guestName;
   const handleClaimWithRef = useCallback((id: string, name: string) => {
     setLastClaimedGift(name);
     setLastClaimedBy(claimNameRef.current);
@@ -68,7 +68,7 @@ export default function EventGuest() {
 
   useEffect(() => {
     if (!event) return;
-    apiClient.post('/api/analytics/view', { eventId: event.id }).catch(() => {});
+    apiClient.post('/api/analytics/view', { eventId: event.id }, { skipAuthRedirect: true }).catch(() => {});
   }, [event]);
 
   useEffect(() => {
@@ -297,6 +297,23 @@ export default function EventGuest() {
               <div className="w-full max-w-md z-10 relative">
                 <ShareButtons slug={event.slug} title={event.title} />
               </div>
+
+              <div className="w-full max-w-md mt-6">
+                <label htmlFor="guest-name" className="block text-sm font-semibold text-on-surface mb-1.5">Tu nombre</label>
+                <input
+                  ref={inputRef}
+                  id="guest-name"
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="Escribe tu nombre"
+                  autoComplete="name"
+                  inputMode="text"
+                  autoCapitalize="words"
+                  enterKeyHint="done"
+                  className={`w-full rounded-2xl border outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${shaking ? 'animate-shake border-red-400 ring-2 ring-red-300' : 'border-outline-variant bg-surface/80 text-on-surface'} ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
+                />
+              </div>
             </motion.header>
           </div>
         </section>
@@ -323,7 +340,7 @@ export default function EventGuest() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
             >
-              <RsvpForm eventId={event.id} eventTitle={event.title} />
+              <RsvpForm eventId={event.id} eventTitle={event.title} guestName={guestName} />
             </motion.div>
           )}
 
@@ -353,25 +370,6 @@ export default function EventGuest() {
             </motion.div>
 
             {gifts.length === 0 && <EmptyGiftState />}
-
-            <div className="mb-6">
-              <label htmlFor="claim-name" className="block text-sm font-semibold text-on-surface mb-1.5">Tu nombre</label>
-              <div className="relative">
-                <input
-                  ref={inputRef}
-                  id="claim-name"
-                  type="text"
-                  value={claimName}
-                  onChange={(e) => setClaimName(e.target.value)}
-                  placeholder="Escribe tu nombre para apartar un regalo"
-                  autoComplete="name"
-                  inputMode="text"
-                  autoCapitalize="words"
-                  enterKeyHint="go"
-                  className={`w-full rounded-2xl border outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all backdrop-blur-sm shadow-sm ${shaking ? 'animate-shake border-red-400 ring-2 ring-red-300' : 'border-outline-variant bg-surface/80 text-on-surface'} ${easyReadMode ? 'px-6 py-4 text-lg min-h-[56px]' : 'px-5 py-3.5 text-sm min-h-[48px]'}`}
-                />
-              </div>
-            </div>
 
             {categories.length > 1 && (
               <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
@@ -505,7 +503,7 @@ export default function EventGuest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
           >
-            <MessageWall eventId={event.id} />
+            <MessageWall eventId={event.id} guestName={guestName} />
           </motion.div>
 
           {event.status !== 'completed' && (
@@ -514,7 +512,7 @@ export default function EventGuest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
           >
-            <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} />
+            <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} />
           </motion.div>
           )}
 
