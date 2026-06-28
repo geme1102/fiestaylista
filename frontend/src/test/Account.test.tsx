@@ -4,12 +4,13 @@ import { MemoryRouter } from 'react-router-dom';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
 const mockGetCurrentSubscription = vi.hoisted(() => vi.fn());
+const mockGetPaymentHistory = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockFormatDate = vi.hoisted(() => vi.fn(() => '1 ene 2024'));
 const mockUseAchievements = vi.hoisted(() => vi.fn(() => ({ getEarned: () => new Set(), allAchievements: [] })));
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
-vi.mock('../services/mercadopago', () => ({ getCurrentSubscription: mockGetCurrentSubscription }));
+vi.mock('../services/mercadopago', () => ({ getCurrentSubscription: mockGetCurrentSubscription, getPaymentHistory: mockGetPaymentHistory }));
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
 vi.mock('../utils/format', () => ({ formatDate: mockFormatDate, validateRedirectUrl: (url: string) => url }));
 vi.mock('../hooks/useAchievements', () => ({ useAchievements: () => mockUseAchievements() }));
@@ -43,6 +44,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUseAuth.mockReturnValue({ user: mockUser, resendVerification: vi.fn(), refreshUser: vi.fn(), logout: vi.fn() });
   mockGetCurrentSubscription.mockResolvedValue({ subscription: mockSubscription });
+  mockGetPaymentHistory.mockResolvedValue({ payments: [] });
 });
 
 function renderAccount() {

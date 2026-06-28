@@ -139,6 +139,9 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
       await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
     } catch (err) {
       log.error({ err }, 'Error al cancelar en MercadoPago - la suscripción local se canceló pero MP podría seguir cobrando:');
+      await subscriptionService.cancelSubscription(req.user!.userId);
+      res.json({ message: 'Suscripción cancelada exitosamente', mpWarning: 'No pudimos cancelar el cobro automático en Mercado Pago. Si ves un cobro futuro, contáctanos para asistencia.' });
+      return;
     }
   }
   await subscriptionService.cancelSubscription(req.user!.userId);
@@ -148,6 +151,11 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
 router.get('/current', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   const subscription = await subscriptionService.getCurrentSubscription(req.user!.userId);
   res.json({ subscription });
+}));
+
+router.get('/payments', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+  const payments = await subscriptionService.getPaymentHistory(req.user!.userId);
+  res.json({ payments });
 }));
 
 export default router;

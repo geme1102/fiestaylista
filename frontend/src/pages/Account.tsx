@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getCurrentSubscription } from '../services/mercadopago';
+import { getCurrentSubscription, getPaymentHistory } from '../services/mercadopago';
 import { apiClient } from '../services/api';
-import { TIER_LIMITS, type Subscription } from '../types';
+import { TIER_LIMITS, type Subscription, type ProPayment } from '../types';
 import { showToast } from '../hooks/useToast';
-import { formatDate, validateRedirectUrl } from '../utils/format';
+import { formatDate, formatCOP, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { AchievementsStrip } from '../components/AchievementsStrip';
 import { useAchievements } from '../hooks/useAchievements';
@@ -36,6 +36,10 @@ export default function Account() {
   const [deletePassword, setDeletePassword] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [retryingPayment, setRetryingPayment] = useState(false);
+  const [payments, setPayments] = useState<ProPayment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [paymentsError, setPaymentsError] = useState(false);
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
@@ -56,13 +60,25 @@ export default function Account() {
       .finally(() => setLoadingSub(false));
   }, []);
 
+  useEffect(() => {
+    setPaymentsLoading(true);
+    setPaymentsError(false);
+    getPaymentHistory()
+      .then((res) => setPayments(res.payments))
+      .catch(() => setPaymentsError(true))
+      .finally(() => setPaymentsLoading(false));
+  }, []);
+
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
     try {
-      await apiClient.post('/api/subscriptions/cancel', {}, {
+      const res = await apiClient.post<{ message: string; mpWarning?: string }>('/api/subscriptions/cancel', {}, {
         headers: { 'x-password': cancelPassword },
       });
-      showToast('Suscripción cancelada exitosamente. Seguirás teniendo acceso Pro hasta el final del período actual.', 'success');
+      showToast(res.message, 'success');
+      if (res.mpWarning) {
+        showToast(res.mpWarning, 'info');
+      }
       setSubscription(prev => prev ? { ...prev, status: 'canceled' as const } : null);
       await refreshUser();
       setShowCancelConfirm(false);
@@ -244,7 +260,10 @@ export default function Account() {
                       <p className="text-sm font-medium text-amber-800">Pago vencido</p>
                       <p className="text-xs text-amber-700 mt-1">Tu suscripción Pro está temporalmente suspendida por falta de pago. Actualiza tu método de pago para recuperar el acceso.</p>
                       <button
+                        disabled={retryingPayment}
                         onClick={async () => {
+                          if (retryingPayment) return;
+                          setRetryingPayment(true);
                           try {
                             const successUrl = `${window.location.origin}/dashboard?pro=activated`;
                             const cancelUrl = `${window.location.origin}/account`;
@@ -256,11 +275,12 @@ export default function Account() {
                             window.location.href = validateRedirectUrl(res.url);
                           } catch {
                             showToast('Error al iniciar el proceso de pago', 'error');
+                            setRetryingPayment(false);
                           }
                         }}
-                        className="mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-all"
+                        className="mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-50"
                       >
-                        Reintentar pago
+                        {retryingPayment ? 'Conectando...' : 'Reintentar pago'}
                       </button>
                     </div>
                   </div>
@@ -296,6 +316,45 @@ export default function Account() {
           )}
         </div>
       </div>
+
+      {paymentsLoading ? (
+        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
+          <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl animate-pulse">
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-surface-dim rounded" />
+                  <div className="h-3 w-32 bg-surface-dim rounded" />
+                </div>
+                <div className="h-6 w-16 bg-surface-dim rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : paymentsError ? (
+        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
+          <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
+          <p className="text-sm text-on-surface-variant">No pudimos cargar tu historial. Intenta de nuevo más tarde.</p>
+        </div>
+      ) : payments.length > 0 && (
+        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
+          <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
+          <div className="space-y-3">
+            {payments.map((p) => (
+              <div key={p.id} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
+                <div>
+                  <p className="text-sm font-medium text-on-surface">{formatCOP(p.amount)}</p>
+                  <p className="text-xs text-on-surface-variant">{p.interval === 'year' ? 'Plan Anual' : 'Plan Mensual'} · {formatDate(p.createdAt)}</p>
+                </div>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                  {p.status === 'completed' ? 'Pagado' : p.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
         <h2 className="text-lg font-semibold text-on-surface mb-4">Mis Datos Personales</h2>

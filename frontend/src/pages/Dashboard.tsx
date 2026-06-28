@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
-import { THEME_COLORS, EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Event } from '../types';
+import { getCurrentSubscription } from '../services/mercadopago';
+import { THEME_COLORS, EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Event, type Subscription } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCOP } from '../utils/format';
 import { cn } from '../utils/cn';
@@ -45,13 +46,31 @@ export default function Dashboard() {
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
   const [syncingPayment, setSyncingPayment] = useState(false);
+  const [pollingPayment, setPollingPayment] = useState(false);
+  const [paymentRejected, setPaymentRejected] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getCurrentSubscription()
+      .then((res) => setSubscription(res.subscription))
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (!params.has('pro')) return;
 
+    const collectionStatus = params.get('collection_status');
     const cleanUrl = window.location.pathname;
     window.history.replaceState({}, '', cleanUrl);
+
+    if (collectionStatus === 'rejected') {
+      setPaymentRejected(true);
+      return;
+    }
+
+    setPollingPayment(true);
 
     let attempts = 0;
     const MAX_ATTEMPTS = 15;
@@ -63,11 +82,13 @@ export default function Dashboard() {
       await refreshUser();
       if (cancelled) return;
       if (tierRef.current === 'pro') {
+        setPollingPayment(false);
         showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
         queryClient.invalidateQueries({ queryKey: ['events'] });
         return;
       }
       if (attempts >= MAX_ATTEMPTS) {
+        setPollingPayment(false);
         setShowPaymentBanner(true);
         return;
       }
@@ -216,6 +237,29 @@ export default function Dashboard() {
                 )}
       </div>
 
+      {pollingPayment && (
+        <div className="mb-6 p-4 rounded-2xl bg-blue-50/90 border border-blue-200/60 flex items-start gap-3">
+          <div className="w-5 h-5 mt-0.5 shrink-0 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-blue-800">Verificando tu pago</p>
+            <p className="text-xs text-blue-700/70 mt-0.5">Estamos confirmando tu suscripción Pro con Mercado Pago. Esto toma unos segundos.</p>
+          </div>
+        </div>
+      )}
+
+      {paymentRejected && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-50/90 border border-red-200/60 flex items-start gap-3">
+          <span className="material-symbols-outlined text-red-500 text-lg shrink-0 mt-0.5">cancel</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-red-800">Pago rechazado</p>
+            <p className="text-xs text-red-700/70 mt-0.5">El pago no fue procesado. Puedes intentar de nuevo desde la página de planes.</p>
+          </div>
+          <a href="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-all min-h-[44px] flex items-center">
+            Reintentar
+          </a>
+        </div>
+      )}
+
       {showPaymentBanner && (
         <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 flex items-start gap-3">
           <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">hourglass_top</span>
@@ -234,6 +278,19 @@ export default function Dashboard() {
               'Verificar pago'
             )}
           </button>
+        </div>
+      )}
+
+      {subscription?.status === 'past_due' && !pollingPayment && !showPaymentBanner && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-600 text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-amber-800">Pago pendiente</p>
+            <p className="text-xs text-amber-700/70 mt-0.5">Tu suscripción Pro tiene un pago vencido. Actualiza tu método de pago para mantener el acceso a todas las funciones.</p>
+          </div>
+          <a href="/account" className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-all min-h-[44px] flex items-center">
+            Ir a cuenta
+          </a>
         </div>
       )}
 

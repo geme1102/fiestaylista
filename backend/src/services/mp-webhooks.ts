@@ -124,6 +124,6 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   } else if (info.status === 'cancelled') {
     await subscriptionService.cancelSubscription(userId);
   } else if (info.status === 'past_due') {
-    await subscriptionService.cancelSubscription(userId, true);
+    await subscriptionService.updateSubscriptionStatus(userId, 'past_due');
   }
 }

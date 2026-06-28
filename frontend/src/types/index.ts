@@ -69,6 +69,14 @@ export interface Subscription {
   mpSubscriptionId?: string;
 }
 
+export interface ProPayment {
+  id: string;
+  amount: number;
+  interval: 'month' | 'year';
+  status: string;
+  createdAt: string;
+}
+
 export interface AuthResponse {
   user: User;
   accessToken: string;

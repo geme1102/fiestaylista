@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useLayoutEffect, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,16 +11,16 @@ export interface TourStep {
   placement?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-function highlightTarget(selector: string): DOMRect | null {
+const PADDING = 12;
+const MOBILE_NAV_SAFE = 72;
+const MIN_CONTENT_HEIGHT = 100;
+
+function getTargetRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector);
   if (!el) return null;
-  (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.scrollIntoView({ block: 'center' });
   return el.getBoundingClientRect();
 }
-
-const PADDING = 8;
-const TOOLTIP_WIDTH = 280;
-const GUESSED_HEIGHT = 180;
 
 export function ProductTour({
   steps,
@@ -37,9 +37,8 @@ export function ProductTour({
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [waitingForClick, setWaitingForClick] = useState(false);
-  const observerRef = useRef<MutationObserver | null>(null);
+  const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
 
   const start = useCallback(() => {
     if (localStorage.getItem(storageKey) === 'done') return;
@@ -52,16 +51,15 @@ export function ProductTour({
     return () => clearTimeout(timer);
   }, [start]);
 
+  useEffect(() => {
+    if (!active) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = original; };
+  }, [active]);
+
   const updateRect = useCallback((selector: string) => {
-    const r = highlightTarget(selector);
-    setRect(r);
-    if (!r) return;
-    observerRef.current?.disconnect();
-    observerRef.current = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) setRect(el.getBoundingClientRect());
-    });
-    observerRef.current.observe(document.body, { childList: true, subtree: true });
+    setRect(getTargetRect(selector));
   }, []);
 
   const advance = useCallback(() => {
@@ -84,6 +82,12 @@ export function ProductTour({
     if (!step) return;
     updateRect(step.target);
     setWaitingForClick(!!step.requireClick);
+  }, [active, stepIndex, steps, updateRect]);
+
+  useEffect(() => {
+    if (!active) return;
+    const step = steps[stepIndex];
+    if (!step?.requireClick) return;
 
     const handleClick = (e: Event) => {
       const target = document.querySelector(step.target);
@@ -92,35 +96,24 @@ export function ProductTour({
       }
     };
 
-    if (step.requireClick) {
-      document.addEventListener('click', handleClick, { capture: true });
-      return () => document.removeEventListener('click', handleClick, { capture: true } as EventListenerOptions);
-    }
-  }, [active, stepIndex, steps, updateRect, advance]);
+    document.addEventListener('click', handleClick, { capture: true });
+    return () => document.removeEventListener('click', handleClick, { capture: true } as EventListenerOptions);
+  }, [active, stepIndex, steps, advance]);
 
   useEffect(() => {
-    const onResize = () => {
-      if (active) {
+    if (!active) return;
+    const handleResize = () => {
+      clearTimeout(resizeTimerRef.current);
+      resizeTimerRef.current = setTimeout(() => {
         updateRect(steps[stepIndex]?.target);
-        setMeasuredHeight(null);
-      }
+      }, 150);
     };
-    window.addEventListener('resize', onResize);
-    window.addEventListener('scroll', onResize, true);
+    window.addEventListener('resize', handleResize);
     return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', onResize, true);
-      observerRef.current?.disconnect();
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimerRef.current);
     };
   }, [active, stepIndex, steps, updateRect]);
-
-  const tooltipHeight = measuredHeight ?? GUESSED_HEIGHT;
-
-  useLayoutEffect(() => {
-    if (!tooltipRef.current) return;
-    const h = tooltipRef.current.getBoundingClientRect().height;
-    if (h !== measuredHeight) setMeasuredHeight(h);
-  }, [stepIndex, active]);
 
   const skip = useCallback(() => {
     localStorage.setItem(storageKey, 'done');
@@ -133,62 +126,46 @@ export function ProductTour({
   if (!step) return <>{children}</>;
 
   const isLast = stepIndex === steps.length - 1;
+  const vw = window.innerWidth;
+  const vh = window.visualViewport?.height ?? window.innerHeight;
+  const safeBottom = vw < 640 ? MOBILE_NAV_SAFE : PADDING;
   const placement = step.placement ?? 'bottom';
 
   const tooltipStyle: React.CSSProperties = rect
     ? (() => {
-        const vw = window.innerWidth;
-        const vh = window.visualViewport?.height ?? window.innerHeight;
-        const p = placement;
-        const th = tooltipHeight;
-        let top = 0;
-        let left = 0;
-        let translateX = '-50%';
-        let translateY = '0';
+        const spaceBelow = vh - rect.bottom - PADDING - safeBottom;
+        const spaceAbove = rect.top - PADDING;
 
-        if (p === 'top') {
-          top = rect.top - PADDING - th;
-          left = rect.left + rect.width / 2;
-          translateY = '-100%';
-          if (top < PADDING) {
-            top = rect.bottom + PADDING;
-            translateY = '0';
-          }
-        } else if (p === 'bottom') {
-          top = rect.bottom + PADDING;
-          left = rect.left + rect.width / 2;
-          translateY = '0';
-        } else if (p === 'left') {
-          top = rect.top + rect.height / 2;
-          left = rect.left - PADDING;
-          translateX = '-100%';
-          translateY = '-50%';
+        let finalPlacement = placement;
+        if (placement === 'bottom' && spaceBelow < MIN_CONTENT_HEIGHT && spaceAbove >= MIN_CONTENT_HEIGHT) {
+          finalPlacement = 'top';
+        } else if (placement === 'top' && spaceAbove < MIN_CONTENT_HEIGHT && spaceBelow >= MIN_CONTENT_HEIGHT) {
+          finalPlacement = 'bottom';
+        }
+
+        const style: React.CSSProperties = { left: rect.left + rect.width / 2 };
+
+        if (finalPlacement === 'top') {
+          style.bottom = vh - rect.top + PADDING;
+          style.maxHeight = Math.max(MIN_CONTENT_HEIGHT, rect.top - PADDING * 2);
         } else {
-          top = rect.top + rect.height / 2;
-          left = rect.right + PADDING;
-          translateX = '0';
-          translateY = '-50%';
+          style.top = rect.bottom + PADDING;
+          style.maxHeight = Math.max(MIN_CONTENT_HEIGHT, vh - rect.bottom - PADDING - safeBottom);
         }
 
-        const maxTop = vh - th - PADDING;
-        if (p === 'top' || p === 'bottom') {
-          if (top + th > vh - PADDING) {
-            top = Math.max(PADDING, maxTop);
-          }
-          top = Math.max(PADDING, top);
-          left = Math.max(TOOLTIP_WIDTH / 2 + PADDING, Math.min(left, vw - TOOLTIP_WIDTH / 2 - PADDING));
-        }
-        if (p === 'left' || p === 'right') {
-          top = Math.max(PADDING, Math.min(top, vh - th - PADDING));
-        }
-
-        return { top, left, transform: `translate(${translateX}, ${translateY})` };
+        style.transform = 'translateX(-50%)';
+        return style;
       })()
-    : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    : {
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        maxHeight: vh - PADDING * 2,
+      };
 
   const cutout = rect
     ? {
-        boxShadow: `0 0 0 9999px rgba(0,0,0,0.65), 0 0 0 ${PADDING}px rgba(255,255,255,0.4)`,
+        boxShadow: `0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 ${PADDING}px rgba(255,255,255,0.3)`,
         borderRadius: 16,
       }
     : {};
@@ -207,21 +184,21 @@ export function ProductTour({
           }}
         />
       )}
-      {!rect && <div className="absolute inset-0 bg-black/65" />}
+      {!rect && <div className="absolute inset-0 bg-black/60" />}
 
       <AnimatePresence mode="wait">
         <motion.div
           key={stepIndex}
-          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+          initial={{ opacity: 0, scale: 0.92, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ type: 'spring', stiffness: 600, damping: 40 }}
+          exit={{ opacity: 0, scale: 0.92, y: -8 }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-[101]"
           style={tooltipStyle}
         >
           <div
             ref={tooltipRef}
-            className="w-[280px] max-h-[calc(100dvh-2rem)] overflow-y-auto pb-safe glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
+            className="pointer-events-auto w-[280px] overflow-y-auto glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">

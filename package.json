@@ -17,7 +17,13 @@
     "test": "cd backend && npm test && cd ../frontend && npm test",
     "test:e2e": "cd frontend && npm run test:e2e",
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "k6:checkout": "k6 run k6/checkout-stress.js",
+    "k6:webhook": "k6 run k6/webhook-avalanche.js",
+    "k6:mixed": "k6 run k6/mixed-traffic.js",
+    "k6:general": "k6 run stress-test.js",
+    "k6:checkout:staging": "k6 run -e BASE_URL=https://fiestaylista-staging.up.railway.app k6/checkout-stress.js",
+    "k6:webhook:staging": "k6 run -e BASE_URL=https://fiestaylista-staging.up.railway.app k6/webhook-avalanche.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",

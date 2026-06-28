@@ -1,3 +1,4 @@
+import compression from 'compression';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -39,6 +40,7 @@ export function createApp() {
 
   const app = express();
 
+  app.use(compression({ threshold: 512, level: 6 }));
   app.set('trust proxy', config.NODE_ENV === 'production' ? 1 : 0);
 
   app.use((req: Request, _res: Response, next: NextFunction) => {

@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { Subscription, Tier } from '../types';
+import type { Subscription, Tier, ProPayment } from '../types';
 
 export function createCheckoutSession(tier: Tier, successUrl?: string, cancelUrl?: string, interval?: 'month' | 'year', turnstileToken?: string): Promise<{ url: string }> {
   return apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
@@ -13,4 +13,8 @@ export function createCheckoutSession(tier: Tier, successUrl?: string, cancelUrl
 
 export function getCurrentSubscription(): Promise<{ subscription: Subscription | null }> {
   return apiClient.get<{ subscription: Subscription | null }>('/api/subscriptions/current');
+}
+
+export function getPaymentHistory(): Promise<{ payments: ProPayment[] }> {
+  return apiClient.get<{ payments: ProPayment[] }>('/api/subscriptions/payments');
 }

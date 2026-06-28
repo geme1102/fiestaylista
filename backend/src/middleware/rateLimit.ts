@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { randomUUID } from 'node:crypto';
 import type { AuthRequest } from '../types/index.js';
+import { config } from '../config.js';
 
 function msg(text: string) {
   return { error: text, errorId: randomUUID() };
@@ -23,7 +24,7 @@ export const authLimiter = rateLimit({
 
 export const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 200,
+  max: config.API_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
@@ -113,7 +114,7 @@ export const arcoLimiter = rateLimit({
 
 export const paymentLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: config.PAYMENT_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
@@ -140,7 +141,7 @@ export const viewLimiter = rateLimit({
 
 export const webhookLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 300,
+  max: config.WEBHOOK_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,

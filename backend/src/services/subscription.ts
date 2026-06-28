@@ -1,6 +1,6 @@
-import { eq, lte, and, inArray, sql, isNull, asc } from 'drizzle-orm';
+import { eq, lte, and, inArray, sql, isNull, asc, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events, gifts, photos } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, gifts, photos, proPayments } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
@@ -258,4 +258,21 @@ export async function expireStaleSubscriptions(): Promise<number> {
   });
 
   return result.count;
+}
+
+export async function getPaymentHistory(userId: string) {
+  const payments = await db
+    .select({
+      id: proPayments.id,
+      amount: proPayments.amount,
+      interval: proPayments.interval,
+      status: proPayments.status,
+      createdAt: proPayments.createdAt,
+    })
+    .from(proPayments)
+    .where(eq(proPayments.userId, userId))
+    .orderBy(desc(proPayments.createdAt))
+    .limit(20);
+
+  return payments;
 }

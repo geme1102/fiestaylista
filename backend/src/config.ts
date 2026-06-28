@@ -94,4 +94,9 @@ export const config = {
   PRO_YEARLY_PRICE_CENTS: parseInt(process.env.PRO_YEARLY_PRICE_CENTS || '660000', 10),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   SENTRY_DSN: process.env.SENTRY_DSN || '',
+  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '25', 10),
+  CLUSTER_WORKERS: parseInt(process.env.CLUSTER_WORKERS || '0', 10),
+  PAYMENT_RATE_LIMIT: parseInt(process.env.PAYMENT_RATE_LIMIT || '10', 10),
+  WEBHOOK_RATE_LIMIT: parseInt(process.env.WEBHOOK_RATE_LIMIT || '300', 10),
+  API_RATE_LIMIT: parseInt(process.env.API_RATE_LIMIT || '200', 10),
 } as const;

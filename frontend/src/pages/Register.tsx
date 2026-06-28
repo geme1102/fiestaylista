@@ -32,6 +32,10 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigatedRef = useRef(false);
 
+  const params = new URLSearchParams(location.search);
+  const planParam = params.get('plan');
+  const intervalParam = params.get('interval');
+
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
@@ -74,7 +78,11 @@ export default function Register() {
     try {
       await register(email, password, name, token ?? undefined);
       navigatedRef.current = true;
-      navigate('/onboarding', { replace: true });
+      if (planParam === 'pro') {
+        navigate(`/pricing?intent=pro&interval=${intervalParam || 'month'}`, { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {

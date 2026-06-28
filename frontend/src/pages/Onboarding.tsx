@@ -84,9 +84,9 @@ export default function Onboarding() {
         {/* Step 1: Event Type */}
         <motion.section
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
+          initial={false}
           animate={{ x: step === 1 ? '0%' : '-100%' }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-          style={{ x: step === 1 ? '0%' : '-100%' }}
         >
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
@@ -136,6 +136,7 @@ export default function Onboarding() {
         {/* Step 2: Event Name + Create (merged with old step 3) */}
         <motion.section
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
+          initial={false}
           animate={{ x: step === 2 ? '0%' : step < 2 ? '100%' : '-100%' }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
