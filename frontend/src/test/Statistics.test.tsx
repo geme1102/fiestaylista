@@ -39,7 +39,7 @@ describe('Statistics', () => {
   it('shows upgrade prompt for non-pro users', () => {
     mockUseAuth.mockReturnValue({ user: { tier: 'free' } });
     renderStatistics();
-    expect(screen.getByText('Estadísticas exclusivas para Plan Pro')).toBeTruthy();
+    expect(screen.getByText('Estadísticas exclusivas para Plan Pro y Pro Plus')).toBeTruthy();
     expect(screen.getByText('Ver Planes')).toBeTruthy();
   });
 
