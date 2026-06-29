@@ -1,4 +1,4 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { eq, and, isNull } from 'drizzle-orm';
