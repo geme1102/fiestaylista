@@ -10,6 +10,10 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
     const appReq = req as AppRequest;
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
 
+    if (level === 'info' && duration < 1000) {
+      return;
+    }
+
     const logData: Record<string, unknown> = {
       requestId: appReq.requestId,
       method: req.method,

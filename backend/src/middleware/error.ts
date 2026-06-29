@@ -31,6 +31,12 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return;
   }
 
+  if (err instanceof SyntaxError && 'body' in err) {
+    logError(err, errorId, req);
+    res.status(400).json({ error: 'JSON inválido en el cuerpo de la solicitud', errorId });
+    return;
+  }
+
   logError(err, errorId, req);
 
   res.status(500).json({ error: 'Error interno del servidor', errorId });

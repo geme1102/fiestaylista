@@ -6,10 +6,12 @@ import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstil
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ValidationError } from '../utils/errors.js';
+import { ValidationError, UnauthorizedError } from '../utils/errors.js';
+import { createModuleLogger } from '../utils/logger.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
+const log = createModuleLogger('AuthRoutes');
 
 function setRefreshCookie(res: Response, refreshToken: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -69,17 +71,25 @@ router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithVali
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
-  if (req.headers['x-refresh-request'] !== 'true') {
-    throw new ValidationError('Token de refresco requerido');
+  try {
+    if (req.headers['x-refresh-request'] !== 'true') {
+      throw new ValidationError('Token de refresco requerido');
+    }
+    const isProduction = process.env.NODE_ENV === 'production';
+    const refreshToken = req.cookies?.[isProduction ? '__Secure-refreshToken' : 'refreshToken'];
+    if (!refreshToken) {
+      throw new ValidationError('Token de refresco requerido');
+    }
+    const result = await authService.refreshToken(refreshToken);
+    setRefreshCookie(res, result.refreshToken);
+    res.json(result);
+  } catch (error) {
+    if (error instanceof ValidationError || error instanceof UnauthorizedError) {
+      throw error;
+    }
+    log.error({ err: error, method: req.method, path: req.path }, 'Error inesperado en refresh');
+    throw error;
   }
-  const isProduction = process.env.NODE_ENV === 'production';
-  const refreshToken = req.cookies?.[isProduction ? '__Secure-refreshToken' : 'refreshToken'];
-  if (!refreshToken) {
-    throw new ValidationError('Token de refresco requerido');
-  }
-  const result = await authService.refreshToken(refreshToken);
-  setRefreshCookie(res, result.refreshToken);
-  res.json(result);
 }));
 
 router.get('/me', requireAnyAuth, asyncHandler(async (req: AuthRequest, res) => {
