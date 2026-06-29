@@ -11,8 +11,6 @@ const mockGetAccessToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | n
 const mockTryRefreshToken = vi.hoisted(() => vi.fn<(...args: any[]) => any>(() => false));
 const mockApiClientPost = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 const mockShowToast = vi.hoisted(() => vi.fn());
-const mockNavigate = vi.hoisted(() => vi.fn());
-
 vi.mock('../services/auth', () => ({
   login: mockLoginApi,
   register: mockRegisterApi,
@@ -28,11 +26,6 @@ vi.mock('../services/api', () => ({
 }));
 
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return { ...actual, useNavigate: () => mockNavigate };
-});
 
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
@@ -167,6 +160,15 @@ describe('AuthContext', () => {
     mockGetAccessToken.mockReturnValue('tok-1');
     mockGetMe.mockResolvedValue({ user: testUser, isGuest: false });
 
+    const locationHrefSetter = vi.fn();
+    delete (window as any).location;
+    (window as any).location = {};
+    Object.defineProperty(window.location, 'href', {
+      get: () => '',
+      set: locationHrefSetter,
+      configurable: true,
+    });
+
     renderAuthProvider();
 
     await waitFor(() => {
@@ -178,7 +180,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(mockClearTokens).toHaveBeenCalled();
     });
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(locationHrefSetter).toHaveBeenCalledWith('/');
     expect(screen.getByTestId('user').textContent).toBe('null');
   });
 
