@@ -3,7 +3,7 @@ import { db } from './db/index.js';
 import { failedWebhooks, refreshTokens, eventViews, auditLogs } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
-import { expireStaleSubscriptions } from './services/subscription.js';
+import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings } from './services/subscription.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import { createModuleLogger } from './utils/logger.js';
 
@@ -61,6 +61,24 @@ export function startCronJobs(): void {
         }
       } catch (error) {
         log.error({ error }, 'Error expirando suscripciones:');
+      }
+
+      try {
+        const purged = await purgeExpiredData();
+        if (purged > 0) {
+          log.info(`Usuarios purgados: ${purged}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error purgando datos expirados:');
+      }
+
+      try {
+        const warned = await sendPurgeWarnings();
+        if (warned > 0) {
+          log.info(`Warnings de purga enviados: ${warned}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error enviando warnings de purga:');
       }
     });
   };

@@ -67,7 +67,7 @@ export default function Dashboard() {
     setPollingPayment(true);
 
     let attempts = 0;
-    const MAX_ATTEMPTS = 15;
+    const MAX_ATTEMPTS = 30;
     let cancelled = false;
 
     async function poll() {
@@ -286,6 +286,39 @@ export default function Dashboard() {
             Ir a cuenta
           </a>
         </div>
+      )}
+
+      {subscription?.status === 'canceled' && subscription.currentPeriodEnd && new Date(subscription.currentPeriodEnd) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && !pollingPayment && !showPaymentBanner && (
+        (() => {
+          const daysSinceExpiry = Math.floor((Date.now() - new Date(subscription.currentPeriodEnd!).getTime()) / (86400000));
+          const daysUntilPurge = 37 - daysSinceExpiry;
+          return daysUntilPurge > 0 ? (
+            <div className="mb-6 p-4 rounded-2xl bg-blue-50/90 border border-blue-200/60 flex items-start gap-3">
+              <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">ac_unit</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-blue-800">Eventos congelados</p>
+                <p className="text-xs text-blue-700/70 mt-0.5">Tus eventos ya no son visibles para los invitados. Renueva tu suscripción para recuperarlos.</p>
+                {daysUntilPurge <= 7 && (
+                  <p className="text-xs text-red-600 font-semibold mt-1">⚠️ Tus datos se eliminarán permanentemente en {daysUntilPurge} {daysUntilPurge === 1 ? 'día' : 'días'}.</p>
+                )}
+              </div>
+              <a href="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+                Ver planes
+              </a>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 rounded-2xl bg-red-50/90 border border-red-200/60 flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-600 text-lg shrink-0 mt-0.5">delete_forever</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-red-800">Datos eliminados</p>
+                <p className="text-xs text-red-700/70 mt-0.5">Tu suscripción expiró y tus datos han sido eliminados. Puedes crear nuevos eventos desde cero.</p>
+              </div>
+              <a href="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:opacity-90 transition-all min-h-[44px] flex items-center">
+                Crear nuevo
+              </a>
+            </div>
+          );
+        })()
       )}
 
       <InstallPwaBanner />

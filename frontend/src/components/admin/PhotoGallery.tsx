@@ -112,31 +112,45 @@ export const PhotoGallery = memo(function PhotoGallery({
           </div>
         )}
 
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-          role="button"
-          tabIndex={0}
-          className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
-        >
-          <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">
-            <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
-          </div>
-          <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
-            {uploadProgress || (uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos')}
-          </span>
-          {uploading && (
-            <div className="w-48 h-1.5 bg-rose-100 rounded-full mt-2 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#a21b53] to-pink-500 rounded-full transition-all duration-300"
-                style={{ width: `${uploadPercent ?? 50}%` }}
-              />
+        {maxPhotosPerEvent && photos.length >= maxPhotosPerEvent ? (
+          <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-gray-400">
+              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
             </div>
-          )}
-          <span className="text-[10px] text-gray-400 font-bold mt-1">
-            Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
-          </span>
-        </div>
+            <span className="text-gray-400 font-black text-sm md:text-base tracking-tight">
+              Límite alcanzado ({photos.length}/{maxPhotosPerEvent})
+            </span>
+            <span className="text-[10px] text-gray-400 font-bold mt-1">
+              Actualiza a Pro para subir más fotos.
+            </span>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+            role="button"
+            tabIndex={0}
+            className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
+          >
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">
+              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
+            </div>
+            <span className="text-[#a21b53] font-black text-sm md:text-base tracking-tight">
+              {uploadProgress || (uploading ? 'Subiendo...' : 'Subir recuerdos fotográficos')}
+            </span>
+            {uploading && (
+              <div className="w-48 h-1.5 bg-rose-100 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#a21b53] to-pink-500 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadPercent ?? 50}%` }}
+                />
+              </div>
+            )}
+            <span className="text-[10px] text-gray-400 font-bold mt-1">
+              Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
+            </span>
+          </div>
+        )}
       </section>
 
       <AnimatePresence>

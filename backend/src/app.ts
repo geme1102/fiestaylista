@@ -91,6 +91,7 @@ export function createApp() {
         workerSrc: ["'none'"],
         manifestSrc: ["'self'"],
         upgradeInsecureRequests: [],
+        // reportUri: ['/api/csp-violation'],  // Descomentar cuando exista un endpoint collector
       },
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },

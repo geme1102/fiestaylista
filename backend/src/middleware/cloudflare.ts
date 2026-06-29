@@ -47,8 +47,31 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
   const connectingIP = req.headers['cf-connecting-ip'];
   const remoteIP = req.ip ?? req.socket.remoteAddress ?? '';
 
+  // Prioridad 1: Cloudflare → directo a Railway (cf-connecting-ip directo)
   if (connectingIP && typeof connectingIP === 'string' && isCloudflareIP(remoteIP)) {
     (req as Request & { ip: string }).ip = connectingIP;
+    next();
+    return;
+  }
+
+  // Prioridad 2: Cloudflare → Netlify → Railway
+  // Netlify envía x-nf-client-ip con la IP real del cliente
+  const netlifyClientIP = req.headers['x-nf-client-ip'];
+  if (netlifyClientIP && typeof netlifyClientIP === 'string') {
+    (req as Request & { ip: string }).ip = netlifyClientIP;
+    next();
+    return;
+  }
+
+  // Prioridad 3: confiar en x-forwarded-for cuando viene de proxy conocido
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor && typeof forwardedFor === 'string') {
+    const firstIP = forwardedFor.split(',')[0]?.trim();
+    if (firstIP && !isPrivateOrLocal(firstIP)) {
+      (req as Request & { ip: string }).ip = firstIP;
+      next();
+      return;
+    }
   }
 
   const resolvedIP = req.ip ?? '';

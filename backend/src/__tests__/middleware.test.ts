@@ -14,6 +14,8 @@ vi.mock('../config.js', () => ({
     RESEND_API_KEY: '',
     FROM_EMAIL: 'test@test.com',
     PORT: 3001,
+    DB_POOL_MAX: 10,
+    CLUSTER_WORKERS: 0,
   },
 }));
 

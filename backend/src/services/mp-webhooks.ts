@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { users, proPayments } from '../db/schema.js';
+import { users, proPayments, emailTracking } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
@@ -9,7 +9,7 @@ import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('MP');
 
-export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus' = 'pro'): Promise<void> {
+export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus'): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
   const isProPlus = tier === 'pro_plus';
   const expectedAmount = interval === 'year'
@@ -102,6 +102,10 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
 }
 
 function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; interval: 'month' | 'year' } | null {
+  // MP puede enviar montos como 59900 en enteros o 599.00 en decimales (pesos).
+  // Normalizar: si el monto es < 10000, asumir que está en unidades (multiplicar por 100).
+  const normalized = amount < 10000 ? Math.round(amount * 100) : Math.round(amount);
+
   const proMonthly = config.PRO_MONTHLY_PRICE_CENTS;
   const proYearly = config.PRO_YEARLY_PRICE_CENTS;
   const proPlusMonthly = config.PRO_PLUS_MONTHLY_PRICE_CENTS;
@@ -109,9 +113,9 @@ function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; inter
   const diff = (a: number, b: number) => Math.abs(a - b);
   const closeEnough = (a: number, b: number) => diff(a, b) <= 1 || diff(a, b) / Math.max(a, b) < 0.01;
 
-  if (closeEnough(amount, proMonthly)) return { tier: 'pro', interval: 'month' };
-  if (closeEnough(amount, proYearly)) return { tier: 'pro', interval: 'year' };
-  if (closeEnough(amount, proPlusMonthly)) return { tier: 'pro_plus', interval: 'month' };
+  if (closeEnough(normalized, proMonthly)) return { tier: 'pro', interval: 'month' };
+  if (closeEnough(normalized, proYearly)) return { tier: 'pro', interval: 'year' };
+  if (closeEnough(normalized, proPlusMonthly)) return { tier: 'pro_plus', interval: 'month' };
 
   return null;
 }
@@ -184,8 +188,12 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   }
 
   const detected = detectTierFromAmount(info.transactionAmount);
-  const detectedTier = detected?.tier ?? 'pro';
-  const detectedInterval = detected?.interval ?? (info.reason?.toLowerCase().includes('anual') ? 'year' : 'month');
+  if (!detected) {
+    log.error({ preapprovalId, amount: info.transactionAmount }, 'Monto de suscripción no coincide con ningún plan conocido');
+    return;
+  }
+  const detectedTier = detected.tier;
+  const detectedInterval = detected.interval;
   const periodDays = detectedInterval === 'year' ? 365 : 30;
 
   if (info.status === 'active') {
@@ -222,5 +230,31 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     await subscriptionService.cancelSubscription(userId);
   } else if (info.status === 'past_due') {
     await subscriptionService.updateSubscriptionStatus(userId, 'past_due');
+
+    const [pastDueUser] = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (pastDueUser?.email) {
+      // Dedup: solo enviar email de past_due una vez por ciclo de suscripción
+      const [recentEmail] = await db
+        .select({ id: emailTracking.id })
+        .from(emailTracking)
+        .where(and(
+          eq(emailTracking.userId, userId),
+          eq(emailTracking.type, 'past_due'),
+          sql`${emailTracking.sentAt} > NOW() - INTERVAL '7 days'`,
+        ))
+        .limit(1);
+
+      if (!recentEmail) {
+        emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {
+          log.error({ err, userId }, 'Error enviando email de past_due:');
+        });
+        db.insert(emailTracking).values({ userId, type: 'past_due' }).catch(() => {});
+      }
+    }
   }
 }

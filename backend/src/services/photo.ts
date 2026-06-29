@@ -44,50 +44,58 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
     throw new ValidationError('La URL de la foto no es válida');
   }
 
-  return await db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
+  try {
+    return await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
 
-    const [event] = await tx
-      .select({ userId: events.userId, isActive: events.isActive })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .limit(1);
+      const [event] = await tx
+        .select({ userId: events.userId, isActive: events.isActive })
+        .from(events)
+        .where(eq(events.id, eventId))
+        .limit(1);
 
-    if (!event) throw new NotFoundError('Evento no encontrado');
-    if (!event.isActive) throw new ValidationError('Este evento no está activo');
+      if (!event) throw new NotFoundError('Evento no encontrado');
+      if (!event.isActive) throw new ValidationError('Este evento no está activo');
 
-    const [user] = await tx
-      .select({ tier: users.tier })
-      .from(users)
-      .where(eq(users.id, event.userId))
-      .limit(1);
+      const [user] = await tx
+        .select({ tier: users.tier })
+        .from(users)
+        .where(eq(users.id, event.userId))
+        .limit(1);
 
-    const tier = (user?.tier as Tier) || 'free';
-    const limits = TIER_LIMITS[tier];
+      const tier = (user?.tier as Tier) || 'free';
+      const limits = TIER_LIMITS[tier];
 
-    if (limits) {
-      const [countResult] = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(photosTable)
-        .where(and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt)));
+      if (limits) {
+        const [countResult] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(photosTable)
+          .where(and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt)));
 
-      const photoCount = Number(countResult?.count ?? 0);
-      if (photoCount >= limits.maxPhotosPerEvent) {
-        throw new ValidationError(`Has alcanzado el límite de ${limits.maxPhotosPerEvent} fotos por evento en tu plan ${tier}`);
+        const photoCount = Number(countResult?.count ?? 0);
+        if (photoCount >= limits.maxPhotosPerEvent) {
+          throw new ValidationError(`Has alcanzado el límite de ${limits.maxPhotosPerEvent} fotos por evento en tu plan ${tier}`);
+        }
       }
+
+      const [photo] = await tx
+        .insert(photosTable)
+        .values({
+          eventId,
+          url,
+          caption: caption || null,
+        })
+        .returning();
+
+      return photo;
+    });
+  } catch (err) {
+    const publicId = getPublicIdFromUrl(url);
+    if (publicId) {
+      cloudinary.uploader.destroy(publicId).catch(() => {});
     }
-
-    const [photo] = await tx
-      .insert(photosTable)
-      .values({
-        eventId,
-        url,
-        caption: caption || null,
-      })
-      .returning();
-
-    return photo;
-  });
+    throw err;
+  }
 }
 
 export async function deletePhoto(photoId: string) {

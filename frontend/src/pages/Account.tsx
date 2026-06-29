@@ -298,17 +298,65 @@ export default function Account() {
                 </div>
               )}
 
-              {subscription?.status === 'canceled' && user.tier === 'pro' && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-blue-600 text-sm mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
-                    <div>
-                      <p className="text-sm font-medium text-blue-800">Suscripción cancelada</p>
-                      <p className="text-xs text-blue-700 mt-1">Tu suscripción ha sido cancelada, pero seguirás teniendo acceso a todas las funciones Pro hasta el final del período actual.</p>
+              {subscription?.status === 'canceled' && (() => {
+                const daysSinceExpiry = subscription.currentPeriodEnd
+                  ? Math.floor((Date.now() - new Date(subscription.currentPeriodEnd).getTime()) / (86400000))
+                  : 0;
+
+                // Still within grace period (less than 7 days since expiry)
+                if (user.tier === 'pro' && daysSinceExpiry <= 7) {
+                  return (
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <span className="material-symbols-outlined text-blue-600 text-sm mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+                        <div>
+                          <p className="text-sm font-medium text-blue-800">Suscripción cancelada</p>
+                          <p className="text-xs text-blue-700 mt-1">Tu suscripción ha sido cancelada, pero seguirás teniendo acceso a todas las funciones Pro hasta el final del período actual.</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  );
+                }
+
+                // Frozen (more than 7 days since expiry, tier is free)
+                if (daysSinceExpiry > 7) {
+                  const daysUntilPurge = 37 - daysSinceExpiry;
+                  if (daysUntilPurge > 0) {
+                    return (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div className="flex items-start gap-3">
+                          <span className="material-symbols-outlined text-blue-600 text-sm mt-0.5">ac_unit</span>
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">Eventos congelados</p>
+                            <p className="text-xs text-blue-700 mt-1">Tus eventos ya no están visibles. Renueva tu suscripción para recuperar todos tus datos.</p>
+                            {daysUntilPurge <= 7 && (
+                              <p className="text-xs text-red-600 font-semibold mt-1">⚠️ Tus datos se eliminarán permanentemente en {daysUntilPurge} {daysUntilPurge === 1 ? 'día' : 'días'}.</p>
+                            )}
+                          </div>
+                          <a href="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+                            Ver planes
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Purged
+                  return (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <span className="material-symbols-outlined text-red-600 text-sm mt-0.5">delete_forever</span>
+                        <div>
+                          <p className="text-sm font-medium text-red-800">Datos eliminados</p>
+                          <p className="text-xs text-red-700 mt-1">Tus datos han sido eliminados por expiración de la suscripción. Puedes crear nuevos eventos desde cero.</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
 
               {subscription?.status === 'active' && (
                 <>

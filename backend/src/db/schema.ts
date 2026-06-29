@@ -36,6 +36,7 @@ export const events = pgTable('events', {
   eventDate: timestamp('event_date', { mode: 'date', withTimezone: true }),
   eventLocation: text('event_location'),
   eventNote: text('event_note'),
+  frozenAt: timestamp('frozen_at', { mode: 'date', withTimezone: true }),
   viewCount: integer('view_count').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),

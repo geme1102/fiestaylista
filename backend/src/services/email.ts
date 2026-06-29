@@ -129,6 +129,89 @@ export async function sendProConfirmationEmail(email: string, name: string, inte
   });
 }
 
+export async function sendPastDueEmail(email: string, name: string, daysRemaining: number, accountUrl: string): Promise<void> {
+  await sendEmail({
+    from: FROM,
+    to: email,
+    subject: '⚠️ Tu suscripción Pro está vencida — Fiesta y Lista',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
+        <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:12px;padding:24px;margin:16px 0;text-align:center">
+          <span style="font-size:40px">⚠️</span>
+          <h1 style="color:#991b1b;font-size:20px;margin:12px 0">Tu pago está pendiente, ${escapeHtml(name)}</h1>
+          <p style="color:#92400e;margin:8px 0">Tu suscripción Pro no se ha renovado. Tienes <strong>${daysRemaining} días</strong> para actualizar tu método de pago antes de que tus eventos se congelen.</p>
+          <p style="color:#92400e;font-size:13px;margin:8px 0">Si no renuevas, después de ${daysRemaining} días tus eventos dejarán de ser visibles para tus invitados y 30 días más tarde todos tus datos serán eliminados permanentemente.</p>
+        </div>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${accountUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ir a mi cuenta</a>
+        </div>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendFreezeEmail(email: string, name: string, pricingUrl: string): Promise<void> {
+  await sendEmail({
+    from: FROM,
+    to: email,
+    subject: '❄️ Tus eventos han sido congelados — Fiesta y Lista',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
+        <div style="background:#eff6ff;border:2px solid #93c5fd;border-radius:12px;padding:24px;margin:16px 0;text-align:center">
+          <span style="font-size:40px">❄️</span>
+          <h1 style="color:#1e40af;font-size:20px;margin:12px 0">Tus eventos han sido congelados</h1>
+          <p style="color:#1e40af;margin:8px 0">Hola ${escapeHtml(name)},</p>
+          <p style="color:#6b7280;margin:8px 0">Tus eventos ya no están visibles para tus invitados porque tu suscripción no se renovó. Todos tus datos están guardados de forma segura.</p>
+          <p style="color:#92400e;font-size:13px;font-weight:bold;margin:12px 0">Tienes 30 días para renovar tu suscripción. Después de ese período, todos tus datos (eventos, regalos, fotos) serán eliminados permanentemente.</p>
+        </div>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${pricingUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver planes</a>
+        </div>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendPurgeWarningEmail(email: string, name: string, daysUntilPurge: number, pricingUrl: string): Promise<void> {
+  await sendEmail({
+    from: FROM,
+    to: email,
+    subject: '⚠️ Tus datos serán eliminados en ' + daysUntilPurge + ' días — Fiesta y Lista',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+          <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
+        </div>
+        <div style="background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:24px;margin:16px 0;text-align:center">
+          <span style="font-size:40px">⏰</span>
+          <h1 style="color:#9a3412;font-size:20px;margin:12px 0">Último aviso, ${escapeHtml(name)}</h1>
+          <p style="color:#9a3412;margin:8px 0">Tus eventos han estado congelados por varios días y tu suscripción no se ha renovado.</p>
+          <p style="color:#92400e;font-size:14px;font-weight:bold;margin:12px 0">En ${daysUntilPurge} días, todos tus datos (eventos, lista de regalos, fotos subidas por tus invitados y mensajes) serán eliminados permanentemente.</p>
+          <p style="color:#6b7280;font-size:13px;margin:8px 0">Si renuevas tu suscripción ahora, tus eventos volverán a estar activos y no perderás nada.</p>
+        </div>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${pricingUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Renovar ahora</a>
+        </div>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendReminderEmail(email: string, eventTitle: string, slug: string, unclaimedCount: number): Promise<void> {
   const url = `${getBaseUrl()}/e/${slug}`;
 

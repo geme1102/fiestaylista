@@ -18,7 +18,11 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '';
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+if (!VITE_API_URL && import.meta.env.PROD) {
+  console.error('[API] VITE_API_URL no está configurada. Las peticiones API fallarán.');
+}
+const BASE_URL = VITE_API_URL ?? '';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -228,34 +232,54 @@ export const apiClient = {
   del<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     return request<T>('DELETE', path, body, options);
   },
-  uploadWithProgress<T>(path: string, formData: FormData, onProgress: (pct: number) => void): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const url = `${BASE_URL}${path}`;
+  async uploadWithProgress<T>(path: string, formData: FormData, onProgress: (pct: number) => void): Promise<T> {
+    const url = `${BASE_URL}${path}`;
 
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          onProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
+    const doUpload = (token: string | null): Promise<T> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(undefined as T); }
-        } else {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+
+        xhr.onload = async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(undefined as T); }
+            return;
+          }
+
+          // 401: try refresh token and retry once
+          if (xhr.status === 401) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+              resolve(doUpload(accessToken));
+              return;
+            }
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
+            reject(new Error('Sesión expirada. Serás redirigido al inicio de sesión.'));
+            return;
+          }
+
           let msg = `Error ${xhr.status}`;
           try { const err = JSON.parse(xhr.responseText); msg = err.message ?? err.error ?? msg; } catch {}
           reject(new Error(msg));
-        }
-      };
+        };
 
-      xhr.onerror = () => reject(new Error('Error de conexión. Verifica tu internet e intenta de nuevo.'));
-      xhr.onabort = () => reject(new Error('La solicitud tardó demasiado. Intenta de nuevo.'));
+        xhr.onerror = () => reject(new Error('Error de conexión. Verifica tu internet e intenta de nuevo.'));
+        xhr.onabort = () => reject(new Error('La solicitud tardó demasiado. Intenta de nuevo.'));
 
-      xhr.open('POST', url);
-      if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-      xhr.timeout = REQUEST_TIMEOUT;
-      xhr.send(formData);
-    });
+        xhr.open('POST', url);
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.timeout = REQUEST_TIMEOUT;
+        xhr.send(formData);
+      });
+    };
+
+    return doUpload(accessToken);
   },
 };

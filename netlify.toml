@@ -7,12 +7,11 @@
   function = "event-og"
   path = "/e/*"
 
-# IMPORTANTE: Actualizar esta URL si cambia el dominio de Railway.
-# Ve a Railway → Settings → Domains y copia la URL generada.
-# Luego reemplázala en la línea `to` de abajo.
+# API proxy a Railway. Define API_URL en Netlify > Environment variables.
+# Ejemplo: API_URL = "https://tusubida.up.railway.app"
 [[redirects]]
   from = "/api/*"
-  to = "https://fiestaylista-production.up.railway.app/api/:splat"
+  to = "${API_URL}/api/:splat"
   status = 200
 
 # Favicon SVG: cache inmutable
@@ -74,7 +73,6 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"

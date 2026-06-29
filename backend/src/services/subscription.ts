@@ -1,8 +1,11 @@
-import { eq, lte, and, inArray, sql, isNull, asc, desc } from 'drizzle-orm';
+import { eq, lte, and, inArray, sql, isNull, desc } from 'drizzle-orm';
+import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events, gifts, photos, proPayments } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, photos, proPayments } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { TIER_LIMITS } from '../types/index.js';
+import { getPublicIdFromUrl } from '../utils/cloudinary.js';
+import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
+import { config } from '../config.js';
 import type { Tier, SubscriptionStatus } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -53,88 +56,27 @@ export async function createOrUpdateSubscription(
   return sub;
 }
 
-async function deactivateExcessEvents(userId: string, txClient?: typeof db) {
+async function freezeUserEvents(userId: string, txClient?: typeof db) {
   const conn = txClient || db;
-  const FREE_MAX_EVENTS = TIER_LIMITS.free.maxEvents;
-  const FREE_MAX_GIFTS = TIER_LIMITS.free.maxGiftsPerEvent;
-  const FREE_MAX_PHOTOS = TIER_LIMITS.free.maxPhotosPerEvent;
-
-  const [countResult] = await conn
-    .select({ count: sql<number>`count(*)` })
-    .from(events)
+  const now = new Date();
+  await conn
+    .update(events)
+    .set({ isActive: false, frozenAt: now, updatedAt: now })
     .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
 
-  const activeCount = Number(countResult?.count ?? 0);
-  if (activeCount <= FREE_MAX_EVENTS) return;
+  log.info({ userId }, 'Eventos congelados');
 
-  const excess = activeCount - FREE_MAX_EVENTS;
+  // Send freeze notification email (fire-and-forget)
+  const [user] = await conn
+    .select({ email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
-  const toDeactivate = await conn
-    .select({ id: events.id })
-    .from(events)
-    .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)))
-    .orderBy(events.createdAt)
-    .limit(excess);
-
-  const ids = toDeactivate.map(e => e.id);
-  if (ids.length > 0) {
-    await conn
-      .update(events)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(inArray(events.id, ids));
-  }
-
-  // Trim excess gifts and photos in remaining active events
-  const remainingEvents = await conn
-    .select({ id: events.id })
-    .from(events)
-    .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
-
-  for (const ev of remainingEvents) {
-    const [giftCountResult] = await conn
-      .select({ count: sql<number>`count(*)` })
-      .from(gifts)
-      .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)));
-
-    const giftCount = Number(giftCountResult?.count ?? 0);
-    if (giftCount > FREE_MAX_GIFTS) {
-      const giftExcess = giftCount - FREE_MAX_GIFTS;
-      const toDelete = await conn
-        .select({ id: gifts.id })
-        .from(gifts)
-        .where(and(eq(gifts.eventId, ev.id), isNull(gifts.deletedAt)))
-        .orderBy(asc(gifts.createdAt))
-        .limit(giftExcess);
-
-      const giftIds = toDelete.map(g => g.id);
-      if (giftIds.length > 0) {
-        await conn
-          .update(gifts)
-          .set({ deletedAt: new Date() })
-          .where(inArray(gifts.id, giftIds));
-      }
-    }
-
-    const [photoCountResult] = await conn
-      .select({ count: sql<number>`count(*)` })
-      .from(photos)
-      .where(and(eq(photos.eventId, ev.id), isNull(photos.deletedAt)));
-
-    const photoCount = Number(photoCountResult?.count ?? 0);
-    if (photoCount > FREE_MAX_PHOTOS) {
-      const photoExcess = photoCount - FREE_MAX_PHOTOS;
-      const toDelete = await conn
-        .select({ id: photos.id })
-        .from(photos)
-        .where(and(eq(photos.eventId, ev.id), isNull(photos.deletedAt)))
-        .orderBy(asc(photos.createdAt))
-        .limit(photoExcess);
-
-      const photoIds = toDelete.map(p => p.id);
-      if (photoIds.length > 0) {
-        await conn.update(photos).set({ deletedAt: new Date() }).where(inArray(photos.id, photoIds));
-      }
-    }
+  if (user?.email) {
+    sendFreezeEmail(user.email, user.name, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
+      log.error({ err, userId }, 'Error enviando email de congelamiento:');
+    });
   }
 }
 
@@ -165,9 +107,9 @@ export async function cancelSubscription(userId: string, immediate = false) {
         .where(eq(users.id, userId));
 
       try {
-        await deactivateExcessEvents(userId, tx as unknown as typeof db);
+        await freezeUserEvents(userId, tx as unknown as typeof db);
       } catch (err) {
-        log.error({ err }, `Error desactivando eventos tras cancelación para ${userId}:`);
+        log.error({ err }, `Error congelando eventos tras cancelación para ${userId}:`);
       }
     }
 
@@ -198,7 +140,7 @@ export async function updateSubscriptionStatus(
         .set({ tier: 'free', updatedAt: new Date() })
         .where(eq(users.id, userId));
 
-      await deactivateExcessEvents(userId, tx as unknown as typeof db);
+      await freezeUserEvents(userId, tx as unknown as typeof db);
     }
 
     return s;
@@ -209,55 +151,134 @@ export async function updateSubscriptionStatus(
 
 export async function expireStaleSubscriptions(): Promise<number> {
   const now = new Date();
-  const gracePeriodEnd = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const freezeThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   const result = await db.transaction(async (tx) => {
-    const expired = await tx
+    const toFreeze = await tx
       .update(subsTable)
-      .set({ status: 'canceled', updatedAt: new Date() })
+      .set({ status: 'canceled', tier: 'free', updatedAt: new Date() })
       .where(and(
-        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
-        eq(subsTable.status, 'active'),
+        lte(subsTable.currentPeriodEnd, freezeThreshold),
+        sql`${subsTable.status} IN ('active', 'past_due')`,
       ))
-      .returning({ id: subsTable.id, userId: subsTable.userId });
+      .returning({ userId: subsTable.userId });
 
-    const pastDueExpired = await tx
-      .update(subsTable)
-      .set({ status: 'canceled', updatedAt: new Date() })
-      .where(and(
-        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
-        eq(subsTable.status, 'past_due'),
-      ))
-      .returning({ id: subsTable.id, userId: subsTable.userId });
-
-    const canceledPastPeriod = await tx
-      .update(subsTable)
-      .set({ tier: 'free', updatedAt: new Date() })
-      .where(and(
-        lte(subsTable.currentPeriodEnd, gracePeriodEnd),
-        eq(subsTable.status, 'canceled'),
-        sql`${subsTable.tier} IN ('pro', 'pro_plus')`,
-      ))
-      .returning({ id: subsTable.id, userId: subsTable.userId });
-
-    const allToDowngrade = [...expired, ...pastDueExpired, ...canceledPastPeriod];
-    const userIds = allToDowngrade.map(s => s.userId).filter(Boolean);
+    const userIds = toFreeze.map(s => s.userId).filter(Boolean);
 
     if (userIds.length > 0) {
       await tx
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })
         .where(inArray(users.id, userIds));
+
+      for (const uid of userIds) {
+        await freezeUserEvents(uid, tx as unknown as typeof db);
+      }
     }
 
-    for (const uid of userIds) {
-      await deactivateExcessEvents(uid, tx as unknown as typeof db);
-    }
-
-    return { count: allToDowngrade.length, userIds };
+    return userIds.length;
   });
 
-  return result.count;
+  if (result > 0) {
+    log.info({ count: result }, 'Suscripciones expiradas, eventos congelados');
+  }
+
+  return result;
+}
+
+export async function purgeExpiredData(): Promise<number> {
+  const now = new Date();
+  const purgeThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const userIds = await db
+    .select({ userId: events.userId })
+    .from(events)
+    .where(and(
+      sql`${events.frozenAt} IS NOT NULL`,
+      lte(events.frozenAt, purgeThreshold),
+    ))
+    .groupBy(events.userId);
+
+  if (userIds.length === 0) return 0;
+
+  let purged = 0;
+  for (const { userId } of userIds) {
+    try {
+      // 1. Collect photo URLs for Cloudinary cleanup
+      const userPhotos = await db
+        .select({ url: photos.url })
+        .from(photos)
+        .innerJoin(events, eq(photos.eventId, events.id))
+        .where(and(eq(events.userId, userId), eq(events.isActive, false), sql`${events.frozenAt} IS NOT NULL`));
+
+      // 2. Delete from Cloudinary (non-blocking)
+      for (const photo of userPhotos) {
+        const publicId = getPublicIdFromUrl(photo.url);
+        if (publicId) {
+          cloudinary.uploader.destroy(publicId).catch(() => {});
+        }
+      }
+
+      // 3. Hard-delete events (cascades to gifts, photos, cash_funds, guests, messages, etc.)
+      await db
+        .delete(events)
+        .where(and(eq(events.userId, userId), isNull(events.deletedAt)));
+
+      log.info({ userId, photosPurged: userPhotos.length }, 'Datos de usuario purgados');
+      purged++;
+    } catch (err) {
+      log.error({ err, userId }, 'Error purgando datos de usuario:');
+    }
+  }
+
+  return purged;
+}
+
+export async function sendPurgeWarnings(): Promise<number> {
+  const now = new Date();
+  const warningStart = new Date(now.getTime() - 23 * 24 * 60 * 60 * 1000);
+  const warningEnd = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const toWarn = await db
+    .select({ userId: events.userId })
+    .from(events)
+    .where(and(
+      sql`${events.frozenAt} IS NOT NULL`,
+      lte(events.frozenAt, warningStart),
+      sql`${events.frozenAt} > ${warningEnd}`,
+    ))
+    .groupBy(events.userId);
+
+  if (toWarn.length === 0) return 0;
+
+  let warned = 0;
+  for (const { userId } of toWarn) {
+    try {
+      const [user] = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (user?.email) {
+        const [event] = await db
+          .select({ frozenAt: events.frozenAt })
+          .from(events)
+          .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`))
+          .limit(1);
+        const frozenAt = event?.frozenAt ? new Date(event.frozenAt) : warningStart;
+        const daysUntilPurge = Math.max(1, Math.ceil((30 * 24 * 60 * 60 * 1000 - (now.getTime() - frozenAt.getTime())) / (24 * 60 * 60 * 1000)));
+        sendPurgeWarningEmail(user.email, user.name, daysUntilPurge, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
+          log.error({ err, userId }, 'Error enviando warning de purga:');
+        });
+        warned++;
+      }
+    } catch (err) {
+      log.error({ err, userId }, 'Error enviando warning de purga:');
+    }
+  }
+
+  return warned;
 }
 
 export async function getPaymentHistory(userId: string) {

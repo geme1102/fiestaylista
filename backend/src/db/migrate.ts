@@ -45,9 +45,16 @@ const COLUMN_MIGRATIONS: string[] = [
   `CREATE INDEX IF NOT EXISTS "messages_event_id_idx" ON "messages"("event_id")`,
   `CREATE INDEX IF NOT EXISTS "messages_created_at_idx" ON "messages"("created_at")`,
 
+  `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "frozen_at" timestamp with time zone`,
+
+  // 0016: Ensure tier column has a CHECK constraint (solo si no existe)
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_tier_check') THEN ALTER TABLE "users" ADD CONSTRAINT "users_tier_check" CHECK (tier IN ('free'::text, 'pro'::text, 'pro_plus'::text)); END IF; END $$`,
+
   `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "status" text NOT NULL DEFAULT 'active'`,
   `ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "is_featured" boolean NOT NULL DEFAULT false`,
   `CREATE INDEX IF NOT EXISTS "photos_is_featured_idx" ON "photos"("is_featured")`,
+
+  `CREATE INDEX IF NOT EXISTS "events_frozen_at_idx" ON "events"("frozen_at") WHERE "frozen_at" IS NOT NULL`,
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

@@ -30,7 +30,7 @@ function useEventsWithViews(enabled: boolean) {
 
 export default function Statistics() {
   const { user } = useAuth();
-  const isPro = user?.tier === 'pro';
+  const isPro = user?.tier !== 'free';
   const { data: events = [], isLoading } = useEventsWithViews(isPro);
 
   if (!isPro) {
@@ -39,9 +39,9 @@ export default function Statistics() {
         <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center mb-5">
           <span className="material-symbols-outlined text-3xl text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
         </div>
-        <h2 className="text-xl font-bold text-on-surface mb-2">Estadísticas exclusivas para Plan Pro</h2>
+        <h2 className="text-xl font-bold text-on-surface mb-2">Estadísticas exclusivas para Plan Pro y Pro Plus</h2>
         <p className="text-sm text-on-surface-variant/70 mb-6 max-w-sm">
-          Actualiza a Pro para acceder a gráficas, métricas y análisis detallados de tus eventos.
+          Actualiza a Pro o Pro Plus para acceder a gráficas, métricas y análisis detallados de tus eventos.
         </p>
         <Link
           to="/pricing"

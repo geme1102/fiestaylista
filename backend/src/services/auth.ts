@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { eq, and, or, sql } from 'drizzle-orm';
 import { randomBytes, createHash } from 'node:crypto';
 import { db } from '../db/index.js';
-import { users, refreshTokens } from '../db/schema.js';
+import { users, refreshTokens, auditLogs } from '../db/schema.js';
 import { config } from '../config.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
@@ -78,6 +78,13 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
     }
     if (existing.revoked) {
       log.warn(`Intento de reuso de refresh token para usuario ${existing.userId}. Revocando todas las sesiones.`);
+      await db.insert(auditLogs).values({
+        userId: existing.userId,
+        action: 'TOKEN_REUSE',
+        resource: 'auth',
+        resourceId: existing.userId,
+        metadata: JSON.stringify({ detail: 'Refresh token reuse detected — all sessions revoked' }),
+      }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
       await db
         .update(refreshTokens)
         .set({ revoked: true })
@@ -311,15 +318,11 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
     .set({ verificationToken, verificationTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
-  if (!isEmailConfigured()) {
-    throw new ValidationError('Email service not configured');
-  }
-
-  try {
-    await sendVerificationEmail(user.email, verificationToken);
-  } catch (err) {
-    log.error({ err }, 'Error al reenviar email de verificación:');
-    throw new ValidationError('No se pudo enviar el correo de verificación. Intenta de nuevo más tarde.');
+  if (isEmailConfigured()) {
+    sendVerificationEmail(user.email, verificationToken).catch((err: unknown) =>
+      log.error({ err }, 'Error al reenviar email de verificación:'));
+  } else {
+    log.warn('Email service not configured — verification email not resent');
   }
 }
 

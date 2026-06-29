@@ -38,13 +38,6 @@ if (cluster.isPrimary && workerCount > 1) {
 } else {
   app = createApp();
 
-  try {
-    await runMigrations();
-  } catch (err) {
-    logger.fatal({ err }, 'Error aplicando migraciones');
-    process.exit(1);
-  }
-
   const server = app.listen(config.PORT, () => {
     logger.info({
       port: config.PORT,
@@ -52,8 +45,14 @@ if (cluster.isPrimary && workerCount > 1) {
       frontend: config.FRONTEND_URL,
       backend: config.BACKEND_URL,
       workerId: cluster.isWorker ? `worker-${cluster.worker?.id}` : 'primary',
-    }, 'Servidor iniciado');
+    }, 'Servidor iniciado — aplicando migraciones en background');
     startCronJobs();
+  });
+
+  // Migraciones en background para no bloquear healthcheck de Railway
+  runMigrations().catch((err) => {
+    logger.fatal({ err }, 'Error aplicando migraciones');
+    process.exit(1);
   });
 
   server.timeout = 30000;
