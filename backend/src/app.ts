@@ -1,7 +1,7 @@
 import compression from 'compression';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
+
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
@@ -51,27 +51,29 @@ export function createApp() {
   app.use(cloudflareIP);
   app.use(requestLogger);
 
-  app.use(cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        config.FRONTEND_URL,
-        'https://fiestaylista.com',
-        'https://www.fiestaylista.com',
-        ...(config.NODE_ENV === 'production'
-          ? [/^https:\/\/[a-zA-Z0-9-]+--fiestaylista\.netlify\.app$/]
-          : ['http://localhost:5173']),
-      ];
-      const normalize = (s: string) => s.replace(/\/+$/, '').toLowerCase();
-      const normalized = origin ? normalize(origin) : '';
-      if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? normalize(a) === normalized : a.test(origin)))) {
-        callback(null, true);
-      } else {
-        console.warn(`[CORS] Origen denegado: "${origin}" — normalizado: "${normalized}" — permitidos: ${allowedOrigins.map(a => typeof a === 'string' ? `"${a}"` : a.toString()).join(', ')}`);
-        callback(new Error(`Origen no permitido: ${origin}`));
-      }
-    },
-    credentials: true,
-  }));
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      config.FRONTEND_URL,
+      'https://fiestaylista.com',
+      'https://www.fiestaylista.com',
+    ].filter(Boolean);
+    const isAllowed = origin && (allowedOrigins.includes(origin) ||
+      (config.NODE_ENV === 'production' &&
+        /^https:\/\/[a-zA-Z0-9-]+--fiestaylista\.netlify\.app$/.test(origin)));
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin!);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Refresh-Request');
+      res.setHeader('Vary', 'Origin');
+    }
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
 
   app.use(helmet({
     contentSecurityPolicy: {
