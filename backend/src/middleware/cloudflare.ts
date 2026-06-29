@@ -49,7 +49,7 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
 
   // Prioridad 1: Cloudflare → directo a Railway (cf-connecting-ip directo)
   if (connectingIP && typeof connectingIP === 'string' && isCloudflareIP(remoteIP)) {
-    (req as Request & { ip: string }).ip = connectingIP;
+    try { Object.defineProperty(req, 'ip', { value: connectingIP, configurable: true, writable: true, enumerable: true }); } catch {}
     next();
     return;
   }
@@ -58,7 +58,7 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
   // Netlify envía x-nf-client-ip con la IP real del cliente
   const netlifyClientIP = req.headers['x-nf-client-ip'];
   if (netlifyClientIP && typeof netlifyClientIP === 'string') {
-    (req as Request & { ip: string }).ip = netlifyClientIP;
+    try { Object.defineProperty(req, 'ip', { value: netlifyClientIP, configurable: true, writable: true, enumerable: true }); } catch {}
     next();
     return;
   }
@@ -68,7 +68,7 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
   if (forwardedFor && typeof forwardedFor === 'string') {
     const firstIP = forwardedFor.split(',')[0]?.trim();
     if (firstIP && !isPrivateOrLocal(firstIP)) {
-      (req as Request & { ip: string }).ip = firstIP;
+      try { Object.defineProperty(req, 'ip', { value: firstIP, configurable: true, writable: true, enumerable: true }); } catch {}
       next();
       return;
     }
