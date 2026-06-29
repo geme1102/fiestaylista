@@ -61,9 +61,12 @@ export function createApp() {
           ? [/^https:\/\/[a-zA-Z0-9-]+--fiestaylista\.netlify\.app$/]
           : ['http://localhost:5173']),
       ];
-      if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? a === origin : a.test(origin)))) {
+      const normalize = (s: string) => s.replace(/\/+$/, '').toLowerCase();
+      const normalized = origin ? normalize(origin) : '';
+      if (!origin || allowedOrigins.some((a) => (typeof a === 'string' ? normalize(a) === normalized : a.test(origin)))) {
         callback(null, true);
       } else {
+        console.warn(`[CORS] Origen denegado: "${origin}" — normalizado: "${normalized}" — permitidos: ${allowedOrigins.map(a => typeof a === 'string' ? `"${a}"` : a.toString()).join(', ')}`);
         callback(new Error(`Origen no permitido: ${origin}`));
       }
     },
