@@ -119,6 +119,17 @@ test.describe('Pricing Page', () => {
   test('renders FAQ section', async ({ page }) => {
     await expect(page.getByText('Cancelación en cualquier momento')).toBeVisible();
   });
+
+  test('shows Pro Plus plan card with 3 events', async ({ page }) => {
+    await expect(page.getByText('Pro Plus')).toBeVisible();
+    await expect(page.getByText('3 eventos')).toBeVisible();
+    await expect(page.getByText('$99.900')).toBeVisible();
+  });
+
+  test('Actualizar a Pro Plus redirects to register when not authenticated', async ({ page }) => {
+    await page.getByText('Actualizar a Pro Plus').click();
+    await expect(page).toHaveURL(/\/register\?plan=pro_plus/);
+  });
 });
 
 test.describe('Navigation Flow', () => {

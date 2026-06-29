@@ -4,11 +4,10 @@ import bcrypt from 'bcryptjs';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
-import * as mpWebhooks from '../services/mp-webhooks.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
@@ -20,48 +19,45 @@ const log = createModuleLogger('Subscriptions');
 
 const router = Router();
 
+const CHECKOUT_URLS: Record<string, Record<string, string>> = {
+  pro: { month: config.PRO_MONTHLY_CHECKOUT_URL, year: config.PRO_YEARLY_CHECKOUT_URL },
+  pro_plus: { month: config.PRO_PLUS_MONTHLY_CHECKOUT_URL },
+};
+
 const checkoutSchema = z.object({
-  tier: z.enum(['pro'], {
-    errorMap: () => ({ message: 'Plan inválido. Debe ser pro' }),
+  tier: z.enum(['pro', 'pro_plus'], {
+    errorMap: () => ({ message: 'Plan inválido. Debe ser pro o pro_plus' }),
   }),
   interval: z.enum(['month', 'year']).default('month'),
-  successUrl: z.string().url('URL de éxito inválida'),
-  cancelUrl: z.string().url('URL de cancelación inválida'),
+  successUrl: z.string().url('URL de éxito inválida').optional(),
+  cancelUrl: z.string().url('URL de cancelación inválida').optional(),
 });
 
 const cancelSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para confirmar'),
 });
 
-router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = checkoutSchema.parse(req.body);
 
-  const allowedOrigin = config.FRONTEND_URL.replace(/\/+$/, '');
-  try {
-    const successOrigin = new URL(data.successUrl).origin;
-    const cancelOrigin = new URL(data.cancelUrl).origin;
-    if (successOrigin !== allowedOrigin || cancelOrigin !== allowedOrigin) {
-      throw new ValidationError('URL de redirección no permitida');
-    }
-  } catch {
-    throw new ValidationError('URL de redirección inválida');
+  if (data.tier === 'pro_plus' && data.interval !== 'month') {
+    throw new ValidationError('Pro Plus solo está disponible en plan mensual');
   }
 
-  const result = await mercadopagoService.createProPreference(
-    req.user!.userId,
-    data.interval,
-    data.successUrl,
-    data.cancelUrl,
-  );
-  res.json(result);
+  const url = CHECKOUT_URLS[data.tier]?.[data.interval];
+  if (!url) {
+    throw new ValidationError('URL de pago no configurada para este plan');
+  }
+
+  res.json({ url });
 }));
 
 router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const userId = req.user!.userId;
 
   const sub = await subscriptionService.getCurrentSubscription(userId);
-  if (sub?.tier === 'pro' && sub?.status === 'active') {
-    res.json({ tier: 'pro', synced: false, message: 'Ya tienes Pro activo' });
+  if ((sub?.tier === 'pro' || sub?.tier === 'pro_plus') && sub?.status === 'active') {
+    res.json({ tier: sub.tier, synced: false, message: `Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo` });
     return;
   }
 
@@ -82,38 +78,23 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
     const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
 
     if (periodEnd <= new Date()) {
-      res.json({ tier: 'free', synced: false, message: 'Tu pago ya expiró. Suscríbete de nuevo para continuar con Pro.' });
+      res.json({ tier: 'free', synced: false, message: 'Tu pago ya expiró. Suscríbete de nuevo para continuar.' });
       return;
     }
 
+    const tier = payment.tier ?? 'pro';
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: null,
-      tier: 'pro',
+      tier: tier as 'pro' | 'pro_plus',
       status: 'active',
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
     });
-    res.json({ tier: 'pro', synced: true, message: 'Suscripción activada' });
+    res.json({ tier, synced: true, message: 'Suscripción activada' });
     return;
   }
 
-  const monthRef = `pro_${userId}_month`;
-  const yearRef = `pro_${userId}_year`;
-
-  const [monthPayment, yearPayment] = await Promise.all([
-    mercadopagoService.searchPaymentsByRef(monthRef),
-    mercadopagoService.searchPaymentsByRef(yearRef),
-  ]);
-
-  const found = monthPayment || yearPayment;
-  if (found) {
-    const interval = monthPayment ? 'month' : 'year';
-    await mpWebhooks.handleProPayment(found.id, userId, interval);
-    res.json({ tier: 'pro', synced: true, message: 'Suscripción activada después de verificar el pago en Mercado Pago' });
-    return;
-  }
-
-  res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Si el problema persiste, contacta a soporte.' });
+  res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Después de pagar, espera unos minutos y vuelve a intentar. Si el problema persiste, contacta a soporte.' });
 }));
 
 router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {

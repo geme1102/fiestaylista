@@ -11,6 +11,10 @@ if (config.RESEND_API_KEY) {
   resend = new Resend(config.RESEND_API_KEY);
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 const FROM = config.FROM_EMAIL;
 
 function getBaseUrl(): string {
@@ -104,7 +108,7 @@ export async function sendProConfirmationEmail(email: string, name: string, inte
           <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
           <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
         </div>
-        <h1 style="text-align:center;color:#1f2937;font-size:20px">¡Bienvenido a PRO, ${name}!</h1>
+        <h1 style="text-align:center;color:#1f2937;font-size:20px">¡Bienvenido a PRO, ${escapeHtml(name)}!</h1>
         <p style="color:#6b7280;text-align:center;margin:16px 0">Tu suscripción ${interval} ya está activa. Ahora tienes acceso a todas las funciones premium.</p>
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin:16px 0">
           <p style="margin:0;color:#991b1b;font-size:14px"><strong>Qué incluye:</strong></p>
@@ -139,7 +143,7 @@ export async function sendReminderEmail(email: string, eventTitle: string, slug:
             <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
             <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
           </div>
-          <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
+          <h1 style="color:#1f2937;font-size:20px">${escapeHtml(eventTitle)}</h1>
           <p style="color:#6b7280">Tu evento ya está listo. Comparte el enlace con tus invitados para que empiecen a apartar sus regalos.</p>
           <div style="text-align:center;margin:24px 0">
             <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Compartir evento</a>
@@ -162,7 +166,7 @@ export async function sendReminderEmail(email: string, eventTitle: string, slug:
           <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ec4899,#f43f5e);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
           <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
         </div>
-        <h1 style="color:#1f2937;font-size:20px">${eventTitle}</h1>
+        <h1 style="color:#1f2937;font-size:20px">${escapeHtml(eventTitle)}</h1>
         <p style="color:#6b7280">Tienes <strong>${unclaimedCount} regalos</strong> que aún no han sido apartados por tus invitados.</p>
         <div style="text-align:center;margin:24px 0">
           <a href="${url}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ec4899,#f43f5e);color:white;text-decoration:none;border-radius:12px;font-weight:600">Ver lista de regalos</a>

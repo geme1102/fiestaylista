@@ -205,9 +205,9 @@ export default function Account() {
               <div className="mb-6">
                 <span className="text-sm text-on-surface-variant">Plan actual</span>
                 <p className="text-2xl font-bold text-on-surface">
-                  {user.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+                  {user.tier === 'free' ? 'Plan Gratis' : user.tier === 'pro_plus' ? 'Plan Pro Plus' : 'Plan Pro'}
                   <span className="ml-3 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold align-middle">
-                    {user.tier === 'free' ? 'FREE' : 'PRO'}
+                    {user.tier === 'free' ? 'FREE' : user.tier === 'pro_plus' ? 'PRO PLUS' : 'PRO'}
                   </span>
                 </p>
               </div>
@@ -233,6 +233,14 @@ export default function Account() {
                   className="w-full block text-center py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-bold hover:shadow-lg transition-all mb-6"
                 >
                   Mejorar a Pro
+                </Link>
+              )}
+              {user.tier === 'pro' && (
+                <Link
+                  to="/pricing"
+                  className="w-full block text-center py-3 bg-gradient-to-r from-secondary to-secondary-container text-on-secondary rounded-xl font-bold hover:shadow-lg transition-all mb-6"
+                >
+                  Mejorar a Pro Plus
                 </Link>
               )}
 
@@ -272,7 +280,12 @@ export default function Account() {
                               successUrl,
                               cancelUrl,
                             });
-                            window.location.href = validateRedirectUrl(res.url);
+                            const redirectUrl = validateRedirectUrl(res.url);
+                            if (!redirectUrl) {
+                              showToast('Error al procesar la URL de pago', 'error');
+                              return;
+                            }
+                            window.location.href = redirectUrl;
                           } catch {
                             showToast('Error al iniciar el proceso de pago', 'error');
                             setRetryingPayment(false);
@@ -307,9 +320,9 @@ export default function Account() {
                   disabled={cancelLoading}
                   className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 flex items-center justify-center"
                 >
-                  {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción Pro'}
-                </button>
-                  <p className="text-xs text-on-surface-variant text-center mt-2">Al cancelar perderás acceso a funciones Pro al final del período actual.</p>
+                  {cancelLoading ? <LoadingSpinner size="sm" /> : 'Cancelar Suscripción'}
+                  </button>
+                  <p className="text-xs text-on-surface-variant text-center mt-2">Al cancelar perderás acceso a las funciones premium al final del período actual.</p>
                 </>
               )}
             </>

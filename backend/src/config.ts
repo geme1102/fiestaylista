@@ -92,6 +92,18 @@ export const config = {
   FROM_EMAIL: process.env.FROM_EMAIL || '',
   PRO_MONTHLY_PRICE_CENTS: parseInt(process.env.PRO_MONTHLY_PRICE_CENTS || '59900', 10),
   PRO_YEARLY_PRICE_CENTS: parseInt(process.env.PRO_YEARLY_PRICE_CENTS || '660000', 10),
+  PRO_PLUS_MONTHLY_PRICE_CENTS: parseInt(process.env.PRO_PLUS_MONTHLY_PRICE_CENTS || '99900', 10),
+  PRO_MONTHLY_CHECKOUT_URL: process.env.PRO_MONTHLY_CHECKOUT_URL || (
+    process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID
+      ? `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID}`
+      : ''
+  ),
+  PRO_YEARLY_CHECKOUT_URL: process.env.PRO_YEARLY_CHECKOUT_URL || (
+    process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID
+      ? `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID}`
+      : ''
+  ),
+  PRO_PLUS_MONTHLY_CHECKOUT_URL: process.env.PRO_PLUS_MONTHLY_CHECKOUT_URL || (process.env.MERCADO_PAGO_PRO_PLUS_LINK_URL || ''),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   SENTRY_DSN: process.env.SENTRY_DSN || '',
   DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '25', 10),

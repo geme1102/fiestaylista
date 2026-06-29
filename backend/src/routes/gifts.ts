@@ -9,7 +9,7 @@ import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
-import { verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
@@ -65,7 +65,7 @@ router.put('/:giftId', requireAuth, requireEventOwnership, validateUuidParam('ev
   res.json({ gift });
 }));
 
-router.put('/:giftId/claim', contributeLimiter, verifyTurnstileOptional, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
+router.put('/:giftId/claim', contributeLimiter, verifyTurnstile, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
@@ -110,7 +110,7 @@ const groupClaimSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
-router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstileOptional, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
+router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstile, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
@@ -191,7 +191,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
   }
 
   try {
-    const decoded = jwt.verify(authToken, config.JWT_SECRET) as { scope: string; eventId: string };
+    const decoded = jwt.verify(authToken, config.JWT_SECRET, { algorithms: ['HS256'] }) as { scope: string; eventId: string };
     if (decoded.scope !== 'sse' || decoded.eventId !== eventId) {
       res.status(403).json({ error: 'Token SSE inválido para este evento' });
       return;

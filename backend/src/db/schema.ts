@@ -144,6 +144,7 @@ export const proPayments = pgTable('pro_payments', {
   mpPaymentId: text('mp_payment_id').notNull().unique(),
   amount: integer('amount').notNull(),
   interval: text('interval').notNull().default('month'),
+  tier: text('tier').notNull().default('pro'),
   status: text('status').notNull().default('completed'),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({

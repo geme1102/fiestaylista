@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Preference, Payment, PreApproval } from 'mercadopago';
+import { MercadoPagoConfig, Payment, PreApproval } from 'mercadopago';
 import { config } from '../config.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -57,50 +57,12 @@ export async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promis
   throw lastError!;
 }
 
-export async function createProPreference(
-  userId: string,
-  interval: 'month' | 'year',
-  successUrl: string,
-  cancelUrl: string,
-): Promise<{ url: string }> {
-  if (!client) {
-    throw new Error('Mercado Pago no está configurado (falta MERCADO_PAGO_ACCESS_TOKEN)');
-  }
-
-  const amount = interval === 'month' ? config.PRO_MONTHLY_PRICE_CENTS : config.PRO_YEARLY_PRICE_CENTS;
-  const preference = new Preference(client);
-  const result = await retryable(() => preference.create({
-    body: {
-      items: [{
-        id: `pro_${userId}_${interval}`,
-        title: `Pro ${interval === 'month' ? 'Mensual' : 'Anual'} - Fiesta y Lista`,
-        quantity: 1,
-        unit_price: amount,
-        currency_id: 'COP',
-      }],
-      back_urls: {
-        success: successUrl,
-        failure: cancelUrl,
-        pending: `${cancelUrl}?payment=pending`,
-      },
-      auto_return: 'approved',
-      external_reference: `pro_${userId}_${interval}`,
-    },
-  }));
-
-  const initPoint = result.init_point;
-  if (!initPoint) {
-    throw new Error('No se pudo generar la URL de pago');
-  }
-
-  return { url: initPoint };
-}
-
 export async function fetchPaymentInfo(paymentId: string): Promise<{
   status: string;
   externalReference: string;
   transactionAmount: number;
   payerName: string;
+  payerEmail: string;
 }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');
@@ -114,6 +76,7 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
     externalReference: info.external_reference ?? '',
     transactionAmount: info.transaction_amount ?? 0,
     payerName: info.payer?.first_name ?? '',
+    payerEmail: info.payer?.email ?? '',
   };
 }
 
@@ -154,6 +117,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   externalReference: string;
   payerEmail: string;
   reason: string;
+  transactionAmount: number;
   nextChargeDate: string | null;
   dateCreated: string | null;
 }> {
@@ -164,11 +128,14 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   const preapproval = new PreApproval(client);
   const info = await retryable(() => preapproval.get({ id: preapprovalId }));
 
+  const autoRecurring = (info as unknown as Record<string, unknown>).auto_recurring as Record<string, unknown> | undefined;
+
   return {
     status: info.status ?? 'unknown',
     externalReference: info.external_reference ?? '',
     payerEmail: info.payer_email ?? '',
     reason: info.reason ?? '',
+    transactionAmount: (info as unknown as Record<string, unknown>).initial_amount as number ?? autoRecurring?.transaction_amount as number ?? 0,
     nextChargeDate: (info as unknown as Record<string, unknown>).next_charge_date as string || (info as unknown as Record<string, unknown>).scheduled_date as string || null,
     dateCreated: (info as unknown as Record<string, unknown>).date_created as string || null,
   };

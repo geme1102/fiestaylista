@@ -29,6 +29,7 @@ vi.mock('../middleware/subscription.js', () => ({
   checkGiftLimit: vi.fn(),
 }));
 vi.mock('../middleware/turnstile.js', () => ({
+  verifyTurnstile: vi.fn((_req, _res, next) => next()),
   verifyTurnstileOptional: vi.fn((_req, _res, next) => next()),
 }));
 vi.mock('../middleware/validateUuid.js', () => ({

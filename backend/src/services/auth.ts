@@ -50,7 +50,7 @@ async function persistRefreshToken(userId: string, token: string, client: DbClie
 async function consumeRefreshToken(token: string): Promise<JwtPayload> {
   let decoded: JwtPayload;
   try {
-    decoded = jwt.verify(token, config.JWT_REFRESH_SECRET) as JwtPayload;
+    decoded = jwt.verify(token, config.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       throw new UnauthorizedError('Token de refresco expirado');

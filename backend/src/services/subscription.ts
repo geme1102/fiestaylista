@@ -236,7 +236,7 @@ export async function expireStaleSubscriptions(): Promise<number> {
       .where(and(
         lte(subsTable.currentPeriodEnd, gracePeriodEnd),
         eq(subsTable.status, 'canceled'),
-        eq(subsTable.tier, 'pro'),
+        sql`${subsTable.tier} IN ('pro', 'pro_plus')`,
       ))
       .returning({ id: subsTable.id, userId: subsTable.userId });
 

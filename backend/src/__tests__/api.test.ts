@@ -17,6 +17,10 @@ vi.mock('../config.js', () => ({
     PORT: 3001,
     PRO_MONTHLY_PRICE_CENTS: 59900,
     PRO_YEARLY_PRICE_CENTS: 660000,
+    PRO_PLUS_MONTHLY_PRICE_CENTS: 99900,
+    PRO_MONTHLY_CHECKOUT_URL: 'https://mpago.test/pro-monthly',
+    PRO_YEARLY_CHECKOUT_URL: 'https://mpago.test/pro-yearly',
+    PRO_PLUS_MONTHLY_CHECKOUT_URL: 'https://mpago.test/pro-plus',
     CLOUDINARY_CLOUD_NAME: '',
     CLOUDINARY_API_KEY: '',
     CLOUDINARY_API_SECRET: '',
@@ -238,9 +242,7 @@ const mockCashFundService = vi.hoisted(() => ({
 vi.mock('../services/cashFund.js', () => mockCashFundService);
 
 const mockMercadopagoService = vi.hoisted(() => ({
-  createProPreference: vi.fn(),
   cancelPreapproval: vi.fn(),
-  searchPaymentsByRef: vi.fn(),
 }));
 
 vi.mock('../services/mercadopago.js', () => mockMercadopagoService);
@@ -684,16 +686,52 @@ describe('Subscription Routes', () => {
     vi.clearAllMocks();
   });
 
-  it('POST /api/subscriptions/create-checkout - create checkout', async () => {
-    mockMercadopagoService.createProPreference.mockResolvedValue({ url: 'https://mpago.test/checkout' });
-
+  it('POST /api/subscriptions/create-checkout - returns static URL for pro monthly', async () => {
     const res = await request(app)
       .post('/api/subscriptions/create-checkout')
       .set(auth)
-      .send({ tier: 'pro', interval: 'month', successUrl: 'http://localhost:5173/success', cancelUrl: 'http://localhost:5173/cancel' });
+      .send({ tier: 'pro', interval: 'month' });
 
     expect(res.status).toBe(200);
-    expect(res.body.url).toBeDefined();
+    expect(res.body.url).toBe('https://mpago.test/pro-monthly');
+  });
+
+  it('POST /api/subscriptions/create-checkout - returns static URL for pro yearly', async () => {
+    const res = await request(app)
+      .post('/api/subscriptions/create-checkout')
+      .set(auth)
+      .send({ tier: 'pro', interval: 'year' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.url).toBe('https://mpago.test/pro-yearly');
+  });
+
+  it('POST /api/subscriptions/create-checkout - returns static URL for pro_plus monthly', async () => {
+    const res = await request(app)
+      .post('/api/subscriptions/create-checkout')
+      .set(auth)
+      .send({ tier: 'pro_plus', interval: 'month' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.url).toBe('https://mpago.test/pro-plus');
+  });
+
+  it('POST /api/subscriptions/create-checkout - pro_plus yearly returns error', async () => {
+    const res = await request(app)
+      .post('/api/subscriptions/create-checkout')
+      .set(auth)
+      .send({ tier: 'pro_plus', interval: 'year' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/subscriptions/create-checkout - validation error for invalid tier', async () => {
+    const res = await request(app)
+      .post('/api/subscriptions/create-checkout')
+      .set(auth)
+      .send({ tier: 'invalid', interval: 'month', successUrl: 'http://localhost:5173/success', cancelUrl: 'http://localhost:5173/cancel' });
+
+    expect(res.status).toBe(400);
   });
 
   it('GET /api/subscriptions/current - get current', async () => {

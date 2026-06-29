@@ -32,10 +32,10 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
 
     let decoded: JwtPayload | GuestJwtPayload;
     try {
-      decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
     } catch {
       try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET) as GuestJwtPayload;
+        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
       } catch {
         throw new UnauthorizedError('Token inválido');
       }
@@ -87,10 +87,10 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
 
     let decoded: JwtPayload | GuestJwtPayload;
     try {
-      decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
     } catch {
       try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET) as GuestJwtPayload;
+        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
       } catch {
         throw new UnauthorizedError('Token inválido');
       }
@@ -141,10 +141,10 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
 
     let decoded: JwtPayload | GuestJwtPayload;
     try {
-      decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
+      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
     } catch {
       try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET) as GuestJwtPayload;
+        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
       } catch {
         next();
         return;

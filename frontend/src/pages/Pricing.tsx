@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
 import { useTurnstile } from '../hooks/useTurnstile';
+import type { Tier } from '../types';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
@@ -33,6 +34,22 @@ const PLANS = [
     badge: 'MÁS ELEGIDO',
     features: [
       { text: '1 evento', included: true },
+      { text: '100 regalos por evento', included: true },
+      { text: '20 fotos por evento', included: true },
+      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
+      { text: 'Panel de estadísticas con gráficas', included: true },
+      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
+    ],
+  },
+  {
+    tier: 'pro_plus' as const,
+    name: 'Pro Plus',
+    price: 99900,
+    yearlyPrice: 1098900,
+    popular: false,
+    badge: 'NUEVO',
+    features: [
+      { text: '3 eventos', included: true },
       { text: '100 regalos por evento', included: true },
       { text: '20 fotos por evento', included: true },
       { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
@@ -120,7 +137,7 @@ export default function Pricing() {
       const interval = yearly ? 'year' : 'month';
       const successUrl = `${window.location.origin}/dashboard?pro=activated`;
       const cancelUrl = `${window.location.origin}/pricing`;
-      const res = await createCheckoutSession(tier as 'pro', successUrl, cancelUrl, interval, token ?? undefined);
+      const res = await createCheckoutSession(tier as Tier, successUrl, cancelUrl, interval, token ?? undefined);
       clearTimeout(safetyTimer);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
@@ -142,19 +159,19 @@ export default function Pricing() {
     <>
       <Helmet>
         <title>Planes - Fiesta y Lista</title>
-        <meta name="description" content="Planes de Fiesta y Lista: plan gratis y Pro desde $59.900/mes. Sin tarjeta de crédito para empezar. Crea tu lista de regalos." />
-        <meta name="keywords" content="fiestaylista planes, lista de regalos precios, plan pro, suscripción, lista de regalos Colombia" />
+        <meta name="description" content="Planes de Fiesta y Lista: gratis, Pro desde $59.900/mes y Pro Plus desde $99.900/mes con 3 eventos. Sin tarjeta de crédito para empezar." />
+        <meta name="keywords" content="fiestaylista planes, lista de regalos precios, plan pro, plan pro plus, suscripción, lista de regalos Colombia" />
         <meta property="og:title" content="Planes - Fiesta y Lista" />
-        <meta property="og:description" content="Planes de Fiesta y Lista: gratis y Pro desde $59.900/mes. Crea listas de regalos para baby showers, bodas y cumpleaños." />
+        <meta property="og:description" content="Planes de Fiesta y Lista: gratis, Pro y Pro Plus. Crea listas de regalos para baby showers, bodas y cumpleaños." />
         <meta name="twitter:title" content="Planes - Fiesta y Lista" />
-        <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis y Pro desde $59.900/mes." />
+        <meta name="twitter:description" content="Planes de Fiesta y Lista: gratis, Pro y Pro Plus." />
         <link rel="canonical" href="https://fiestaylista.com/pricing" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            "name": "Fiesta y Lista Pro",
-            "description": "Plan Pro de Fiesta y Lista con 1 evento, 100 regalos por evento y Lluvia de Sobres incluida.",
+            "name": "Fiesta y Lista",
+            "description": "Planes de Fiesta y Lista con gratis, Pro y Pro Plus.",
             "url": "https://fiestaylista.com/pricing",
             "offers": [
               {
@@ -170,6 +187,15 @@ export default function Pricing() {
                 "@type": "Offer",
                 "name": "Plan Anual Pro",
                 "price": "660000",
+                "priceCurrency": "COP",
+                "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                "availability": "https://schema.org/InStock",
+                "url": "https://fiestaylista.com/pricing"
+              },
+              {
+                "@type": "Offer",
+                "name": "Plan Mensual Pro Plus",
+                "price": "99900",
                 "priceCurrency": "COP",
                 "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 "availability": "https://schema.org/InStock",
@@ -252,7 +278,7 @@ export default function Pricing() {
 
           {/* Pricing Cards */}
           <section className="md:max-w-5xl mx-auto px-4">
-            <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-6">
+            <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-6">
               {PLANS.map((plan) => {
                 const price = yearly ? plan.yearlyPrice : plan.price;
                 const isCurrent = user?.tier === plan.tier;
@@ -272,10 +298,7 @@ export default function Pricing() {
                           : 'border border-outline-variant',
                       )}
                     >
-                      <h3 className={cn(
-                        'font-headline-md text-headline-md mb-4',
-                        plan.popular ? 'text-primary' : 'text-on-surface-variant',
-                      )}>
+                      <h3 className="font-headline-md text-headline-md mb-4 text-on-surface">
                         {plan.name}
                       </h3>
                       <div className="mb-6">
@@ -309,7 +332,7 @@ export default function Pricing() {
                         </div>
                       ) : (
                         <button
-                          data-testid={plan.price === 0 ? 'cta-free' : 'cta-pro'}
+                          data-testid={plan.price === 0 ? 'cta-free' : plan.tier === 'pro_plus' ? 'cta-pro-plus' : 'cta-pro'}
                           onClick={() => handleSelect(plan.tier)}
                           disabled={loading}
                           className={cn(
@@ -323,7 +346,9 @@ export default function Pricing() {
                             ? 'Procesando...'
                             : plan.price === 0
                               ? 'Empezar Gratis'
-                              : 'Actualizar a Pro'
+                              : plan.tier === 'pro_plus'
+                                ? 'Actualizar a Pro Plus'
+                                : 'Actualizar a Pro'
                           }
                         </button>
                       )}

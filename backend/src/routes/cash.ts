@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 
 import { contributeLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, ForbiddenError } from '../utils/errors.js';
@@ -54,7 +54,7 @@ router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHand
   res.json({ cashFund: fund || null });
 }));
 
-router.post('/cash-fund/promise', contributeLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
+router.post('/cash-fund/promise', contributeLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
   const data = promiseSchema.parse(req.body);
   const result = await cashFundService.createPromise(
     data.cashFundId,

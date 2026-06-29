@@ -11,7 +11,7 @@ const BASE_NAV_ITEMS = [
 
 function useNavItems(tier: string | undefined) {
   return useMemo(() => {
-    if (tier === 'pro') {
+    if (tier === 'pro' || tier === 'pro_plus') {
       return [
         ...BASE_NAV_ITEMS.slice(0, 1),
         { path: '/statistics', label: 'Estadísticas', icon: 'bar_chart' },

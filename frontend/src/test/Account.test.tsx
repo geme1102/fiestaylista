@@ -32,6 +32,15 @@ const mockUser = {
   createdAt: '2024-01-01T00:00:00Z',
 };
 
+const mockProPlusUser = {
+  id: 'user-2',
+  name: 'Carlos López',
+  email: 'carlos@test.com',
+  emailVerified: true,
+  tier: 'pro_plus' as const,
+  createdAt: '2024-01-01T00:00:00Z',
+};
+
 const mockSubscription = {
   id: 'sub-1',
   userId: 'user-1',
@@ -86,6 +95,26 @@ describe('Account', () => {
     await waitFor(() => {
       expect(screen.getByTestId('download-data-button')).toBeTruthy();
       expect(screen.getByTestId('delete-account-button')).toBeTruthy();
+    });
+  });
+
+  it('renders Pro Plus plan badge when user tier is pro_plus', async () => {
+    mockUseAuth.mockReturnValue({ user: mockProPlusUser, resendVerification: vi.fn(), refreshUser: vi.fn(), logout: vi.fn() });
+
+    renderAccount();
+    await waitFor(() => {
+      expect(screen.getByText('Plan Pro Plus')).toBeTruthy();
+    });
+    expect(screen.getByText('PRO PLUS')).toBeTruthy();
+    expect(screen.getByText('3')).toBeTruthy();
+  });
+
+  it('shows upgrade to Pro Plus button for pro users', async () => {
+    mockUseAuth.mockReturnValue({ user: { ...mockUser, tier: 'pro' as const }, resendVerification: vi.fn(), refreshUser: vi.fn(), logout: vi.fn() });
+
+    renderAccount();
+    await waitFor(() => {
+      expect(screen.getByText('Mejorar a Pro Plus')).toBeTruthy();
     });
   });
 });

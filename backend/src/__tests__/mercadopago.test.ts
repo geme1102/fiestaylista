@@ -13,6 +13,7 @@ vi.mock('../config.js', () => ({
     FRONTEND_URL: 'http://localhost:5173',
     PRO_MONTHLY_PRICE_CENTS: 59900,
     PRO_YEARLY_PRICE_CENTS: 660000,
+    PRO_PLUS_MONTHLY_PRICE_CENTS: 99900,
     NODE_ENV: 'test',
   },
 }));
@@ -51,7 +52,6 @@ vi.mock('../db/schema.js', () => ({
 import {
   serializeError,
   retryable,
-  createProPreference,
   fetchPaymentInfo,
   cancelPreapproval,
 } from '../services/mercadopago.js';
@@ -136,50 +136,6 @@ describe('retryable', () => {
   }, 10000);
 });
 
-describe('createProPreference', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('creates preference and returns URL', async () => {
-    mockPreferenceCreate.mockResolvedValueOnce({ init_point: 'https://mp.com/pay/123' });
-
-    const result = await createProPreference(
-      'user-1', 'month',
-      'http://localhost:5173/success', 'http://localhost:5173/cancel',
-    );
-
-    expect(result).toEqual({ url: 'https://mp.com/pay/123' });
-    expect(mockPreferenceCreate).toHaveBeenCalledTimes(1);
-    const body = mockPreferenceCreate.mock.calls[0][0].body;
-    expect(body.external_reference).toBe('pro_user-1_month');
-    expect(body.items[0].unit_price).toBe(59900);
-  });
-
-  it('uses yearly price for year interval', async () => {
-    mockPreferenceCreate.mockResolvedValueOnce({ init_point: 'https://mp.com/pay/456' });
-
-    const result = await createProPreference(
-      'user-1', 'year',
-      'http://localhost:5173/success', 'http://localhost:5173/cancel',
-    );
-
-    expect(result).toEqual({ url: 'https://mp.com/pay/456' });
-    const body = mockPreferenceCreate.mock.calls[0][0].body;
-    expect(body.external_reference).toBe('pro_user-1_year');
-    expect(body.items[0].unit_price).toBe(660000);
-  });
-
-  it('throws if no init_point returned', async () => {
-    mockPreferenceCreate.mockResolvedValueOnce({});
-
-    await expect(createProPreference(
-      'user-1', 'month',
-      'http://localhost:5173/success', 'http://localhost:5173/cancel',
-    )).rejects.toThrow('No se pudo generar la URL de pago');
-  });
-});
-
 describe('fetchPaymentInfo', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -190,7 +146,7 @@ describe('fetchPaymentInfo', () => {
       status: 'approved',
       external_reference: 'ref-1',
       transaction_amount: 50000,
-      payer: { first_name: 'Juan' },
+      payer: { first_name: 'Juan', email: 'juan@test.com' },
     });
 
     const info = await fetchPaymentInfo('pay-1');
@@ -198,6 +154,7 @@ describe('fetchPaymentInfo', () => {
     expect(info.externalReference).toBe('ref-1');
     expect(info.transactionAmount).toBe(50000);
     expect(info.payerName).toBe('Juan');
+    expect(info.payerEmail).toBe('juan@test.com');
   });
 });
 
