@@ -4,11 +4,11 @@ export class ToastPageObject {
   constructor(private page: Page) {}
 
   get container(): Locator {
-    return this.page.locator('[data-testid="toaster"]');
+    return this.page.locator('[data-sonner-toast]');
   }
 
   async getMessage(): Promise<string | null> {
-    const toast = this.page.locator('[data-testid="toaster"] [data-sonner-toast]').first();
+    const toast = this.page.locator('[data-sonner-toast]').first();
     try {
       await toast.waitFor({ state: 'visible', timeout: 5000 });
       return await toast.textContent();
@@ -18,7 +18,7 @@ export class ToastPageObject {
   }
 
   async waitForToast(timeout = 5000): Promise<string> {
-    const toast = this.page.locator('[data-testid="toaster"] [data-sonner-toast]').first();
+    const toast = this.page.locator('[data-sonner-toast]').first();
     await toast.waitFor({ state: 'visible', timeout });
     return (await toast.textContent()) || '';
   }

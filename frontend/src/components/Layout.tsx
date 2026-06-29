@@ -76,6 +76,7 @@ export default function Layout() {
 
               <button
                 onClick={logout}
+                data-testid="logout-button"
                 className="hidden sm:inline-flex items-center px-4 py-2 min-h-[44px] text-sm font-medium text-error hover:bg-error-container/20 rounded-lg transition-colors"
               >
                 Salir

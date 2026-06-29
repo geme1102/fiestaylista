@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { LandingPage } from '../pages/landing.page';
 import { BottomNavPageObject } from '../pages/components/bottom-nav.po';
+import { mockGlobalApi } from '../mocks/global.mock';
 import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Responsive Mobile', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
   });
 
   test.use({ viewport: { width: 375, height: 667 } });

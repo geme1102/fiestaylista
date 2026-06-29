@@ -31,6 +31,6 @@ export class ResetPasswordPage {
   }
 
   get successMessage() {
-    return this.page.getByText('Contraseña actualizada');
+    return this.page.getByRole('heading', { name: 'Contraseña actualizada' });
   }
 }

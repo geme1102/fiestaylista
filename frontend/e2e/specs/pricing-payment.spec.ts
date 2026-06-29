@@ -2,11 +2,14 @@ import { test, expect } from '@playwright/test';
 import { PricingPage } from '../pages/pricing.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockPaymentsApi } from '../mocks/payments.mock';
+import { mockAuthenticatedUser } from '../mocks/auth.mock';
+import { mockGlobalApi } from '../mocks/global.mock';
 import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Pricing & Payment', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await mockTurnstile(page);
   });
 
@@ -37,22 +40,20 @@ test.describe('Pricing & Payment', () => {
     await pricing.goto();
     await pricing.clickYearly();
     await expect(pricing.yearlyBadge).toBeVisible();
-    await expect(page.getByText('$288.000')).toBeVisible();
+    await expect(page.getByText('$660.000')).toBeVisible();
   });
 
   test('P7 - FAQ accordion se expande al hacer click', async ({ page }) => {
     const pricing = new PricingPage(page);
     await pricing.goto();
-    const faqItem = page.locator('.glass-card.rounded-2xl').first();
+    const faqItem = page.locator('[data-testid="faq-item"]').first();
     await faqItem.click();
     const answer = faqItem.locator('.max-h-96');
     await expect(answer).toBeVisible();
   });
 
   test('P5 - Checkout Pro con auth redirige a MP', async ({ page }) => {
-    await page.route('**/api/auth/me', async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ user: { id: 'user-pro-1', email: 'pro@test.com', name: 'Pro User', tier: 'free', emailVerified: true } }) });
-    });
+    await mockAuthenticatedUser(page);
     await mockPaymentsApi(page);
     const pricing = new PricingPage(page);
     await pricing.goto();

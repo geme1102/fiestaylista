@@ -13,7 +13,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'VITE_TURNSTILE_SITE_KEY=1 npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     cwd: '.',

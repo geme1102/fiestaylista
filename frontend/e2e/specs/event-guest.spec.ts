@@ -2,11 +2,13 @@ import { test, expect } from '@playwright/test';
 import { EventGuestPage } from '../pages/event-guest.page';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { mockPublicEventsApi } from '../mocks/events.mock';
+import { mockGlobalApi } from '../mocks/global.mock';
 import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Event Guest', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await mockTurnstile(page);
     await mockPublicEventsApi(page);
   });

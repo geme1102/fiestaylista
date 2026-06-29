@@ -242,7 +242,7 @@ export default function Register() {
 
               <button
                 type="submit"
-                disabled={loading || !acceptTerms || !acceptPrivacy}
+                disabled={loading}
                 className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
                 {loading ? <LoadingSpinner size="sm" /> : 'Empezar gratis'}

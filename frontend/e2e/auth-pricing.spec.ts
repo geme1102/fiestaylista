@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { dismissCookieBanner } from './utils/cookie-consent';
 import { mockTurnstile } from './mocks/turnstile.mock';
+import { mockGlobalApi } from './mocks/global.mock';
 
 test.describe('Register Page', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
     await mockTurnstile(page);
     await page.goto('/register');
@@ -36,7 +38,7 @@ test.describe('Register Page', () => {
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('short');
     await page.getByRole('button', { name: 'Empezar gratis' }).click();
-    await expect(page.getByText('al menos 8 caracteres')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('La contraseña debe tener al menos 8 caracteres')).toBeVisible({ timeout: 5000 });
   });
 
   test('requires terms and privacy acceptance', async ({ page }) => {
@@ -56,6 +58,7 @@ test.describe('Register Page', () => {
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
     await mockTurnstile(page);
     await page.goto('/login');
@@ -86,6 +89,7 @@ test.describe('Login Page', () => {
 test.describe('Pricing Page', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
     await mockTurnstile(page);
     await page.goto('/pricing');
@@ -99,7 +103,7 @@ test.describe('Pricing Page', () => {
 
   test('shows yearly discount toggle', async ({ page }) => {
     await page.getByText('Anual').click();
-    await expect(page.getByText('Ahorra 4%')).toBeVisible();
+    await expect(page.getByText('Ahorra 8%')).toBeVisible();
   });
 
   test('Empezar Gratis redirects to register when not authenticated', async ({ page }) => {
@@ -120,6 +124,7 @@ test.describe('Pricing Page', () => {
 test.describe('Navigation Flow', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
   });
 
   test('landing page links to pricing', async ({ page }) => {
@@ -130,7 +135,6 @@ test.describe('Navigation Flow', () => {
   });
 
   test('dashboard redirects to login when not authenticated', async ({ page }) => {
-    await page.route('**/api/auth/me', route => route.fulfill({ status: 401 }));
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/login/);
   });

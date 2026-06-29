@@ -9,12 +9,14 @@ export async function mockTurnstile(page: Page) {
         window.turnstile = {
           render: (container, options) => {
             if (options && options.callback) {
-              setTimeout(() => options.callback('mock-turnstile-token'), 100);
+              options.callback('mock-turnstile-token');
             }
             return 'mock-widget-id';
           },
           getResponse: () => 'mock-turnstile-token',
           reset: () => {},
+          remove: () => {},
+          execute: () => {},
         };
       `,
     });

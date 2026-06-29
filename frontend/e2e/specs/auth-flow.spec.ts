@@ -4,12 +4,14 @@ import { LoginPage } from '../pages/login.page';
 import { NavbarPageObject } from '../pages/components/navbar.po';
 import { MOCK_USERS } from '../config/constants';
 import { mockAuthApi } from '../mocks/auth.mock';
+import { mockGlobalApi } from '../mocks/global.mock';
 import { mockTurnstile } from '../mocks/turnstile.mock';
 import { dismissCookieBanner } from '../utils/cookie-consent';
 
 test.describe('Auth Flow', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookieBanner(page);
+    await mockGlobalApi(page);
     await mockTurnstile(page);
     await mockAuthApi(page);
   });
@@ -62,7 +64,9 @@ test.describe('Auth Flow', () => {
     await login.goto();
     await login.login(MOCK_USERS.free.email, 'ValidPass1');
     await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForTimeout(2000);
     const navbar = new NavbarPageObject(page);
+    await navbar.logoutButton.waitFor({ state: 'visible' });
     await navbar.clickLogout();
     await expect(page).toHaveURL('/');
   });

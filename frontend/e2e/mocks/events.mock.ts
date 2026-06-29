@@ -61,11 +61,11 @@ export async function mockEventsApi(page: Page) {
 }
 
 export async function mockPublicEventsApi(page: Page) {
-  await page.route('**/api/public/events/*', async (route) => {
+  await page.route('**/api/events/slug/*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { ...MOCK_EVENT, gifts: MOCK_GIFTS, photos: MOCK_PHOTOS } }) });
   });
 
-  await page.route('**/api/public/gifts/*/claim', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+  await page.route('**/api/events/*/gifts/*/claim', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ gift: { ...MOCK_GIFTS[0], isClaimed: true } }) });
   });
 }

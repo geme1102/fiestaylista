@@ -101,7 +101,7 @@ export default function ForgotPassword() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="glass-card rounded-2xl p-8 space-y-5">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Correo electrónico

@@ -368,10 +368,11 @@ export default function Pricing() {
           {/* FAQ */}
           <section className="max-w-3xl mx-auto px-4 mt-section-gap-mobile md:mt-section-gap-desktop">
             <h2 className="font-headline-md text-headline-md text-center mb-10 text-on-surface">Preguntas Frecuentes</h2>
-            <div className="space-y-4">
+            <div className="space-y-4" data-testid="faq-section">
               {FAQS.map((faq, idx) => (
                 <div
                   key={idx}
+                  data-testid="faq-item"
                   className={cn(
                     'glass-card rounded-2xl overflow-hidden cursor-pointer transition-all',
                     activeFaq === idx ? 'shadow-md' : '',

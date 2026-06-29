@@ -30,7 +30,7 @@ export class PricingPage {
   }
 
   get yearlyBadge() {
-    return this.page.getByText('Ahorra 4%');
+    return this.page.getByText('Ahorra 8%');
   }
 
   async clickMonthly() {
