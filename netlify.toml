@@ -7,11 +7,9 @@
   function = "event-og"
   path = "/e/*"
 
-# API proxy a Railway. Define API_URL en Netlify > Environment variables.
-# Ejemplo: API_URL = "https://tusubida.up.railway.app"
 [[redirects]]
   from = "/api/*"
-  to = "${API_URL}/api/:splat"
+  to = "https://fiestaylista-production.up.railway.app/api/:splat"
   status = 200
 
 # Favicon SVG: cache inmutable

@@ -18,11 +18,7 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
-if (!VITE_API_URL && import.meta.env.PROD) {
-  console.error('[API] VITE_API_URL no está configurada. Las peticiones API fallarán.');
-}
-const BASE_URL = VITE_API_URL ?? '';
+const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
