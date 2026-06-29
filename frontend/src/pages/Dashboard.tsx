@@ -36,12 +36,6 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshUser();
-    }
-  }, [isAuthenticated, refreshUser]);
-
   const tierRef = useRef(user?.tier);
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);

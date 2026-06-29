@@ -49,24 +49,22 @@ export default function Account() {
   }, []);
 
   useEffect(() => {
-    getCurrentSubscription()
-      .then((res) => setSubscription(res.subscription))
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
-        showToast(message, 'error');
-        setSubError(true);
-        if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
-      })
-      .finally(() => setLoadingSub(false));
-  }, []);
-
-  useEffect(() => {
-    setPaymentsLoading(true);
-    setPaymentsError(false);
-    getPaymentHistory()
-      .then((res) => setPayments(res.payments))
-      .catch(() => setPaymentsError(true))
-      .finally(() => setPaymentsLoading(false));
+    Promise.all([
+      getCurrentSubscription()
+        .then((res) => setSubscription(res.subscription))
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
+          showToast(message, 'error');
+          setSubError(true);
+          if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
+        }),
+      getPaymentHistory()
+        .then((res) => setPayments(res.payments))
+        .catch(() => setPaymentsError(true)),
+    ]).finally(() => {
+      setLoadingSub(false);
+      setPaymentsLoading(false);
+    });
   }, []);
 
   const handleCancelSubscription = async () => {

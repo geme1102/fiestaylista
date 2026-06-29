@@ -5,7 +5,6 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { checkGiftLimit } from '../middleware/subscription.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
@@ -43,11 +42,7 @@ router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => 
   res.json({ gifts });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), (req: AuthRequest, res: Response, next: NextFunction) => {
-  const eventId = req.params.eventId;
-  if (!eventId) return next(new ValidationError('ID del evento requerido'));
-  checkGiftLimit(eventId)(req, res, next);
-}, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   const data = createGiftSchema.parse(req.body);
 

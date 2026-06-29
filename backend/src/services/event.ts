@@ -1,7 +1,7 @@
 import { eq, and, sql, isNull, inArray, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
-import { users, events as eventsTable, gifts, photos, cashFunds } from '../db/schema.js';
+import { users, events as eventsTable, gifts, photos, cashFunds, giftClaims } from '../db/schema.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors.js';
 import { generateSlug } from '../utils/slug.js';
 import { TIER_LIMITS } from '../types/index.js';
@@ -140,7 +140,7 @@ export async function getEvent(eventId: string, userId: string) {
     throw new ForbiddenError('No tienes permiso para ver este evento');
   }
 
-  const [eventGifts, eventPhotos] = await Promise.all([
+  const [eventGifts, eventPhotos, allClaims] = await Promise.all([
     db
       .select()
       .from(gifts)
@@ -153,11 +153,27 @@ export async function getEvent(eventId: string, userId: string) {
       .where(and(eq(photos.eventId, eventId), isNull(photos.deletedAt)))
       .orderBy(photos.createdAt)
       .limit(101),
+    db
+      .select()
+      .from(giftClaims)
+      .innerJoin(gifts, eq(giftClaims.giftId, gifts.id))
+      .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
+      .orderBy(giftClaims.createdAt),
   ]);
+
+  const claimsByGiftId = new Map<string, Array<{ id: string; giftId: string; claimedBy: string; message: string | null; createdAt: Date }>>();
+  for (const row of allClaims) {
+    const id = row.gift_claims.giftId;
+    if (!claimsByGiftId.has(id)) claimsByGiftId.set(id, []);
+    claimsByGiftId.get(id)!.push(row.gift_claims);
+  }
 
   return {
     ...event,
-    gifts: eventGifts,
+    gifts: eventGifts.map(g => ({
+      ...g,
+      claims: claimsByGiftId.get(g.id) || [],
+    })),
     photos: eventPhotos,
   };
 }
@@ -265,13 +281,6 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     ? and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt), giftCursor)
     : and(eq(gifts.eventId, event.id), isNull(gifts.deletedAt));
 
-  const eventGifts = await db
-    .select()
-    .from(gifts)
-    .where(giftConditions)
-    .orderBy(desc(gifts.createdAt))
-    .limit(giftLimit);
-
   const { limit: photoLimit, cursorCondition: photoCursor } = buildPaginationConditions(
     photos.createdAt as unknown as SQL,
     photoParams,
@@ -281,16 +290,41 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     ? and(eq(photos.eventId, event.id), isNull(photos.deletedAt), photoCursor)
     : and(eq(photos.eventId, event.id), isNull(photos.deletedAt));
 
-  const eventPhotos = await db
-    .select()
-    .from(photos)
-    .where(photoConditions)
-    .orderBy(desc(photos.createdAt))
-    .limit(photoLimit);
+  const [eventGifts, eventPhotos] = await Promise.all([
+    db
+      .select()
+      .from(gifts)
+      .where(giftConditions)
+      .orderBy(desc(gifts.createdAt))
+      .limit(giftLimit),
+    db
+      .select()
+      .from(photos)
+      .where(photoConditions)
+      .orderBy(desc(photos.createdAt))
+      .limit(photoLimit),
+  ]);
+
+  const groupGiftIds = eventGifts.filter(g => g.isGroupGift).map(g => g.id);
+  const claimsByGiftId = new Map<string, Array<{ id: string; giftId: string; claimedBy: string; message: string | null; createdAt: Date }>>();
+  if (groupGiftIds.length > 0) {
+    const claimRows = await db
+      .select()
+      .from(giftClaims)
+      .where(inArray(giftClaims.giftId, groupGiftIds))
+      .orderBy(giftClaims.createdAt);
+    for (const row of claimRows) {
+      if (!claimsByGiftId.has(row.giftId)) claimsByGiftId.set(row.giftId, []);
+      claimsByGiftId.get(row.giftId)!.push(row);
+    }
+  }
 
   return {
     event,
-    gifts: eventGifts,
+    gifts: eventGifts.map(g => ({
+      ...g,
+      claims: claimsByGiftId.get(g.id) || [],
+    })),
     photos: eventPhotos,
   };
 }

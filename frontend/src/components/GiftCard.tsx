@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
@@ -29,17 +29,6 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const [claimName, setClaimName] = useState('');
   const [claimMessage, setClaimMessage] = useState('');
   const [claiming, setClaiming] = useState(false);
-
-  useEffect(() => {
-    if (!gift.isGroupGift) return;
-    if (gift.claims && gift.claims.length > 0) {
-      setClaims(gift.claims);
-    } else {
-      apiClient.get<{ claims: GiftClaim[] }>(`/api/events/${gift.eventId}/gifts/${gift.id}/claims`)
-        .then((res) => setClaims(res.claims || []))
-        .catch(() => {});
-    }
-  }, [gift.isGroupGift, gift.eventId, gift.id, gift.claims]);
 
   const onImgError = () => setImgError(true);
 

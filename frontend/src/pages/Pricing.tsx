@@ -292,10 +292,8 @@ export default function Pricing() {
                     )}
                     <div
                       className={cn(
-                        'glass-card h-full p-8 rounded-3xl flex flex-col items-center text-center hover:-translate-y-2 hover:scale-[1.02] hover:shadow-xl transition-all duration-300',
-                        plan.popular
-                          ? 'border-2 border-primary/40 glow-shadow-pro'
-                          : 'border border-outline-variant',
+                        'glass-card-gradient h-full p-8 rounded-3xl flex flex-col items-center text-center hover:-translate-y-2 hover:scale-[1.02] hover:shadow-xl transition-all duration-300',
+                        plan.popular && 'glow-shadow-pro',
                       )}
                     >
                       <h3 className="font-headline-md text-headline-md mb-4 text-on-surface">

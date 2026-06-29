@@ -398,6 +398,26 @@
   pointer-events: none;
 }
 
+.glass-card-gradient {
+  background: rgba(250, 249, 248, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: relative;
+  box-shadow: 0 4px 24px rgba(177, 14, 107, 0.06), 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+.glass-card-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #b10e6b, #d23284);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .glass {
   background: rgba(250, 249, 248, 0.7);
   backdrop-filter: blur(20px);
@@ -510,6 +530,8 @@ h1, h2, h3, h4, h5, h6 {
   .glass-card { background: rgba(250, 249, 248, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
   .glass-card-premium { background: rgba(250, 249, 248, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
   .glass-card-premium::before { display: none; }
+  .glass-card-gradient { background: rgba(250, 249, 248, 0.95); border: 1px solid rgba(0, 0, 0, 0.08); }
+  .glass-card-gradient::before { display: none; }
   .glass-ghost::before { display: none; }
   .crystal-glass-rose, .glass-panel, .glass-crystal,
   .glass-button-gold, .glass-button-primary, .glass-button-secondary {
@@ -520,6 +542,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @supports not (mask-composite: exclude) {
   .glass-card-premium::before,
+  .glass-card-gradient::before,
   .glass-ghost::before { display: none; }
 }
 
@@ -640,6 +663,13 @@ h1, h2, h3, h4, h5, h6 {
 
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
+}
+
+/* Press feedback visual en todos los botones — previene doble click */
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 0.05s ease;
 }
 
 @media (pointer: coarse) {

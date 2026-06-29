@@ -2,7 +2,7 @@ import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -61,7 +61,7 @@ router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidatio
   res.status(201).json(result);
 }));
 
-router.post('/login', verifyTurnstile, authLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password);
   setRefreshCookie(res, result.refreshToken);

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { checkEventLimit, checkActiveEventLimit } from '../middleware/subscription.js';
+import { checkActiveEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
 import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -45,7 +45,7 @@ router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   res.json({ events });
 }));
 
-router.post('/', requireAuth, checkEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = createEventSchema.parse(req.body) as CreateEventData;
   const event = await eventService.createEvent(req.user!.userId, data);
   res.status(201).json({ event });
