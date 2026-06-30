@@ -10,9 +10,6 @@ coverage/
 test-results/
 playwright-report/
 .opencode/
-!.opencode/agents/
-!.opencode/skills/
-!.opencode/plugins/
 *.tsbuildinfo
 frontend/dist/
 backend/dist/
