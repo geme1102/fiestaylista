@@ -27,6 +27,12 @@ function requireConfig(key: string, value: string | undefined): asserts value is
   }
 }
 
+function warnConfig(key: string, value: string | undefined): void {
+  if (!value) {
+    console.error(`[config] Variable de entorno no configurada: ${key} — la funcionalidad asociada no estará disponible`);
+  }
+}
+
 const DEFAULT_JWT_SECRETS = [
   'change-this-to-a-random-secret-at-least-32-chars',
   'change-this-to-another-random-secret',
@@ -55,17 +61,17 @@ function validateConfig(): void {
 
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd) {
-    requireConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
-    requireConfig('MERCADO_PAGO_WEBHOOK_SECRET', process.env.MERCADO_PAGO_WEBHOOK_SECRET);
-    requireConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
-    requireConfig('FROM_EMAIL', process.env.FROM_EMAIL);
-    requireConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
-    requireConfig('BACKEND_URL', process.env.BACKEND_URL);
-    requireConfig('FRONTEND_URL', process.env.FRONTEND_URL);
+    warnConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+    warnConfig('MERCADO_PAGO_WEBHOOK_SECRET', process.env.MERCADO_PAGO_WEBHOOK_SECRET);
+    warnConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
+    warnConfig('FROM_EMAIL', process.env.FROM_EMAIL);
+    warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
+    warnConfig('BACKEND_URL', process.env.BACKEND_URL);
+    warnConfig('FRONTEND_URL', process.env.FRONTEND_URL);
     if (process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_SECRET) {
-      requireConfig('CLOUDINARY_CLOUD_NAME', process.env.CLOUDINARY_CLOUD_NAME);
-      requireConfig('CLOUDINARY_API_KEY', process.env.CLOUDINARY_API_KEY);
-      requireConfig('CLOUDINARY_API_SECRET', process.env.CLOUDINARY_API_SECRET);
+      warnConfig('CLOUDINARY_CLOUD_NAME', process.env.CLOUDINARY_CLOUD_NAME);
+      warnConfig('CLOUDINARY_API_KEY', process.env.CLOUDINARY_API_KEY);
+      warnConfig('CLOUDINARY_API_SECRET', process.env.CLOUDINARY_API_SECRET);
     }
   }
 }

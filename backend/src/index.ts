@@ -1,3 +1,5 @@
+console.log('[startup] Iniciando servidor...');
+
 import cluster from 'node:cluster';
 import { config } from './config.js';
 import { sql } from './db/index.js';
@@ -50,8 +52,8 @@ if (cluster.isPrimary && workerCount > 1) {
 
   // Migraciones en background para no bloquear healthcheck de Railway
   runMigrations().catch((err) => {
-    logger.fatal({ err }, 'Error aplicando migraciones');
-    process.exit(1);
+    logger.fatal({ err }, 'Error aplicando migraciones — el servidor continúa funcionando');
+    logger.info('Ejecuta "npm run db:migrate" manualmente para aplicar las migraciones pendientes');
   });
 
   server.timeout = 30000;
