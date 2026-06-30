@@ -165,7 +165,8 @@ fiesta-y-lista/
 
 - **Sentry** (`@sentry/node` + `@sentry/react`): Rastreo de errores en backend y frontend. Configurar `SENTRY_DSN` (backend) y `VITE_SENTRY_DSN` (frontend) para activar.
 - **Logs estructurados** (Pino): Backend usa `pino` con formato JSON en producción y pretty-print en desarrollo. `createModuleLogger()` para logs con contexto por módulo.
-- **Health check**: `GET /api/health` — verifica DB, estado de servicios externos y uptime.
+- **Health check**: `GET /api/health` — liveness probe (devuelve `ok`). Railway lo usa para deploy.
+- **Readiness check**: `GET /api/health/ready` — verifica DB, estado de servicios externos y uptime.
 - **Shutdown graceful**: Captura `SIGTERM/SIGINT`, cierra conexiones DB y cron jobs en máximo 10s.
 
 ## Infraestructura
@@ -178,7 +179,7 @@ fiesta-y-lista/
   npm run db:restore <file>  # Restaura desde un backup
   ```
 - **Preview deployments**: Cada PR genera una vista previa automática en Netlify
-- **Monitoreo de uptime**: Recomendado configurar [Better Uptime](https://betteruptime.com) o [Upptime](https://upptime.js.org) apuntando a `https://fiestaylista.com/api/health`
+- **Monitoreo de uptime**: Recomendado configurar [Better Uptime](https://betteruptime.com) o [Upptime](https://upptime.js.org) apuntando a `https://fiestaylista.com/api/health/ready`
 
 ## Seguridad
 

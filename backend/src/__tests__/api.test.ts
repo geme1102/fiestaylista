@@ -308,8 +308,14 @@ beforeAll(() => {
 });
 
 describe('Health', () => {
-  it('GET /api/health returns health status', async () => {
+  it('GET /api/health returns ok (liveness)', async () => {
     const res = await request(app).get('/api/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+  });
+
+  it('GET /api/health/ready returns service status (readiness)', async () => {
+    const res = await request(app).get('/api/health/ready');
     expect(res.status).toBe(200);
     expect(['healthy', 'degraded']).toContain(res.body.status);
     expect(res.body.checks).toBeDefined();
