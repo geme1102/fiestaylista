@@ -11,6 +11,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/drizzle.config.js ./
 COPY --from=builder /app/src/db/migrations ./src/db/migrations
 COPY backend/startup.sh ./
