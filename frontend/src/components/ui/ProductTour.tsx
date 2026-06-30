@@ -16,10 +16,14 @@ const MOBILE_NAV_SAFE = 72;
 const MIN_CONTENT_HEIGHT = 100;
 
 function getTargetRect(selector: string): DOMRect | null {
-  const el = document.querySelector(selector);
-  if (!el) return null;
-  el.scrollIntoView({ block: 'center' });
-  return el.getBoundingClientRect();
+  try {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    el.scrollIntoView({ block: 'center' });
+    return el.getBoundingClientRect();
+  } catch {
+    return null;
+  }
 }
 
 export function ProductTour({
@@ -59,22 +63,26 @@ export function ProductTour({
   }, [active]);
 
   const updateRect = useCallback((selector: string) => {
-    setRect(getTargetRect(selector));
+    const rect = getTargetRect(selector);
+    if (rect) {
+      setRect(rect);
+      return;
+    }
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      const r = getTargetRect(selector);
+      if (r || attempts >= 3) {
+        clearInterval(interval);
+        if (r) setRect(r);
+      }
+    }, 300);
   }, []);
 
   const advance = useCallback(() => {
     setWaitingForClick(false);
-    setStepIndex((prev) => {
-      const next = prev + 1;
-      if (next >= steps.length) {
-        localStorage.setItem(storageKey, 'done');
-        setActive(false);
-        onComplete?.();
-        return prev;
-      }
-      return next;
-    });
-  }, [steps.length, storageKey, onComplete]);
+    setStepIndex((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (!active) return;
@@ -114,6 +122,13 @@ export function ProductTour({
       clearTimeout(resizeTimerRef.current);
     };
   }, [active, stepIndex, steps, updateRect]);
+
+  useEffect(() => {
+    if (!active || stepIndex < steps.length) return;
+    localStorage.setItem(storageKey, 'done');
+    setActive(false);
+    onComplete?.();
+  }, [active, stepIndex, steps.length, storageKey, onComplete]);
 
   const skip = useCallback(() => {
     localStorage.setItem(storageKey, 'done');

@@ -31,16 +31,17 @@ export function serializeError(error: unknown): Error {
   return new Error(String(error));
 }
 
-export async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+export async function retryable<T>(
+  fn: (signal?: AbortSignal) => Promise<T>,
+  maxRetries = 2,
+  timeoutMs = 10000,
+): Promise<T> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const result = await Promise.race([
-        fn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('MP request timed out')), 15000),
-        ),
-      ]);
+      const result = await fn(controller.signal);
       return result;
     } catch (error) {
       lastError = serializeError(error);
@@ -52,6 +53,8 @@ export async function retryable<T>(fn: () => Promise<T>, maxRetries = 3): Promis
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise(r => setTimeout(r, delay));
       }
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw lastError!;
@@ -88,10 +91,11 @@ export async function searchPaymentsByRef(externalReference: string): Promise<{
   if (!client) return null;
 
   try {
-    const result = await retryable(async () => {
+    const result = await retryable(async (signal) => {
       const url = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}&limit=5`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
+        signal,
       });
       if (!res.ok) throw new Error(`MP API error: ${res.status}`);
       return res.json() as Promise<{ results: Array<{ id: number; status: string; transaction_amount: number }> }>;
