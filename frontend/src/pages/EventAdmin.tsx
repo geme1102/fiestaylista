@@ -28,6 +28,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { useAchievements } from '../hooks/useAchievements';
+import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import GiftManagement from '../components/admin/GiftManagement';
 import { PhotoGallery } from '../components/admin/PhotoGallery';
 import GuestsPanel from '../components/admin/GuestsPanel';
@@ -835,6 +836,7 @@ export default function EventAdmin() {
         <ProductTour steps={tourSteps} storageKey={`fy_tour_event_${id}`} />
 
         <div data-tour="add-gift">
+        <SectionErrorBoundary sectionName="GiftManagement">
         <GiftManagement
           gifts={gifts}
           addingGift={addingGift}
@@ -852,12 +854,18 @@ export default function EventAdmin() {
           onNewGiftNameChange={setNewGiftName}
           onShowSuggestionsChange={setShowSuggestions}
         />
+        </SectionErrorBoundary>
         </div>
 
+        <SectionErrorBoundary sectionName="GuestsPanel">
         <GuestsPanel eventId={id ?? ''} />
+        </SectionErrorBoundary>
 
+        <SectionErrorBoundary sectionName="MessagesPanel">
         <MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} />
+        </SectionErrorBoundary>
 
+        <SectionErrorBoundary sectionName="PhotoGallery">
         <PhotoGallery
           photos={photos}
           uploading={uploading}
@@ -875,6 +883,7 @@ export default function EventAdmin() {
           selectedPhotoForPreview={selectedPhotoForPreview}
           onToggleFeatured={handleToggleFeatured}
         />
+        </SectionErrorBoundary>
       </div>
 
       {/* Edit Details Modal */}

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
+import { v2 as cloudinary } from 'cloudinary';
 import { config } from './config.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -115,44 +116,62 @@ export function createApp() {
 
   app.use('/api', publicRouter);
 
-  const startTime = Date.now();
-
   app.get('/api/health', apiLimiter, async (_req, res) => {
-    const checks: Record<string, { status: string; latency?: number }> = {};
-    let healthy = true;
+    let overall: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    const checks: Record<string, { status: string; configured?: boolean }> = {};
+
     const dbStart = Date.now();
     try {
       const { sql } = await import('./db/index.js');
       await sql`SELECT 1`;
-      checks.database = { status: 'connected', latency: Date.now() - dbStart };
+      checks.database = { status: 'ok', ...(Date.now() - dbStart > 0 && { latency: Date.now() - dbStart }) };
     } catch {
-      checks.database = { status: 'disconnected' };
-      healthy = false;
+      checks.database = { status: 'error' };
+      overall = 'unhealthy';
     }
-    if (config.MERCADO_PAGO_ACCESS_TOKEN && config.NODE_ENV === 'production') {
-      const mpStart = Date.now();
+
+    if (config.MERCADO_PAGO_ACCESS_TOKEN) {
       try {
         const { MercadoPagoConfig } = await import('mercadopago');
         new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
-        checks.mercadopago = { status: 'connected', latency: Date.now() - mpStart };
+        checks.mercadopago = { status: 'ok', configured: true };
       } catch {
-        checks.mercadopago = { status: 'error', latency: Date.now() - mpStart };
+        checks.mercadopago = { status: 'error', configured: false };
+        if (overall !== 'unhealthy') overall = 'degraded';
       }
     } else {
-      checks.mercadopago = { status: config.MERCADO_PAGO_ACCESS_TOKEN ? 'skipped' : 'not_configured' };
+      checks.mercadopago = { status: 'not_configured', configured: false };
+      if (overall !== 'unhealthy') overall = 'degraded';
     }
-    const statusCode = healthy ? 200 : 503;
+
+    try {
+      cloudinary.config({
+        cloud_name: config.CLOUDINARY_CLOUD_NAME || undefined,
+        api_key: config.CLOUDINARY_API_KEY || undefined,
+        api_secret: config.CLOUDINARY_API_SECRET || undefined,
+      });
+      const cfg = cloudinary.config();
+      if (cfg.cloud_name) {
+        checks.cloudinary = { status: 'ok', configured: true };
+      } else {
+        checks.cloudinary = { status: 'not_configured', configured: false };
+        if (overall !== 'unhealthy') overall = 'degraded';
+      }
+    } catch {
+      checks.cloudinary = { status: 'error', configured: false };
+      if (overall !== 'unhealthy') overall = 'degraded';
+    }
+
+    if (config.RESEND_API_KEY) {
+      checks.resend = { status: 'ok', configured: true };
+    } else {
+      checks.resend = { status: 'not_configured', configured: false };
+      if (overall !== 'unhealthy') overall = 'degraded';
+    }
+
+    const statusCode = overall === 'unhealthy' ? 503 : 200;
     res.status(statusCode).json({
-      status: healthy ? 'ok' : 'degraded',
-      timestamp: new Date().toISOString(),
-      environment: config.NODE_ENV,
-      uptime: Math.floor((Date.now() - startTime) / 1000),
-      version: '1.0.0',
-      services: {
-        sentry: sentryEnabled ? 'configured' : 'not_configured',
-        resend: config.RESEND_API_KEY ? 'configured' : 'not_configured',
-        cloudinary: config.CLOUDINARY_CLOUD_NAME ? 'configured' : 'not_configured',
-      },
+      status: overall,
       checks,
     });
   });

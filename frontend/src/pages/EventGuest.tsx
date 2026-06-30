@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ShareButtons from '../components/ShareButtons';
+import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import RsvpForm from '../components/RsvpForm';
@@ -515,7 +516,9 @@ export default function EventGuest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
           >
+            <SectionErrorBoundary sectionName="CashFundSection">
             <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} />
+            </SectionErrorBoundary>
           </motion.div>
           )}
 
