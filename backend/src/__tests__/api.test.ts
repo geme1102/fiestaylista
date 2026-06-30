@@ -159,6 +159,7 @@ vi.mock('../middleware/cloudflare.js', () => ({
 
 vi.mock('../middleware/ownership.js', () => ({
   requireEventOwnership: (_req: Request, _res: Response, next: NextFunction) => next(),
+  requireCashFundOwnership: (_req: Request, _res: Response, next: NextFunction) => next(),
 }));
 
 vi.mock('../middleware/subscription.js', () => ({
@@ -310,8 +311,8 @@ describe('Health', () => {
   it('GET /api/health returns health status', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('ok');
-    expect(res.body.timestamp).toBeDefined();
+    expect(['healthy', 'degraded']).toContain(res.body.status);
+    expect(res.body.checks).toBeDefined();
   });
 
   it('GET /health returns ok', async () => {

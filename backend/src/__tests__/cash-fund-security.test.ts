@@ -25,10 +25,11 @@ vi.mock('../db/schema.js', () => ({
 import { createPromise, getPromisedAmount } from '../services/cashFund.js';
 
 function createMockTx() {
-  return {
+  const tx: any = {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
+    for: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
@@ -39,6 +40,9 @@ function createMockTx() {
     limit: vi.fn(),
     returning: vi.fn(),
   };
+  tx.limit.mockReturnValue(Promise.resolve([]));
+  tx.returning.mockReturnValue(Promise.resolve([]));
+  return tx;
 }
 
 describe('createPromise (C1) — incrementa collectedAmount', () => {

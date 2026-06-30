@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 if (!('ResizeObserver' in globalThis)) {
   globalThis.ResizeObserver = class {
@@ -7,3 +8,19 @@ if (!('ResizeObserver' in globalThis)) {
     disconnect() {}
   } as any;
 }
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => {},
+  }),
+});
+
+window.scrollTo = (() => {}) as any;

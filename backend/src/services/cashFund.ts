@@ -97,8 +97,8 @@ export async function createPromise(
       .select()
       .from(cashFunds)
       .where(eq(cashFunds.id, cashFundId))
-      .limit(1)
-      .for('update');
+      .for('update')
+      .limit(1);
 
     if (!fund) throw new NotFoundError('Fondo no encontrado');
     if (!fund.isActive) throw new ValidationError('Este fondo ya no está activo');
