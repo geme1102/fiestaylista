@@ -253,7 +253,9 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
         emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {
           log.error({ err, userId }, 'Error enviando email de past_due:');
         });
-        db.insert(emailTracking).values({ userId, type: 'past_due' }).catch(() => {});
+        db.insert(emailTracking).values({ userId, type: 'past_due' }).catch((err: Error) => {
+          log.error({ err, userId }, 'Error registrando tracking de past_due:');
+        });
       }
     }
   }

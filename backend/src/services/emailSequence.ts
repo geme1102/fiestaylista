@@ -245,7 +245,14 @@ log.error({ err }, `Error día 14 para ${user.email}:`);
         }
       }
 
-      await markEmailSentBatch(markBatch.splice(0));
+      const batch = markBatch.splice(0);
+      try {
+        await markEmailSentBatch(batch);
+      } catch (err) {
+        markBatch.push(...batch);
+        log.error({ err }, 'Error marcando batch de emails como enviados, restaurando batch:');
+        throw err;
+      }
       minCreatedAt = microBatch[microBatch.length - 1].createdAt;
 
       if (i + MICRO_BATCH_SIZE < rows.length) {

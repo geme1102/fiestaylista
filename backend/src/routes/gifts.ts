@@ -126,7 +126,15 @@ router.put('/:giftId/toggle-group', requireAuth, requireEventOwnership, validate
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
-  const { isGroupGift } = z.object({ isGroupGift: z.boolean() }).parse(req.body);
+  let isGroupGift: boolean;
+  try {
+    ({ isGroupGift } = z.object({ isGroupGift: z.boolean() }).parse(req.body));
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      throw new ValidationError(err.errors.map(e => e.message).join(', '));
+    }
+    throw err;
+  }
   const gift = await giftService.toggleGroupGift(giftId, isGroupGift);
   res.json({ gift });
 }));
