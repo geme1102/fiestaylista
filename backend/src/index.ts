@@ -1,5 +1,4 @@
 import cluster from 'node:cluster';
-import { cpus } from 'node:os';
 import { config } from './config.js';
 import { sql } from './db/index.js';
 import { runMigrations } from './db/migrate.js';
