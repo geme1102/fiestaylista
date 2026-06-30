@@ -222,7 +222,12 @@ export async function purgeExpiredData(): Promise<number> {
       // 3. Hard-delete events (cascades to gifts, photos, cash_funds, guests, messages, etc.)
       await db
         .delete(events)
-        .where(and(eq(events.userId, userId), isNull(events.deletedAt)));
+        .where(and(
+          eq(events.userId, userId),
+          eq(events.isActive, false),
+          sql`${events.frozenAt} IS NOT NULL`,
+          isNull(events.deletedAt),
+        ));
 
       log.info({ userId, photosPurged: userPhotos.length }, 'Datos de usuario purgados');
       purged++;

@@ -122,13 +122,13 @@ router.post('/resend-verification', requireAuth, authLimiter, asyncHandler(async
   res.json({ success: true });
 }));
 
-router.post('/forgot-password', resetLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/forgot-password', verifyTurnstile, resetLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = forgotPasswordSchema.parse(req.body);
   await authService.forgotPassword(data.email);
   res.json({ success: true });
 }));
 
-router.post('/reset-password', resetLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/reset-password', verifyTurnstile, resetLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = resetPasswordSchema.parse(req.body);
   await authService.resetPassword(data.token, data.password);
   res.json({ success: true });

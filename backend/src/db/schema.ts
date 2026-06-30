@@ -1,5 +1,5 @@
-import { pgTable, uuid, text, boolean, timestamp, integer, index, unique, uniqueIndex } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { isNull, relations, sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -59,7 +59,7 @@ export const gifts = pgTable('gifts', {
 }, (table) => ({
   eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
   eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${table.isClaimed} = false`),
-  eventIdNameUnique: unique('gifts_event_id_name_unique').on(table.eventId, table.name),
+  eventIdNameUnique: uniqueIndex('gifts_event_id_name_unique').on(table.eventId, table.name).where(isNull(table.deletedAt)),
 }));
 
 export const giftClaims = pgTable('gift_claims', {

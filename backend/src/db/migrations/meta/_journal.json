@@ -106,6 +106,13 @@
       "when": 1782055400000,
       "tag": "0014_consolidate_inline_migrations",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782140400000,
+      "tag": "0017_make_gift_name_unique_soft_delete_aware",
+      "breakpoints": true
     }
   ]
 }

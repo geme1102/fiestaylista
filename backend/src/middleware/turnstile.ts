@@ -47,8 +47,7 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     }
 
     if (!token) {
-      next();
-      return;
+      throw new ValidationError('Token de seguridad requerido');
     }
 
     await verifyToken(token);

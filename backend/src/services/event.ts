@@ -212,6 +212,7 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
       if (data.eventType !== undefined) updateData.eventType = data.eventType;
       if (data.hostPhone !== undefined) updateData.hostPhone = data.hostPhone;
       updateData.isActive = true;
+      updateData.frozenAt = null;
       if (data.eventDate !== undefined) updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null;
       if (data.eventLocation !== undefined) updateData.eventLocation = data.eventLocation;
       if (data.eventNote !== undefined) updateData.eventNote = data.eventNote;
@@ -220,7 +221,7 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
       const [event] = await tx
         .update(eventsTable)
         .set(updateData)
-        .where(eq(eventsTable.id, eventId))
+        .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
         .returning();
 
       return event;
@@ -240,7 +241,7 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
   const [event] = await db
     .update(eventsTable)
     .set(updateData)
-    .where(eq(eventsTable.id, eventId))
+    .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
     .returning();
 
   return event;
@@ -343,7 +344,7 @@ export async function completeEvent(eventId: string, userId: string) {
   await db
     .update(eventsTable)
     .set({ status: 'completed', updatedAt: new Date() })
-    .where(eq(eventsTable.id, eventId));
+    .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)));
 
   return { success: true };
 }
@@ -388,14 +389,14 @@ export async function reactivateEvent(eventId: string, userId: string) {
     const [updated] = await tx
       .update(eventsTable)
       .set({ status: 'active', updatedAt: new Date() })
-      .where(eq(eventsTable.id, eventId))
+      .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
       .returning();
 
     return updated;
   });
 }
 
-export async function deleteEvent(eventId: string, _userId: string) {
+export async function deleteEvent(eventId: string, userId: string) {
   await db.transaction(async (tx) => {
     await tx
       .update(gifts)
@@ -410,7 +411,7 @@ export async function deleteEvent(eventId: string, _userId: string) {
     await tx
       .update(eventsTable)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(eventsTable.id, eventId));
+      .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)));
   });
 
   return { success: true };
