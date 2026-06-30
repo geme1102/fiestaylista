@@ -94,6 +94,9 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
   }));
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 

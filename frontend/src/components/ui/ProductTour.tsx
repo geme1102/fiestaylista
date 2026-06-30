@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export interface TourStep {
   target: string;
@@ -43,6 +44,14 @@ export function ProductTour({
   const [waitingForClick, setWaitingForClick] = useState(false);
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
+  const trapRef = useFocusTrap(active);
+
+  useEffect(() => {
+    if (active) {
+      nextButtonRef.current?.focus();
+    }
+  }, [stepIndex, active]);
 
   const start = useCallback(() => {
     if (localStorage.getItem(storageKey) === 'done') return;
@@ -186,7 +195,14 @@ export function ProductTour({
     : {};
 
   return createPortal(
-    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={step.title}>
+    <div
+      ref={trapRef}
+      className="fixed inset-0 z-[100]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={step.title}
+      onKeyDown={(e) => { if (e.key === 'Escape') skip(); }}
+    >
       {rect && (
         <div
           className="absolute pointer-events-none transition-all duration-150"
@@ -248,6 +264,7 @@ export function ProductTour({
                 </span>
               ) : (
                 <button
+                  ref={nextButtonRef}
                   onClick={advance}
                   className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow"
                 >

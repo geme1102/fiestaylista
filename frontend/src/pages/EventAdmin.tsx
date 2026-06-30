@@ -980,7 +980,7 @@ export default function EventAdmin() {
                     disabled={updatingDetails}
                     className="bg-primary hover:bg-primary text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {updatingDetails ? '...' : 'Guardar Cambios'}
+                    {updatingDetails ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Guardar Cambios'}
                   </motion.button>
                 </div>
               </form>
@@ -1045,7 +1045,7 @@ export default function EventAdmin() {
                   disabled={boostLoading}
                   className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
-                    {boostLoading ? '...' : 'ACTIVAR GRATIS'}
+                    {boostLoading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'ACTIVAR GRATIS'}
                 </motion.button>
                 <button
                   onClick={() => setBoostModal(false)}

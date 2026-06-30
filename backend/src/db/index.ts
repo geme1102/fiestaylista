@@ -10,7 +10,7 @@ const isPrimary = typeof cluster.isPrimary === 'boolean' ? cluster.isPrimary : t
 const workerCount = isPrimary
   ? (config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : 1)
   : 1;
-const poolMax = Math.max(3, Math.ceil((config.DB_POOL_MAX || 10) / workerCount));
+const poolMax = Math.max(3, Math.ceil((config.DB_POOL_MAX || 15) / workerCount));
 
 const sql = postgres(config.DATABASE_URL, {
   max: poolMax,

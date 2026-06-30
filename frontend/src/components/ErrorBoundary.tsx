@@ -57,6 +57,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   private addParallax() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     document.addEventListener('mousemove', this.handleMouseMove);
   }
 

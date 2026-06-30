@@ -530,7 +530,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">
-            {loading ? '...' : 'Activar gratis'}
+            {loading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
           </button>
         </div>
       </motion.div>

@@ -5,6 +5,10 @@ const isDev = config.NODE_ENV !== 'production';
 
 export const logger = pino({
   level: isDev ? 'debug' : 'info',
+  redact: {
+    paths: ['password', '*token', '*secret', 'authorization', 'cookie', 'set-cookie'],
+    censor: '[REDACTED]',
+  },
   ...(isDev
     ? {
         transport: {

@@ -36,6 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -53,8 +54,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       onClick={handleClick}
       disabled={disabled || loading}
-      whileHover={{ scale: disabled || loading ? 1 : 1.02 }}
-      whileTap={{ scale: disabled || loading ? 1 : 0.97 }}
+      whileHover={prefersReducedMotion ? {} : { scale: disabled || loading ? 1 : 1.02 }}
+      whileTap={prefersReducedMotion ? {} : { scale: disabled || loading ? 1 : 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={cn(
         'relative overflow-hidden inline-flex items-center justify-center gap-2 font-bold transition-colors duration-200 select-none',
