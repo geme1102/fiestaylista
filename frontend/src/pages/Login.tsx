@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
-import { useTurnstile } from '../hooks/useTurnstile';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -30,10 +30,7 @@ export default function Login() {
 
     let token = turnstileToken;
     if (!token) {
-      for (let i = 0; i < 25; i++) {
-        await new Promise(r => setTimeout(r, 200));
-        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
-      }
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
 
     setLoading(true);

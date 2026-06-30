@@ -3,7 +3,7 @@ import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
-import { useTurnstile } from '../hooks/useTurnstile';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AuthBottomNav from '../components/AuthBottomNav';
 import { getPasswordStrength } from '../utils/passwordStrength';
@@ -47,10 +47,7 @@ export default function ResetPassword() {
 
     let token = turnstileToken;
     if (!token) {
-      for (let i = 0; i < 25; i++) {
-        await new Promise(r => setTimeout(r, 200));
-        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
-      }
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
 
     setLoading(true);

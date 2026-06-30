@@ -5,6 +5,10 @@ import ImageWithSkeleton from '../ImageWithSkeleton';
 import { ConfirmModal } from '../ConfirmModal';
 import type { Photo } from '../../types';
 
+const Z_LAYERS = {
+  modal: 70,
+} as const;
+
 interface PhotoGalleryProps {
   photos: Photo[];
   uploading: boolean;
@@ -164,7 +168,7 @@ export const PhotoGallery = memo(function PhotoGallery({
             role="dialog"
             aria-modal="true"
             aria-label="Vista previa de foto"
-            className="fixed inset-0 bg-black/95 z-55 flex flex-col items-center justify-center p-4 backdrop-blur-lg"
+            className="fixed inset-0 bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-lg" style={{ zIndex: Z_LAYERS.modal }}
           >
             <div className="absolute top-4 right-4 flex gap-4">
               <button

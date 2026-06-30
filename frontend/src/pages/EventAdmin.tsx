@@ -1,3 +1,11 @@
+const Z_LAYERS = {
+  dropdown: 50,
+  sticky: 60,
+  modal: 70,
+  tooltip: 80,
+  tour: 100,
+} as const;
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +34,7 @@ import GuestsPanel from '../components/admin/GuestsPanel';
 import MessagesPanel from '../components/admin/MessagesPanel';
 
 interface AdminEvent {
-  id: string; title: string; eventType: EventType; slug: string; status?: string; isActive: boolean; boostedUntil?: string;
+  id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
 
@@ -74,6 +82,7 @@ export default function EventAdmin() {
   const [updatingDetails, setUpdatingDetails] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
   const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
+  const [messageRefreshKey, setMessageRefreshKey] = useState(0);
   const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -156,10 +165,14 @@ export default function EventAdmin() {
       ));
     },
     onMessagePosted: () => {
-      if (loadEvent) loadEvent();
+      setMessageRefreshKey((k) => k + 1);
     },
     onPhotoUploaded: () => {
-      if (loadEvent) loadEvent();
+      if (id) {
+        apiClient.get<{ event: { photos?: Photo[] } }>(`/api/events/${id}`).then((res) => {
+          setPhotos(res.event.photos || []);
+        }).catch(() => {});
+      }
     },
   });
 
@@ -511,7 +524,7 @@ export default function EventAdmin() {
       <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[160px] pointer-events-none -z-10" />
 
       {/* Glossy Navigation Bar */}
-      <nav className="sticky top-0 z-40 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 flex items-center justify-between">
+      <nav className="sticky top-0 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 flex items-center justify-between" style={{ zIndex: Z_LAYERS.sticky }}>
         <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.08 }}
@@ -843,7 +856,7 @@ export default function EventAdmin() {
 
         <GuestsPanel eventId={id ?? ''} />
 
-        <MessagesPanel eventId={id ?? ''} />
+        <MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} />
 
         <PhotoGallery
           photos={photos}
@@ -871,7 +884,8 @@ export default function EventAdmin() {
             role="dialog"
             aria-modal="true"
             aria-label="Editar información del evento"
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+            style={{ zIndex: Z_LAYERS.modal }}
             onKeyDown={(e) => { if (e.key === 'Escape') setEditingDetails(false); }}
             onClick={(e) => { if (e.target === e.currentTarget) setEditingDetails(false); }}
           >
@@ -1002,7 +1016,8 @@ export default function EventAdmin() {
             role="dialog"
             aria-modal="true"
             aria-label="Activar Lluvia de Sobres"
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            style={{ zIndex: Z_LAYERS.modal }}
             onKeyDown={(e) => { if (e.key === 'Escape') setBoostModal(false); }}
             onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}
           >
@@ -1079,7 +1094,7 @@ export default function EventAdmin() {
       )}
 
       {/* Bottom Navigation */}
-      <nav className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] z-50 rounded-t-xl">
+      <nav className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] rounded-t-xl" style={{ zIndex: Z_LAYERS.sticky }}>
         <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>

@@ -11,13 +11,15 @@ interface Message {
 
 interface MessagesPanelProps {
   eventId: string;
+  refreshKey?: number;
 }
 
-export default function MessagesPanel({ eventId }: MessagesPanelProps) {
+export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadMessages = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`);
       setMessages(res.messages || []);
@@ -30,7 +32,7 @@ export default function MessagesPanel({ eventId }: MessagesPanelProps) {
 
   useEffect(() => {
     loadMessages();
-  }, [loadMessages]);
+  }, [loadMessages, refreshKey]);
 
   if (loading) {
     return (

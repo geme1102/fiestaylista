@@ -1,5 +1,8 @@
-import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
 import { isNull, relations, sql } from 'drizzle-orm';
+
+export const eventStatusEnum = pgEnum('event_status', ['active', 'completed', 'paused']);
+export const contributionStatusEnum = pgEnum('contribution_status', ['promised', 'paid', 'cancelled']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -29,7 +32,7 @@ export const events = pgTable('events', {
   eventType: text('event_type').notNull().default('BABY_SHOWER'),
   hostPhone: text('host_phone'),
   slug: text('slug').notNull().unique(),
-  status: text('status').notNull().default('active'),
+  status: eventStatusEnum('status').notNull().default('active'),
   isActive: boolean('is_active').notNull().default(true),
   boostedUntil: timestamp('boosted_until', { mode: 'date', withTimezone: true }),
   deletedAt: timestamp('deleted_at', { mode: 'date', withTimezone: true }),
@@ -121,7 +124,7 @@ export const cashContributions = pgTable('cash_contributions', {
   feeAmount: integer('fee_amount').notNull().default(0),
   netAmount: integer('net_amount').notNull().default(0),
   mpPaymentId: text('mp_payment_id').unique(),
-  status: text('status').notNull().default('pending'),
+  status: contributionStatusEnum('status').notNull().default('promised'),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   cashFundIdIdx: index('cash_contributions_cash_fund_id_idx').on(table.cashFundId),

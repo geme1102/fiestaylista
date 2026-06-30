@@ -66,32 +66,31 @@ export default function Dashboard() {
 
     setPollingPayment(true);
 
-    let attempts = 0;
     const MAX_ATTEMPTS = 30;
-    let cancelled = false;
+    let attempts = 0;
 
-    async function poll() {
-      if (cancelled) return;
+    const interval = setInterval(async () => {
       attempts++;
-      await refreshUser();
-      if (cancelled) return;
-      if (tierRef.current === 'pro') {
-        setPollingPayment(false);
-        showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
-        queryClient.invalidateQueries({ queryKey: ['events'] });
-        return;
+      try {
+        await refreshUser();
+        if (tierRef.current === 'pro') {
+          clearInterval(interval);
+          setPollingPayment(false);
+          showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
+          queryClient.invalidateQueries({ queryKey: ['events'] });
+          return;
+        }
+        if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(interval);
+          setPollingPayment(false);
+          setShowPaymentBanner(true);
+        }
+      } catch {
+        // ignore polling errors
       }
-      if (attempts >= MAX_ATTEMPTS) {
-        setPollingPayment(false);
-        setShowPaymentBanner(true);
-        return;
-      }
-      const backoff = Math.min(1500 * Math.pow(2, attempts - 1), 30000);
-      setTimeout(poll, backoff);
-    }
+    }, 2000);
 
-    const timer = setTimeout(poll, 1500);
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => clearInterval(interval);
   }, [location.search, refreshUser, queryClient]);
 
   const handlePaymentSync = async () => {

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
-import { useTurnstile } from './useTurnstile';
+import { useTurnstile, waitForTurnstile } from './useTurnstile';
 import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
 import type { Gift, Photo, EventType } from '../types';
@@ -163,10 +163,7 @@ export function useEventPage() {
 
     let token = turnstileTokenRef.current;
     if (!token) {
-      for (let i = 0; i < 25; i++) {
-        await new Promise(r => setTimeout(r, 200));
-        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
-      }
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
 
     setClaimingId(giftId);

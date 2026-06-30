@@ -21,7 +21,7 @@ function getInitialsBg(name: string) {
   return INITIALS_COLORS[Math.abs(hash) % INITIALS_COLORS.length];
 }
 
-const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRead, guestName }: { eventId: string; isOwner: boolean; ownerTier?: string; easyRead?: boolean; guestName?: string }) {
+const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRead, guestName }: { eventId: string; isOwner: boolean; easyRead?: boolean; guestName?: string }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [promisedTotal, setPromisedTotal] = useState(0);
   const [contributions, setContributions] = useState<CashContribution[]>([]);

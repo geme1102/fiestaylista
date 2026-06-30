@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
-import { useTurnstile } from '../hooks/useTurnstile';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Tier } from '../types';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
@@ -114,10 +114,7 @@ export default function Pricing() {
       if (!turnstileReady) {
         showToast('Verificando que no eres un robot...', 'info');
       }
-      for (let i = 0; i < 50; i++) {
-        await new Promise(r => setTimeout(r, 200));
-        if (turnstileTokenRef.current) { token = turnstileTokenRef.current; break; }
-      }
+      token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
       if (!token && turnstileError) {
         showToast(`Verificación de seguridad no disponible. ${turnstileError} Puedes continuar, pero si el problema persiste desactiva tu bloqueador de anuncios.`, 'info');
       } else if (!token) {

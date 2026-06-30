@@ -55,7 +55,6 @@ export default function EventGuest() {
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
   const claimNameRef = useRef(guestName);
-  claimNameRef.current = guestName;
   const handleClaimWithRef = useCallback((id: string, name: string) => {
     setLastClaimedGift(name);
     setLastClaimedBy(claimNameRef.current);
@@ -83,6 +82,10 @@ export default function EventGuest() {
     }, 1200);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    claimNameRef.current = guestName;
+  }, [guestName]);
 
   if (loading) {
     return (

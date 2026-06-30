@@ -19,6 +19,19 @@ declare global {
 
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
+export async function waitForTurnstile(
+  getToken: () => string | null,
+  maxAttempts = 25,
+  intervalMs = 200,
+): Promise<string | null> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const token = getToken();
+    if (token) return token;
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  return null;
+}
+
 export function useTurnstile() {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);

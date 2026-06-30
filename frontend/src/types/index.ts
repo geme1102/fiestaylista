@@ -17,7 +17,7 @@ export interface Event {
   eventType: EventType;
   hostPhone?: string;
   slug: string;
-  status?: string;
+  status?: 'active' | 'completed' | 'paused';
   isActive: boolean;
   giftCount?: number;
   photoCount?: number;
@@ -103,7 +103,7 @@ export interface CashContribution {
   contributorName: string;
   message?: string;
   amount: number;
-  status: string;
+  status: 'promised' | 'paid' | 'cancelled';
   createdAt: string;
 }
 
