@@ -10,8 +10,12 @@ export default function LoadingSpinner({ fullScreen, size = 'md', text }: Loadin
   useEffect(() => {
     if (!fullScreen) return;
     const original = document.body.style.overflow;
+    const scrollY = window.scrollY;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = original; };
+    return () => {
+      document.body.style.overflow = original;
+      window.scrollTo(0, scrollY);
+    };
   }, [fullScreen]);
 
   const spinnerLg = (

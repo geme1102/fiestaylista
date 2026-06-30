@@ -41,7 +41,7 @@ export function createApp() {
   const app = express();
 
   app.use(compression({ threshold: 512, level: 6 }));
-  app.set('trust proxy', config.NODE_ENV === 'production' ? 1 : 0);
+  app.set('trust proxy', config.NODE_ENV === 'production' ? 2 : 0);
 
   app.use((req: Request, _res: Response, next: NextFunction) => {
     (req as AppRequest).requestId = randomUUID();

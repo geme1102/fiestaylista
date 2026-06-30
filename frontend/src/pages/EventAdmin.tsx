@@ -684,7 +684,13 @@ export default function EventAdmin() {
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.96 }}
               data-testid="boost-button"
-              onClick={() => setBoostModal(true)}
+              onClick={() => {
+                if (user?.tier === 'free') {
+                  navigate('/pricing');
+                } else {
+                  setBoostModal(true);
+                }
+              }}
               className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
             >
               <span>Activar Lluvia de Sobres</span>

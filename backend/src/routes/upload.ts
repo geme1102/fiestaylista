@@ -118,7 +118,7 @@ async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): 
   return Promise.race([
     cloudinaryUpload(filePath, mimeType),
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Cloudinary upload timed out after 30s')), 30000),
+      setTimeout(() => reject(new Error('Cloudinary upload timed out after 25s')), 25000),
     ),
   ]);
 }

@@ -20,6 +20,11 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayed(texts[0]);
+      return;
+    }
+
     const current = texts[lineIdx];
     const timeout = setTimeout(() => {
       if (!deleting) {

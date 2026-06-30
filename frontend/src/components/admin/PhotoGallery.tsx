@@ -69,7 +69,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
 
                 {photo.isFeatured && (
-                  <div className="absolute top-3.5 left-3.5 bg-amber-400 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg">
+                  <div className="absolute top-3.5 left-3.5 bg-amber-400 text-white rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg p-2.5">
                     <Star className="w-3.5 h-3.5" fill="currentColor" />
                   </div>
                 )}

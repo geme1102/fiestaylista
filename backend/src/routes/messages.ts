@@ -22,6 +22,14 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
+  const [event] = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
+    .limit(1);
+
+  if (!event) throw new NotFoundError('Evento no encontrado o inactivo');
+
   const eventMessages = await db
     .select()
     .from(messages)

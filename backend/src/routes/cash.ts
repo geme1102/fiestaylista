@@ -5,14 +5,11 @@ import { contributeLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ValidationError, ForbiddenError } from '../utils/errors.js';
-import { db } from '../db/index.js';
-import { cashFunds, events } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireEventOwnership } from '../middleware/ownership.js';
+import { requireEventOwnership, requireCashFundOwnership } from '../middleware/ownership.js';
 
 const router = Router();
 
@@ -65,27 +62,9 @@ router.post('/cash-fund/promise', contributeLimiter, verifyTurnstile, asyncHandl
   res.status(201).json(result);
 }));
 
-router.get('/cash-fund/:cashFundId/contributions', requireAuth, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {
+router.get('/cash-fund/:cashFundId/contributions', requireAuth, requireCashFundOwnership, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {
   const cashFundId = req.params.cashFundId as string;
   if (!cashFundId) throw new ValidationError('ID del fondo requerido');
-
-  const [fund] = await db
-    .select({ eventId: cashFunds.eventId })
-    .from(cashFunds)
-    .where(eq(cashFunds.id, cashFundId))
-    .limit(1);
-
-  if (!fund) throw new ValidationError('Fondo no encontrado');
-
-  const [event] = await db
-    .select({ userId: events.userId })
-    .from(events)
-    .where(eq(events.id, fund.eventId))
-    .limit(1);
-
-  if (!event || event.userId !== req.user!.userId) {
-    throw new ForbiddenError('No tienes permiso para ver estas contribuciones');
-  }
 
   const result = await cashFundService.getContributions(cashFundId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,

@@ -263,7 +263,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       ) : onClaim && (
         <div className="mt-4">
           <button
-            onClick={() => { navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
+            onClick={() => { if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
             disabled={claimingId === gift.id}
             className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.97] hover:scale-[1.01] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >

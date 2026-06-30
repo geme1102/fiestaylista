@@ -109,7 +109,7 @@ export function emitPhotoUploaded(data: PhotoUploadedEvent): void {
 }
 
 // SSE scavenger: cleanup abandoned connections
-const SSE_SCAVENGER_INTERVAL_MS = 5 * 60 * 1000;
+const SSE_SCAVENGER_INTERVAL_MS = 2 * 60 * 1000;
 let scavengerTimer: ReturnType<typeof setInterval> | null = null;
 
 export function startSSEScavenger(): void {

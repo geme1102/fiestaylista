@@ -546,7 +546,7 @@ export default function EventGuest() {
             onClick={(e) => { if (e.target === e.currentTarget) setShowSuccessModal(false); }}
             onKeyDown={(e) => { if (e.key === 'Escape') setShowSuccessModal(false); }}
           >
-            <div className="w-full max-w-sm rounded-[40px] p-8 text-center">
+            <div className="w-full max-w-sm rounded-[40px] p-8 text-center bg-white shadow-2xl">
               <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
                 <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
