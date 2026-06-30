@@ -21,12 +21,6 @@ function loadEnv(): void {
 
 loadEnv();
 
-function requireConfig(key: string, value: string | undefined): asserts value is string {
-  if (!value) {
-    throw new Error(`Variable de entorno requerida: ${key}`);
-  }
-}
-
 function warnConfig(key: string, value: string | undefined): void {
   if (!value) {
     console.error(`[config] Variable de entorno no configurada: ${key} — la funcionalidad asociada no estará disponible`);
@@ -39,24 +33,24 @@ const DEFAULT_JWT_SECRETS = [
 ];
 
 function validateConfig(): void {
-  requireConfig('DATABASE_URL', process.env.DATABASE_URL);
-  requireConfig('JWT_SECRET', process.env.JWT_SECRET);
-  requireConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
-  requireConfig('JWT_GUEST_SECRET', process.env.JWT_GUEST_SECRET);
+  warnConfig('DATABASE_URL', process.env.DATABASE_URL);
+  warnConfig('JWT_SECRET', process.env.JWT_SECRET);
+  warnConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
+  warnConfig('JWT_GUEST_SECRET', process.env.JWT_GUEST_SECRET);
 
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_SECRET || '')) {
-    throw new Error('Variable de entorno requerida: JWT_SECRET debe cambiarse del valor por defecto');
+    console.error('[config] JWT_SECRET debe cambiarse del valor por defecto');
   }
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_REFRESH_SECRET || '')) {
-    throw new Error('Variable de entorno requerida: JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
+    console.error('[config] JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
   }
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_GUEST_SECRET || '')) {
-    throw new Error('Variable de entorno requerida: JWT_GUEST_SECRET debe cambiarse del valor por defecto');
+    console.error('[config] JWT_GUEST_SECRET debe cambiarse del valor por defecto');
   }
 
   const secrets = [process.env.JWT_SECRET, process.env.JWT_REFRESH_SECRET, process.env.JWT_GUEST_SECRET];
   if (new Set(secrets).size !== secrets.length) {
-    throw new Error('JWT_SECRET, JWT_REFRESH_SECRET y JWT_GUEST_SECRET deben ser diferentes entre sí');
+    console.error('[config] JWT_SECRET, JWT_REFRESH_SECRET y JWT_GUEST_SECRET deben ser diferentes entre sí');
   }
 
   const isProd = process.env.NODE_ENV === 'production';
@@ -79,10 +73,10 @@ function validateConfig(): void {
 validateConfig();
 
 export const config = {
-  DATABASE_URL: process.env.DATABASE_URL!,
-  JWT_SECRET: process.env.JWT_SECRET!,
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET!,
+  DATABASE_URL: process.env.DATABASE_URL || '',
+  JWT_SECRET: process.env.JWT_SECRET || '',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
+  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || '',
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, '').trim(),

@@ -32,11 +32,15 @@ import messagesRouter from './routes/messages.js';
 
 export function createApp() {
   if (sentryEnabled) {
-    Sentry.init({
-      dsn: config.SENTRY_DSN,
-      environment: config.NODE_ENV,
-      tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 0,
-    });
+    try {
+      Sentry.init({
+        dsn: config.SENTRY_DSN,
+        environment: config.NODE_ENV,
+        tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 0,
+      });
+    } catch (e) {
+      console.error('[sentry] Error inicializando Sentry:', e);
+    }
   }
 
   const app = express();
