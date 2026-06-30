@@ -11,7 +11,7 @@ import { logger } from './utils/logger.js';
 
 let app: Express | undefined;
 
-const workerCount = config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : (config.NODE_ENV === 'production' ? cpus().length : 0);
+const workerCount = config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : (config.NODE_ENV === 'production' ? 1 : 0);
 
 if (cluster.isPrimary && workerCount > 1) {
   logger.info({ workers: workerCount }, 'Modo cluster iniciando workers');

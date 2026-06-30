@@ -4,7 +4,7 @@ import { config } from '../config.js';
 const isDev = config.NODE_ENV !== 'production';
 
 export const logger = pino({
-  level: isDev ? 'debug' : 'warn',
+  level: isDev ? 'debug' : 'info',
   ...(isDev
     ? {
         transport: {
