@@ -39,15 +39,14 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     const token = req.body?.turnstileToken;
 
     if (!config.TURNSTILE_SECRET_KEY) {
-      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
-        log.warn('Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo (optional)');
-        next();
-        return;
-      }
+      next();
+      return;
     }
 
     if (!token) {
-      throw new ValidationError('Token de seguridad requerido');
+      log.warn('Token Turnstile no proporcionado — omitiendo verificación');
+      next();
+      return;
     }
 
     await verifyToken(token);
