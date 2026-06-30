@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 if (!('ResizeObserver' in globalThis)) {
   globalThis.ResizeObserver = class {

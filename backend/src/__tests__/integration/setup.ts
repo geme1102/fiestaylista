@@ -5,14 +5,13 @@ import * as schema from '../../db/schema.js';
 const TEST_DB_URL =
   process.env.DATABASE_URL_TEST || process.env.DATABASE_URL;
 
-if (!TEST_DB_URL) {
-  throw new Error(
-    'DATABASE_URL_TEST or DATABASE_URL must be set for integration tests',
-  );
-}
+let sql: ReturnType<typeof postgres> | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
 
-const sql = postgres(TEST_DB_URL, { max: 1 });
-const db = drizzle(sql, { schema });
+if (TEST_DB_URL) {
+  sql = postgres(TEST_DB_URL, { max: 1 });
+  db = drizzle(sql, { schema });
+}
 
 export { db, sql };
 
@@ -22,6 +21,7 @@ const PASSWORD_HASH =
 export async function createTestUser(
   overrides: Partial<typeof schema.users.$inferInsert> = {},
 ) {
+  if (!db) throw new Error('Database not configured — missing DATABASE_URL_TEST');
   const suffix = Date.now();
   const defaults: typeof schema.users.$inferInsert = {
     email: `integration-test-${suffix}@fiestaylista.test`,
@@ -41,6 +41,7 @@ export async function createTestEvent(
   userId: string,
   overrides: Partial<typeof schema.events.$inferInsert> = {},
 ) {
+  if (!db) throw new Error('Database not configured — missing DATABASE_URL_TEST');
   const suffix = Date.now();
   const defaults: typeof schema.events.$inferInsert = {
     userId,
@@ -56,6 +57,7 @@ export async function createTestEvent(
 }
 
 export async function cleanDatabase() {
+  if (!sql) return;
   await sql.unsafe(`
     TRUNCATE TABLE
       gift_claims, gifts, photos, cash_contributions, cash_funds,
@@ -67,5 +69,6 @@ export async function cleanDatabase() {
 }
 
 export async function closeConnection() {
+  if (!sql) return;
   await sql.end();
 }
