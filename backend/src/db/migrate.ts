@@ -102,18 +102,17 @@ const TIMESTAMPTZ_ALTERS: string[] = [
 ];
 
 export async function runMigrations(): Promise<void> {
-  await sql.unsafe('BEGIN');
   try {
-    for (const statement of COLUMN_MIGRATIONS) {
-      await sql.unsafe(statement);
-    }
-    for (const statement of TIMESTAMPTZ_ALTERS) {
-      await sql.unsafe(statement);
-    }
-    await sql.unsafe('COMMIT');
+    await sql.begin(async (tx) => {
+      for (const statement of COLUMN_MIGRATIONS) {
+        await tx.unsafe(statement);
+      }
+      for (const statement of TIMESTAMPTZ_ALTERS) {
+        await tx.unsafe(statement);
+      }
+    });
     log.info('Migraciones aplicadas correctamente');
   } catch (e) {
-    await sql.unsafe('ROLLBACK');
     log.error('Migraciones fallidas, rollback ejecutado');
     throw e;
   }
