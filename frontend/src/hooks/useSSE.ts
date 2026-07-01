@@ -91,6 +91,12 @@ export function useSSE({
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.type === 'connected') continue;
+                if (data.type === 'reconnect') {
+                  reader.cancel();
+                  retryCount = 0;
+                  retryDelay = initialRetryDelay;
+                  break;
+                }
                 if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
                   onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
                 } else if (data.type === 'cash:contribution') {
@@ -100,12 +106,12 @@ export function useSSE({
                 } else if (data.type === 'photo:uploaded') {
                   onPhotoUploadedRef.current?.({ photoUrl: data.photoUrl, uploadedBy: data.uploadedBy });
                 } else if (data.giftId && data.claimedBy) {
-                  // fallback para mensajes antiguos sin type
                   onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
                 }
               } catch { /* ignore parse errors */ }
             }
           }
+          if (buffer === '' && lines.length > 0 && lines[lines.length - 1] === '') break;
         }
       } catch {
         try { reader?.cancel(); } catch { /* ignore cancel errors */ }

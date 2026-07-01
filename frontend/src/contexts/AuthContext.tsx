@@ -57,14 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {
     const res = await loginApi(email, password, turnstileToken);
-    setTokens(res.accessToken);
+    setTokens(res.accessToken, res.refreshToken);
     setUser(res.user);
     return res;
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string, turnstileToken?: string) => {
     const res = await registerApi(email, password, name, turnstileToken);
-    setTokens(res.accessToken);
+    setTokens(res.accessToken, res.refreshToken);
     setUser(res.user);
     return res;
   }, []);

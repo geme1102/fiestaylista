@@ -60,16 +60,14 @@ router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidatio
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
   setRefreshCookie(res, result.refreshToken);
-  const { refreshToken: _rt, ...safe } = result;
-  res.status(201).json(safe);
+  res.status(201).json(result);
 }));
 
 router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password);
   setRefreshCookie(res, result.refreshToken);
-  const { refreshToken: _rt, ...safe } = result;
-  res.json(safe);
+  res.json(result);
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
@@ -78,14 +76,15 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
       throw new ValidationError('Token de refresco requerido');
     }
     const isProduction = process.env.NODE_ENV === 'production';
-    const refreshToken = req.cookies?.[isProduction ? '__Secure-refreshToken' : 'refreshToken'];
+    const cookieName = isProduction ? '__Secure-refreshToken' : 'refreshToken';
+    const refreshToken = req.cookies?.[cookieName] || (typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : null);
     if (!refreshToken) {
+      log.warn({ hasCookie: !!req.cookies?.[cookieName], hasBody: !!req.body?.refreshToken, origin: req.headers.origin }, 'Refresh sin token');
       throw new ValidationError('Token de refresco requerido');
     }
     const result = await authService.refreshToken(refreshToken);
     setRefreshCookie(res, result.refreshToken);
-    const { refreshToken: _rt, ...safe } = result;
-    res.json(safe);
+    res.json(result);
   } catch (error) {
     if (error instanceof ValidationError || error instanceof UnauthorizedError) {
       throw error;

@@ -16,16 +16,27 @@ export interface TourStep {
 const PADDING = 12;
 const MOBILE_NAV_SAFE = 72;
 const MIN_CONTENT_HEIGHT = 100;
+const TARGET_POLL_MAX_MS = 8000;
+const TARGET_POLL_INTERVAL_MS = 100;
 
-function getTargetRect(selector: string): DOMRect | null {
+function measureTarget(selector: string): DOMRect | null {
   try {
     const el = document.querySelector(selector);
     if (!el) return null;
-    el.scrollIntoView({ block: 'center' });
     return el.getBoundingClientRect();
   } catch (err) {
     reportError(err, { source: 'ProductTour' });
     return null;
+  }
+}
+
+function scrollToTarget(selector: string): void {
+  try {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch {
+    /* ignore scroll errors */
   }
 }
 
@@ -45,15 +56,16 @@ export function ProductTour({
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [waitingForClick, setWaitingForClick] = useState(false);
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const nextButtonRef = useRef<HTMLButtonElement>(null);
   const trapRef = useFocusTrap(active);
 
   useEffect(() => {
-    if (active) {
+    if (active && !waitingForClick) {
       nextButtonRef.current?.focus();
     }
-  }, [stepIndex, active]);
+  }, [stepIndex, active, waitingForClick]);
 
   const start = useCallback(() => {
     if (localStorage.getItem(storageKey) === 'done') return;
@@ -62,7 +74,7 @@ export function ProductTour({
   }, [storageKey]);
 
   useEffect(() => {
-    const timer = setTimeout(start, 600);
+    const timer = setTimeout(start, 800);
     return () => clearTimeout(timer);
   }, [start]);
 
@@ -74,24 +86,44 @@ export function ProductTour({
   }, [active]);
 
   const updateRect = useCallback((selector: string) => {
-    const rect = getTargetRect(selector);
-    if (rect) {
-      setRect(rect);
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+
+    const r = measureTarget(selector);
+    if (r) {
+      setRect(r);
+      scrollToTarget(selector);
+      requestAnimationFrame(() => {
+        const r2 = measureTarget(selector);
+        if (r2) setRect(r2);
+      });
       return;
     }
-    let attempts = 0;
-    const interval = setInterval(() => {
-      attempts++;
-      const r = getTargetRect(selector);
-      if (r || attempts >= 3) {
-        clearInterval(interval);
-        if (r) setRect(r);
+
+    const startTime = Date.now();
+    const poll = () => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= TARGET_POLL_MAX_MS) {
+        setRect(null);
+        return;
       }
-    }, 300);
+      const found = measureTarget(selector);
+      if (found) {
+        setRect(found);
+        scrollToTarget(selector);
+        requestAnimationFrame(() => {
+          const r2 = measureTarget(selector);
+          if (r2) setRect(r2);
+        });
+        return;
+      }
+      pollTimerRef.current = setTimeout(poll, TARGET_POLL_INTERVAL_MS);
+    };
+    pollTimerRef.current = setTimeout(poll, TARGET_POLL_INTERVAL_MS);
   }, []);
 
   const advance = useCallback(() => {
     setWaitingForClick(false);
+    setRect(null);
     setStepIndex((prev) => prev + 1);
   }, []);
 
@@ -101,6 +133,9 @@ export function ProductTour({
     if (!step) return;
     updateRect(step.target);
     setWaitingForClick(!!step.requireClick);
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
   }, [active, stepIndex, steps, updateRect]);
 
   useEffect(() => {
@@ -124,15 +159,20 @@ export function ProductTour({
     const handleResize = () => {
       clearTimeout(resizeTimerRef.current);
       resizeTimerRef.current = setTimeout(() => {
-        updateRect(steps[stepIndex]?.target);
+        const step = steps[stepIndex];
+        if (!step) return;
+        const r = measureTarget(step.target);
+        if (r) setRect(r);
       }, 150);
     };
     window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, { passive: true });
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
       clearTimeout(resizeTimerRef.current);
     };
-  }, [active, stepIndex, steps, updateRect]);
+  }, [active, stepIndex, steps]);
 
   useEffect(() => {
     if (!active || stepIndex < steps.length) return;
@@ -141,7 +181,14 @@ export function ProductTour({
     onComplete?.();
   }, [active, stepIndex, steps.length, storageKey, onComplete]);
 
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, []);
+
   const skip = useCallback(() => {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     localStorage.setItem(storageKey, 'done');
     setActive(false);
   }, [storageKey]);
@@ -219,19 +266,19 @@ export function ProductTour({
       )}
       {!rect && <div className="absolute inset-0 bg-black/60" />}
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={stepIndex}
           initial={{ opacity: 0, scale: 0.92, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-[101]"
           style={tooltipStyle}
         >
           <div
             ref={tooltipRef}
-            className="pointer-events-auto w-[280px] overflow-y-auto glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
+            className="pointer-events-auto w-[280px] max-w-[calc(100vw-24px)] overflow-y-auto glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -242,8 +289,7 @@ export function ProductTour({
               </div>
               <button
                 onClick={skip}
-                onKeyDown={(e) => { if (e.key === 'Escape') skip(); }}
-                className="text-on-surface-variant/50 hover:text-on-surface transition-colors p-3 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="text-on-surface-variant/50 hover:text-on-surface transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Cerrar tour"
               >
                 <span className="material-symbols-outlined text-base">close</span>
@@ -270,7 +316,7 @@ export function ProductTour({
                   onClick={advance}
                   className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow"
                 >
-                  {isLast ? '¡Listo! 🎉' : step.cta ?? 'Siguiente'}
+                  {isLast ? '¡Listo!' : step.cta ?? 'Siguiente'}
                 </button>
               )}
             </div>

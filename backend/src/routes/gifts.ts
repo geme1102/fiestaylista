@@ -180,7 +180,8 @@ router.post('/public-sse-token', apiLimiter, validateUuidParam('eventId'), async
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
 const SSE_MAX_PER_IP = 3;
-const SSE_CONNECTION_TIMEOUT_MS = 30 * 60 * 1000;
+const SSE_CONNECTION_TIMEOUT_MS = 4 * 60 * 1000;
+const SSE_KEEPALIVE_MS = 15000;
 const sseIpCount = new Map<string, number>();
 
 router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {
@@ -234,10 +235,13 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
 
   const keepAlive = setInterval(() => {
     try { res.write(':keepalive\n\n'); } catch { /* cliente desconectado */ }
-  }, 30000);
+  }, SSE_KEEPALIVE_MS);
 
   const connectionTimeout = setTimeout(() => {
-    try { res.end(); } catch { /* ya desconectado */ }
+    try {
+      res.write(`data: ${JSON.stringify({ type: 'reconnect' })}\n\n`);
+      res.end();
+    } catch { /* ya desconectado */ }
   }, SSE_CONNECTION_TIMEOUT_MS);
 
   const cleanup = () => {

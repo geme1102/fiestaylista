@@ -1,6 +1,7 @@
 import { reportError } from '../lib/reportError';
 
 let accessToken: string | null = null;
+let refreshToken: string | null = null;
 const REQUEST_TIMEOUT = 10000;
 const MAX_RETRIES = 1;
 
@@ -8,12 +9,14 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function setTokens(access: string): void {
+export function setTokens(access: string, refresh?: string): void {
   accessToken = access;
+  if (refresh) refreshToken = refresh;
 }
 
 export function clearTokens(): void {
   accessToken = null;
+  refreshToken = null;
 }
 
 export function getAccessToken(): string | null {
@@ -174,13 +177,14 @@ export async function tryRefreshToken(): Promise<boolean> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Refresh-Request': 'true' },
         credentials: 'include',
-        body: JSON.stringify({}),
+        body: JSON.stringify(refreshToken ? { refreshToken } : {}),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
       if (!res.ok) return false;
       const data = await res.json();
       accessToken = data.accessToken;
+      if (data.refreshToken) refreshToken = data.refreshToken;
       return true;
     } catch (err) {
       reportError(err, { source: 'api' });

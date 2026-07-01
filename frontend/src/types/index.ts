@@ -81,6 +81,7 @@ export interface ProPayment {
 export interface AuthResponse {
   user: User;
   accessToken: string;
+  refreshToken?: string;
   emailSent?: boolean;
 }
 

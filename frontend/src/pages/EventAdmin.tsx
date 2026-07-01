@@ -121,9 +121,9 @@ export default function EventAdmin() {
   }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements]);
 
   const tourSteps: TourStep[] = useMemo(() => [
-    { target: '[data-tour="add-gift"]', title: 'Añade regalos', body: 'Escribe lo que quieres recibir o elige de nuestras sugerencias rápidas. ¡Tu lista se arma en segundos!', cta: 'Entendido', requireClick: false, placement: 'bottom' },
     { target: '[data-tour="share"]', title: 'Comparte tu enlace', body: 'Envía tu lista por WhatsApp o copia el enlace. Tus invitados NO necesitan registrarse — ven la lista y apartan al instante.', cta: 'Genial', placement: 'bottom' },
     { target: '[data-tour="preview"]', title: 'Vista previa', body: 'Mira exactamente lo que verán tus invitados. Abre tu evento público en una pestaña nueva.', cta: '¡Perfecto!', placement: 'bottom' },
+    { target: '[data-tour="add-gift"]', title: 'Añade regalos', body: 'Escribe lo que quieres recibir o elige de nuestras sugerencias rápidas. ¡Tu lista se arma en segundos!', cta: 'Entendido', requireClick: false, placement: 'bottom' },
   ], []);
 
   const loadEvent = useCallback(async () => {
@@ -159,7 +159,7 @@ export default function EventAdmin() {
   useSSE({
     eventId: id ?? '',
     sseTokenEndpoint: id ? `/api/events/${id}/gifts/sse-token` : '',
-    maxRetries: 5,
+    maxRetries: 50,
     initialRetryDelay: 1000,
     onGiftClaimed: (data) => {
       showToast(`🎉 ${data.claimedBy} apartó: ${data.giftName}`, 'success');
