@@ -31,7 +31,7 @@ export async function processReminders(): Promise<ReminderResult> {
       and(
         sql`${events.isActive} = true`,
         sql`EXISTS (SELECT 1 FROM ${gifts} WHERE ${gifts.eventId} = ${events.id} AND ${gifts.isClaimed} = false)`,
-        sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'reminder' AND ${emailTracking.sentAt} > ${cooldownDate})`,
+        sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'reminder' AND ${emailTracking.sentAt} > ${cooldownDate.toISOString()}::timestamptz)`,
       ),
     )
     .limit(50);
