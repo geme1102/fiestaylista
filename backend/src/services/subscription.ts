@@ -283,7 +283,7 @@ export async function sendPurgeWarnings(): Promise<number> {
       sql`${events.frozenAt} IS NOT NULL`,
       lte(events.frozenAt, warningStart),
       sql`${events.frozenAt} > ${warningEnd}`,
-      sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'purge_warning' AND ${emailTracking.sentAt} > ${warningStart.toISOString()})`,
+      sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'purge_warning' AND ${emailTracking.sentAt} > ${warningStart})`,
     ))
     .groupBy(events.userId);
 
