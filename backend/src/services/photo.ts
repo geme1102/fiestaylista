@@ -1,8 +1,10 @@
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
+import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { v2 as cloudinary } from 'cloudinary';
 import { isIP } from 'node:net';
 import { db } from '../db/index.js';
 import { photos as photosTable, events, users } from '../db/schema.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
@@ -31,7 +33,7 @@ function isPrivateHostname(hostname: string): boolean {
 function isValidImageUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+    if (parsed.protocol !== 'https:') return false;
     if (isPrivateHostname(parsed.hostname)) return false;
     return true;
   } catch {
@@ -83,7 +85,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
         .values({
           eventId,
           url,
-          caption: caption || null,
+          caption: caption ? sanitizeAndStrip(caption) : null,
         })
         .returning();
 
@@ -127,30 +129,32 @@ export async function deletePhoto(photoId: string) {
 }
 
 export async function toggleFeaturedPhoto(photoId: string) {
-  const [photo] = await db
-    .select()
-    .from(photosTable)
-    .where(and(eq(photosTable.id, photoId), isNull(photosTable.deletedAt)))
-    .limit(1);
-
-  if (!photo) throw new NotFoundError('Foto no encontrada');
-
   const [updated] = await db
     .update(photosTable)
-    .set({ isFeatured: !photo.isFeatured })
-    .where(eq(photosTable.id, photoId))
+    .set({ isFeatured: sql`NOT ${photosTable.isFeatured}` })
+    .where(and(eq(photosTable.id, photoId), isNull(photosTable.deletedAt)))
     .returning();
 
+  if (!updated) throw new NotFoundError('Foto no encontrada');
   return updated;
 }
 
-export async function getEventPhotos(eventId: string) {
+export async function getEventPhotos(eventId: string, params: PaginationParams = {}) {
+  const { limit, cursorCondition } = buildPaginationConditions(
+    photosTable.createdAt as unknown as SQL,
+    params,
+    50,
+  );
+  const conditions = cursorCondition
+    ? and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt), cursorCondition)
+    : and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt));
+
   const eventPhotos = await db
     .select()
     .from(photosTable)
-    .where(and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt)))
-    .orderBy(photosTable.createdAt)
-    .limit(101);
+    .where(conditions)
+    .orderBy(desc(photosTable.createdAt))
+    .limit(limit);
 
   return eventPhotos;
 }

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 
 interface Message {
   id: string;
@@ -21,6 +23,9 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
   const [showForm, setShowForm] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,8 +33,9 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
       try {
         const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`, { skipAuthRedirect: true });
         if (!cancelled) setMessages(res.messages || []);
-      } catch {
-        /* ignore */
+      } catch (err) {
+        reportError(err, { source: 'MessageWall' });
+        showToast('Error al cargar los mensajes', 'error');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -40,17 +46,24 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName.trim() || !newMessage.trim()) return;
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
+    }
     setSubmitting(true);
     try {
       const res = await apiClient.post<{ message: Message }>(`/api/events/${eventId}/messages`, {
         authorName: guestName.trim(),
         message: newMessage.trim(),
+        turnstileToken: token ?? undefined,
       });
       setMessages((prev) => [res.message, ...prev]);
       setNewMessage('');
       setShowForm(false);
+      resetTurnstile();
       showToast('Mensaje publicado 💬', 'success');
     } catch (err) {
+      reportError(err, { source: 'MessageWall' });
       showToast(err instanceof Error ? err.message : 'Error al publicar mensaje', 'error');
     } finally {
       setSubmitting(false);
@@ -88,7 +101,9 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
             className="overflow-hidden"
           >
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+              <label htmlFor="guest-name-message" className="sr-only">Tu nombre</label>
               <input
+                id="guest-name-message"
                 type="text"
                 value={guestName}
                 readOnly
@@ -103,6 +118,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
                 rows={3}
                 required
               />
+              <div ref={containerRef} />
               <button
                 type="submit"
                 disabled={submitting || !guestName.trim() || !newMessage.trim()}

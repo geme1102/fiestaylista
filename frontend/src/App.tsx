@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import SplashIntro from './components/SplashIntro';
 import ErrorBoundary from './components/ErrorBoundary';
+import { reportError } from './lib/reportError';
 import { QueryProvider } from './components/QueryProvider';
 import { PAGE_META } from './data/pageMeta';
 
@@ -142,14 +143,17 @@ export default function App() {
   const [splashDone, setSplashDone] = useState(() => {
     try {
       return localStorage.getItem('splash_seen') === 'true';
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'App' });
       return false;
     }
   });
   const handleSplashDone = useCallback(() => {
     try {
       localStorage.setItem('splash_seen', 'true');
-    } catch {}
+    } catch (err) {
+      reportError(err, { source: 'App' });
+    }
     setSplashDone(true);
   }, []);
   const location = useLocation();

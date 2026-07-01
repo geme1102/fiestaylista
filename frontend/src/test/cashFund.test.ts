@@ -37,7 +37,7 @@ describe('cashFund service', () => {
 
     const result = await getContributions('cf-1');
 
-    expect(mockGet).toHaveBeenCalledWith('/api/cash-fund/cf-1/contributions');
+    expect(mockGet).toHaveBeenCalledWith('/api/cash-fund/cf-1/contributions', { skipAuthRedirect: true });
     expect(result.contributions).toHaveLength(1);
   });
 

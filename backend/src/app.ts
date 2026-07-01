@@ -60,8 +60,7 @@ export function createApp() {
     const origin = req.headers.origin;
     const allowedOrigins = [
       config.FRONTEND_URL,
-      'https://fiestaylista.com',
-      'https://www.fiestaylista.com',
+      ...(config.ALLOWED_ORIGINS ?? []),
     ].filter(Boolean);
     const isAllowed = origin && (allowedOrigins.includes(origin) ||
       (config.NODE_ENV === 'production' &&

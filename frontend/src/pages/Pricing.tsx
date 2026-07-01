@@ -6,6 +6,7 @@ import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Tier } from '../types';
+import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
@@ -146,6 +147,7 @@ export default function Pricing() {
       }
     } catch (err) {
       clearTimeout(safetyTimer);
+      reportError(err, { source: 'Pricing' });
       showToast(err instanceof Error ? err.message : 'Error al procesar el pago. Recarga la página e intenta de nuevo.', 'error');
       setLoading(false);
       setSelectedTier(null);

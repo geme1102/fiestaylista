@@ -58,11 +58,17 @@ export async function processReminders(): Promise<ReminderResult> {
     const unclaimedCount = unclaimedMap.get(row.id) ?? 0;
 
     try {
-      await db.insert(emailTracking).values({
-        userId: row.userId,
-        type: 'reminder',
-      });
       await sendReminderEmail(row.userEmail, row.title, row.slug, unclaimedCount);
+      try {
+        await db.insert(emailTracking).values({
+          userId: row.userId,
+          type: 'reminder',
+        });
+      } catch {
+        await db.update(emailTracking)
+          .set({ sentAt: new Date() })
+          .where(and(eq(emailTracking.userId, row.userId), eq(emailTracking.type, 'reminder')));
+      }
       reminded++;
     } catch (error) {
       log.error({ error }, `Error enviando email a ${row.userEmail}:`);

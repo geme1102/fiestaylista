@@ -80,7 +80,8 @@ export async function getUserEvents(userId: string) {
     .select()
     .from(eventsTable)
     .where(and(eq(eventsTable.userId, userId), sql`${eventsTable.deletedAt} IS NULL`))
-    .orderBy(eventsTable.createdAt);
+    .orderBy(eventsTable.createdAt)
+    .limit(50);
 
   if (userEvents.length === 0) return [];
 
@@ -125,7 +126,7 @@ export async function getUserEvents(userId: string) {
   }));
 }
 
-export async function getEvent(eventId: string, userId: string) {
+export async function getEvent(eventId: string, userId: string, giftParams: PaginationParams = {}, photoParams: PaginationParams = {}) {
   const [event] = await db
     .select()
     .from(eventsTable)
@@ -140,19 +141,30 @@ export async function getEvent(eventId: string, userId: string) {
     throw new ForbiddenError('No tienes permiso para ver este evento');
   }
 
+  const { limit: giftLimit } = buildPaginationConditions(
+    gifts.createdAt as unknown as SQL,
+    giftParams,
+    50,
+  );
+  const { limit: photoLimit } = buildPaginationConditions(
+    photos.createdAt as unknown as SQL,
+    photoParams,
+    50,
+  );
+
   const [eventGifts, eventPhotos, allClaims] = await Promise.all([
     db
       .select()
       .from(gifts)
       .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
       .orderBy(gifts.createdAt)
-      .limit(101),
+      .limit(giftLimit),
     db
       .select()
       .from(photos)
       .where(and(eq(photos.eventId, eventId), isNull(photos.deletedAt)))
       .orderBy(photos.createdAt)
-      .limit(101),
+      .limit(photoLimit),
     db
       .select()
       .from(giftClaims)
@@ -181,6 +193,16 @@ export async function getEvent(eventId: string, userId: string) {
 export async function updateEvent(eventId: string, userId: string, data: UpdateEventData) {
   if (data.isActive === true) {
     return await db.transaction(async (tx) => {
+      const [currentEvent] = await tx
+        .select({ frozenAt: eventsTable.frozenAt })
+        .from(eventsTable)
+        .where(eq(eventsTable.id, eventId))
+        .limit(1);
+
+      if (currentEvent?.frozenAt) {
+        throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
+      }
+
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
 
       const [user] = await tx
@@ -254,6 +276,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       title: eventsTable.title,
       eventType: eventsTable.eventType,
       slug: eventsTable.slug,
+      status: eventsTable.status,
       isActive: eventsTable.isActive,
       eventDate: eventsTable.eventDate,
       eventLocation: eventsTable.eventLocation,
@@ -351,14 +374,17 @@ export async function completeEvent(eventId: string, userId: string) {
 
 export async function reactivateEvent(eventId: string, userId: string) {
   const [event] = await db
-    .select({ id: eventsTable.id, userId: eventsTable.userId, status: eventsTable.status })
+    .select({ id: eventsTable.id, userId: eventsTable.userId, status: eventsTable.status, frozenAt: eventsTable.frozenAt })
     .from(eventsTable)
     .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
     .limit(1);
 
   if (!event) throw new NotFoundError('Evento no encontrado');
   if (event.userId !== userId) throw new ForbiddenError('No tienes permiso para modificar este evento');
-  if (event.status !== 'completed') throw new ValidationError('El evento no está finalizado');
+
+  if (event.status === 'active' && !event.frozenAt) {
+    throw new ValidationError('El evento ya está activo');
+  }
 
   return await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
@@ -377,8 +403,9 @@ export async function reactivateEvent(eventId: string, userId: string) {
       .from(eventsTable)
       .where(and(
         eq(eventsTable.userId, userId),
-        eq(eventsTable.status, 'active'),
+        eq(eventsTable.isActive, true),
         isNull(eventsTable.deletedAt),
+        sql`${eventsTable.id} != ${eventId}`,
       ));
 
     const activeCount = Number(countResult?.count ?? 0);
@@ -388,7 +415,7 @@ export async function reactivateEvent(eventId: string, userId: string) {
 
     const [updated] = await tx
       .update(eventsTable)
-      .set({ status: 'active', updatedAt: new Date() })
+      .set({ status: 'active', isActive: true, frozenAt: null, updatedAt: new Date() })
       .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
       .returning();
 

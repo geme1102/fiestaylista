@@ -23,7 +23,7 @@ export default function LoadingSpinner({ fullScreen, size = 'md', text }: Loadin
       <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
       <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
       <div className="absolute inset-0 flex items-center justify-center gift-bounce">
-        <span className="material-symbols-outlined text-primary text-4xl">card_giftcard</span>
+        <span className="material-symbols-outlined text-primary text-4xl" aria-hidden="true">card_giftcard</span>
       </div>
     </div>
   );
@@ -43,7 +43,7 @@ export default function LoadingSpinner({ fullScreen, size = 'md', text }: Loadin
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-tr from-surface via-primary-container/10 to-surface overflow-hidden">
+      <div role="status" aria-live="polite" className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-tr from-surface via-primary-container/10 to-surface overflow-hidden">
         <div className="absolute inset-0 opacity-40 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 blur-[80px] rounded-full animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-secondary-container/10 blur-[100px] rounded-full animate-pulse" />
@@ -54,9 +54,9 @@ export default function LoadingSpinner({ fullScreen, size = 'md', text }: Loadin
             <div className="absolute -inset-4 border border-primary/10 rounded-full animate-[spin_4s_linear_infinite]" />
             <div className="absolute -inset-8 border border-primary/5 rounded-full animate-[spin_8s_linear_infinite_reverse]" />
             <div className="relative bg-white/40 backdrop-blur-xl border border-white/60 w-full h-full rounded-2xl flex items-center justify-center gift-bounce shadow-2xl">
-              <span className="material-symbols-outlined text-primary text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
+              <span className="material-symbols-outlined text-primary text-6xl" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
               <div className="absolute -top-4 -right-4 bg-secondary-container text-white p-2 rounded-full shadow-lg scale-90">
-                <span className="material-symbols-outlined text-sm">celebration</span>
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">celebration</span>
               </div>
             </div>
           </div>

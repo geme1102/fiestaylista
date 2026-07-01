@@ -4,6 +4,7 @@ import { failedWebhooks, refreshTokens, eventViews, auditLogs } from './db/schem
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings } from './services/subscription.js';
+import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import { createModuleLogger } from './utils/logger.js';
 
@@ -11,6 +12,7 @@ const log = createModuleLogger('Cron');
 
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
+let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
 
 export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
@@ -79,6 +81,19 @@ export function startCronJobs(): void {
         }
       } catch (error) {
         log.error({ error }, 'Error enviando warnings de purga:');
+      }
+    });
+  };
+
+  const reconcileCashFundsJob = async () => {
+    await runWithLock('reconcile-cash-funds', async () => {
+      try {
+        const result = await reconcileCashFunds();
+        if (result.checked > 0) {
+          log.info({ fixed: result.fixed, checked: result.checked }, `Cash funds reconciliados: ${result.fixed} corregidos de ${result.checked}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error reconciliando cash funds:');
       }
     });
   };
@@ -179,6 +194,7 @@ export function startCronJobs(): void {
   retryFailedWebhooks();
   cleanupExpiredWebhooks();
   runDaily();
+  reconcileCashFundsJob();
 
   const WEBHOOK_RETRY_MS = 60 * 1000;
 
@@ -194,6 +210,12 @@ export function startCronJobs(): void {
     retryFailedWebhooks();
   }, WEBHOOK_RETRY_MS);
 
+  const CASH_RECONCILLE_MS = 6 * 60 * 60 * 1000;
+
+  cashReconcileInterval = setInterval(() => {
+    reconcileCashFundsJob();
+  }, CASH_RECONCILLE_MS);
+
   log.info('Jobs iniciados correctamente');
 }
 
@@ -205,6 +227,10 @@ export function stopCronJobs(): void {
   if (webhookRetryInterval) {
     clearInterval(webhookRetryInterval);
     webhookRetryInterval = null;
+  }
+  if (cashReconcileInterval) {
+    clearInterval(cashReconcileInterval);
+    cashReconcileInterval = null;
   }
   log.info('Jobs detenidos');
 }

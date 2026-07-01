@@ -1,4 +1,5 @@
 import { memo, useState, useRef, useEffect } from 'react';
+import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
 
 const ShareButtons = memo(function ShareButtons({ slug, title }: { slug: string; title: string }) {
@@ -20,7 +21,8 @@ const ShareButtons = memo(function ShareButtons({ slug, title }: { slug: string;
       setCopied(true);
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'ShareButtons' });
       setCopied(false);
     }
   };

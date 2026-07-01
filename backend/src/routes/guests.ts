@@ -5,6 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { ValidationError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { guests } from '../db/schema.js';
@@ -27,13 +28,16 @@ router.get('/events/:eventId/guests', requireAuth, requireEventOwnership, valida
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200);
+
   const eventGuests = await db
     .select()
     .from(guests)
     .where(eq(guests.eventId, eventId))
-    .orderBy(desc(guests.createdAt));
+    .orderBy(desc(guests.createdAt))
+    .limit(limit);
 
-  res.json({ guests: eventGuests });
+  res.json({ guests: eventGuests, hasMore: eventGuests.length === limit });
 }));
 
 router.post('/events/:eventId/rsvp', verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
@@ -46,9 +50,9 @@ router.post('/events/:eventId/rsvp', verifyTurnstile, validateUuidParam('eventId
     .insert(guests)
     .values({
       eventId,
-      name: data.name,
-      email: data.email || null,
-      phone: data.phone || null,
+      name: sanitizeAndStrip(data.name),
+      email: data.email ? sanitizeAndStrip(data.email) : null,
+      phone: data.phone ? sanitizeAndStrip(data.phone) : null,
       companions: data.companions,
       dietaryRestrictions: data.dietaryRestrictions || null,
       message: data.message || null,

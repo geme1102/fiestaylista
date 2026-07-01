@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 
 interface GuestPhotoUploadProps {
   eventId: string;
@@ -14,6 +16,9 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const [caption, setCaption] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   useEffect(() => {
     return () => {
@@ -32,6 +37,11 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
     const file = fileInputRef.current?.files?.[0];
     if (!file) return;
 
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
@@ -46,10 +56,17 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
         throw new Error(err.message || 'Error al subir la imagen');
       }
       const { url } = await res.json();
+      resetTurnstile();
+
+      let photoToken = turnstileTokenRef.current;
+      if (!photoToken) {
+        photoToken = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
 
       await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
         url,
         caption: caption.trim() || undefined,
+        turnstileToken: photoToken ?? undefined,
       });
 
       showToast('Foto subida 📸 ¡Gracias!', 'success');
@@ -59,6 +76,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       if (fileInputRef.current) fileInputRef.current.value = '';
       onUploaded();
     } catch (err) {
+      reportError(err, { source: 'GuestPhotoUpload' });
       showToast(err instanceof Error ? err.message : 'Error al subir la foto', 'error');
     } finally {
       setUploading(false);
@@ -108,6 +126,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
             placeholder="¿Qué quieres contar de esta foto? (opcional)"
             className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
+          <div ref={containerRef} />
 
           <button
             onClick={handleUpload}

@@ -52,6 +52,24 @@ if (cluster.isPrimary && workerCount > 1) {
   }
 
   try {
+    ;(async () => {
+    console.log('[startup] Aplicando migraciones antes de iniciar servidor...');
+    try {
+      await runMigrations();
+      console.log('[startup] Migraciones aplicadas correctamente');
+    } catch (err) {
+      logger.fatal({ err }, 'Error aplicando migraciones — abortando inicio');
+      console.log('[startup] Error en migraciones, iniciando servidor de respaldo...');
+      const fs = http.createServer((_req: any, res: any) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', migrations: 'failed' }));
+      });
+      fs.listen(config.PORT, () => {
+        console.log('[startup] Servidor de respaldo (sin migraciones) en puerto', config.PORT);
+      });
+      return;
+    }
+
     console.log('[startup] Iniciando servidor en puerto', config.PORT);
     const server = app!.listen(config.PORT, () => {
       logger.info({
@@ -60,14 +78,8 @@ if (cluster.isPrimary && workerCount > 1) {
         frontend: config.FRONTEND_URL,
         backend: config.BACKEND_URL,
         workerId: cluster.isWorker ? `worker-${cluster.worker?.id}` : 'primary',
-      }, 'Servidor iniciado — aplicando migraciones en background');
+      }, 'Servidor iniciado');
       startCronJobs();
-    });
-
-    // Migraciones en background para no bloquear healthcheck de Railway
-    runMigrations().catch((err) => {
-      logger.fatal({ err }, 'Error aplicando migraciones — el servidor continúa funcionando');
-      logger.info('Ejecuta "npm run db:migrate" manualmente para aplicar las migraciones pendientes');
     });
 
     server.timeout = 30000;
@@ -76,14 +88,14 @@ if (cluster.isPrimary && workerCount > 1) {
 
     const SHUTDOWN_TIMEOUT = 10_000;
 
-    function gracefulShutdown(signal: string) {
-      logger.warn({ signal }, 'Cerrando servidor...');
+    function gracefulShutdown(signal: string, exitCode = 0) {
+      logger.warn({ signal, exitCode }, 'Cerrando servidor...');
       stopSSEScavenger();
       stopCronJobs();
       server.close(() => {
         sql.end({ timeout: 5 }).then(() => {
           logger.info('Conexiones cerradas correctamente.');
-          process.exit(0);
+          process.exit(exitCode);
         });
       });
       setTimeout(() => {
@@ -92,16 +104,17 @@ if (cluster.isPrimary && workerCount > 1) {
       }, SHUTDOWN_TIMEOUT);
     }
 
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM', 0));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT', 0));
     process.on('uncaughtException', (error) => {
       logger.fatal({ err: error }, 'Excepción no capturada');
-      gracefulShutdown('uncaughtException');
+      gracefulShutdown('uncaughtException', 1);
     });
     process.on('unhandledRejection', (reason) => {
       logger.fatal({ err: reason }, 'Promesa rechazada no capturada');
-      gracefulShutdown('unhandledRejection');
+      gracefulShutdown('unhandledRejection', 1);
     });
+    })();
   } catch (e) {
     console.error('[startup] Error fatal al iniciar el servidor:', e);
     console.log('[startup] Iniciando servidor HTTP mínimo en puerto', config.PORT);

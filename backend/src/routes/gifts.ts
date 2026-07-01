@@ -38,8 +38,11 @@ router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => 
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
   }
-  const gifts = await giftService.getEventGifts(eventId);
-  res.json({ gifts });
+  const gifts = await giftService.getEventGifts(eventId, {
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
+    cursor: req.query.cursor as string | undefined,
+  });
+  res.json({ gifts, hasMore: gifts.length === Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200) });
 }));
 
 router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {

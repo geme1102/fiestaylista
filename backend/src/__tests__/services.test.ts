@@ -38,10 +38,11 @@ vi.mock('../utils/logger.js', () => ({
 }));
 
 vi.mock('bcryptjs', () => ({
-  default: { compare: vi.fn().mockResolvedValue(true), hash: vi.fn().mockResolvedValue('hash'), genSalt: vi.fn().mockResolvedValue('salt') },
+  default: { compare: vi.fn().mockResolvedValue(true), hash: vi.fn().mockResolvedValue('hash'), genSalt: vi.fn().mockResolvedValue('salt'), hashSync: vi.fn(() => 'hash') },
   compare: vi.fn().mockResolvedValue(true),
   hash: vi.fn().mockResolvedValue('hash'),
   genSalt: vi.fn().mockResolvedValue('salt'),
+  hashSync: vi.fn(() => 'hash'),
 }));
 
 vi.mock('../services/email.js', () => ({
@@ -238,9 +239,11 @@ describe('Gift Service', () => {
     it('claims available gift', async () => {
       const { db } = await import('../db/index.js');
       const { claimGift } = await import('../services/gift.js');
-      const q = queryMock([]);
-      q._updateResult = [{ id: 'g1', isClaimed: true, claimedBy: 'Ana' }];
-      vi.mocked(db.update).mockReturnValue(q);
+      const selectQ = queryMock([[{ eventId: 'e1' }], [{ status: 'active' }]]);
+      vi.mocked(db.select).mockReturnValue(selectQ);
+      const updateQ = queryMock([]);
+      updateQ._updateResult = [{ id: 'g1', isClaimed: true, claimedBy: 'Ana' }];
+      vi.mocked(db.update).mockReturnValue(updateQ);
       const result = await claimGift('g1', 'Ana');
       expect(result.isClaimed).toBe(true);
     });

@@ -8,6 +8,8 @@ export function compressImage(file: File): Promise<Blob> {
       return;
     }
 
+    const isPng = file.type === 'image/png';
+
     const img = new Image();
     const url = URL.createObjectURL(file);
 
@@ -26,16 +28,30 @@ export function compressImage(file: File): Promise<Blob> {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) { reject(new Error('No se pudo crear el contexto del canvas')); return; }
+
+      if (isPng) {
+        ctx.clearRect(0, 0, width, height);
+      }
       ctx.drawImage(img, 0, 0, width, height);
 
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Error al comprimir la imagen'));
-        },
-        'image/jpeg',
-        JPEG_QUALITY,
-      );
+      if (isPng) {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Error al comprimir la imagen'));
+          },
+          'image/png',
+        );
+      } else {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Error al comprimir la imagen'));
+          },
+          'image/jpeg',
+          JPEG_QUALITY,
+        );
+      }
     };
 
     img.onerror = () => {

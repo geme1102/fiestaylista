@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -39,6 +40,7 @@ export default function ForgotPassword() {
       await apiClient.post('/api/auth/forgot-password', { email: email.trim(), turnstileToken: token ?? undefined });
       setSent(true);
     } catch (err) {
+      reportError(err, { source: 'ForgotPassword' });
       showToast(err instanceof Error ? err.message : 'Error al enviar correo', 'error');
     } finally {
       setLoading(false);

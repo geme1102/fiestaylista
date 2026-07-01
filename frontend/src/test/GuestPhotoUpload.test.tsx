@@ -14,6 +14,8 @@ vi.mock('../hooks/useToast', () => ({
   showToast: mockShowToast,
 }));
 
+vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: 'tok-1', reset: vi.fn() }), waitForTurnstile: vi.fn(() => 'tok-1') }));
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();

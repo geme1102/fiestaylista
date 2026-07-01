@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { reportError } from '../lib/reportError';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { formatCOP } from '../utils/format';
@@ -20,7 +21,7 @@ function useEventsWithViews(enabled: boolean) {
         try {
           const res = await apiClient.post<{ views: Record<string, number> }>('/api/analytics/views/batch', { eventIds });
           viewsMap = res.views;
-        } catch {}
+        } catch (err) { reportError(err, { source: 'Statistics' }); }
       }
       return events.map(event => ({ ...event, viewCount: viewsMap[event.id] ?? 0 }));
     },
@@ -31,7 +32,7 @@ function useEventsWithViews(enabled: boolean) {
 export default function Statistics() {
   const { user } = useAuth();
   const isPro = user?.tier !== 'free';
-  const { data: events = [], isLoading } = useEventsWithViews(isPro);
+  const { data: events = [], isLoading, isError, error } = useEventsWithViews(isPro);
 
   if (!isPro) {
     return (
@@ -57,6 +58,26 @@ export default function Statistics() {
     return (
       <div className="flex justify-center py-20">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-5">
+          <span className="material-symbols-outlined text-3xl text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>error_outline</span>
+        </div>
+        <h2 className="text-xl font-bold text-on-surface mb-2">Error al cargar estadísticas</h2>
+        <p className="text-sm text-on-surface-variant/70 mb-6 max-w-sm">
+          {error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }

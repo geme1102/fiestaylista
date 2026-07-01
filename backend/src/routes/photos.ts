@@ -18,7 +18,7 @@ const router = Router({ mergeParams: true });
 
 const createPhotoSchema = z.object({
   url: z.string().url('La URL de la foto es inválida').refine((u) => {
-    try { const p = new URL(u); return p.protocol === 'https:' || p.protocol === 'http:'; } catch { return false; }
+    try { const p = new URL(u); return p.protocol === 'https:'; } catch { return false; }
   }, 'La URL debe ser una imagen HTTPS válida'),
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
@@ -28,8 +28,11 @@ router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (re
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
   }
-  const photos = await photoService.getEventPhotos(eventId);
-  res.json({ photos });
+  const photos = await photoService.getEventPhotos(eventId, {
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
+    cursor: req.query.cursor as string | undefined,
+  });
+  res.json({ photos, hasMore: photos.length === Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200) });
 }));
 
 router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
@@ -69,7 +72,9 @@ router.post('/guest', requireAuth, requireEventOwnership, validateUuidParam('eve
 }));
 
 const guestPhotoSchema = z.object({
-  url: z.string().url('La URL de la foto es inválida'),
+  url: z.string().url('La URL de la foto es inválida').refine((u) => {
+    try { const p = new URL(u); return p.protocol === 'https:'; } catch { return false; }
+  }, 'La URL debe ser una imagen HTTPS válida'),
   caption: z.string().max(500).optional(),
 });
 

@@ -1,6 +1,6 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { requireAuth, requireAnyAuth } from '../middleware/auth.js';
+import { requireAuth, requireAnyAuth, optionalAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
@@ -60,14 +60,16 @@ router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidatio
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
   setRefreshCookie(res, result.refreshToken);
-  res.status(201).json(result);
+  const { refreshToken: _rt, ...safe } = result;
+  res.status(201).json(safe);
 }));
 
 router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password);
   setRefreshCookie(res, result.refreshToken);
-  res.json(result);
+  const { refreshToken: _rt, ...safe } = result;
+  res.json(safe);
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
@@ -82,7 +84,8 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
     }
     const result = await authService.refreshToken(refreshToken);
     setRefreshCookie(res, result.refreshToken);
-    res.json(result);
+    const { refreshToken: _rt, ...safe } = result;
+    res.json(safe);
   } catch (error) {
     if (error instanceof ValidationError || error instanceof UnauthorizedError) {
       throw error;
@@ -134,8 +137,10 @@ router.post('/reset-password', verifyTurnstile, resetLimiter, asyncHandlerWithVa
   res.json({ success: true });
 }));
 
-router.post('/logout', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
-  await authService.revokeAllUserTokens(req.user!.userId);
+router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  if (req.user) {
+    await authService.revokeAllUserTokens(req.user.userId);
+  }
   const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', { path: '/api/auth/refresh' });
   res.json({ success: true });

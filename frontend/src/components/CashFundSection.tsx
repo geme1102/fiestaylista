@@ -2,7 +2,9 @@ import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCashFund, getContributions, boostEvent, createPromise } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
 import { formatCOP } from '../utils/format';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { CashFund, CashContribution } from '../types';
 
 const MAX_RECENT_CONTRIBUTIONS = 5;
@@ -42,11 +44,13 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
         try {
           const contribRes = await getContributions(res.cashFund.id);
           setContributions(contribRes.contributions.filter((c) => c.status === 'promised'));
-        } catch {
+        } catch (err) {
+          reportError(err, { source: 'CashFundSection' });
           // guests cannot see contributions list, that's fine
         }
       }
     } catch (err) {
+      reportError(err, { source: 'CashFundSection' });
       const message = err instanceof Error ? err.message : 'Error al cargar la Lluvia de Sobres. Recarga la página e intenta de nuevo.';
       showToast(message, 'error');
       if (import.meta.env.DEV) console.error('[CashFund] loadFund error:', err);
@@ -83,6 +87,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
       setBoostModal(false);
       loadFund();
     } catch (err) {
+      reportError(err, { source: 'CashFundSection' });
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
       setBoostLoading(false);
@@ -372,6 +377,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
       showToast('Datos bancarios guardados ✅', 'success');
       onUpdate();
     } catch (err) {
+      reportError(err, { source: 'AdminBankConfig' });
       showToast(err instanceof Error ? err.message : 'Error al guardar', 'error');
     } finally {
       setSaving(false);
@@ -391,22 +397,30 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
         <div className="mt-4 space-y-3">
           <p className="text-xs text-on-surface-variant/70">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
-            >
-              <option value="nequi">Nequi</option>
-              <option value="daviplata">Daviplata</option>
-              <option value="bancolombia">Bancolombia</option>
-            </select>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Número de teléfono"
-              className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all sm:col-span-2"
-            />
+            <div>
+              <label htmlFor="bank-type" className="sr-only">Tipo de cuenta</label>
+              <select
+                id="bank-type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+              >
+                <option value="nequi">Nequi</option>
+                <option value="daviplata">Daviplata</option>
+                <option value="bancolombia">Bancolombia</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="bank-phone" className="sr-only">Número de teléfono</label>
+              <input
+                id="bank-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Número de teléfono"
+                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+              />
+            </div>
           </div>
           <button
             onClick={handleSave}
@@ -430,10 +444,19 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName?.trim() || !amount) return;
+
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
+    }
+
     setSubmitting(true);
     try {
       await createPromise({
@@ -441,11 +464,14 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
         contributorName: guestName!.trim(),
         amount: Number(amount),
         message: message.trim() || undefined,
+        turnstileToken: token ?? undefined,
       });
       setDone(true);
+      resetTurnstile();
       showToast('¡Gracias por tu aporte! 💛 El anfitrión lo recibirá directo.', 'success');
       loadFund();
     } catch (err) {
+      reportError(err, { source: 'PromiseForm' });
       showToast(err instanceof Error ? err.message : 'Error al registrar tu aporte', 'error');
     } finally {
       setSubmitting(false);
@@ -465,16 +491,22 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
     <form onSubmit={handleSubmit} className="space-y-3">
       <p className="text-sm font-bold text-on-surface">¿Ya transferiste? Regístralo aquí:</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input
-          type="text"
-          value={guestName ?? ''}
-          readOnly
-          placeholder="Tu nombre"
-          className="w-full rounded-xl border border-surface-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
-        />
+        <div>
+          <label htmlFor="promise-name" className="sr-only">Nombre</label>
+          <input
+            id="promise-name"
+            type="text"
+            value={guestName ?? ''}
+            readOnly
+            placeholder="Tu nombre"
+            className="w-full rounded-xl border border-surface-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
+          />
+        </div>
         <div className="relative">
+          <label htmlFor="promise-amount" className="sr-only">Valor del aporte</label>
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm font-bold">$</span>
           <input
+            id="promise-amount"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -485,13 +517,16 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
           />
         </div>
       </div>
+      <label htmlFor="promise-message" className="sr-only">Mensaje (opcional)</label>
       <input
+        id="promise-message"
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Mensaje (opcional)"
         className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
       />
+      <div ref={containerRef} />
       <button
         type="submit"
         disabled={submitting || !guestName?.trim() || !amount}

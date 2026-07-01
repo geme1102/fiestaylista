@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../../services/api';
+import { reportError } from '../../lib/reportError';
+import { showToast } from '../../hooks/useToast';
 
 
 interface Message {
@@ -23,8 +25,9 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
     try {
       const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`);
       setMessages(res.messages || []);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      reportError(err, { source: 'MessagesPanel' });
+      showToast('Error al cargar los mensajes', 'error');
     } finally {
       setLoading(false);
     }

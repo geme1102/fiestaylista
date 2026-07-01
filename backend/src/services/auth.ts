@@ -77,6 +77,19 @@ async function consumeRefreshToken(token: string): Promise<JwtPayload> {
       throw new UnauthorizedError('Token de refresco inválido');
     }
     if (existing.revoked) {
+      const [activeToken] = await db
+        .select({ id: refreshTokens.id })
+        .from(refreshTokens)
+        .where(and(
+          eq(refreshTokens.userId, existing.userId),
+          eq(refreshTokens.revoked, false),
+          sql`${refreshTokens.expiresAt} > NOW()`,
+        ))
+        .limit(1);
+      if (activeToken) {
+        log.warn(`Reuso de refresh token para usuario ${existing.userId} — posible concurrencia entre pestañas`);
+        return decoded;
+      }
       log.warn(`Intento de reuso de refresh token para usuario ${existing.userId}. Revocando todas las sesiones.`);
       await db.insert(auditLogs).values({
         userId: existing.userId,
@@ -191,7 +204,7 @@ export async function register(
   };
 }
 
-const DUMMY_HASH = '$2a$12$OOQOQOQOQOQOQOQOQOQOQeQOQOQOQOQOQOQOQOQOQOQOQOQOQ';
+const DUMMY_HASH = bcrypt.hashSync('dummy', 12);
 
 export async function login(
   email: string,

@@ -1,9 +1,11 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { getGiftImage, getGiftCategory } from '../data/giftEmojis';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Gift, GiftClaim } from '../types';
 
 interface GiftCardProps {
@@ -29,23 +31,35 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const [claimName, setClaimName] = useState('');
   const [claimMessage, setClaimMessage] = useState('');
   const [claiming, setClaiming] = useState(false);
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const onImgError = () => setImgError(true);
 
   const handleGroupClaim = async () => {
     if (!claimName.trim()) return;
+
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
+    }
+
     setClaiming(true);
     try {
       const res = await apiClient.put<{ claim: GiftClaim }>(`/api/events/${gift.eventId}/gifts/${gift.id}/group-claim`, {
         claimedBy: claimName.trim(),
         message: claimMessage.trim() || undefined,
+        turnstileToken: token ?? undefined,
       });
       setClaims((prev) => [...prev, res.claim]);
       setClaimName('');
       setClaimMessage('');
       setShowClaimForm(false);
+      resetTurnstile();
       showToast(`${claimName.trim()} se unió al regalo 🎉`, 'success');
     } catch (err) {
+      reportError(err, { source: 'GiftCard' });
       showToast(err instanceof Error ? err.message : 'Error al unirte al regalo', 'error');
     } finally {
       setClaiming(false);
@@ -162,6 +176,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: !prev });
                 showToast(res.gift.isGroupGift ? 'Regalo grupal activado 👥' : 'Regalo individual', 'success');
               } catch (err) {
+                reportError(err, { source: 'GiftCard' });
                 setIsGroupGift(prev);
                 showToast(err instanceof Error ? err.message : 'Error', 'error');
               } finally {
@@ -223,7 +238,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             </button>
           ) : (
             <div className="space-y-2 p-3 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30">
+              <label htmlFor="claim-name" className="sr-only">Tu nombre</label>
               <input
+                id="claim-name"
                 type="text"
                 value={claimName}
                 onChange={(e) => setClaimName(e.target.value)}
@@ -231,13 +248,16 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
                 autoFocus
               />
+              <label htmlFor="claim-message" className="sr-only">Mensaje (opcional)</label>
               <input
+                id="claim-message"
                 type="text"
                 value={claimMessage}
                 onChange={(e) => setClaimMessage(e.target.value)}
                 placeholder="Mensaje (opcional)"
                 className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
               />
+              <div ref={containerRef} />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowClaimForm(false)}

@@ -16,6 +16,14 @@ interface MessagePostedEvent {
   timestamp: string;
 }
 
+interface CashContributionEvent {
+  eventId: string;
+  contributorName: string;
+  amount: number;
+  type: 'created' | 'cancelled';
+  timestamp: string;
+}
+
 interface PhotoUploadedEvent {
   eventId: string;
   photoUrl: string;
@@ -23,14 +31,30 @@ interface PhotoUploadedEvent {
   timestamp: string;
 }
 
-// SSE client management
+// SSE client management with delivery buffer and half-open detection
 const clients = new Map<string, Set<Response>>();
+const clientActivity = new WeakMap<Response, number>();
+const deliveryBuffer = new Map<Response, string[]>();
+const MAX_BUFFER_SIZE = 20;
+
+function touchClient(res: Response): void {
+  clientActivity.set(res, Date.now());
+}
 
 export function subscribeClient(eventId: string, res: Response): void {
   if (!clients.has(eventId)) {
     clients.set(eventId, new Set());
   }
   clients.get(eventId)!.add(res);
+  touchClient(res);
+  // Flush any buffered messages
+  const buf = deliveryBuffer.get(res);
+  if (buf) {
+    for (const msg of buf) {
+      try { res.write(msg); } catch { break; }
+    }
+    deliveryBuffer.delete(res);
+  }
 }
 
 export function unsubscribeClient(eventId: string, res: Response): void {
@@ -41,6 +65,8 @@ export function unsubscribeClient(eventId: string, res: Response): void {
       clients.delete(eventId);
     }
   }
+  deliveryBuffer.delete(res);
+  clientActivity.delete(res);
 }
 
 export function getClientCount(eventId: string): number {
@@ -60,7 +86,39 @@ function broadcastToClients(eventId: string, data: Record<string, unknown>): voi
   if (!eventClients) return;
   const payload = `data: ${JSON.stringify(data)}\n\n`;
   for (const client of eventClients) {
-    try { client.write(payload); } catch { /* cliente desconectado */ }
+    try {
+      client.write(payload);
+      touchClient(client);
+    } catch {
+      // Buffer for retry — connection might be temporarily unavailable
+      let buf = deliveryBuffer.get(client);
+      if (!buf) {
+        buf = [];
+        deliveryBuffer.set(client, buf);
+      }
+      if (buf.length < MAX_BUFFER_SIZE) {
+        buf.push(payload);
+      }
+    }
+  }
+}
+
+function retryBuffered(res: Response): void {
+  const buf = deliveryBuffer.get(res);
+  if (!buf || buf.length === 0) return;
+  const remaining: string[] = [];
+  for (const msg of buf) {
+    try {
+      res.write(msg);
+      touchClient(res);
+    } catch {
+      remaining.push(msg);
+    }
+  }
+  if (remaining.length > 0) {
+    deliveryBuffer.set(res, remaining);
+  } else {
+    deliveryBuffer.delete(res);
   }
 }
 
@@ -108,19 +166,53 @@ export function emitPhotoUploaded(data: PhotoUploadedEvent): void {
   }
 }
 
-// SSE scavenger: cleanup abandoned connections
-const SSE_SCAVENGER_INTERVAL_MS = 2 * 60 * 1000;
+export function emitCashContribution(data: CashContributionEvent): void {
+  try {
+    emitter.emit(`cash:contribution:${data.eventId}`, data);
+    broadcastToClients(data.eventId, {
+      type: 'cash:contribution',
+      contributorName: data.contributorName,
+      amount: data.amount,
+      contributionType: data.type,
+    });
+  } catch {
+    // no-op
+  }
+}
+
+// SSE scavenger: cleanup abandoned connections + retry buffer
+const SSE_SCAVENGER_INTERVAL_MS = 60 * 1000;
+const SSE_HALF_OPEN_TIMEOUT_MS = 90 * 1000;
 let scavengerTimer: ReturnType<typeof setInterval> | null = null;
 
 export function startSSEScavenger(): void {
   if (scavengerTimer) return;
   scavengerTimer = setInterval(() => {
+    const now = Date.now();
     for (const [eventId, eventClients] of clients) {
       for (const client of eventClients) {
+        // Retry buffered messages
+        retryBuffered(client);
+        // Detect half-open connections
+        const lastActive = clientActivity.get(client);
+        if (lastActive && (now - lastActive) > SSE_HALF_OPEN_TIMEOUT_MS) {
+          try {
+            client.end();
+          } catch {
+            // already dead
+          }
+          eventClients.delete(client);
+          deliveryBuffer.delete(client);
+          clientActivity.delete(client);
+          continue;
+        }
+        // Ping to detect dead connections
         try {
           client.write(':ping\n\n');
         } catch {
           eventClients.delete(client);
+          deliveryBuffer.delete(client);
+          clientActivity.delete(client);
         }
       }
       if (eventClients.size === 0) {
@@ -138,4 +230,4 @@ export function stopSSEScavenger(): void {
 }
 
 export { emitter, clients };
-export type { GiftClaimedEvent, MessagePostedEvent, PhotoUploadedEvent };
+export type { GiftClaimedEvent, MessagePostedEvent, CashContributionEvent, PhotoUploadedEvent };

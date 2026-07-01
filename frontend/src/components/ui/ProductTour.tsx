@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { reportError } from '../../lib/reportError';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export interface TourStep {
@@ -22,7 +23,8 @@ function getTargetRect(selector: string): DOMRect | null {
     if (!el) return null;
     el.scrollIntoView({ block: 'center' });
     return el.getBoundingClientRect();
-  } catch {
+  } catch (err) {
+    reportError(err, { source: 'ProductTour' });
     return null;
   }
 }

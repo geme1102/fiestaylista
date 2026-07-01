@@ -13,7 +13,7 @@ const mockUseSSE = vi.hoisted(() => vi.fn());
 vi.mock('../services/events', () => ({ getEventBySlug: mockGetEventBySlug }));
 vi.mock('../services/api', () => ({ apiClient: { put: mockApiClientPut, post: mockApiClientPost, get: vi.fn() } }));
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
-vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken() }) }));
+vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), reset: vi.fn() }) }));
 vi.mock('../data/giftEmojis', () => ({ getGiftCategory: mockGetGiftCategory }));
 vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
 

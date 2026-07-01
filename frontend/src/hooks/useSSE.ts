@@ -7,6 +7,7 @@ interface SSEOptions {
   onGiftClaimed?: (data: { giftId: string; giftName: string; claimedBy: string }) => void;
   onMessagePosted?: (data: { authorName: string; messagePreview: string }) => void;
   onPhotoUploaded?: (data: { photoUrl: string; uploadedBy: string }) => void;
+  onCashContribution?: (data: { contributorName: string; amount: number; contributionType: 'created' | 'cancelled' }) => void;
   maxRetries?: number;
   initialRetryDelay?: number;
   onConnected?: () => void;
@@ -14,7 +15,7 @@ interface SSEOptions {
 }
 
 export function useSSE({
-  eventId, sseTokenEndpoint, onGiftClaimed, onMessagePosted, onPhotoUploaded,
+  eventId, sseTokenEndpoint, onGiftClaimed, onMessagePosted, onPhotoUploaded, onCashContribution,
   maxRetries = 5, initialRetryDelay = 1000, onConnected, onDisconnected,
 }: SSEOptions) {
   const cancelledRef = useRef(false);
@@ -22,11 +23,13 @@ export function useSSE({
   const onGiftClaimedRef = useRef(onGiftClaimed);
   const onMessagePostedRef = useRef(onMessagePosted);
   const onPhotoUploadedRef = useRef(onPhotoUploaded);
+  const onCashContributionRef = useRef(onCashContribution);
   const onConnectedRef = useRef(onConnected);
   const onDisconnectedRef = useRef(onDisconnected);
   onGiftClaimedRef.current = onGiftClaimed;
   onMessagePostedRef.current = onMessagePosted;
   onPhotoUploadedRef.current = onPhotoUploaded;
+  onCashContributionRef.current = onCashContribution;
   onConnectedRef.current = onConnected;
   onDisconnectedRef.current = onDisconnected;
 
@@ -90,6 +93,8 @@ export function useSSE({
                 if (data.type === 'connected') continue;
                 if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
                   onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
+                } else if (data.type === 'cash:contribution') {
+                  onCashContributionRef.current?.({ contributorName: data.contributorName, amount: data.amount, contributionType: data.contributionType });
                 } else if (data.type === 'message:posted') {
                   onMessagePostedRef.current?.({ authorName: data.authorName, messagePreview: data.messagePreview });
                 } else if (data.type === 'photo:uploaded') {

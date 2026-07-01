@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
+import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from './useTurnstile';
 import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
@@ -37,7 +38,7 @@ export function useEventPage() {
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const cancelPollRef = useRef<(() => void) | null>(null);
-  const { containerRef: turnstileRef, token: turnstileToken } = useTurnstile();
+  const { containerRef: turnstileRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -63,6 +64,7 @@ export function useEventPage() {
       setGifts(data.gifts || []);
       setPhotos(data.photos || []);
     } catch (err) {
+      reportError(err, { source: 'useEventPage' });
       if (!mountedRef.current) return;
       let msg = err instanceof Error ? err.message : 'Evento no encontrado';
       if (msg.includes('Sesión expirada') || msg.includes('No autorizado')) {
@@ -144,6 +146,9 @@ export function useEventPage() {
         g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
       ));
     },
+    onCashContribution: () => {
+      loadEvent();
+    },
     onMessagePosted: () => {
       loadEvent();
     },
@@ -175,10 +180,12 @@ export function useEventPage() {
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
       setShowConfetti(true);
       setShowSuccessModal(true);
+      resetTurnstile();
       clearTimeout(confettiTimerRef.current);
       confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 3000);
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
+      reportError(err, { source: 'useEventPage' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('ya ha sido reservado')) {
         showToast('Este regalo ya fue apartado por otra persona', 'error');
@@ -200,7 +207,7 @@ export function useEventPage() {
           const file = new File([blob], url.split('/').pop() || 'photo.jpg', { type: blob.type });
           await navigator.share({ files: [file], title: 'Foto del evento' });
           return;
-        } catch { /* user cancelled */ }
+        } catch (err) { reportError(err, { source: 'useEventPage' }); }
       }
 
       const blobUrl = URL.createObjectURL(blob);
@@ -211,7 +218,8 @@ export function useEventPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'useEventPage' });
       window.open(url, '_blank');
     }
   }, []);

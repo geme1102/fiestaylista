@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { reportError } from '../lib/reportError';
 import { createEvent } from '../services/events';
 import { type EventType } from '../types';
 import { showToast } from '../hooks/useToast';
@@ -37,6 +38,7 @@ export default function Onboarding() {
       await createEvent({ title: title.trim(), eventType, eventNote: eventNote.trim() || undefined });
       navigate('/dashboard');
     } catch (err) {
+      reportError(err, { source: 'Onboarding' });
       showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
       setCreating(false);
     }

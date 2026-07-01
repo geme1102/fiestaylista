@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../services/api';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { reportError } from '../lib/reportError';
 
 interface RsvpFormProps {
   eventId: string;
@@ -19,12 +21,19 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName.trim()) {
       setError('El nombre es obligatorio');
       return;
+    }
+    let token = turnstileTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
     setSubmitting(true);
     setError('');
@@ -36,10 +45,13 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
         companions,
         dietaryRestrictions: dietaryRestrictions.trim() || undefined,
         message: message.trim() || undefined,
+        turnstileToken: token ?? undefined,
       });
       setConfirmed(true);
       setShowForm(false);
+      resetTurnstile();
     } catch (err) {
+      reportError(err, { source: 'RsvpForm' });
       setError(err instanceof Error ? err.message : 'Error al confirmar asistencia');
     } finally {
       setSubmitting(false);
@@ -172,6 +184,8 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   rows={2}
                 />
               </div>
+
+              <div ref={containerRef} />
 
               {error && (
                 <p className="text-xs text-error font-medium">{error}</p>

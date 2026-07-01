@@ -8,6 +8,8 @@ vi.mock('../services/api', () => ({
   apiClient: { post: mockPost },
 }));
 
+vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: 'tok-1', reset: vi.fn() }), waitForTurnstile: vi.fn(() => 'tok-1') }));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockPost.mockResolvedValue({});

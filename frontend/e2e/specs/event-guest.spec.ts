@@ -31,4 +31,8 @@ test.describe('Event Guest', () => {
     await guest.claimGift('gift-1', 'Invitado Test');
     await expect(guest.successModal).toBeVisible({ timeout: 5000 });
   });
+
+  // TODO(e2e): Add test for posting a message to the event wall
+  // TODO(e2e): Add test for photo uploading to the event gallery
+  // TODO(e2e): Add test for cash/money contribution flow
 });

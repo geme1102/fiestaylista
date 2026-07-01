@@ -1,3 +1,5 @@
+import { reportError } from '../lib/reportError';
+
 let accessToken: string | null = null;
 const REQUEST_TIMEOUT = 10000;
 const MAX_RETRIES = 1;
@@ -84,6 +86,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       try {
         res = await fetch(url.toString(), fetchOptions);
       } catch (error) {
+        reportError(error, { source: 'api' });
         if (error instanceof DOMException && error.name === 'AbortError') {
           throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
         }
@@ -112,6 +115,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           try {
             res = await fetch(url.toString(), retryInit);
           } catch (error) {
+            reportError(error, { source: 'api' });
             if (error instanceof DOMException && error.name === 'AbortError') {
               throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
             }
@@ -135,7 +139,8 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         try {
           const err = await res.json();
           errorMsg = err.message ?? err.error ?? errorMsg;
-        } catch {
+        } catch (err) {
+          reportError(err, { source: 'api' });
           if (import.meta.env.DEV) console.warn('[API] Error parsing error response body');
         }
         throw new Error(errorMsg);
@@ -177,7 +182,8 @@ export async function tryRefreshToken(): Promise<boolean> {
       const data = await res.json();
       accessToken = data.accessToken;
       return true;
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'api' });
       return false;
     } finally {
       refreshPromise = null;

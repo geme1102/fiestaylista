@@ -1,16 +1,11 @@
-import { eq, and, isNull, sql, desc } from 'drizzle-orm';
+import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
+import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { users, events, gifts as giftsTable, giftClaims } from '../db/schema.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitize } from '../utils/sanitize.js';
+import { NotFoundError, ValidationError, ConflictError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier } from '../types/index.js';
-
-function sanitize(input: string): string {
-  return input
-    .replace(/[<>]/g, '')
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-    .trim();
-}
 
 export async function addGift(eventId: string, name: string) {
   const cleaned = sanitize(name);
@@ -50,12 +45,18 @@ export async function addGift(eventId: string, name: string) {
       }
     }
 
-    const [gift] = await tx
-      .insert(giftsTable)
-      .values({ eventId, name: cleaned })
-      .returning();
-
-    return gift;
+    try {
+      const [gift] = await tx
+        .insert(giftsTable)
+        .values({ eventId, name: cleaned })
+        .returning();
+      return gift;
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
+        throw new ConflictError('Ya existe un regalo con ese nombre');
+      }
+      throw err;
+    }
   });
 }
 
@@ -115,6 +116,24 @@ export async function claimGift(giftId: string, claimedBy: string) {
     throw new ValidationError('El nombre es requerido');
   }
 
+  const [giftWithEvent] = await db
+    .select({ eventId: giftsTable.eventId })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+
+  if (giftWithEvent) {
+    const [event] = await db
+      .select({ status: events.status })
+      .from(events)
+      .where(eq(events.id, giftWithEvent.eventId))
+      .limit(1);
+
+    if (event && event.status === 'completed') {
+      throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
+    }
+  }
+
   const [updated] = await db
     .update(giftsTable)
     .set({
@@ -166,13 +185,22 @@ export async function deleteGift(giftId: string) {
   return { success: true };
 }
 
-export async function getEventGifts(eventId: string) {
+export async function getEventGifts(eventId: string, params: PaginationParams = {}) {
+  const { limit, cursorCondition } = buildPaginationConditions(
+    giftsTable.createdAt as unknown as SQL,
+    params,
+    50,
+  );
+  const conditions = cursorCondition
+    ? and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt), cursorCondition)
+    : and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt));
+
   const eventGifts = await db
     .select()
     .from(giftsTable)
-    .where(and(eq(giftsTable.eventId, eventId), isNull(giftsTable.deletedAt)))
-    .orderBy(giftsTable.createdAt)
-    .limit(101);
+    .where(conditions)
+    .orderBy(desc(giftsTable.createdAt))
+    .limit(limit);
 
   return eventGifts;
 }
@@ -181,11 +209,30 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
   const cleanedName = sanitize(claimedBy);
   if (!cleanedName) throw new ValidationError('El nombre es requerido');
 
+  const [giftWithEvent] = await db
+    .select({ eventId: giftsTable.eventId })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+
+  if (giftWithEvent) {
+    const [event] = await db
+      .select({ status: events.status })
+      .from(events)
+      .where(eq(events.id, giftWithEvent.eventId))
+      .limit(1);
+
+    if (event && event.status === 'completed') {
+      throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
+    }
+  }
+
   return await db.transaction(async (tx) => {
     const [gift] = await tx
       .select({ isGroupGift: giftsTable.isGroupGift, isClaimed: giftsTable.isClaimed })
       .from(giftsTable)
       .where(eq(giftsTable.id, giftId))
+      .for('update')
       .limit(1);
 
     if (!gift) throw new NotFoundError('Regalo no encontrado');

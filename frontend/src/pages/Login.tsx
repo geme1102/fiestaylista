@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NavbarPremium from '../components/NavbarPremium';
@@ -49,10 +50,11 @@ export default function Login() {
             navigate(url.pathname + url.search, { replace: true });
             return;
           }
-        } catch {}
+        } catch (err) { reportError(err, { source: 'Login' }); }
       }
       navigate('/dashboard', { replace: true });
     } catch (err) {
+      reportError(err, { source: 'Login' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('Credenciales inválidas')) {
         showToast('Credenciales inválidas. Verifica tu correo y contraseña e intenta de nuevo.', 'error');

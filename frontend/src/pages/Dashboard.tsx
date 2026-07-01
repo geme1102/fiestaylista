@@ -9,6 +9,7 @@ import { getCurrentSubscription } from '../services/mercadopago';
 import { THEME_COLORS, EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Event, type Subscription } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCOP } from '../utils/format';
+import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
 import { ConfirmModal } from '../components/ConfirmModal';
 import InstallPwaBanner from '../components/InstallPwaBanner';
@@ -48,7 +49,7 @@ export default function Dashboard() {
     if (!isAuthenticated) return;
     getCurrentSubscription()
       .then((res) => setSubscription(res.subscription))
-      .catch(() => {});
+      .catch((err) => { reportError(err, { source: 'Dashboard' }); });
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -85,8 +86,8 @@ export default function Dashboard() {
           setPollingPayment(false);
           setShowPaymentBanner(true);
         }
-      } catch {
-        // ignore polling errors
+      } catch (err) {
+        reportError(err, { source: 'Dashboard' });
       }
     }, 2000);
 
@@ -106,6 +107,7 @@ export default function Dashboard() {
         showToast(res.message || 'No se encontró el pago. Si el problema persiste, contacta a soporte.', 'info');
       }
     } catch (err) {
+      reportError(err, { source: 'Dashboard' });
       showToast(err instanceof Error ? err.message : 'Error al verificar el pago', 'error');
     } finally {
       setSyncingPayment(false);
@@ -126,6 +128,7 @@ export default function Dashboard() {
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       navigate(`/event/${res.event.id}`);
     } catch (err) {
+      reportError(err, { source: 'Dashboard' });
       showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
       setCreating(false);
@@ -140,6 +143,7 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       showToast('Evento eliminado', 'success');
     } catch (err) {
+      reportError(err, { source: 'Dashboard' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar el evento. Intenta de nuevo.', 'error');
     } finally {
       setDeleting(null);
@@ -150,7 +154,8 @@ export default function Dashboard() {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
       showToast('Enlace copiado ✅', 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'Dashboard' });
       showToast('No se pudo copiar el enlace', 'error');
     }
   };

@@ -1,7 +1,7 @@
 import { eq, lte, and, inArray, sql, isNull, desc } from 'drizzle-orm';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events, photos, proPayments } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, photos, proPayments, emailTracking } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
@@ -53,6 +53,14 @@ export async function createOrUpdateSubscription(
     .set({ tier: data.tier, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
+  if (data.status === 'active') {
+    const now = new Date();
+    await conn
+      .update(events)
+      .set({ isActive: true, frozenAt: null, updatedAt: now })
+      .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)));
+  }
+
   return sub;
 }
 
@@ -77,6 +85,28 @@ async function freezeUserEvents(userId: string, txClient?: typeof db) {
     sendFreezeEmail(user.email, user.name, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
       log.error({ err, userId }, 'Error enviando email de congelamiento:');
     });
+  }
+}
+
+async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
+  const conn = txClient || db;
+  const now = new Date();
+  await conn
+    .update(events)
+    .set({ isActive: false, frozenAt: now, updatedAt: now })
+    .where(and(inArray(events.userId, userIds), eq(events.isActive, true), isNull(events.deletedAt)));
+
+  const userRows = await conn
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(inArray(users.id, userIds));
+
+  for (const user of userRows) {
+    if (user?.email) {
+      sendFreezeEmail(user.email, user.name, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
+        log.error({ err, userId: user.id }, 'Error enviando email de congelamiento:');
+      });
+    }
   }
 }
 
@@ -171,9 +201,7 @@ export async function expireStaleSubscriptions(): Promise<number> {
         .set({ tier: 'free', updatedAt: new Date() })
         .where(inArray(users.id, userIds));
 
-      for (const uid of userIds) {
-        await freezeUserEvents(uid, tx as unknown as typeof db);
-      }
+      await batchFreezeEvents(userIds, tx as unknown as typeof db);
     }
 
     return userIds.length;
@@ -190,28 +218,42 @@ export async function purgeExpiredData(): Promise<number> {
   const now = new Date();
   const purgeThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const userIds = await db
-    .select({ userId: events.userId })
+  const expiredEvents = await db
+    .select({ id: events.id, userId: events.userId })
     .from(events)
     .where(and(
       sql`${events.frozenAt} IS NOT NULL`,
       lte(events.frozenAt, purgeThreshold),
-    ))
-    .groupBy(events.userId);
+      sql`${events.deletedAt} IS NULL`,
+    ));
 
-  if (userIds.length === 0) return 0;
+  if (expiredEvents.length === 0) return 0;
+
+  const userIds = [...new Set(expiredEvents.map(e => e.userId))];
+
+  const allEventIds = expiredEvents.map(e => e.id);
+
+  const allPhotos = await db
+    .select({ url: photos.url, eventId: photos.eventId })
+    .from(photos)
+    .where(inArray(photos.eventId, allEventIds));
+
+  const photosByEvent = new Map<string, { url: string }[]>();
+  for (const p of allPhotos) {
+    if (!photosByEvent.has(p.eventId)) photosByEvent.set(p.eventId, []);
+    photosByEvent.get(p.eventId)!.push(p);
+  }
+
+  await db
+    .delete(events)
+    .where(inArray(events.id, allEventIds));
 
   let purged = 0;
-  for (const { userId } of userIds) {
+  for (const userId of userIds) {
     try {
-      // 1. Collect photo URLs for Cloudinary cleanup
-      const userPhotos = await db
-        .select({ url: photos.url })
-        .from(photos)
-        .innerJoin(events, eq(photos.eventId, events.id))
-        .where(and(eq(events.userId, userId), eq(events.isActive, false), sql`${events.frozenAt} IS NOT NULL`));
+      const userEventIds = expiredEvents.filter(e => e.userId === userId).map(e => e.id);
+      const userPhotos = userEventIds.flatMap(eid => photosByEvent.get(eid) || []);
 
-      // 2. Delete from Cloudinary (non-blocking)
       for (const photo of userPhotos) {
         const publicId = getPublicIdFromUrl(photo.url);
         if (publicId) {
@@ -219,18 +261,8 @@ export async function purgeExpiredData(): Promise<number> {
         }
       }
 
-      // 3. Hard-delete events (cascades to gifts, photos, cash_funds, guests, messages, etc.)
-      await db
-        .delete(events)
-        .where(and(
-          eq(events.userId, userId),
-          eq(events.isActive, false),
-          sql`${events.frozenAt} IS NOT NULL`,
-          isNull(events.deletedAt),
-        ));
-
-      log.info({ userId, photosPurged: userPhotos.length }, 'Datos de usuario purgados');
-      purged++;
+      log.info({ userId, eventCount: userEventIds.length, photosPurged: userPhotos.length }, 'Eventos expirados purgados');
+      purged += userEventIds.length;
     } catch (err) {
       log.error({ err, userId }, 'Error purgando datos de usuario:');
     }
@@ -251,31 +283,53 @@ export async function sendPurgeWarnings(): Promise<number> {
       sql`${events.frozenAt} IS NOT NULL`,
       lte(events.frozenAt, warningStart),
       sql`${events.frozenAt} > ${warningEnd}`,
+      sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'purge_warning' AND ${emailTracking.sentAt} > ${warningStart.toISOString()})`,
     ))
     .groupBy(events.userId);
 
   if (toWarn.length === 0) return 0;
 
+  const userIds = toWarn.map(w => w.userId);
+
+  const userRows = await db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(inArray(users.id, userIds));
+
+  const userMap = new Map(userRows.map(u => [u.id, u]));
+
+  const eventRows = await db
+    .select({ userId: events.userId, frozenAt: events.frozenAt })
+    .from(events)
+    .where(and(inArray(events.userId, userIds), sql`${events.frozenAt} IS NOT NULL`));
+
+  const eventMap = new Map<string, Date>();
+  for (const e of eventRows) {
+    if (!eventMap.has(e.userId)) {
+      eventMap.set(e.userId, e.frozenAt ? new Date(e.frozenAt) : warningStart);
+    }
+  }
+
   let warned = 0;
   for (const { userId } of toWarn) {
     try {
-      const [user] = await db
-        .select({ email: users.email, name: users.name })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-
+      const user = userMap.get(userId);
       if (user?.email) {
-        const [event] = await db
-          .select({ frozenAt: events.frozenAt })
-          .from(events)
-          .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`))
-          .limit(1);
-        const frozenAt = event?.frozenAt ? new Date(event.frozenAt) : warningStart;
+        const frozenAt = eventMap.get(userId) ?? warningStart;
         const daysUntilPurge = Math.max(1, Math.ceil((30 * 24 * 60 * 60 * 1000 - (now.getTime() - frozenAt.getTime())) / (24 * 60 * 60 * 1000)));
         sendPurgeWarningEmail(user.email, user.name, daysUntilPurge, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
           log.error({ err, userId }, 'Error enviando warning de purga:');
         });
+        try {
+          await db.insert(emailTracking).values({
+            userId,
+            type: 'purge_warning',
+          });
+        } catch {
+          await db.update(emailTracking)
+            .set({ sentAt: new Date() })
+            .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'purge_warning')));
+        }
         warned++;
       }
     } catch (err) {

@@ -3,6 +3,7 @@ import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -56,6 +57,7 @@ export default function ResetPassword() {
       setDone(true);
       showToast('Contraseña actualizada correctamente', 'success');
     } catch (err) {
+      reportError(err, { source: 'ResetPassword' });
       showToast(err instanceof Error ? err.message : 'Error al restablecer contraseña', 'error');
     } finally {
       setLoading(false);

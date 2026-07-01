@@ -5,8 +5,8 @@ export function getCashFund(eventId: string): Promise<{ cashFund: CashFund | nul
   return apiClient.get<{ cashFund: CashFund | null; promisedTotal?: number }>(`/api/events/${eventId}/cash-fund`);
 }
 
-export function getContributions(cashFundId: string): Promise<{ contributions: CashContribution[] }> {
-  return apiClient.get<{ contributions: CashContribution[] }>(`/api/cash-fund/${cashFundId}/contributions`);
+export function getContributions(cashFundId: string): Promise<{ contributions: CashContribution[]; nextCursor: string | null }> {
+  return apiClient.get<{ contributions: CashContribution[]; nextCursor: string | null }>(`/api/cash-fund/${cashFundId}/contributions`, { skipAuthRedirect: true });
 }
 
 export function boostEvent(eventId: string): Promise<{ url?: string; message?: string; boostedUntil?: string }> {

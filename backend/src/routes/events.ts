@@ -6,16 +6,13 @@ import { checkActiveEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
 import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
+import { stripHtml } from '../utils/sanitize.js';
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
-
-function stripHtml(value: string): string {
-  return value.replace(/<[^>]*>/g, '');
-}
 
 const phoneRegex = /^\+?\d{7,15}$/;
 
@@ -65,7 +62,13 @@ router.get('/slug/:slug', viewLimiter, (_req, res, next) => { res.set('Cache-Con
 
 router.get('/:id', requireAuth, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.id as string;
-  const result = await eventService.getEvent(eventId, req.user!.userId);
+  const result = await eventService.getEvent(eventId, req.user!.userId, {
+    limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,
+    cursor: req.query.giftCursor as string | undefined,
+  }, {
+    limit: req.query.photoLimit ? Number(req.query.photoLimit) : undefined,
+    cursor: req.query.photoCursor as string | undefined,
+  });
   res.json({ event: result });
 }));
 

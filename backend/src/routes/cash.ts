@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { contributeLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
+import { getPromisedAmount } from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireEventOwnership, requireCashFundOwnership } from '../middleware/ownership.js';
+import { requireEventOwnership } from '../middleware/ownership.js';
 
 const router = Router();
 
@@ -48,7 +49,11 @@ router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHand
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
   const fund = await cashFundService.getCashFund(eventId);
-  res.json({ cashFund: fund || null });
+  let promisedTotal = 0;
+  if (fund) {
+    promisedTotal = await getPromisedAmount(fund.id);
+  }
+  res.json({ cashFund: fund || null, promisedTotal });
 }));
 
 router.post('/cash-fund/promise', contributeLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
@@ -62,7 +67,7 @@ router.post('/cash-fund/promise', contributeLimiter, verifyTurnstile, asyncHandl
   res.status(201).json(result);
 }));
 
-router.get('/cash-fund/:cashFundId/contributions', requireAuth, requireCashFundOwnership, validateUuidParam('cashFundId'), asyncHandler(async (req: AuthRequest, res) => {
+router.get('/cash-fund/:cashFundId/contributions', validateUuidParam('cashFundId'), asyncHandler(async (req, res) => {
   const cashFundId = req.params.cashFundId as string;
   if (!cashFundId) throw new ValidationError('ID del fondo requerido');
 
@@ -70,7 +75,7 @@ router.get('/cash-fund/:cashFundId/contributions', requireAuth, requireCashFundO
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     cursor: req.query.cursor as string | undefined,
   });
-  res.json(result);
+  res.json({ contributions: result.data, nextCursor: result.nextCursor });
 }));
 
 export default router;

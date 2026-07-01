@@ -10,13 +10,22 @@ import { createModuleLogger } from '../utils/logger.js';
 const log = createModuleLogger('MP');
 
 export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus'): Promise<void> {
+  const [existingPayment] = await db
+    .select({ id: proPayments.id })
+    .from(proPayments)
+    .where(eq(proPayments.mpPaymentId, paymentId))
+    .limit(1);
+
+  if (existingPayment) {
+    log.info(`${tier.toUpperCase()} payment ${paymentId} already processed`);
+    return;
+  }
+
   const periodDays = interval === 'year' ? 365 : 30;
   const isProPlus = tier === 'pro_plus';
   const expectedAmount = interval === 'year'
     ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
     : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
-
-  let isFirstProcessing = true;
 
   await db.transaction(async (tx) => {
     await subscriptionService.createOrUpdateSubscription(userId, {
@@ -26,22 +35,10 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       currentPeriodStart: new Date(),
       currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
     }, tx as unknown as typeof db);
-
-    try {
-      await tx
-        .insert(proPayments)
-        .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval, tier });
-    } catch (err: unknown) {
-      if ((err as Record<string, unknown>)?.code === '23505') {
-        log.info(`${tier.toUpperCase()} payment ${paymentId} already processed`);
-        isFirstProcessing = false;
-        return;
-      }
-      throw err;
-    }
+    await tx
+      .insert(proPayments)
+      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval, tier });
   });
-
-  if (!isFirstProcessing) return;
 
   try {
     const [user] = await db
@@ -149,6 +146,14 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
     return;
   }
 
+  if (info.status === 'refunded' || info.status === 'charged_back') {
+    if (info.payerEmail) {
+      const userId = await findUserIdByEmail(info.payerEmail);
+      if (userId) await subscriptionService.cancelSubscription(userId, true);
+    }
+    return;
+  }
+
   if (info.status !== 'approved') return;
 
   if (!info.payerEmail) {
@@ -197,6 +202,13 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   const periodDays = detectedInterval === 'year' ? 365 : 30;
 
   if (info.status === 'active') {
+    const currentSub = await subscriptionService.getCurrentSubscription(userId);
+
+    if (currentSub && currentSub.status === 'canceled' && !currentSub.mpSubscriptionId) {
+      log.warn({ userId }, 'Ignorando webhook tardío — suscripción cancelada manualmente');
+      return;
+    }
+
     const currentPeriodEnd = info.nextChargeDate
       ? new Date(info.nextChargeDate)
       : new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);

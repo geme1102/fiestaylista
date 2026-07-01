@@ -1,8 +1,10 @@
-import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
+import { eq, and, ne, isNull, sql, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, type PaginatedResult, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { cashFunds, cashContributions, events } from '../db/schema.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
+import { NotFoundError, ValidationError, ConflictError } from '../utils/errors.js';
+import { emitCashContribution } from './notifications.js';
 
 interface CashFundData {
   title?: string;
@@ -49,7 +51,7 @@ export async function createOrUpdateCashFund(eventId: string, _userId: string, d
       .onConflictDoNothing({ target: cashFunds.eventId })
       .returning();
 
-    if (!fund) throw new ValidationError('El fondo monetario ya existe para este evento');
+    if (!fund) throw new ConflictError('El fondo monetario ya existe para este evento');
     return fund;
   });
 }
@@ -62,6 +64,42 @@ export async function getCashFund(eventId: string) {
     .limit(1);
 
   return fund || null;
+}
+
+export async function reconcileCashFunds(): Promise<{ fixed: number; checked: number }> {
+  let checked = 0;
+  let fixed = 0;
+
+  const funds = await db
+    .select({
+      id: cashFunds.id,
+      eventId: cashFunds.eventId,
+      collectedAmount: cashFunds.collectedAmount,
+    })
+    .from(cashFunds)
+    .limit(500);
+
+  for (const fund of funds) {
+    checked++;
+    const [row] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${cashContributions.amount}), 0)::int` })
+      .from(cashContributions)
+      .where(and(
+        eq(cashContributions.cashFundId, fund.id),
+        ne(cashContributions.status, 'cancelled'),
+      ));
+
+    const expected = row?.total ?? 0;
+    if (fund.collectedAmount !== expected) {
+      await db
+        .update(cashFunds)
+        .set({ collectedAmount: expected, updatedAt: new Date() })
+        .where(eq(cashFunds.id, fund.id));
+      fixed++;
+    }
+  }
+
+  return { fixed, checked };
 }
 
 export async function getPromisedAmount(cashFundId: string): Promise<number> {
@@ -81,7 +119,7 @@ export async function createPromise(
   amountInCents: number,
   message?: string,
 ): Promise<{ contribution: typeof cashContributions.$inferSelect; cashFund: typeof cashFunds.$inferSelect }> {
-  const cleanedName = contributorName.replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '').trim();
+  const cleanedName = sanitize(contributorName);
   if (!cleanedName) {
     throw new ValidationError('El nombre es requerido');
   }
@@ -126,7 +164,7 @@ export async function createPromise(
     if (existing) {
       const [row] = await tx
         .update(cashContributions)
-        .set({ message: message || null })
+        .set({ message: message ? sanitizeAndStrip(message) : null })
         .where(eq(cashContributions.id, existing.id))
         .returning();
       return { contribution: row, fund };
@@ -138,7 +176,7 @@ export async function createPromise(
         cashFundId,
         contributorName: cleanedName,
         amount: amountInCents,
-        message: message || null,
+        message: message ? sanitizeAndStrip(message) : null,
         status: 'promised',
       })
       .returning();
@@ -153,6 +191,61 @@ export async function createPromise(
       .returning();
 
     return { contribution: row, fund: updatedFund };
+  });
+
+  emitCashContribution({
+    eventId: result.fund.eventId,
+    contributorName: result.contribution.contributorName,
+    amount: result.contribution.amount,
+    type: 'created',
+    timestamp: new Date().toISOString(),
+  });
+
+  return { contribution: result.contribution, cashFund: result.fund };
+}
+
+export async function cancelContribution(
+  contributionId: string,
+  cashFundId: string,
+): Promise<{ contribution: typeof cashContributions.$inferSelect; cashFund: typeof cashFunds.$inferSelect }> {
+  const result = await db.transaction(async (tx) => {
+    const [contribution] = await tx
+      .select()
+      .from(cashContributions)
+      .where(and(
+        eq(cashContributions.id, contributionId),
+        eq(cashContributions.cashFundId, cashFundId),
+        eq(cashContributions.status, 'promised'),
+      ))
+      .for('update')
+      .limit(1);
+
+    if (!contribution) throw new NotFoundError('Aporte no encontrado o ya cancelado');
+
+    const [updatedContribution] = await tx
+      .update(cashContributions)
+      .set({ status: 'cancelled' })
+      .where(eq(cashContributions.id, contributionId))
+      .returning();
+
+    const [updatedFund] = await tx
+      .update(cashFunds)
+      .set({
+        collectedAmount: sql`GREATEST(${cashFunds.collectedAmount} - ${contribution.amount}, 0)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(cashFunds.id, cashFundId))
+      .returning();
+
+    return { contribution: updatedContribution, fund: updatedFund };
+  });
+
+  emitCashContribution({
+    eventId: result.fund.eventId,
+    contributorName: result.contribution.contributorName,
+    amount: result.contribution.amount,
+    type: 'cancelled',
+    timestamp: new Date().toISOString(),
   });
 
   return { contribution: result.contribution, cashFund: result.fund };

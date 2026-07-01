@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription, getPaymentHistory } from '../services/mercadopago';
 import { apiClient } from '../services/api';
 import { TIER_LIMITS, type Subscription, type ProPayment } from '../types';
+import { reportError } from '../lib/reportError';
 import { showToast } from '../hooks/useToast';
 import { formatDate, formatCOP, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -53,6 +54,7 @@ export default function Account() {
       getCurrentSubscription()
         .then((res) => setSubscription(res.subscription))
         .catch((err) => {
+          reportError(err, { source: 'Account' });
           const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
           showToast(message, 'error');
           setSubError(true);
@@ -60,7 +62,7 @@ export default function Account() {
         }),
       getPaymentHistory()
         .then((res) => setPayments(res.payments))
-        .catch(() => setPaymentsError(true)),
+        .catch((err) => { reportError(err, { source: 'Account' }); setPaymentsError(true); }),
     ]).finally(() => {
       setLoadingSub(false);
       setPaymentsLoading(false);
@@ -82,6 +84,7 @@ export default function Account() {
       setShowCancelConfirm(false);
       setCancelPassword('');
     } catch (err) {
+      reportError(err, { source: 'Account' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('contrase') || msg.toLowerCase().includes('password')) {
         showToast('Contraseña incorrecta. Verifica e intenta de nuevo.', 'error');
@@ -108,6 +111,7 @@ export default function Account() {
       URL.revokeObjectURL(url);
       showToast('Datos descargados correctamente', 'success');
     } catch (err) {
+      reportError(err, { source: 'Account' });
       showToast(err instanceof Error ? err.message : 'Error al descargar datos', 'error');
     } finally {
       setDownloading(false);
@@ -125,6 +129,7 @@ export default function Account() {
       setDeletePassword('');
       deleteTimerRef.current = setTimeout(() => { logout(); }, 2000);
     } catch (err) {
+      reportError(err, { source: 'Account' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
       setDeletingAccount(false);
@@ -194,7 +199,7 @@ export default function Account() {
           ) : subError ? (
             <div className="text-center py-8">
               <p className="text-sm text-on-surface-variant mb-3">No pudimos cargar tu suscripción.</p>
-              <button onClick={() => { setLoadingSub(true); setSubError(false); getCurrentSubscription().then((res) => setSubscription(res.subscription)).catch(() => setSubError(true)).finally(() => setLoadingSub(false)); }} className="text-primary font-semibold text-sm underline hover:no-underline">
+              <button onClick={() => { setLoadingSub(true); setSubError(false); getCurrentSubscription().then((res) => setSubscription(res.subscription)).catch((err) => { reportError(err, { source: 'Account' }); setSubError(true); }).finally(() => setLoadingSub(false)); }} className="text-primary font-semibold text-sm underline hover:no-underline">
                 Reintentar
               </button>
             </div>
@@ -284,7 +289,8 @@ export default function Account() {
                               return;
                             }
                             window.location.href = redirectUrl;
-                          } catch {
+                          } catch (err) {
+                            reportError(err, { source: 'Account' });
                             showToast('Error al iniciar el proceso de pago', 'error');
                             setRetryingPayment(false);
                           }

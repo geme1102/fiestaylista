@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/api';
+import { reportError } from '../lib/reportError';
 import { useAuth } from '../contexts/AuthContext';
 import { showToast } from '../hooks/useToast';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -65,6 +66,7 @@ export default function VerifyEmail() {
         setMessage('¡Correo verificado exitosamente!');
       })
       .catch((err) => {
+        reportError(err, { source: 'VerifyEmail' });
         const raw = err instanceof Error ? err.message : 'Error al verificar correo';
         setStatus('error');
         setMessage(mapErrorMessage(raw));
@@ -95,7 +97,8 @@ export default function VerifyEmail() {
     try {
       await resendVerification();
       showToast('Correo de verificación reenviado. Revisa tu bandeja de entrada.', 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'VerifyEmail' });
       showToast('Error al reenviar verificación. Intenta de nuevo.', 'error');
     } finally {
       setResending(false);
@@ -122,6 +125,7 @@ export default function VerifyEmail() {
         setMessage('¡Correo verificado exitosamente!');
       })
       .catch((err) => {
+        reportError(err, { source: 'VerifyEmail' });
         const raw = err instanceof Error ? err.message : 'Error al verificar correo';
         setStatus('error');
         setMessage(mapErrorMessage(raw));

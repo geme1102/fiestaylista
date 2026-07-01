@@ -1,5 +1,6 @@
-export type EventType = 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING';
-export type Tier = 'free' | 'pro' | 'pro_plus';
+import { EventType, Tier, TierLimits, TIER_LIMITS } from '@shared/types';
+export type { EventType, Tier, TierLimits };
+export { TIER_LIMITS };
 
 export interface User {
   id: string;
@@ -63,7 +64,7 @@ export interface Subscription {
   id: string;
   userId: string;
   tier: Tier;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
+  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'pending_approval';
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   mpSubscriptionId?: string;
@@ -80,7 +81,6 @@ export interface ProPayment {
 export interface AuthResponse {
   user: User;
   accessToken: string;
-  refreshToken: string;
   emailSent?: boolean;
 }
 
@@ -106,18 +106,6 @@ export interface CashContribution {
   status: 'promised' | 'paid' | 'cancelled';
   createdAt: string;
 }
-
-export interface TierLimits {
-  maxEvents: number;
-  maxGiftsPerEvent: number;
-  maxPhotosPerEvent: number;
-}
-
-export const TIER_LIMITS: Record<Tier, TierLimits> = {
-  free: { maxEvents: 1, maxGiftsPerEvent: 15, maxPhotosPerEvent: 3 },
-  pro: { maxEvents: 1, maxGiftsPerEvent: 100, maxPhotosPerEvent: 20 },
-  pro_plus: { maxEvents: 3, maxGiftsPerEvent: 100, maxPhotosPerEvent: 20 },
-};
 
 export const EVENT_LABELS: Record<EventType, string> = {
   BABY_SHOWER: 'Baby Shower',

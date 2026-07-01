@@ -20,7 +20,8 @@ export function addPhoto(eventId: string, url: string, caption?: string): Promis
 export async function uploadPhoto(file: File, onProgress?: (pct: number) => void): Promise<{ url: string }> {
   const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append('file', compressed, file.name.replace(/\.[^.]+$/, '.jpg'));
+  const ext = file.type === 'image/png' ? '.png' : '.jpg';
+  formData.append('file', compressed, file.name.replace(/\.[^.]+$/, ext));
   if (onProgress) {
     return apiClient.uploadWithProgress<{ url: string }>('/api/upload', formData, onProgress);
   }

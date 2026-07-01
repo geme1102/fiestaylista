@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AuthResponse } from '../types';
 
 const mockToast = vi.hoisted(() => {
@@ -10,6 +10,9 @@ const mockToast = vi.hoisted(() => {
 });
 
 vi.mock('sonner', () => ({ toast: mockToast }));
+
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(() => { vi.useRealTimers(); });
 
 // BUG-16: Toasts should replace instead of stacking (real import)
 describe('BUG-16: useToast reemplaza en lugar de apilar', () => {
@@ -24,6 +27,7 @@ describe('BUG-16: useToast reemplaza en lugar de apilar', () => {
 });
 
 // BUG-17: Email format validation
+// TODO: Replace with real component test (inline EMAIL_REGEX)
 describe('BUG-17: Validación de formato de email', () => {
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -43,6 +47,7 @@ describe('BUG-17: Validación de formato de email', () => {
 });
 
 // BUG-23: localStorage try/catch
+// TODO: Replace with real component test (inline localStorage pattern)
 describe('BUG-23: localStorage con try/catch', () => {
   it('debería manejar localStorage.getItem con error', () => {
     const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
@@ -100,11 +105,12 @@ describe('BUG-15: getPasswordStrength', () => {
 });
 
 // BUG-1: Turnstile token polling
+// TODO: Replace with real component test (inline pollWithTimeout)
 describe('BUG-1: Lógica de polling de Turnstile', () => {
   it('debería encontrar el token si está disponible', async () => {
     const pollWithTimeout = async (tokenRef: { current: string | null }, maxAttempts: number) => {
       for (let i = 0; i < maxAttempts; i++) {
-        await new Promise(r => setTimeout(r, 1));
+        await vi.advanceTimersByTimeAsync(1);
         if (tokenRef.current) return tokenRef.current;
       }
       return null;
@@ -117,7 +123,7 @@ describe('BUG-1: Lógica de polling de Turnstile', () => {
   it('debería retornar null si no hay token tras el polling', async () => {
     const pollWithTimeout = async (tokenRef: { current: string | null }, maxAttempts: number) => {
       for (let i = 0; i < maxAttempts; i++) {
-        await new Promise(r => setTimeout(r, 1));
+        await vi.advanceTimersByTimeAsync(1);
         if (tokenRef.current) return tokenRef.current;
       }
       return null;
@@ -129,6 +135,7 @@ describe('BUG-1: Lógica de polling de Turnstile', () => {
 });
 
 // BUG-10: Keyboard navigation in suggestions
+// TODO: Replace with real component test (inline handleKeyDown)
 describe('BUG-10: Navegación por teclado en sugerencias', () => {
   it('debería navegar con ArrowDown y ArrowUp', () => {
     const items = ['item1', 'item2', 'item3'];
@@ -161,6 +168,7 @@ describe('BUG-10: Navegación por teclado en sugerencias', () => {
 });
 
 // BUG-22: Desync prevention with useRef pattern
+// TODO: Replace with real component test (inline loadingRef pattern)
 describe('BUG-22: Prevención de desincronización con useRef', () => {
   it('debería prevenir llamadas concurrentes usando ref', async () => {
     const loadingRef = { current: false };
@@ -170,7 +178,7 @@ describe('BUG-22: Prevención de desincronización con useRef', () => {
       if (loadingRef.current) return;
       loadingRef.current = true;
       callCount++;
-      await new Promise(r => setTimeout(r, 5));
+      await vi.advanceTimersByTimeAsync(5);
       loadingRef.current = false;
     };
 
@@ -186,7 +194,7 @@ describe('BUG-22: Prevención de desincronización con useRef', () => {
       if (loadingRef.current) return;
       loadingRef.current = true;
       callCount++;
-      await new Promise(r => setTimeout(r, 1));
+      await vi.advanceTimersByTimeAsync(1);
       loadingRef.current = false;
     };
 
@@ -198,11 +206,12 @@ describe('BUG-22: Prevención de desincronización con useRef', () => {
 });
 
 // BUG-4 + BUG-5: File input reset and multiple files
+// TODO: Replace with real component test (inline processAndReset, isValid, processFile)
 describe('BUG-4/BUG-5: Input de fotos — reset y múltiples archivos', () => {
   it('debería resetear el value del input tras la subida', async () => {
     const processAndReset = async (files: File[], resetFn: () => void) => {
       for (let i = 0; i < files.length; i++) {
-        await new Promise(r => setTimeout(r, 1));
+        await vi.advanceTimersByTimeAsync(1);
       }
       resetFn();
     };
@@ -236,7 +245,7 @@ describe('BUG-4/BUG-5: Input de fotos — reset y múltiples archivos', () => {
   it('debería procesar archivos en secuencia', async () => {
     const processed: string[] = [];
     const processFile = async (name: string) => {
-      await new Promise(r => setTimeout(r, 1));
+      await vi.advanceTimersByTimeAsync(1);
       processed.push(name);
     };
 
@@ -253,7 +262,6 @@ describe('BUG-2: AuthResponse contiene user para verificación', () => {
     const mockResponse: AuthResponse = {
       user: { email: 'test@test.com', emailVerified: false } as AuthResponse['user'],
       accessToken: 'token',
-      refreshToken: 'refresh',
     };
 
     expect(mockResponse.user).toBeDefined();
@@ -262,6 +270,7 @@ describe('BUG-2: AuthResponse contiene user para verificación', () => {
 });
 
 // BUG-7: Turnstile polling max attempts
+// TODO: Replace with real component test (abstract constant equality)
 describe('BUG-7: Coincidencia de intentos de polling Turnstile', () => {
   it('debería usar 50 intentos en Pricing (coincidiendo con useTurnstile)', () => {
     const PRICING_POLL_ATTEMPTS = 50;
@@ -272,6 +281,7 @@ describe('BUG-7: Coincidencia de intentos de polling Turnstile', () => {
 });
 
 // BUG-8: Toast on restore failure
+// TODO: Replace with real component test (inline getMe/mockShowToast)
 describe('BUG-8: Toast en fallo de restauración de sesión', () => {
   it('debería mostrar un toast cuando getMe falla', async () => {
     const toastMessages: string[] = [];
@@ -291,6 +301,7 @@ describe('BUG-8: Toast en fallo de restauración de sesión', () => {
 });
 
 // BUG-20: Single navigation after login
+// TODO: Replace with real component test (inline navigatedRef pattern)
 describe('BUG-20: Una sola navegación tras login', () => {
   it('debería navegar solo una vez usando navigatedRef', () => {
     const navigatedRef = { current: false };

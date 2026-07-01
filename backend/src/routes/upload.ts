@@ -8,7 +8,6 @@ import { tmpdir } from 'node:os';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../middleware/auth.js';
 import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
 import { ValidationError } from '../utils/errors.js';
 import { config } from '../config.js';
 import type { AuthRequest } from '../types/index.js';
@@ -158,7 +157,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
-router.post('/guest-upload', guestUploadLimiter, verifyTurnstile, (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, next: NextFunction) => {
   upload.single('file')(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {

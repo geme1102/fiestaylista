@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { reportError } from '../lib/reportError';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -131,6 +132,7 @@ export default function ArcoRights() {
       URL.revokeObjectURL(url);
       showToast('Datos descargados correctamente', 'success');
     } catch (err) {
+      reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al descargar datos', 'error');
     } finally {
       setLoading(false);
@@ -149,6 +151,7 @@ export default function ArcoRights() {
       setDeletePassword('');
       navTimerRef.current = setTimeout(() => { navigate('/'); }, 2000);
     } catch (err) {
+      reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
       setLoading(false);
@@ -170,6 +173,7 @@ export default function ArcoRights() {
       setShowRequests(true);
       loadRequests();
     } catch (err) {
+      reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al enviar solicitud', 'error');
     } finally {
       setLoading(false);
@@ -181,7 +185,7 @@ export default function ArcoRights() {
       const res = await apiClient.get<{ requests: ArcoRequest[] }>('/api/auth/arco/requests');
       setRequests(res.requests);
     } catch (err) {
-      if (import.meta.env.DEV) console.error('[ArcoRights] loadRequests error:', err);
+      reportError(err, { source: 'ArcoRights' });
     }
   };
 

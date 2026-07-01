@@ -93,4 +93,8 @@ test.describe('Auth Flow', () => {
     await login.togglePassword();
     await expect(passwordInput).toHaveAttribute('type', 'text');
   });
+
+  // TODO(e2e): Add test for password reset flow (solicitar reseteo, email recibido, token válido)
+  // TODO(e2e): Add test for refresh token expiration (401 → redirect to login with toast)
+  // TODO(e2e): Add test for email verification flow (resend verification email)
 });

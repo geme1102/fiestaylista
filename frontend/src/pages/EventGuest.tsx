@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import ShareButtons from '../components/ShareButtons';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
-import CashFundSection from '../components/CashFundSection';
 import GiftCard from '../components/GiftCard';
 import RsvpForm from '../components/RsvpForm';
 import GuestPhotoUpload from '../components/GuestPhotoUpload';
 import MessageWall from '../components/MessageWall';
-import PhotoSlideshow from '../components/PhotoSlideshow';
-import { ConfettiCanvas, type ConfettiCanvasRef } from '../components/ConfettiCanvas';
+import type { ConfettiCanvasRef } from '../components/ConfettiCanvas';
+
+const CashFundSection = lazy(() => import('../components/CashFundSection'));
+const PhotoSlideshow = lazy(() => import('../components/PhotoSlideshow'));
+const ConfettiCanvas = lazy(() => import('../components/ConfettiCanvas').then(m => ({ default: m.ConfettiCanvas })));
 import { useEventPage } from '../hooks/useEventPage';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
@@ -25,6 +27,7 @@ function EmptyGiftState() {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      role="status"
       className="text-center py-16"
     >
       <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
@@ -90,7 +93,7 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface animate-pulse">
+      <div role="status" aria-live="polite" className="min-h-screen bg-surface animate-pulse">
         <div className="pt-16 w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
@@ -184,7 +187,7 @@ export default function EventGuest() {
       </Helmet>
 
       <div className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
-        <ConfettiCanvas ref={confettiRef} />
+        <Suspense fallback={null}><ConfettiCanvas ref={confettiRef} /></Suspense>
 
         <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">
@@ -203,7 +206,7 @@ export default function EventGuest() {
         </header>
 
         {/* Turnstile (invisible) */}
-        <div ref={turnstileRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+        <div ref={turnstileRef} aria-hidden="true" className="absolute -z-10 opacity-0 pointer-events-none" />
 
         <section className="pt-16 w-full overflow-hidden relative">
           <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.primary}20` }} />
@@ -380,6 +383,7 @@ export default function EventGuest() {
                 <div className="flex gap-2 w-max">
                   <button
                     onClick={() => setCategoryFilter(null)}
+                    aria-pressed={categoryFilter === null}
                     className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[44px] ${
                       categoryFilter === null
   ? 'bg-primary text-on-primary border-primary shadow-md shadow-primary/20'
@@ -392,6 +396,7 @@ export default function EventGuest() {
                     <button
                       key={cat.label}
                       onClick={() => setCategoryFilter(cat.label === categoryFilter ? null : cat.label)}
+                      aria-pressed={categoryFilter === cat.label}
                       className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all border min-h-[44px] ${
                         categoryFilter === cat.label
                           ? 'text-white shadow-md'
@@ -517,7 +522,7 @@ export default function EventGuest() {
             transition={{ duration: 0.5, delay: 0.45 }}
           >
             <SectionErrorBoundary sectionName="CashFundSection">
-            <CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} />
+            <Suspense fallback={null}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
             </SectionErrorBoundary>
           </motion.div>
           )}
@@ -535,11 +540,13 @@ export default function EventGuest() {
         </nav>
 
         {slideshowIndex !== null && (
-          <PhotoSlideshow
-            photos={photos}
-            initialIndex={slideshowIndex}
-            onClose={() => setSlideshowIndex(null)}
-          />
+          <Suspense fallback={null}>
+            <PhotoSlideshow
+              photos={photos}
+              initialIndex={slideshowIndex}
+              onClose={() => setSlideshowIndex(null)}
+            />
+          </Suspense>
         )}
 
         {showSuccessModal && (

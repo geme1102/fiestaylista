@@ -6,7 +6,7 @@ const Z_LAYERS = {
   tour: 100,
 } as const;
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
+import { reportError } from '../lib/reportError';
 import { showToast } from '../hooks/useToast';
 import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
@@ -29,10 +30,10 @@ import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar'
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { useAchievements } from '../hooks/useAchievements';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
-import GiftManagement from '../components/admin/GiftManagement';
-import { PhotoGallery } from '../components/admin/PhotoGallery';
-import GuestsPanel from '../components/admin/GuestsPanel';
-import MessagesPanel from '../components/admin/MessagesPanel';
+const GiftManagement = lazy(() => import('../components/admin/GiftManagement'));
+const PhotoGallery = lazy(() => import('../components/admin/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
+const GuestsPanel = lazy(() => import('../components/admin/GuestsPanel'));
+const MessagesPanel = lazy(() => import('../components/admin/MessagesPanel'));
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
@@ -142,7 +143,8 @@ export default function EventAdmin() {
       setGifts(ev.gifts || []);
       setPhotos(ev.photos || []);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al cargar el evento. Recarga la página e intenta de nuevo.', 'error');
     } finally {
       setLoading(false);
@@ -172,7 +174,7 @@ export default function EventAdmin() {
       if (id) {
         apiClient.get<{ event: { photos?: Photo[] } }>(`/api/events/${id}`).then((res) => {
           setPhotos(res.event.photos || []);
-        }).catch(() => {});
+        }).catch((err) => { reportError(err, { source: 'EventAdmin' }); });
       }
     },
   });
@@ -186,6 +188,7 @@ export default function EventAdmin() {
       setNewGiftName('');
       setShowSuggestions(false);
     } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al agregar regalo', 'error');
     } finally {
       setAddingGift(false);
@@ -197,7 +200,8 @@ export default function EventAdmin() {
     try {
       await apiClient.del(`/api/events/${id}/gifts/${giftId}`);
       setGifts((prev) => prev.filter((g) => g.id !== giftId));
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al eliminar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setDeletingGiftId(null);
@@ -209,7 +213,8 @@ export default function EventAdmin() {
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${id}/gifts/${giftId}/free`);
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al liberar el regalo. Intenta de nuevo.', 'error');
     } finally {
       setFreeingGiftId(null);
@@ -222,7 +227,8 @@ export default function EventAdmin() {
       const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name });
       setGifts((prev) => [...prev, res.gift]);
       showToast(`Regalo sugerido "${name}" añadido 🎁`, 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al agregar regalo', 'error');
     } finally {
       setAddingGift(false);
@@ -242,7 +248,8 @@ export default function EventAdmin() {
       setEvent((prev) => prev ? { ...prev, ...res.event } : prev);
       setEditingDetails(false);
       showToast('¡Información y detalles actualizados con éxito! 💾', 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al actualizar los datos del evento. Verifica los campos e intenta de nuevo.', 'error');
     } finally {
       setUpdatingDetails(false);
@@ -290,6 +297,7 @@ export default function EventAdmin() {
             setUploadProgress(`Subiendo ${completed} de ${validFiles.length}...`);
             setPhotos((prev) => [...prev, res.photo]);
           } catch (err) {
+            reportError(err, { source: 'EventAdmin' });
             const msg = err instanceof Error ? err.message : `Error al subir "${file.name}"`;
             showToast(msg, 'error');
           }
@@ -309,6 +317,7 @@ export default function EventAdmin() {
       setPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, isFeatured: res.photo.isFeatured } : p));
       showToast(res.photo.isFeatured ? 'Foto destacada ⭐' : 'Foto no destacada', 'success');
     } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al destacar foto', 'error');
     }
   }, [id]);
@@ -320,7 +329,8 @@ export default function EventAdmin() {
       await apiClient.del(`/api/events/${id}/photos/${photoId}`);
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       showToast('Foto eliminada', 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Error al eliminar la foto. Intenta de nuevo.', 'error');
     } finally {
       setDeletingPhoto(false);
@@ -335,6 +345,7 @@ export default function EventAdmin() {
       setEvent((prev) => prev ? { ...prev, status: 'completed' } : null);
       showToast('Evento finalizado 🎉', 'success');
     } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al finalizar evento', 'error');
     } finally {
       setCompleting(false);
@@ -349,6 +360,7 @@ export default function EventAdmin() {
       setEvent(res.event);
       showToast('Evento reactivado', 'success');
     } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al reactivar evento', 'error');
     } finally {
       setCompleting(false);
@@ -374,6 +386,7 @@ export default function EventAdmin() {
         setEvent((prev) => prev ? { ...prev, boostedUntil: res.boostedUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() } : prev);
       }
     } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
       setBoostLoading(false);
@@ -417,7 +430,8 @@ export default function EventAdmin() {
     try {
       await apiClient.put(`/api/events/${id}`, { isActive: !prevActive });
       showToast(prevActive ? 'El evento ha sido pausado de forma privada' : '¡Tu evento ya está disponible en vivo! ⚡', 'success');
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
       setEvent((prev) => prev ? { ...prev, isActive: prevActive! } : prev);
       showToast('Error al cambiar el estado del evento. Intenta de nuevo.', 'error');
     } finally {
@@ -432,7 +446,8 @@ export default function EventAdmin() {
     const url = `${window.location.origin}/e/${event.slug}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast('¡Enlace exclusivo copiado al portapapeles! 🔗', 'success');
-    }).catch(() => {
+    }).catch((err) => {
+      reportError(err, { source: 'EventAdmin' });
       showToast('Enlace copiado! 🔗', 'success');
     });
   };
@@ -837,52 +852,56 @@ export default function EventAdmin() {
 
         <div data-tour="add-gift">
         <SectionErrorBoundary sectionName="GiftManagement">
-        <GiftManagement
-          gifts={gifts}
-          addingGift={addingGift}
-          freeingGiftId={freeingGiftId}
-          deletingGiftId={deletingGiftId}
-          newGiftName={newGiftName}
-          showSuggestions={showSuggestions}
-          suggestions={suggestions}
-          filteredSuggestions={filteredSuggestions}
-          maxGiftsPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxGiftsPerEvent}
-          onAddGift={handleAddGift}
-          onFreeGift={handleFreeGift}
-          onDeleteGift={handleDeleteGift}
-          onAddSuggestion={handleAddSuggestion}
-          onNewGiftNameChange={setNewGiftName}
-          onShowSuggestionsChange={setShowSuggestions}
-        />
+        <Suspense fallback={null}>
+          <GiftManagement
+            gifts={gifts}
+            addingGift={addingGift}
+            freeingGiftId={freeingGiftId}
+            deletingGiftId={deletingGiftId}
+            newGiftName={newGiftName}
+            showSuggestions={showSuggestions}
+            suggestions={suggestions}
+            filteredSuggestions={filteredSuggestions}
+            maxGiftsPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxGiftsPerEvent}
+            onAddGift={handleAddGift}
+            onFreeGift={handleFreeGift}
+            onDeleteGift={handleDeleteGift}
+            onAddSuggestion={handleAddSuggestion}
+            onNewGiftNameChange={setNewGiftName}
+            onShowSuggestionsChange={setShowSuggestions}
+          />
+        </Suspense>
         </SectionErrorBoundary>
         </div>
 
         <SectionErrorBoundary sectionName="GuestsPanel">
-        <GuestsPanel eventId={id ?? ''} />
+        <Suspense fallback={null}><GuestsPanel eventId={id ?? ''} /></Suspense>
         </SectionErrorBoundary>
 
         <SectionErrorBoundary sectionName="MessagesPanel">
-        <MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} />
+        <Suspense fallback={null}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>
         </SectionErrorBoundary>
 
         <SectionErrorBoundary sectionName="PhotoGallery">
-        <PhotoGallery
-          photos={photos}
-          uploading={uploading}
-          uploadProgress={uploadProgress}
-          uploadPercent={uploadPercent}
-          deletingPhoto={deletingPhoto}
-          deletePhotoConfirm={deletePhotoConfirm}
-          fileInputRef={fileInputRef}
-          maxPhotosPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent}
-          onUpload={handleUploadPhoto}
-          onDelete={handleDeletePhoto}
-          onRequestDelete={setDeletePhotoConfirm}
-          onDeleteConfirmClose={() => setDeletePhotoConfirm(null)}
-          onSelectPreview={setSelectedPhotoForPreview}
-          selectedPhotoForPreview={selectedPhotoForPreview}
-          onToggleFeatured={handleToggleFeatured}
-        />
+        <Suspense fallback={null}>
+          <PhotoGallery
+            photos={photos}
+            uploading={uploading}
+            uploadProgress={uploadProgress}
+            uploadPercent={uploadPercent}
+            deletingPhoto={deletingPhoto}
+            deletePhotoConfirm={deletePhotoConfirm}
+            fileInputRef={fileInputRef}
+            maxPhotosPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent}
+            onUpload={handleUploadPhoto}
+            onDelete={handleDeletePhoto}
+            onRequestDelete={setDeletePhotoConfirm}
+            onDeleteConfirmClose={() => setDeletePhotoConfirm(null)}
+            onSelectPreview={setSelectedPhotoForPreview}
+            selectedPhotoForPreview={selectedPhotoForPreview}
+            onToggleFeatured={handleToggleFeatured}
+          />
+        </Suspense>
         </SectionErrorBoundary>
       </div>
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { eq, and, isNull, desc } from 'drizzle-orm';
 
+import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
 import { apiLimiter } from '../middleware/rateLimit.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
@@ -30,13 +31,16 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
 
   if (!event) throw new NotFoundError('Evento no encontrado o inactivo');
 
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200);
+
   const eventMessages = await db
     .select()
     .from(messages)
     .where(eq(messages.eventId, eventId))
-    .orderBy(desc(messages.createdAt));
+    .orderBy(desc(messages.createdAt))
+    .limit(limit);
 
-  res.json({ messages: eventMessages });
+  res.json({ messages: eventMessages, hasMore: eventMessages.length === limit });
 }));
 
 router.post('/events/:eventId/messages', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
@@ -54,7 +58,7 @@ router.post('/events/:eventId/messages', apiLimiter, verifyTurnstile, validateUu
   const data = createMessageSchema.parse(req.body);
   const [msg] = await db
     .insert(messages)
-    .values({ eventId, authorName: data.authorName, message: data.message })
+    .values({ eventId, authorName: sanitize(data.authorName), message: sanitizeAndStrip(data.message) })
     .returning();
 
   emitMessagePosted({

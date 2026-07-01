@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { reportError } from '../lib/reportError';
 
 interface Props {
   children: ReactNode;
@@ -21,7 +22,7 @@ export default class SectionErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    if (import.meta.env.DEV) console.error(`[SectionErrorBoundary${this.props.sectionName ? ` – ${this.props.sectionName}` : ''}]`, error.message, errorInfo.componentStack);
+    reportError(error, { componentStack: errorInfo.componentStack, sectionName: this.props.sectionName });
   }
 
   handleRetry = () => {

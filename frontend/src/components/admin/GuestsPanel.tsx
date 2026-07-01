@@ -33,7 +33,29 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
   const totalCompanions = confirmed.reduce((sum, g) => sum + g.companions, 0);
   const totalPeople = confirmed.length + totalCompanions;
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="glass rounded-3xl p-6 md:p-8 border border-outline-variant/20">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 bg-surface-container-highest rounded-full animate-pulse" />
+            <div className="h-5 w-20 bg-surface-container-highest rounded animate-pulse" />
+          </div>
+          <div className="h-5 w-28 bg-surface-container-highest rounded-full animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-16 bg-surface-container-highest rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-14 bg-surface-container-highest rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass rounded-3xl p-6 md:p-8 border border-outline-variant/20">

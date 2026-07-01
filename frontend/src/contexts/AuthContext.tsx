@@ -3,6 +3,7 @@ import type { User, AuthResponse } from '../types';
 import { login as loginApi, register as registerApi, getMe } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, tryRefreshToken, apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { reportError } from '../lib/reportError';
 
 interface AuthContextValue {
   user: User | null;
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(res.user);
         }
       } catch (err) {
+        reportError(err, { source: 'AuthContext' });
         if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
         showToast('Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.', 'error');
       } finally {
@@ -69,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     apiClient.post('/api/auth/logout').catch((err) => {
+      reportError(err, { source: 'AuthContext' });
       if (import.meta.env.DEV) console.error('[Auth] Error en logout:', err);
     });
     clearTokens();
@@ -80,7 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await getMe();
       setUser(res.user);
-    } catch {
+    } catch (err) {
+      reportError(err, { source: 'AuthContext' });
       clearTokens();
       setUser(null);
     }
@@ -90,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiClient.post('/api/auth/resend-verification');
     } catch (err) {
+      reportError(err, { source: 'AuthContext' });
       if (import.meta.env.DEV) console.error('[Auth] Error reenviando verificación:', err);
       throw err;
     }

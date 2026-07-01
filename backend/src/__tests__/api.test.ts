@@ -25,6 +25,7 @@ vi.mock('../config.js', () => ({
     CLOUDINARY_API_KEY: '',
     CLOUDINARY_API_SECRET: '',
     SENTRY_DSN: '',
+    ALLOWED_ORIGINS: [],
   },
 }));
 
@@ -442,7 +443,7 @@ describe('Auth Routes', () => {
     expect(res.status).toBe(200);
   });
 
-  it('POST /api/auth/logout - success', async () => {
+  it('POST /api/auth/logout - success with token', async () => {
     mockAuthService.revokeAllUserTokens.mockResolvedValue({});
 
     const res = await request(app)
@@ -451,6 +452,15 @@ describe('Auth Routes', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(mockAuthService.revokeAllUserTokens).toHaveBeenCalled();
+  });
+
+  it('POST /api/auth/logout - works without token', async () => {
+    const res = await request(app).post('/api/auth/logout');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(mockAuthService.revokeAllUserTokens).not.toHaveBeenCalled();
   });
 
   it('POST /api/auth/resend-verification - success', async () => {

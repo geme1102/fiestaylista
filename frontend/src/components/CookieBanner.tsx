@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { reportError } from '../lib/reportError';
 
 declare global {
   interface Window {
@@ -25,7 +26,7 @@ function getStoredPrefs(): CookiePrefs | null {
       }
     }
   } catch (err) {
-    if (import.meta.env.DEV) console.warn('[CookieBanner] Error parsing stored prefs:', err);
+    reportError(err, { source: 'CookieBanner' });
   }
   return null;
 }

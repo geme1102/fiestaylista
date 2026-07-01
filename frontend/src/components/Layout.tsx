@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMemo, useState } from 'react';
 import { cn } from '../utils/cn';
+import InstallPwaBanner from './InstallPwaBanner';
 
 const BASE_NAV_ITEMS = [
   { path: '/dashboard', label: 'Mis Eventos', icon: 'celebration' },
@@ -126,6 +127,7 @@ export default function Layout() {
 
       <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10 pb-24 sm:pb-10">
         <Outlet />
+        <InstallPwaBanner />
       </main>
 
       <footer className="border-t border-outline-variant/30 bg-surface">
