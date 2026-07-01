@@ -5,18 +5,28 @@ let refreshToken: string | null = null;
 const REQUEST_TIMEOUT = 10000;
 const MAX_RETRIES = 1;
 
+const RT_KEY = 'fy_rt';
+
+try {
+  refreshToken = sessionStorage.getItem(RT_KEY);
+} catch { /* SSR o navegador sin sessionStorage */ }
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function setTokens(access: string, refresh?: string): void {
   accessToken = access;
-  if (refresh) refreshToken = refresh;
+  if (refresh) {
+    refreshToken = refresh;
+    try { sessionStorage.setItem(RT_KEY, refresh); } catch { /* ignore */ }
+  }
 }
 
 export function clearTokens(): void {
   accessToken = null;
   refreshToken = null;
+  try { sessionStorage.removeItem(RT_KEY); } catch { /* ignore */ }
 }
 
 export function getAccessToken(): string | null {
@@ -184,7 +194,10 @@ export async function tryRefreshToken(): Promise<boolean> {
       if (!res.ok) return false;
       const data = await res.json();
       accessToken = data.accessToken;
-      if (data.refreshToken) refreshToken = data.refreshToken;
+      if (data.refreshToken) {
+        refreshToken = data.refreshToken;
+        try { sessionStorage.setItem(RT_KEY, data.refreshToken); } catch { /* ignore */ }
+      }
       return true;
     } catch (err) {
       reportError(err, { source: 'api' });

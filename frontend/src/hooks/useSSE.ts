@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getAccessToken } from '../services/api';
+import { apiClient } from '../services/api';
 
 interface SSEOptions {
   eventId: string;
@@ -16,7 +16,7 @@ interface SSEOptions {
 
 export function useSSE({
   eventId, sseTokenEndpoint, onGiftClaimed, onMessagePosted, onPhotoUploaded, onCashContribution,
-  maxRetries = 5, initialRetryDelay = 1000, onConnected, onDisconnected,
+  maxRetries = 50, initialRetryDelay = 1000, onConnected, onDisconnected,
 }: SSEOptions) {
   const cancelledRef = useRef(false);
   const sseConnectedRef = useRef(false);
@@ -37,103 +37,95 @@ export function useSSE({
     if (!eventId) return;
 
     cancelledRef.current = false;
-    let abortController: AbortController | null = null;
+    let es: EventSource | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let retryDelay = initialRetryDelay;
     let retryCount = 0;
 
-    async function connectSSE() {
-      let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+    function handleMessage(data: Record<string, unknown>) {
+      if (data.type === 'connected' || data.type === 'reconnect') return;
+      if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
+        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string });
+      } else if (data.type === 'cash:contribution') {
+        onCashContributionRef.current?.({ contributorName: data.contributorName as string, amount: data.amount as number, contributionType: data.contributionType as 'created' | 'cancelled' });
+      } else if (data.type === 'message:posted') {
+        onMessagePostedRef.current?.({ authorName: data.authorName as string, messagePreview: data.messagePreview as string });
+      } else if (data.type === 'photo:uploaded') {
+        onPhotoUploadedRef.current?.({ photoUrl: data.photoUrl as string, uploadedBy: data.uploadedBy as string });
+      } else if (data.giftId && data.claimedBy) {
+        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string });
+      }
+    }
+
+    async function connect() {
+      if (cancelledRef.current) return;
+
+      let token: string;
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-        const tokenRes = await fetch(`${baseUrl}${sseTokenEndpoint}`, {
-          method: 'POST',
-          headers: getAccessToken() ? { 'Authorization': `Bearer ${getAccessToken()}` } : {},
-          credentials: 'include',
-        });
-        if (!tokenRes.ok || cancelledRef.current) return;
-        let token: string;
-        try { ({ token } = await tokenRes.json()); } catch { return; }
+        const data = await apiClient.post<{ token: string }>(sseTokenEndpoint);
+        token = data.token;
+      } catch {
+        if (!cancelledRef.current && retryCount < maxRetries) {
+          retryCount++;
+          reconnectTimeout = setTimeout(connect, retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 30000);
+        }
+        return;
+      }
 
-        if (cancelledRef.current) return;
+      if (cancelledRef.current) return;
 
-        abortController = new AbortController();
-        let response: Response;
-        try {
-          response = await fetch(`${baseUrl}/api/events/${eventId}/gifts/subscribe`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-            signal: abortController.signal,
-          });
-        } catch { return; }
+      const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+      es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
 
-        if (!response.ok || !response.body || cancelledRef.current) return;
-
+      es.onopen = () => {
+        if (cancelledRef.current) { es?.close(); return; }
         retryDelay = initialRetryDelay;
         retryCount = 0;
         sseConnectedRef.current = true;
         onConnectedRef.current?.();
+      };
 
-        const decoder = new TextDecoder();
-        let buffer = '';
-        reader = response.body.getReader();
-
-        while (!cancelledRef.current) {
-          const { done, value } = await reader.read();
-          if (done) {
-            reader.cancel();
-            break;
-          }
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'connected') continue;
-                if (data.type === 'reconnect') {
-                  reader.cancel();
-                  retryCount = 0;
-                  retryDelay = initialRetryDelay;
-                  break;
-                }
-                if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
-                  onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
-                } else if (data.type === 'cash:contribution') {
-                  onCashContributionRef.current?.({ contributorName: data.contributorName, amount: data.amount, contributionType: data.contributionType });
-                } else if (data.type === 'message:posted') {
-                  onMessagePostedRef.current?.({ authorName: data.authorName, messagePreview: data.messagePreview });
-                } else if (data.type === 'photo:uploaded') {
-                  onPhotoUploadedRef.current?.({ photoUrl: data.photoUrl, uploadedBy: data.uploadedBy });
-                } else if (data.giftId && data.claimedBy) {
-                  onGiftClaimedRef.current?.({ giftId: data.giftId, giftName: data.giftName, claimedBy: data.claimedBy });
-                }
-              } catch { /* ignore parse errors */ }
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'reconnect') {
+            es?.close();
+            es = null;
+            sseConnectedRef.current = false;
+            onDisconnectedRef.current?.();
+            if (!cancelledRef.current) {
+              retryCount = 0;
+              retryDelay = initialRetryDelay;
+              reconnectTimeout = setTimeout(connect, 100);
             }
+            return;
           }
-          if (buffer === '' && lines.length > 0 && lines[lines.length - 1] === '') break;
+          handleMessage(data);
+        } catch { /* ignore parse errors */ }
+      };
+
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        sseConnectedRef.current = false;
+        onDisconnectedRef.current?.();
+
+        if (!cancelledRef.current && retryCount < maxRetries) {
+          retryCount++;
+          reconnectTimeout = setTimeout(connect, retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 30000);
         }
-      } catch {
-        try { reader?.cancel(); } catch { /* ignore cancel errors */ }
-      }
-
-      sseConnectedRef.current = false;
-      onDisconnectedRef.current?.();
-
-      if (!cancelledRef.current && retryCount < maxRetries) {
-        retryCount++;
-        reconnectTimeout = setTimeout(connectSSE, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 30000);
-      }
+      };
     }
 
-    connectSSE();
+    connect();
 
     return () => {
       cancelledRef.current = true;
       sseConnectedRef.current = false;
       onDisconnectedRef.current?.();
-      if (abortController) abortController.abort();
+      es?.close();
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
   }, [eventId, sseTokenEndpoint, initialRetryDelay, maxRetries]);

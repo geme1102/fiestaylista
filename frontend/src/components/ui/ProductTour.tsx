@@ -18,6 +18,7 @@ const MOBILE_NAV_SAFE = 72;
 const MIN_CONTENT_HEIGHT = 100;
 const TARGET_POLL_MAX_MS = 8000;
 const TARGET_POLL_INTERVAL_MS = 100;
+const SCROLL_SETTLE_MS = 350;
 
 function measureTarget(selector: string): DOMRect | null {
   try {
@@ -30,14 +31,18 @@ function measureTarget(selector: string): DOMRect | null {
   }
 }
 
-function scrollToTarget(selector: string): void {
-  try {
-    const el = document.querySelector(selector);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch {
-    /* ignore scroll errors */
-  }
+function smoothScrollToTarget(selector: string): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      const el = document.querySelector(selector);
+      if (!el) { resolve(); return; }
+      const rect = el.getBoundingClientRect();
+      const targetY = window.scrollY + rect.top - window.innerHeight / 2 + rect.height / 2;
+      const clampedY = Math.max(0, targetY);
+      window.scrollTo({ top: clampedY, behavior: 'smooth' });
+    } catch { /* ignore */ }
+    setTimeout(resolve, SCROLL_SETTLE_MS);
+  });
 }
 
 export function ProductTour({
@@ -54,18 +59,17 @@ export function ProductTour({
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [waitingForClick, setWaitingForClick] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const tooltipRef = useRef<HTMLDivElement>(null);
   const nextButtonRef = useRef<HTMLButtonElement>(null);
   const trapRef = useFocusTrap(active);
 
   useEffect(() => {
-    if (active && !waitingForClick) {
+    if (active && !transitioning) {
       nextButtonRef.current?.focus();
     }
-  }, [stepIndex, active, waitingForClick]);
+  }, [stepIndex, active, transitioning]);
 
   const start = useCallback(() => {
     if (localStorage.getItem(storageKey) === 'done') return;
@@ -78,65 +82,48 @@ export function ProductTour({
     return () => clearTimeout(timer);
   }, [start]);
 
-  useEffect(() => {
-    if (!active) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = original; };
-  }, [active]);
-
-  const updateRect = useCallback((selector: string) => {
+  const acquireTarget = useCallback(async (selector: string) => {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
 
-    const r = measureTarget(selector);
-    if (r) {
-      setRect(r);
-      scrollToTarget(selector);
-      requestAnimationFrame(() => {
-        const r2 = measureTarget(selector);
-        if (r2) setRect(r2);
-      });
+    let r = measureTarget(selector);
+    if (!r) {
+      const startTime = Date.now();
+      while (Date.now() - startTime < TARGET_POLL_MAX_MS) {
+        await new Promise<void>(resolve => {
+          pollTimerRef.current = setTimeout(resolve, TARGET_POLL_INTERVAL_MS);
+        });
+        if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+        r = measureTarget(selector);
+        if (r) break;
+      }
+    }
+
+    if (!r) {
+      setRect(null);
       return;
     }
 
-    const startTime = Date.now();
-    const poll = () => {
-      const elapsed = Date.now() - startTime;
-      if (elapsed >= TARGET_POLL_MAX_MS) {
-        setRect(null);
-        return;
-      }
-      const found = measureTarget(selector);
-      if (found) {
-        setRect(found);
-        scrollToTarget(selector);
-        requestAnimationFrame(() => {
-          const r2 = measureTarget(selector);
-          if (r2) setRect(r2);
-        });
-        return;
-      }
-      pollTimerRef.current = setTimeout(poll, TARGET_POLL_INTERVAL_MS);
-    };
-    pollTimerRef.current = setTimeout(poll, TARGET_POLL_INTERVAL_MS);
-  }, []);
-
-  const advance = useCallback(() => {
-    setWaitingForClick(false);
-    setRect(null);
-    setStepIndex((prev) => prev + 1);
+    await smoothScrollToTarget(selector);
+    const finalRect = measureTarget(selector);
+    setRect(finalRect ?? r);
   }, []);
 
   useEffect(() => {
     if (!active) return;
     const step = steps[stepIndex];
     if (!step) return;
-    updateRect(step.target);
-    setWaitingForClick(!!step.requireClick);
+    setTransitioning(true);
+    setRect(null);
+    acquireTarget(step.target).finally(() => setTransitioning(false));
     return () => {
       if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     };
-  }, [active, stepIndex, steps, updateRect]);
+  }, [active, stepIndex, steps, acquireTarget]);
+
+  const advance = useCallback(() => {
+    setTransitioning(true);
+    setStepIndex((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (!active) return;
@@ -166,10 +153,19 @@ export function ProductTour({
       }, 150);
     };
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, { passive: true });
+    let scrollTicking = false;
+    const handleScroll = () => {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        handleResize();
+        scrollTicking = false;
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
+      window.removeEventListener('scroll', handleScroll);
       clearTimeout(resizeTimerRef.current);
     };
   }, [active, stepIndex, steps]);
@@ -236,8 +232,12 @@ export function ProductTour({
         maxHeight: vh - PADDING * 2,
       };
 
-  const cutout = rect
+  const cutoutStyle: React.CSSProperties = rect
     ? {
+        top: rect.top - PADDING,
+        left: rect.left - PADDING,
+        width: rect.width + PADDING * 2,
+        height: rect.height + PADDING * 2,
         boxShadow: `0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 ${PADDING}px rgba(255,255,255,0.3)`,
         borderRadius: 16,
       }
@@ -254,30 +254,23 @@ export function ProductTour({
     >
       {rect && (
         <div
-          className="absolute pointer-events-none transition-all duration-150"
-          style={{
-            top: rect.top - PADDING,
-            left: rect.left - PADDING,
-            width: rect.width + PADDING * 2,
-            height: rect.height + PADDING * 2,
-            ...cutout,
-          }}
+          className="absolute pointer-events-none transition-all duration-300 ease-out"
+          style={cutoutStyle}
         />
       )}
       {!rect && <div className="absolute inset-0 bg-black/60" />}
 
-      <AnimatePresence>
-        <motion.div
-          key={stepIndex}
-          initial={{ opacity: 0, scale: 0.92, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: -8 }}
-          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          className="absolute z-[101]"
-          style={tooltipStyle}
-        >
-          <div
-            ref={tooltipRef}
+      <div
+        className="absolute z-[101] transition-all duration-300 ease-out"
+        style={tooltipStyle}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stepIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: transitioning ? 0.3 : 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="pointer-events-auto w-[280px] max-w-[calc(100vw-24px)] overflow-y-auto glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"
           >
             <div className="flex items-start justify-between mb-2">
@@ -305,24 +298,18 @@ export function ProductTour({
                   />
                 ))}
               </div>
-              {waitingForClick ? (
-                <span className="text-xs text-primary font-semibold flex items-center gap-1 animate-pulse">
-                  <span className="material-symbols-outlined text-sm">touch_app</span>
-                  Haz clic aquí
-                </span>
-              ) : (
-                <button
-                  ref={nextButtonRef}
-                  onClick={advance}
-                  className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow"
-                >
-                  {isLast ? '¡Listo!' : step.cta ?? 'Siguiente'}
-                </button>
-              )}
+              <button
+                ref={nextButtonRef}
+                onClick={advance}
+                disabled={transitioning}
+                className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-lg text-xs font-bold hover:shadow-lg transition-shadow disabled:opacity-50"
+              >
+                {isLast ? '¡Listo!' : step.cta ?? 'Siguiente'}
+              </button>
             </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>,
     document.body,
   );
