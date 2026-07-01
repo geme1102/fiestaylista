@@ -152,7 +152,7 @@ router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandle
     config.JWT_SECRET,
     { expiresIn: '2m' },
   );
-  res.json({ token: sseToken });
+  res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
 router.post('/public-sse-token', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
@@ -175,7 +175,7 @@ router.post('/public-sse-token', apiLimiter, validateUuidParam('eventId'), async
     config.JWT_SECRET,
     { expiresIn: '2m' },
   );
-  res.json({ token: sseToken });
+  res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;

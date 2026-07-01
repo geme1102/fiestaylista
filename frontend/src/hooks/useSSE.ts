@@ -61,9 +61,11 @@ export function useSSE({
       if (cancelledRef.current) return;
 
       let token: string;
+      let sseUrl: string | undefined;
       try {
-        const data = await apiClient.post<{ token: string }>(sseTokenEndpoint);
+        const data = await apiClient.post<{ token: string; url?: string }>(sseTokenEndpoint);
         token = data.token;
+        sseUrl = data.url;
       } catch {
         if (!cancelledRef.current && retryCount < maxRetries) {
           retryCount++;
@@ -75,8 +77,12 @@ export function useSSE({
 
       if (cancelledRef.current) return;
 
-      const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-      es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
+      if (sseUrl) {
+        es = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
+      } else {
+        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+        es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
+      }
 
       es.onopen = () => {
         if (cancelledRef.current) { es?.close(); return; }
