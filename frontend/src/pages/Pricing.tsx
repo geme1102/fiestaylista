@@ -132,7 +132,7 @@ export default function Pricing() {
     }, 15000);
 
     try {
-      const interval = yearly ? 'year' : 'month';
+      const interval = tier === 'pro_plus' ? 'month' : yearly ? 'year' : 'month';
       const successUrl = `${window.location.origin}/dashboard?pro=activated`;
       const cancelUrl = `${window.location.origin}/pricing`;
       const res = await createCheckoutSession(tier as Tier, successUrl, cancelUrl, interval, token ?? undefined);
@@ -279,7 +279,7 @@ export default function Pricing() {
           <section className="md:max-w-5xl mx-auto px-4">
             <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-6">
               {PLANS.map((plan) => {
-                const price = yearly ? plan.yearlyPrice : plan.price;
+                const price = yearly && plan.tier !== 'pro_plus' ? plan.yearlyPrice : plan.price;
                 const isCurrent = user?.tier === plan.tier;
 
                 return (
@@ -303,8 +303,11 @@ export default function Pricing() {
                           ${price.toLocaleString('es-CO')}
                         </span>
                         <span className="font-body-md text-body-md text-on-surface-variant">
-                          {plan.price === 0 ? '' : yearly ? '/año' : '/mes'}
+                          {plan.price === 0 ? '' : yearly && plan.tier !== 'pro_plus' ? '/año' : '/mes'}
                         </span>
+                        {yearly && plan.tier === 'pro_plus' && (
+                          <div className="font-caption text-caption text-on-surface-variant/60 mt-1">(solo plan mensual)</div>
+                        )}
                       </div>
                       <ul className="space-y-4 mb-8 text-left w-full">
                         {plan.features.map((feat) => (
