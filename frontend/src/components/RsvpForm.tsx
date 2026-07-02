@@ -11,10 +11,7 @@ interface RsvpFormProps {
 }
 
 export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [companions, setCompanions] = useState(0);
-  const [dietaryRestrictions, setDietaryRestrictions] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -40,10 +37,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
     try {
       await apiClient.post(`/api/events/${eventId}/rsvp`, {
         name: guestName.trim(),
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
         companions,
-        dietaryRestrictions: dietaryRestrictions.trim() || undefined,
         message: message.trim() || undefined,
         turnstileToken: token ?? undefined,
       });
@@ -103,46 +97,6 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
           >
             <div className="p-5 mt-2 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4">
               <div>
-                <label htmlFor="rsvp-name" className="block text-sm font-semibold text-on-surface mb-1">Tu nombre *</label>
-                <input
-                  id="rsvp-name"
-                  type="text"
-                  value={guestName}
-                  readOnly
-                  className="w-full rounded-xl border border-outline-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
-                  placeholder="Ej: María Pérez"
-                  autoComplete="name"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="rsvp-email" className="block text-sm font-semibold text-on-surface mb-1">Email (opcional)</label>
-                  <input
-                    id="rsvp-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    placeholder="maria@ejemplo.com"
-                    autoComplete="email"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="rsvp-phone" className="block text-sm font-semibold text-on-surface mb-1">Celular (opcional)</label>
-                  <input
-                    id="rsvp-phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    placeholder="+57 300 000 0000"
-                    autoComplete="tel"
-                  />
-                </div>
-              </div>
-
-              <div>
                 <label htmlFor="rsvp-companions" className="block text-sm font-semibold text-on-surface mb-1">
                   Acompañantes {companions > 0 && <span className="text-on-surface-variant/70 font-normal">({companions} {companions === 1 ? 'persona' : 'personas'})</span>}
                 </label>
@@ -159,18 +113,6 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   <span>0</span>
                   <span>10+</span>
                 </div>
-              </div>
-
-              <div>
-                <label htmlFor="rsvp-diet" className="block text-sm font-semibold text-on-surface mb-1">Restricciones alimentarias (opcional)</label>
-                <input
-                  id="rsvp-diet"
-                  type="text"
-                  value={dietaryRestrictions}
-                  onChange={(e) => setDietaryRestrictions(e.target.value)}
-                  className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="Ej: Vegetariano, alergia al maní..."
-                />
               </div>
 
               <div>

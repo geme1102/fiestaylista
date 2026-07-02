@@ -19,13 +19,13 @@ describe('RsvpForm', () => {
   it('renders collapsed form initially', () => {
     render(<RsvpForm eventId="event-1" eventTitle="Mi Fiesta" guestName="" />);
     expect(screen.getByText(/¿Vienes\?/)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Ej: María Pérez')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Acompañantes/)).not.toBeInTheDocument();
   });
 
   it('opens form on toggle click', () => {
     render(<RsvpForm eventId="event-1" eventTitle="Mi Fiesta" guestName="" />);
     fireEvent.click(screen.getByText(/¿Vienes\?/));
-    expect(screen.getByPlaceholderText('Ej: María Pérez')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Acompañantes/)).toBeInTheDocument();
   });
 
   it('disables submit when name is empty', () => {

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
-import ShareButtons from '../components/ShareButtons';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import GiftCard from '../components/GiftCard';
 import RsvpForm from '../components/RsvpForm';
@@ -299,10 +298,6 @@ export default function EventGuest() {
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
                 </button>
-              </div>
-
-              <div className="w-full max-w-md z-10 relative">
-                <ShareButtons slug={event.slug} title={event.title} />
               </div>
 
               <div className="w-full max-w-md mt-6">

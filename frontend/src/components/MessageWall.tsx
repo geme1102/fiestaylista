@@ -101,15 +101,6 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
             className="overflow-hidden"
           >
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
-              <label htmlFor="guest-name-message" className="sr-only">Tu nombre</label>
-              <input
-                id="guest-name-message"
-                type="text"
-                value={guestName}
-                readOnly
-                placeholder="Tu nombre"
-                className="w-full rounded-xl border border-outline-variant bg-surface-container-high text-on-surface/70 px-4 py-3 text-sm outline-none cursor-default"
-              />
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
