@@ -10,17 +10,6 @@ import { createModuleLogger } from '../utils/logger.js';
 const log = createModuleLogger('MP');
 
 export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus'): Promise<void> {
-  const [existingPayment] = await db
-    .select({ id: proPayments.id })
-    .from(proPayments)
-    .where(eq(proPayments.mpPaymentId, paymentId))
-    .limit(1);
-
-  if (existingPayment) {
-    log.info(`${tier.toUpperCase()} payment ${paymentId} already processed`);
-    return;
-  }
-
   const periodDays = interval === 'year' ? 365 : 30;
   const isProPlus = tier === 'pro_plus';
   const expectedAmount = interval === 'year'
@@ -28,6 +17,17 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
 
   await db.transaction(async (tx) => {
+    const [existingPayment] = await tx
+      .select({ id: proPayments.id })
+      .from(proPayments)
+      .where(eq(proPayments.mpPaymentId, paymentId))
+      .limit(1);
+
+    if (existingPayment) {
+      log.info(`${tier.toUpperCase()} payment ${paymentId} already processed`);
+      return;
+    }
+
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: null,
       tier,
@@ -37,7 +37,8 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     }, tx as unknown as typeof db);
     await tx
       .insert(proPayments)
-      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval, tier });
+      .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval, tier })
+      .onConflictDoNothing();
   });
 
   try {

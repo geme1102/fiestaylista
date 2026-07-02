@@ -23,8 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
@@ -32,13 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!getAccessToken()) {
         const refreshed = await tryRefreshToken();
         if (!refreshed) {
-          setIsLoading(false);
+          if (mountedRef.current) setIsLoading(false);
           return;
         }
       }
 
       try {
         const res = await getMe();
+        if (!mountedRef.current) return;
         if (res.isGuest) {
           clearTokens();
           setUser(null);
@@ -50,9 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
         showToast('Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.', 'error');
       } finally {
-        setIsLoading(false);
+        if (mountedRef.current) setIsLoading(false);
       }
     })();
+
+    return () => { mountedRef.current = false; };
   }, []);
 
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {

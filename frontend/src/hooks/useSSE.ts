@@ -77,11 +77,22 @@ export function useSSE({
 
       if (cancelledRef.current) return;
 
-      if (sseUrl) {
-        es = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
-      } else {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-        es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
+      try {
+        if (sseUrl) {
+          es = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
+        } else {
+          const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+          es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
+        }
+      } catch {
+        sseConnectedRef.current = false;
+        onDisconnectedRef.current?.();
+        if (!cancelledRef.current && retryCount < maxRetries) {
+          retryCount++;
+          reconnectTimeout = setTimeout(connect, retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 30000);
+        }
+        return;
       }
 
       es.onopen = () => {

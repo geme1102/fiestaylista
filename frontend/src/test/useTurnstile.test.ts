@@ -122,7 +122,7 @@ describe('useTurnstile', () => {
     expect(result.current.ready).toBe(false);
     expect(mockTurnstile.reset).toHaveBeenCalledWith('widget-1');
 
-    act(() => { vi.advanceTimersByTime(100); });
+    act(() => { vi.advanceTimersByTime(500); });
     expect(result.current.ready).toBe(true);
   });
 

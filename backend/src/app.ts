@@ -56,6 +56,11 @@ export function createApp() {
   app.use(cloudflareIP);
   app.use(requestLogger);
 
+  // Healthcheck endpoint sin rate limiter para Railway
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok' });
+  });
+
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     const allowedOrigins = [
@@ -119,11 +124,11 @@ export function createApp() {
 
   app.use('/api', publicRouter);
 
-  app.get('/api/health', apiLimiter, (_req, res) => {
+  app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
 
-  app.get('/api/health/ready', apiLimiter, async (_req, res) => {
+  app.get('/api/health/ready', async (_req, res) => {
     let overall: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
     const checks: Record<string, { status: string; configured?: boolean }> = {};
 

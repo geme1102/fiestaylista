@@ -16,6 +16,8 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const [caption, setCaption] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
@@ -29,6 +31,16 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Solo se permiten imágenes', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('La imagen no puede superar los 10MB', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     if (preview) URL.revokeObjectURL(preview);
     setPreview(URL.createObjectURL(file));
   };
@@ -47,10 +59,16 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       const formData = new FormData();
       formData.append('file', file);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/guest-upload`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
+      if (!mountedRef.current) return;
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Error al subir la imagen');

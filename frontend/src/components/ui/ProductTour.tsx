@@ -72,7 +72,7 @@ export function ProductTour({
   }, [stepIndex, active, transitioning]);
 
   const start = useCallback(() => {
-    if (localStorage.getItem(storageKey) === 'done') return;
+    try { if (localStorage.getItem(storageKey) === 'done') return; } catch { return; }
     setActive(true);
     setStepIndex(0);
   }, [storageKey]);
@@ -185,7 +185,7 @@ export function ProductTour({
 
   const skip = useCallback(() => {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-    localStorage.setItem(storageKey, 'done');
+    try { localStorage.setItem(storageKey, 'done'); } catch {}
     setActive(false);
   }, [storageKey]);
 

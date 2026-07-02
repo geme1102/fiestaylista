@@ -37,7 +37,8 @@ const STORAGE_KEY = 'fy_achievements_unlocked';
 
 function getUnlocked(): Set<string> {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored: string | null = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch {}
     return new Set(stored ? JSON.parse(stored) : []);
   } catch {
     return new Set();
@@ -57,7 +58,7 @@ export function useAchievements() {
 
     if (newlyUnlocked.length > 0) {
       const all = new Set([...previouslyUnlocked, ...newlyUnlocked.map((a) => a.id)]);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...all]));
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...all])); } catch {}
 
       for (const ach of newlyUnlocked) {
         showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');

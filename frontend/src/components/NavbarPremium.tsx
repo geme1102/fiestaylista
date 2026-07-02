@@ -19,11 +19,11 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
   return (
     <header
       data-testid="navbar"
-      className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 ${
-        scrolled ? 'h-16 shadow-md' : 'h-20'
+      className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 h-16 ${
+        scrolled ? 'shadow-md' : ''
       }`}
     >
-      <div className="flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full">
+      <div className={`flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
         <Link to="/" className="flex items-center gap-3 group cursor-pointer">
 <picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" /></picture>
           <span className="font-headline-md text-headline-md font-extrabold text-on-surface hidden sm:block">

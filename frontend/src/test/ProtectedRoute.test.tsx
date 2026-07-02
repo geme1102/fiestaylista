@@ -25,7 +25,9 @@ function renderWithRouter(initialRoute: string = '/dashboard') {
 describe('ProtectedRoute', () => {
   it('debería mostrar loading mientras verifica autenticación', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
+    sessionStorage.setItem('fy_rt', 'fake-rt');
     renderWithRouter();
+    sessionStorage.removeItem('fy_rt');
     expect(screen.getByText('Cargando...')).toBeInTheDocument();
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
   });

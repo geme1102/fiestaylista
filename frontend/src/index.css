@@ -679,17 +679,17 @@ button:not(:disabled):active,
     min-width: 44px;
   }
 
-  /* Prevenir auto-zoom en iOS Safari al enfocar inputs (requiere font-size >= 16px) */
-  input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
-  input[type="password"], input[type="search"], input[type="url"], input[type="date"],
-  input[type="datetime-local"], select, textarea {
-    font-size: 16px;
-  }
-
   /* Reset universal de hover states en dispositivos táctiles */
   @media (hover: none) {
     *:hover {
       transform: none !important;
     }
   }
+}
+
+/* Prevenir auto-zoom en iOS Safari al enfocar inputs (requiere font-size >= 16px) */
+input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+input[type="password"], input[type="search"], input[type="url"], input[type="date"],
+input[type="datetime-local"], select, textarea {
+  font-size: 16px;
 }

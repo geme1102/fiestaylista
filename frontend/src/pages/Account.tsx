@@ -37,6 +37,7 @@ export default function Account() {
   const [deletePassword, setDeletePassword] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [retryingPayment, setRetryingPayment] = useState(false);
   const [payments, setPayments] = useState<ProPayment[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
@@ -50,23 +51,27 @@ export default function Account() {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
     Promise.all([
       getCurrentSubscription()
-        .then((res) => setSubscription(res.subscription))
+        .then((res) => { if (mounted) setSubscription(res.subscription); })
         .catch((err) => {
           reportError(err, { source: 'Account' });
           const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
           showToast(message, 'error');
-          setSubError(true);
+          if (mounted) setSubError(true);
           if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
         }),
       getPaymentHistory()
-        .then((res) => setPayments(res.payments))
-        .catch((err) => { reportError(err, { source: 'Account' }); setPaymentsError(true); }),
+        .then((res) => { if (mounted) setPayments(res.payments); })
+        .catch((err) => { reportError(err, { source: 'Account' }); if (mounted) setPaymentsError(true); }),
     ]).finally(() => {
-      setLoadingSub(false);
-      setPaymentsLoading(false);
+      if (mounted) {
+        setLoadingSub(false);
+        setPaymentsLoading(false);
+      }
     });
+    return () => { mounted = false; };
   }, []);
 
   const handleCancelSubscription = async () => {
@@ -492,12 +497,26 @@ export default function Account() {
           aria-modal="true"
           aria-label="Eliminar cuenta"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteConfirm(false); setDeletePassword(''); } }}
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteConfirm(false); setDeletePassword(''); } }}
+          onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
         >
           <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
-            <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer. Ingresa tu contraseña para confirmar.</p>
+            <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer.</p>
+            <div>
+              <label htmlFor="delete-confirm-text" className="block text-sm font-semibold text-on-surface mb-1">
+                Escribe <span className="font-mono text-red-600">ELIMINAR MI CUENTA</span> para confirmar
+              </label>
+              <input
+                id="delete-confirm-text"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="ELIMINAR MI CUENTA"
+                autoComplete="off"
+                className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
+              />
+            </div>
             <input
               id="delete-password"
               type="password"
@@ -508,10 +527,10 @@ export default function Account() {
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
             />
             <div className="flex gap-3">
-              <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
+              <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!deletePassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleDeleteAccount} disabled={deleteConfirmText !== 'ELIMINAR MI CUENTA' || !deletePassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {deletingAccount ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>

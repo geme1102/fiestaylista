@@ -27,30 +27,69 @@ function warnConfig(key: string, value: string | undefined): void {
   }
 }
 
+function failConfig(reason: string): never {
+  console.error(`[config] ERROR CRÍTICO: ${reason}`);
+  console.error('[config] El servidor no puede iniciar. Corrige las variables de entorno y reinicia.');
+  process.exit(1);
+}
+
 const DEFAULT_JWT_SECRETS = [
   'change-this-to-a-random-secret-at-least-32-chars',
   'change-this-to-another-random-secret',
 ];
 
 function validateConfig(): void {
-  warnConfig('DATABASE_URL', process.env.DATABASE_URL);
-  warnConfig('JWT_SECRET', process.env.JWT_SECRET);
-  warnConfig('JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET);
-  warnConfig('JWT_GUEST_SECRET', process.env.JWT_GUEST_SECRET);
+  // Validaciones críticas — detienen el servidor
+  if (!process.env.DATABASE_URL) {
+    failConfig('DATABASE_URL no está configurada');
+  }
+  if (!process.env.DATABASE_URL.startsWith('postgresql://')) {
+    failConfig('DATABASE_URL debe comenzar con postgresql://');
+  }
+
+  if (!process.env.JWT_SECRET) {
+    failConfig('JWT_SECRET no está configurado');
+  }
+  if (!process.env.JWT_REFRESH_SECRET) {
+    failConfig('JWT_REFRESH_SECRET no está configurado');
+  }
+  if (!process.env.JWT_GUEST_SECRET) {
+    failConfig('JWT_GUEST_SECRET no está configurado');
+  }
+
+  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
+    failConfig('JWT_SECRET debe tener al menos 32 caracteres');
+  }
+  if (process.env.JWT_REFRESH_SECRET && process.env.JWT_REFRESH_SECRET.length < 32) {
+    failConfig('JWT_REFRESH_SECRET debe tener al menos 32 caracteres');
+  }
+  if (process.env.JWT_GUEST_SECRET && process.env.JWT_GUEST_SECRET.length < 32) {
+    failConfig('JWT_GUEST_SECRET debe tener al menos 32 caracteres');
+  }
 
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_SECRET || '')) {
-    console.error('[config] JWT_SECRET debe cambiarse del valor por defecto');
+    failConfig('JWT_SECRET debe cambiarse del valor por defecto');
   }
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_REFRESH_SECRET || '')) {
-    console.error('[config] JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
+    failConfig('JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
   }
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_GUEST_SECRET || '')) {
-    console.error('[config] JWT_GUEST_SECRET debe cambiarse del valor por defecto');
+    failConfig('JWT_GUEST_SECRET debe cambiarse del valor por defecto');
   }
 
   const secrets = [process.env.JWT_SECRET, process.env.JWT_REFRESH_SECRET, process.env.JWT_GUEST_SECRET];
   if (new Set(secrets).size !== secrets.length) {
-    console.error('[config] JWT_SECRET, JWT_REFRESH_SECRET y JWT_GUEST_SECRET deben ser diferentes entre sí');
+    failConfig('JWT_SECRET, JWT_REFRESH_SECRET y JWT_GUEST_SECRET deben ser diferentes entre sí');
+  }
+
+  // Validar NODE_ENV
+  if (!process.env.NODE_ENV) {
+    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      process.env.NODE_ENV = 'production';
+    } else {
+      console.warn('[config] NODE_ENV no configurado, usando "development". ¡No usar en producción!');
+      process.env.NODE_ENV = 'development';
+    }
   }
 
   const isProd = process.env.NODE_ENV === 'production';
@@ -62,10 +101,12 @@ function validateConfig(): void {
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
     warnConfig('BACKEND_URL', process.env.BACKEND_URL);
     warnConfig('FRONTEND_URL', process.env.FRONTEND_URL);
-    if (process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_SECRET) {
-      warnConfig('CLOUDINARY_CLOUD_NAME', process.env.CLOUDINARY_CLOUD_NAME);
-      warnConfig('CLOUDINARY_API_KEY', process.env.CLOUDINARY_API_KEY);
-      warnConfig('CLOUDINARY_API_SECRET', process.env.CLOUDINARY_API_SECRET);
+
+    const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
+    const present = cloudKeys.filter(k => process.env[k]);
+    if (present.length > 0 && present.length < cloudKeys.length) {
+      const missing = cloudKeys.filter(k => !process.env[k]);
+      console.error(`[config] Cloudinary configurado parcialmente. Faltan: ${missing.join(', ')}`);
     }
   }
 }
@@ -80,9 +121,9 @@ export const config = {
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, '').trim(),
-  FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace('backend', 'frontend')}` : 'http://localhost:5173')).trim(),
+  FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://fiestaylista.netlify.app` : 'http://localhost:5173')).trim(),
   PORT: (() => { const p = parseInt(process.env.PORT || '3001', 10); return Number.isNaN(p) ? 3001 : p; })(),
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: process.env.NODE_ENV as string,
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',

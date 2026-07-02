@@ -94,8 +94,8 @@ function extractTopicId(req: Request): { topic?: string; id?: string } {
     }
     const parsed = mpWebhookPayloadSchema.parse(JSON.parse(bodyStr));
     return {
-      topic: parsed.topic || parsed.type || (req.query.topic as string),
-      id: parsed.id || parsed.data?.id || (req.query.id as string),
+      topic: parsed.topic || parsed.type,
+      id: parsed.data?.id || parsed.id,
     };
   } catch (err) {
     log.error({ err }, 'Error parsing webhook body:');

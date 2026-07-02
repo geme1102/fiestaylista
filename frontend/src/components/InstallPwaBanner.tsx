@@ -44,7 +44,7 @@ export default function InstallPwaBanner() {
   };
 
   return (
-    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-primary-container/20 border border-primary/20 flex items-start gap-3">
+    <div className="fixed bottom-20 left-4 right-4 z-50 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-primary-container/20 border border-primary/20 flex items-start gap-3 shadow-xl backdrop-blur-xl">
       <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>install_mobile</span>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm text-primary">Instala Fiesta y Lista</p>

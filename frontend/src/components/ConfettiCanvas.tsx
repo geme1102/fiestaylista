@@ -100,6 +100,8 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    let hidden = false;
+
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -120,6 +122,11 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
     if (!ctx) return;
 
     const render = () => {
+      if (hidden) {
+        animationFrameRef.current = requestAnimationFrame(render);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       backgroundStarsRef.current.forEach((star) => {
@@ -196,7 +203,11 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
 
     render();
 
+    const onVisibilityChange = () => { hidden = document.hidden; };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('resize', handleResize);
       checkObserver.disconnect();
       if (animationFrameRef.current) {

@@ -17,7 +17,7 @@ let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
 export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
     await db.transaction(async (tx) => {
-      const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(hashtext(${name})) as acquired`);
+      const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(1, hashtext(${name})) as acquired`);
       const row = Array.isArray(result) ? result[0] : result;
       const acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
       if (!acquired) {

@@ -16,6 +16,7 @@ import { useEventPage } from '../hooks/useEventPage';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { apiClient } from '../services/api';
+import { getGiftCategory } from '../data/giftEmojis';
 
 function sanitizeForJSON(str: string): string {
   return str.replace(/<\/script>/gi, '<\\/script>');
@@ -58,18 +59,22 @@ export default function EventGuest() {
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
   const claimNameRef = useRef(guestName);
+  const handleClaimRef = useRef(handleClaim);
+  handleClaimRef.current = handleClaim;
   const handleClaimWithRef = useCallback((id: string, name: string) => {
     setLastClaimedGift(name);
     setLastClaimedBy(claimNameRef.current);
-    handleClaim(id, name);
-  }, [handleClaim]);
+    handleClaimRef.current(id, name);
+  }, []);
 
   const displayNote = event?.eventNote;
 
   const confettiRef = useRef<ConfettiCanvasRef>(null);
+  const viewedEventRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!event) return;
+    if (!event || viewedEventRef.current === event.id) return;
+    viewedEventRef.current = event.id;
     apiClient.post('/api/analytics/view', { eventId: event.id }, { skipAuthRedirect: true }).catch(() => {});
   }, [event]);
 
@@ -431,11 +436,11 @@ export default function EventGuest() {
               >
                 <h3 className={`font-semibold text-on-surface-variant mb-4 uppercase tracking-wider flex items-center gap-2 ${easyReadMode ? 'text-lg' : 'text-sm'}`}>
                   <span>💝</span>
-                  Ya apartados ({claimedGifts.length})
+                  Ya apartados ({categoryFilter ? claimedGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter).length : claimedGifts.length})
                 </h3>
                 <AnimatePresence mode="wait">
                   <div className="space-y-2">
-                    {claimedGifts.map((gift) => (
+                    {(categoryFilter ? claimedGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter) : claimedGifts).map((gift) => (
                       <GiftCard
                         key={gift.id}
                         gift={gift}
@@ -517,7 +522,7 @@ export default function EventGuest() {
             transition={{ duration: 0.5, delay: 0.45 }}
           >
             <SectionErrorBoundary sectionName="CashFundSection">
-            <Suspense fallback={null}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
+            <Suspense fallback={<div className="animate-pulse h-40 bg-surface-container-highest rounded-3xl" />}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
             </SectionErrorBoundary>
           </motion.div>
           )}
@@ -528,7 +533,7 @@ export default function EventGuest() {
         </div>
 
         <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-20 px-4 pb-safe">
-          <Link to="/" className="flex flex-col items-center justify-center text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
+          <Link to="/" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>
           </Link>

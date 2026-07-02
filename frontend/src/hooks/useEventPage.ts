@@ -28,7 +28,12 @@ export function useEventPage() {
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [easyReadMode, setEasyReadMode] = useState(false);
+  const [easyReadMode, setEasyReadMode] = useState(() => {
+    try { return localStorage.getItem('fy_easy_read') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('fy_easy_read', String(easyReadMode)); } catch {}
+  }, [easyReadMode]);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
@@ -85,11 +90,11 @@ export function useEventPage() {
   useEffect(() => {
     mountedRef.current = true;
     if (!slug) return;
-    loadEvent();
+    loadEventRef.current?.();
 
     const POLL_FALLBACK = 30000;
 
-    let initialPollTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+    let initialPollTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
       pollTimerRef.current = setInterval(() => {
         if (!sseConnectedRef.current) {
           loadEventRef.current?.();
@@ -100,7 +105,7 @@ export function useEventPage() {
     const cancelPoll = () => {
       if (initialPollTimer) {
         clearTimeout(initialPollTimer);
-        initialPollTimer = null;
+        initialPollTimer = undefined;
       }
       clearInterval(pollTimerRef.current);
     };
@@ -111,12 +116,12 @@ export function useEventPage() {
         cancelPoll();
       } else if (!sseConnectedRef.current) {
         loadEventRef.current?.();
-        const rePollTimer = setTimeout(() => {
+        clearTimeout(initialPollTimer);
+        initialPollTimer = setTimeout(() => {
           pollTimerRef.current = setInterval(() => {
             if (!sseConnectedRef.current) { loadEventRef.current?.(); }
           }, POLL_FALLBACK);
         }, 5000);
-        initialPollTimer = rePollTimer;
       }
     }
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -127,7 +132,7 @@ export function useEventPage() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
     };
-  }, [slug, loadEvent]);
+  }, [slug]);
 
   useSSE({
     eventId: event?.id ?? '',
@@ -182,12 +187,14 @@ export function useEventPage() {
       setShowSuccessModal(true);
       resetTurnstile();
       clearTimeout(confettiTimerRef.current);
-      confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 3000);
+      confettiTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) setShowConfetti(false);
+      }, 3000);
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
       reportError(err, { source: 'useEventPage' });
       const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('ya ha sido reservado')) {
+      if (msg.toLowerCase().includes('ya ha sido reservado') || msg.toLowerCase().includes('already claimed')) {
         showToast('Este regalo ya fue apartado por otra persona', 'error');
       } else {
         showToast('Error al apartar el regalo. Intenta de nuevo.', 'error');

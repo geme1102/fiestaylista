@@ -40,12 +40,11 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const handleGroupClaim = async () => {
     if (!claimName.trim()) return;
 
+    setClaiming(true);
     let token = turnstileTokenRef.current;
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
-
-    setClaiming(true);
     try {
       const res = await apiClient.put<{ claim: GiftClaim }>(`/api/events/${gift.eventId}/gifts/${gift.id}/group-claim`, {
         claimedBy: claimName.trim(),
@@ -169,15 +168,15 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         <div className="absolute top-4 right-4 flex gap-1 z-10">
           <button
             onClick={async () => {
-              const prev = isGroupGift;
-              setIsGroupGift(!prev);
+              const next = !isGroupGift;
+              setIsGroupGift(next);
               setTogglingGroup(true);
               try {
-                const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: !prev });
+                const res = await apiClient.put<{ gift: Gift }>(`/api/events/${gift.eventId}/gifts/${gift.id}/toggle-group`, { isGroupGift: next });
                 showToast(res.gift.isGroupGift ? 'Regalo grupal activado 👥' : 'Regalo individual', 'success');
               } catch (err) {
                 reportError(err, { source: 'GiftCard' });
-                setIsGroupGift(prev);
+                setIsGroupGift(!next);
                 showToast(err instanceof Error ? err.message : 'Error', 'error');
               } finally {
                 setTogglingGroup(false);
@@ -186,7 +185,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             disabled={togglingGroup}
             className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-all ${isGroupGift ? 'text-secondary bg-secondary/10 hover:bg-secondary/20' : 'text-gray-400 hover:text-secondary hover:bg-secondary/10'} disabled:opacity-50`}
             title={isGroupGift ? 'Regalo grupal (varias personas)' : 'Hacer grupal (varias personas pueden unirse)'}
-            aria-label={isGroupGift ? 'Alternar regalo grupal' : 'Alternar regalo grupal'}
+            aria-label={isGroupGift ? 'Desactivar modo grupal' : 'Activar modo grupal'}
           >
             <span className="material-symbols-outlined text-base">group</span>
           </button>

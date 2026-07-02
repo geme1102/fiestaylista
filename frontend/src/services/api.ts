@@ -147,6 +147,10 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         continue;
       }
 
+      if (res.status === 429) {
+        throw new Error('Has hecho demasiadas solicitudes. Espera un momento y vuelve a intentar.');
+      }
+
       if (!res.ok) {
         let errorMsg = `Error ${res.status}`;
         try {
@@ -229,11 +233,15 @@ export const apiClient = {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
+        let refreshedOnce = false;
+
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             onProgress(Math.round((e.loaded / e.total) * 100));
           }
         };
+
+        xhr.ontimeout = () => reject(new Error('La solicitud tardó demasiado. Intenta de nuevo.'));
 
         xhr.onload = async () => {
           if (xhr.status >= 200 && xhr.status < 300) {
@@ -243,6 +251,11 @@ export const apiClient = {
 
           // 401: try refresh token and retry once
           if (xhr.status === 401) {
+            if (refreshedOnce) {
+              reject(new Error('Sesión expirada. Serás redirigido al inicio de sesión.'));
+              return;
+            }
+            refreshedOnce = true;
             const refreshed = await tryRefreshToken();
             if (refreshed) {
               resolve(doUpload(accessToken));

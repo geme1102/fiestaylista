@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sin conexión — Fiesta y Lista</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100dvh; padding: 24px; text-align: center; color: #1c1917;
+    }
+    .card {
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+      border-radius: 32px; padding: 48px 32px; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(162,27,83,0.08);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+    .icon { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    p { font-size: 14px; color: #57534e; line-height: 1.6; margin-bottom: 24px; }
+    .btn {
+      display: inline-block; padding: 14px 32px; border-radius: 999px;
+      background: linear-gradient(135deg, #e11d48, #fb7185);
+      color: white; font-weight: 700; font-size: 14px; text-decoration: none;
+      box-shadow: 0 8px 24px rgba(225,29,72,0.2);
+    }
+    .btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>Sin conexión</h1>
+    <p>Parece que no tienes internet en este momento. Vuelve a intentar cuando tengas conexión.</p>
+    <a class="btn" href="/">Reintentar</a>
+  </div>
+</body>
+</html>

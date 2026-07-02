@@ -105,7 +105,7 @@ export function useTurnstile() {
       window.turnstile.reset(widgetId.current);
     }
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-    resetTimerRef.current = setTimeout(() => setReady(true), 100);
+    resetTimerRef.current = setTimeout(() => setReady(true), 500);
   }, []);
 
   return { containerRef, token, ready, reset, error };

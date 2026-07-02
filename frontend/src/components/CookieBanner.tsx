@@ -18,7 +18,8 @@ const STORAGE_KEY = 'cookie_consent_v1';
 
 function getStoredPrefs(): CookiePrefs | null {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored: string | null = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch {}
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed && typeof parsed === 'object' && 'essential' in parsed) {
@@ -32,7 +33,7 @@ function getStoredPrefs(): CookiePrefs | null {
 }
 
 function storePrefs(prefs: CookiePrefs): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch {}
   applyConsent(prefs);
 }
 

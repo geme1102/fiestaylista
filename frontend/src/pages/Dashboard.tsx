@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,9 +48,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    let mounted = true;
     getCurrentSubscription()
-      .then((res) => setSubscription(res.subscription))
+      .then((res) => { if (mounted) setSubscription(res.subscription); })
       .catch((err) => { reportError(err, { source: 'Dashboard' }); });
+    return () => { mounted = false; };
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -665,13 +668,21 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useFocusTrap(true);
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <motion.div
+      ref={dialogRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

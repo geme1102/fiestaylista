@@ -28,12 +28,12 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
       setError('El nombre es obligatorio');
       return;
     }
+    setSubmitting(true);
+    setError('');
     let token = turnstileTokenRef.current;
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
-    setSubmitting(true);
-    setError('');
     try {
       await apiClient.post(`/api/events/${eventId}/rsvp`, {
         name: guestName.trim(),

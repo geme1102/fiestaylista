@@ -317,20 +317,19 @@ export async function sendPurgeWarnings(): Promise<number> {
       if (user?.email) {
         const frozenAt = eventMap.get(userId) ?? warningStart;
         const daysUntilPurge = Math.max(1, Math.ceil((30 * 24 * 60 * 60 * 1000 - (now.getTime() - frozenAt.getTime())) / (24 * 60 * 60 * 1000)));
-        sendPurgeWarningEmail(user.email, user.name, daysUntilPurge, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
-          log.error({ err, userId }, 'Error enviando warning de purga:');
-        });
         try {
-          await db.insert(emailTracking).values({
-            userId,
-            type: 'purge_warning',
-          });
-        } catch {
-          await db.update(emailTracking)
-            .set({ sentAt: new Date() })
-            .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'purge_warning')));
+          await sendPurgeWarningEmail(user.email, user.name, daysUntilPurge, `${config.FRONTEND_URL}/pricing`);
+          try {
+            await db.insert(emailTracking).values({ userId, type: 'purge_warning' });
+          } catch {
+            await db.update(emailTracking)
+              .set({ sentAt: new Date() })
+              .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'purge_warning')));
+          }
+          warned++;
+        } catch (err) {
+          log.error({ err, userId }, 'Error enviando warning de purga:');
         }
-        warned++;
       }
     } catch (err) {
       log.error({ err, userId }, 'Error enviando warning de purga:');

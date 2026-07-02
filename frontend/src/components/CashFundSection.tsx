@@ -450,14 +450,17 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guestName?.trim() || !amount) return;
+    if (!guestName?.trim() || !amount) {
+      if (!guestName?.trim()) showToast('Debes ingresar tu nombre primero', 'error');
+      else showToast('Ingresa un monto válido', 'error');
+      return;
+    }
 
+    setSubmitting(true);
     let token = turnstileTokenRef.current;
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
-
-    setSubmitting(true);
     try {
       await createPromise({
         cashFundId: fundId,

@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/cn';
 import InstallPwaBanner from './InstallPwaBanner';
 
@@ -95,40 +96,50 @@ export default function Layout() {
             </div>
           </div>
 
-          {mobileOpen && (
-            <div className="md:hidden border-t border-outline/20 py-3 space-y-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
-                    pathname === item.path
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-on-surface-variant hover:text-primary hover:bg-black/5'
-                  )}
-                >
-                  <span className="material-symbols-outlined text-lg">{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
-              <button
-                onClick={() => { logout(); setMobileOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm font-medium text-error hover:bg-error-container/20 rounded-lg transition-colors"
+          <AnimatePresence>
+            {mobileOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="md:hidden border-t border-outline/20 overflow-hidden"
               >
-                <span className="material-symbols-outlined text-lg">logout</span>
-                Salir
-              </button>
-            </div>
-          )}
+                <div className="py-3 space-y-1">
+                  {NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+                        pathname === item.path
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-on-surface-variant hover:text-primary hover:bg-black/5'
+                      )}
+                    >
+                      <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm font-medium text-error hover:bg-error-container/20 rounded-lg transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-lg">logout</span>
+                    Salir
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
 
       <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10 pb-24 sm:pb-10">
         <Outlet />
-        <InstallPwaBanner />
       </main>
+
+      <InstallPwaBanner />
 
       <footer className="border-t border-outline-variant/30 bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">

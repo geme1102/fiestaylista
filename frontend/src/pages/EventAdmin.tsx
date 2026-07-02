@@ -16,6 +16,7 @@ import {
   ChevronRight, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
 import { reportError } from '../lib/reportError';
@@ -87,6 +88,27 @@ export default function EventAdmin() {
   const [messageRefreshKey, setMessageRefreshKey] = useState(0);
   const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mountedRef = useRef(true);
+  const editDialogRef = useFocusTrap(!!editingDetails);
+  const boostDialogRef = useFocusTrap(!!boostModal);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (editingDetails || boostModal) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [editingDetails, boostModal]);
+
+  const isBoosted = useMemo(() =>
+    !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
+    [event]
+  );
 
   const setupChecklist: SetupChecklist = useMemo(() => ({
     hasGifts: gifts.length > 0,
@@ -95,10 +117,10 @@ export default function EventAdmin() {
     hasLocation: !!event?.eventLocation,
     hasNote: !!event?.eventNote,
     hasPhotos: photos.length > 0,
-    hasCashFund: !!cashFund?.isActive || !!event?.boostedUntil,
+    hasCashFund: !!cashFund?.isActive || isBoosted,
     hasRsvp: gifts.some((g) => g.isClaimed),
-    hasBeenShared: id ? localStorage.getItem(`fy_shared_${id}`) === 'true' : false,
-  }), [gifts, photos, event, cashFund, id]);
+    hasBeenShared: id ? (() => { try { return localStorage.getItem(`fy_shared_${id}`) === 'true'; } catch { return false; } })() : false,
+  }), [gifts, photos, event, cashFund, id, isBoosted]);
 
   const setupPercent = useMemo(() => {
     const weights = { hasGifts: 15, hasThreeGifts: 10, hasDate: 15, hasLocation: 10, hasNote: 10, hasPhotos: 10, hasCashFund: 10, hasRsvp: 10, hasBeenShared: 10 };
@@ -173,7 +195,7 @@ export default function EventAdmin() {
     onPhotoUploaded: () => {
       if (id) {
         apiClient.get<{ event: { photos?: Photo[] } }>(`/api/events/${id}`).then((res) => {
-          setPhotos(res.event.photos || []);
+          if (mountedRef.current) setPhotos(res.event.photos || []);
         }).catch((err) => { reportError(err, { source: 'EventAdmin' }); });
       }
     },
@@ -236,12 +258,16 @@ export default function EventAdmin() {
   }, [id]);
 
   const handleUpdateDetails = async () => {
+    if (!titleDraft.trim()) {
+      showToast('El nombre del evento es obligatorio', 'error');
+      return;
+    }
     setUpdatingDetails(true);
     try {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, {
         title: titleDraft.trim(),
         eventType: typeDraft,
-        eventDate: dateDraft ? new Date(dateDraft + ':00').toISOString() : null,
+        eventDate: dateDraft ? new Date(dateDraft).toISOString() : null,
         eventLocation: locationDraft || null,
         eventNote: noteDraft || null,
       });
@@ -281,16 +307,17 @@ export default function EventAdmin() {
 
     let completed = 0;
     const fileProgress = new Map<number, number>();
-    const totalWeight = validFiles.length;
+    const fileWeights = validFiles.map((f) => f.size);
+    const totalWeight = fileWeights.reduce((a, b) => a + b, 0) || 1;
 
     await Promise.allSettled(
       validFiles.map((file, idx) =>
         (async () => {
           try {
             const { url } = await uploadPhoto(file, (pct) => {
-              fileProgress.set(idx, pct);
+              fileProgress.set(idx, pct * fileWeights[idx] / 100);
               const total = [...fileProgress.values()].reduce((a, b) => a + b, 0);
-              setUploadPercent(Math.round(total / totalWeight));
+              setUploadPercent(Math.round((total / totalWeight) * 100));
             });
             const res = await addPhoto(id!, url);
             completed++;
@@ -409,16 +436,12 @@ export default function EventAdmin() {
       !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
     );
   }, [suggestions, newGiftName, gifts]);
-  const isBoosted = useMemo(() =>
-    !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
-    [event]
-  );
 
   const formatDateTime = useCallback((dateStr: string) => {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    const date = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const date = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+    const time = d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
     return `${date} ${time}`;
   }, []);
 
@@ -442,13 +465,13 @@ export default function EventAdmin() {
 
   const copyShareLink = () => {
     if (!event) return;
-    if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
+    if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
     const url = `${window.location.origin}/e/${event.slug}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast('¡Enlace exclusivo copiado al portapapeles! 🔗', 'success');
     }).catch((err) => {
       reportError(err, { source: 'EventAdmin' });
-      showToast('Enlace copiado! 🔗', 'success');
+      showToast('No se pudo copiar al portapapeles. Cópialo manualmente.', 'error');
     });
   };
 
@@ -731,7 +754,7 @@ onClick={() => {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 const url = `${window.location.origin}/e/${event.slug}`;
-                if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
+                if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
                 if (navigator.share) {
                   navigator.share({ title: event.title, url });
                 } else {
@@ -768,7 +791,7 @@ onClick={() => {
               whileHover={{ scale: 1.12, rotate: -5 }}
               whileTap={{ scale: 0.88 }}
               onClick={() => {
-                if (id) localStorage.setItem(`fy_shared_${id}`, 'true');
+                if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
                 window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank');
               }}
               className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
@@ -848,7 +871,7 @@ onClick={() => {
 
         <div data-tour="add-gift">
         <SectionErrorBoundary sectionName="GiftManagement">
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="animate-pulse h-48 bg-surface-container-highest rounded-3xl" />}>
           <GiftManagement
             gifts={gifts}
             addingGift={addingGift}
@@ -871,15 +894,15 @@ onClick={() => {
         </div>
 
         <SectionErrorBoundary sectionName="GuestsPanel">
-        <Suspense fallback={null}><GuestsPanel eventId={id ?? ''} /></Suspense>
+        <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><GuestsPanel eventId={id ?? ''} /></Suspense>
         </SectionErrorBoundary>
 
         <SectionErrorBoundary sectionName="MessagesPanel">
-        <Suspense fallback={null}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>
+        <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>
         </SectionErrorBoundary>
 
         <SectionErrorBoundary sectionName="PhotoGallery">
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="animate-pulse h-64 bg-surface-container-highest rounded-3xl" />}>
           <PhotoGallery
             photos={photos}
             uploading={uploading}
@@ -905,6 +928,7 @@ onClick={() => {
       <AnimatePresence>
         {editingDetails && (
           <div
+            ref={editDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Editar información del evento"
@@ -947,7 +971,7 @@ onClick={() => {
                     type="text"
                     value={titleDraft}
                     onChange={(e) => setTitleDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold"
                     autoComplete="off"
                     enterKeyHint="next"
                     required
@@ -961,7 +985,7 @@ onClick={() => {
                       id="edit-type"
                       value={typeDraft}
                       onChange={(e) => setTypeDraft(e.target.value as EventType)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
                     >
                       {EVENT_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
@@ -976,7 +1000,7 @@ onClick={() => {
                       type="datetime-local"
                       value={dateDraft}
                       onChange={(e) => setDateDraft(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
+                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
                     />
                   </div>
                 </div>
@@ -988,7 +1012,7 @@ onClick={() => {
                     type="text"
                     value={locationDraft}
                     onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-bold text-gray-700"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
                     placeholder="Ej: Salón de eventos, Ciudad"
                     autoComplete="street-address"
                     inputMode="text"
@@ -1003,7 +1027,7 @@ onClick={() => {
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[primary]/25 bg-white font-semibold text-gray-700 resize-none"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-semibold text-gray-700 resize-none"
                     placeholder="Ej: No se aceptan regalos envueltos"
                   />
                 </div>
@@ -1037,6 +1061,7 @@ onClick={() => {
       <AnimatePresence>
         {boostModal && (
           <div
+            ref={boostDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Activar Lluvia de Sobres"
@@ -1118,19 +1143,20 @@ onClick={() => {
       )}
 
       {/* Bottom Navigation */}
+      {/* Bottom Navigation */}
       <nav className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] rounded-t-xl" style={{ zIndex: Z_LAYERS.sticky }}>
-        <Link to="/dashboard" className="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
+        <Link to="/dashboard" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>
         </Link>
-        <Link to="/pricing" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200 relative">
+        <Link to="/pricing" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200 relative">
           <span className="material-symbols-outlined">card_giftcard</span>
           <span className="font-label-md text-label-md">Planes</span>
           <span className="absolute -top-0.5 -right-2 text-[7px] font-black px-1 py-0.5 rounded-full bg-primary/10 text-primary">
             {user?.tier === 'free' ? 'FREE' : 'PRO'}
           </span>
         </Link>
-        <Link to="/account" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
+        <Link to="/account" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">
           <span className="material-symbols-outlined">person</span>
           <span className="font-label-md text-label-md">Cuenta</span>
         </Link>

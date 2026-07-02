@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'favicon-48x48.png', 'logo.png', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'icons/icon-*.png'],
+      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'favicon-48x48.png', 'logo.png', 'robots.txt', 'apple-touch-icon.png', 'sitemap.xml', 'offline.html', 'icons/icon-*.png'],
       manifest: {
         name: 'Fiesta y Lista',
         short_name: 'FiestaL',
