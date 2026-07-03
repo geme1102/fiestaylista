@@ -33,8 +33,6 @@ function mockSelectChain(limitResult: any[]) {
   return { select, from, where, orderBy, limit: limitSelect };
 }
 
-let mockDb: any;
-
 vi.mock('../db/index.js', () => ({
   db: {
     transaction: vi.fn(),
