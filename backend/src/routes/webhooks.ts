@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import express from 'express';
 import { z } from 'zod';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -27,57 +27,48 @@ router.post('/stripe', (_req: Request, res: Response) => {
 });
 
 function verifyMpSignature(req: Request): boolean {
-  const signature = req.headers['x-signature'] as string;
-  if (!signature) return false;
+  const secret = config.MERCADO_PAGO_WEBHOOK_SECRET;
+  if (!secret) return false;
 
-  const webhookSecret = config.MERCADO_PAGO_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    log.error('MERCADO_PAGO_WEBHOOK_SECRET no configurado');
-    return false;
-  }
-
-  const parts = signature.split(',');
-  let ts = '';
-  let hash = '';
-  for (const part of parts) {
-    const [k, v] = part.trim().split('=');
-    if (k === 'ts') ts = v;
-    if (k === 'v1') hash = v;
-  }
-  if (!ts || !hash) return false;
-
-  const tsNumber = parseInt(ts, 10);
-  if (isNaN(tsNumber) || Date.now() - tsNumber * 1000 > 5 * 60 * 1000) {
-    log.warn('Firma con timestamp expirado o inválido, ignorando notificación');
-    return false;
-  }
-
-  // req.body es un Buffer gracias a express.raw() montado en index.ts
-  if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-    log.warn('Body ausente o no es Buffer');
-    return false;
-  }
-
-  const bodyStr = req.body.toString('utf-8');
-
-  // Extraer data.id del body para incluirlo en la firma
+  // Extraer data.id del raw query string (Express/qs parsea data.id como anidado)
   let dataId: string | undefined;
-  try {
-    const parsed = JSON.parse(bodyStr);
-    dataId = parsed.data?.id;
-  } catch {
-    return false;
+  const qIndex = req.url?.indexOf('?');
+  if (qIndex !== undefined && qIndex !== -1) {
+    const searchParams = new URLSearchParams(req.url!.slice(qIndex + 1));
+    dataId = searchParams.get('data.id') || undefined;
   }
-  if (!dataId) return false;
-
-  // HMAC-SHA256(secret, data.id + '.' + ts + '.' + body)
-  const expected = createHmac('sha256', webhookSecret)
-    .update(dataId + '.' + ts + '.' + bodyStr)
-    .digest('hex');
 
   try {
-    return timingSafeEqual(Buffer.from(hash.toLowerCase()), Buffer.from(expected.toLowerCase()));
-  } catch {
+    WebhookSignatureValidator.validate({
+      xSignature: req.headers['x-signature'] as string | string[] | undefined,
+      xRequestId: req.headers['x-request-id'] as string | string[] | undefined,
+      dataId,
+      secret,
+      // No toleranceSeconds — v2.13.0 del SDK tiene un bug donde compara
+      // ts (segundos) vs Date.now() (ms) sin convertir, causando siempre
+      // TimestampOutOfTolerance. Validamos timestamp manualmente abajo.
+    });
+
+    // Validación manual de timestamp (±5 min, ambos sentidos)
+    const signature = req.headers['x-signature'] as string | undefined;
+    if (signature) {
+      const tsPart = signature.split(',').find(p => p.trim().startsWith('ts='));
+      if (tsPart) {
+        const ts = Number(tsPart.split('=')[1]);
+        if (!isNaN(ts) && Math.abs(Date.now() - ts * 1000) > 5 * 60 * 1000) {
+          log.warn('Firma con timestamp fuera de ventana de 5 minutos');
+          return false;
+        }
+      }
+    }
+
+    return true;
+  } catch (err) {
+    if (err instanceof InvalidWebhookSignatureError) {
+      log.warn({ reason: err.reason, requestId: err.requestId, timestamp: err.timestamp }, 'Firma MP inválida');
+    } else {
+      log.error({ err }, 'Error inesperado validando firma MP');
+    }
     return false;
   }
 }

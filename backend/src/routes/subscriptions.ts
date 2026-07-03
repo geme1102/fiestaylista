@@ -143,15 +143,34 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
     res.status(400).json({ error: 'No tienes una suscripción activa' });
     return;
   }
-  if (sub.mpSubscriptionId) {
+  let mpSubscriptionId = sub.mpSubscriptionId;
+
+  // Si no tenemos el ID localmente, intentar buscar el preapproval activo en MP
+  if (!mpSubscriptionId) {
+    const tier = sub.tier ?? 'pro';
+    const interval = sub.currentPeriodEnd
+      ? (sub.currentPeriodEnd.getTime() - (sub.currentPeriodStart?.getTime() ?? Date.now())) > 330 * 24 * 60 * 60 * 1000 ? 'year' : 'month'
+      : 'month';
+    const externalRef = `${tier}_${req.user!.userId}_${interval}`;
+    const preapproval = await mercadopagoService.searchPreapprovalsByRef(externalRef);
+    if (preapproval) {
+      mpSubscriptionId = preapproval.id;
+    }
+  }
+
+  if (mpSubscriptionId) {
     try {
-      await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
+      await mercadopagoService.cancelPreapproval(mpSubscriptionId);
     } catch (err) {
       log.error({ err }, 'Error al cancelar en MercadoPago — no se cancela local para evitar desincronización:');
       res.status(502).json({ error: 'No pudimos cancelar el cobro automático en Mercado Pago. Intenta de nuevo o contacta a soporte.' });
       return;
     }
+  } else {
+    // No se encontró preapproval ni localmente ni en MP
+    log.warn({ userId: req.user!.userId }, 'Intento de cancelación sin mpSubscriptionId — no se encontró preapproval en MP');
   }
+
   await subscriptionService.cancelSubscription(req.user!.userId);
   res.json({ message: 'Suscripción cancelada exitosamente' });
 }));

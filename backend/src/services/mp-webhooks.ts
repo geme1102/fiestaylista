@@ -1,7 +1,7 @@
 import { eq, and, sql } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { users, proPayments, emailTracking } from '../db/schema.js';
+import { users, subscriptions, proPayments, emailTracking } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
@@ -30,8 +30,17 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       return;
     }
 
+    // Preservar el mpSubscriptionId existente si lo hay
+    // (el COALESCE en createOrUpdateSubscription también protege esto)
+    const currentSub = await db
+      .select({ mpSubscriptionId: subscriptions.mpSubscriptionId })
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1);
+    const existingId = currentSub[0]?.mpSubscriptionId ?? null;
+
     await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: null,
+      mpSubscriptionId: existingId,
       tier,
       status: 'active',
       currentPeriodStart: new Date(),

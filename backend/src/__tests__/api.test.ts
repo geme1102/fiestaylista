@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
+import { createHmac } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 
 vi.mock('../config.js', () => ({
@@ -244,6 +245,7 @@ vi.mock('../services/cashFund.js', () => mockCashFundService);
 
 const mockMercadopagoService = vi.hoisted(() => ({
   cancelPreapproval: vi.fn(),
+  searchPreapprovalsByRef: vi.fn(),
 }));
 
 vi.mock('../services/mercadopago.js', () => mockMercadopagoService);
@@ -299,6 +301,7 @@ vi.mock('../utils/logger.js', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), fatal: vi.fn(), debug: vi.fn() },
 }));
 
+import { config } from '../config.js';
 import { createApp } from '../app.js';
 
 const app = createApp();
@@ -788,10 +791,10 @@ describe('Subscription Routes', () => {
     expect(mockSubscriptionService.cancelSubscription).not.toHaveBeenCalled();
   });
 
-  it('POST /api/subscriptions/cancel - cancels locally when no mpSubscriptionId', async () => {
+  it('POST /api/subscriptions/cancel - cancels locally when no mpSubscriptionId and MP search finds nothing', async () => {
     mockSubscriptionService.cancelSubscription.mockResolvedValue({ success: true });
-
-    mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: null });
+    mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: null, currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+    mockMercadopagoService.searchPreapprovalsByRef.mockResolvedValue(null);
 
     const res = await request(app)
       .post('/api/subscriptions/cancel')
@@ -800,6 +803,26 @@ describe('Subscription Routes', () => {
       .send({});
 
     expect(res.status).toBe(200);
+    expect(mockMercadopagoService.searchPreapprovalsByRef).toHaveBeenCalled();
+    expect(mockMercadopagoService.cancelPreapproval).not.toHaveBeenCalled();
+    expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
+  });
+
+  it('POST /api/subscriptions/cancel - cancels via MP when no local id but MP search finds preapproval', async () => {
+    mockSubscriptionService.cancelSubscription.mockResolvedValue({ success: true });
+    mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: null, currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+    mockMercadopagoService.searchPreapprovalsByRef.mockResolvedValue({ id: 'mp-found-1', status: 'active' });
+    mockMercadopagoService.cancelPreapproval.mockResolvedValue(undefined);
+
+    const res = await request(app)
+      .post('/api/subscriptions/cancel')
+      .set(auth)
+      .set('x-password', 'Password1')
+      .send({});
+
+    expect(res.status).toBe(200);
+    expect(mockMercadopagoService.searchPreapprovalsByRef).toHaveBeenCalled();
+    expect(mockMercadopagoService.cancelPreapproval).toHaveBeenCalledWith('mp-found-1');
     expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
   });
 
@@ -950,7 +973,7 @@ describe('ARCO Routes', () => {
 });
 
 describe('Webhook Routes', () => {
-  it('POST /api/webhooks/mercadopago - handle webhook', async () => {
+  it('POST /api/webhooks/mercadopago - rejects unsigned requests', async () => {
     mockMpWebhooks.handlePaymentNotification.mockResolvedValue({ received: true });
 
     const res = await request(app)
@@ -958,6 +981,34 @@ describe('Webhook Routes', () => {
       .send({ type: 'payment', data: { id: 'pay-1' } });
 
     expect(res.status).toBe(401);
+  });
+
+  it('POST /api/webhooks/mercadopago - accepts valid signature and dispatches to handler', async () => {
+    const secret = 'test-webhook-secret';
+    const original = (config as any).MERCADO_PAGO_WEBHOOK_SECRET;
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = secret;
+
+    const dataId = 'pay-123';
+    const requestId = 'req-456';
+    const ts = Math.floor(Date.now() / 1000);
+    const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+    const hash = createHmac('sha256', secret).update(manifest).digest('hex');
+    const signature = `ts=${ts},v1=${hash}`;
+
+    mockMpWebhooks.handlePaymentNotification.mockResolvedValue(undefined);
+
+    const res = await request(app)
+      .post('/api/webhooks/mercadopago')
+      .query({ 'data.id': dataId })
+      .set('x-signature', signature)
+      .set('x-request-id', requestId)
+      .send({ type: 'payment', data: { id: dataId } });
+
+    expect(res.status).toBe(200);
+    expect(res.body.received).toBe(true);
+    expect(mockMpWebhooks.handlePaymentNotification).toHaveBeenCalledWith(dataId);
+
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = original;
   });
 });
 

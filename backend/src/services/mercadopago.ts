@@ -175,6 +175,32 @@ export async function createPreApproval(opts: {
   };
 }
 
+export async function searchPreapprovalsByRef(externalReference: string): Promise<{ id: string; status: string } | null> {
+  if (!client) return null;
+
+  try {
+    const result = await retryable(async (signal) => {
+      const url = `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(externalReference)}&status=authorized&status=active`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
+        signal,
+      });
+      if (!res.ok) throw new Error(`MP API error: ${res.status}`);
+      return res.json() as Promise<{ results: Array<{ id: string; status: string }> }>;
+    });
+
+    const results = result?.results ?? [];
+    // Priorizar preapprovals activos sobre authorized
+    const active = results.find((p) => p.status === 'active') ?? results.find((p) => p.status === 'authorized') ?? null;
+    if (!active) return null;
+
+    return { id: active.id, status: active.status };
+  } catch (err) {
+    log.error({ err }, 'Error searching preapprovals by ref:');
+    return null;
+  }
+}
+
 export async function cancelPreapproval(preapprovalId: string): Promise<void> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');

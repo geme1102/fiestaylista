@@ -38,7 +38,7 @@ export async function createOrUpdateSubscription(
     .onConflictDoUpdate({
       target: subsTable.userId,
       set: {
-        mpSubscriptionId: data.mpSubscriptionId,
+        mpSubscriptionId: sql`COALESCE(${data.mpSubscriptionId}, ${subsTable.mpSubscriptionId})`,
         tier: data.tier,
         status: data.status,
         currentPeriodStart: data.currentPeriodStart,
