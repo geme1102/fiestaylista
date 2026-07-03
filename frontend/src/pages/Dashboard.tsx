@@ -77,10 +77,10 @@ export default function Dashboard() {
       attempts++;
       try {
         await refreshUser();
-        if (tierRef.current === 'pro') {
+        if (tierRef.current === 'pro' || tierRef.current === 'pro_plus') {
           clearInterval(interval);
           setPollingPayment(false);
-          showToast('🎉 ¡Bienvenido a Pro! Ahora tienes acceso a todas las funciones premium.', 'success');
+          showToast(`🎉 ¡Bienvenido a ${tierRef.current === 'pro_plus' ? 'Pro Plus' : 'Pro'}! Ahora tienes acceso a todas las funciones premium.`, 'success');
           queryClient.invalidateQueries({ queryKey: ['events'] });
           return;
         }
@@ -101,7 +101,7 @@ export default function Dashboard() {
     setSyncingPayment(true);
     try {
       const res = await apiClient.post<{ tier: string; synced: boolean; message: string }>('/api/subscriptions/sync');
-      if (res.synced || res.tier === 'pro') {
+      if (res.synced || res.tier === 'pro' || res.tier === 'pro_plus') {
         await refreshUser();
         showToast(res.message || '¡Suscripción activada!', 'success');
         setShowPaymentBanner(false);
@@ -210,7 +210,7 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
                 {user?.tier === 'free' ? 'redeem' : 'auto_awesome'}
               </span>
-              {user?.tier === 'free' ? 'Plan Gratis' : 'Plan Pro'}
+              {user?.tier === 'free' ? 'Plan Gratis' : user?.tier === 'pro_plus' ? 'Pro Plus' : 'Plan Pro'}
             </span>
             <span className="text-sm text-on-surface-variant/70">
               Tus celebraciones, todas en un solo lugar.
@@ -279,6 +279,19 @@ export default function Dashboard() {
               'Verificar pago'
             )}
           </button>
+        </div>
+      )}
+
+      {subscription?.status === 'pending_approval' && !pollingPayment && !showPaymentBanner && (
+        <div className="mb-6 p-4 rounded-2xl bg-blue-50/90 border border-blue-200/60 flex items-start gap-3">
+          <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>hourglass_top</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-blue-800">Suscripción pendiente</p>
+            <p className="text-xs text-blue-700/70 mt-0.5">Estamos esperando la confirmación de Mercado Pago. Esto suele tomar unos minutos.</p>
+          </div>
+          <a href="/account" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+            Ir a cuenta
+          </a>
         </div>
       )}
 

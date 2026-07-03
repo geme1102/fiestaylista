@@ -5,7 +5,6 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -145,12 +144,7 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
       log.error({ err: dbError }, 'Error guardando failed webhook:');
     }
 
-    const isTransient = !(error instanceof ValidationError || error instanceof NotFoundError);
-    if (isTransient) {
-      res.status(500).json({ received: false, error: errorMessage });
-    } else {
-      res.status(200).json({ received: true });
-    }
+    res.status(200).json({ received: true });
   }
 }));
 

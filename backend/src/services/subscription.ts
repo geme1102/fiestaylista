@@ -6,7 +6,7 @@ import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
-import type { Tier, SubscriptionStatus } from '../types/index.js';
+import { TIER_LIMITS, type Tier, type SubscriptionStatus } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Subscription');
@@ -55,10 +55,20 @@ export async function createOrUpdateSubscription(
 
   if (data.status === 'active') {
     const now = new Date();
-    await conn
-      .update(events)
-      .set({ isActive: true, frozenAt: null, updatedAt: now })
-      .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)));
+    const limits = TIER_LIMITS[data.tier] ?? TIER_LIMITS.free;
+    const frozenEventIds = await conn
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)))
+      .orderBy(sql`${events.frozenAt} DESC`)
+      .limit(limits.maxEvents);
+
+    if (frozenEventIds.length > 0) {
+      await conn
+        .update(events)
+        .set({ isActive: true, frozenAt: null, updatedAt: now })
+        .where(inArray(events.id, frozenEventIds.map(e => e.id)));
+    }
   }
 
   return sub;
@@ -189,7 +199,7 @@ export async function expireStaleSubscriptions(): Promise<number> {
       .set({ status: 'canceled', tier: 'free', updatedAt: new Date() })
       .where(and(
         lte(subsTable.currentPeriodEnd, freezeThreshold),
-        sql`${subsTable.status} IN ('active', 'past_due')`,
+        sql`${subsTable.status} IN ('active', 'past_due', 'canceled')`,
       ))
       .returning({ userId: subsTable.userId });
 

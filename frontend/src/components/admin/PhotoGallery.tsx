@@ -116,7 +116,19 @@ export const PhotoGallery = memo(function PhotoGallery({
           </div>
         )}
 
-        {maxPhotosPerEvent && photos.length >= maxPhotosPerEvent ? (
+        {maxPhotosPerEvent === 0 ? (
+          <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-gray-400">
+              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
+            </div>
+            <span className="text-gray-400 font-black text-sm md:text-base tracking-tight">
+              Álbum de fotos exclusivo Plan Pro
+            </span>
+            <span className="text-[10px] text-gray-400 font-bold mt-1">
+              Actualiza a Pro para activar esta función.
+            </span>
+          </div>
+        ) : maxPhotosPerEvent && photos.length >= maxPhotosPerEvent ? (
           <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
             <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-gray-400">
               <Upload className="w-[22px] h-[22px] stroke-[2.5]" />

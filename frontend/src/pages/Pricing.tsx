@@ -87,11 +87,24 @@ export default function Pricing() {
   const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => { return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); }; }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    let shouldClean = false;
+
     if (params.get('payment') === 'pending') {
       showToast('El pago está pendiente de confirmación. Te notificaremos cuando se complete.', 'info');
+      shouldClean = true;
+    }
+
+    if (params.get('interval') === 'year') {
+      setYearly(true);
+      shouldClean = true;
+    }
+
+    if (shouldClean) {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
     }
@@ -125,7 +138,7 @@ export default function Pricing() {
     setSelectedTier(tier);
     setLoading(true);
 
-    const safetyTimer = setTimeout(() => {
+    safetyTimerRef.current = setTimeout(() => {
       setLoading(false);
       setSelectedTier(null);
       showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
@@ -136,7 +149,7 @@ export default function Pricing() {
       const successUrl = `${window.location.origin}/dashboard?pro=activated`;
       const cancelUrl = `${window.location.origin}/pricing`;
       const res = await createCheckoutSession(tier as Tier, successUrl, cancelUrl, interval, token ?? undefined);
-      clearTimeout(safetyTimer);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       const validatedUrl = validateRedirectUrl(res.url);
       if (validatedUrl) {
         window.location.href = validatedUrl;
@@ -146,7 +159,7 @@ export default function Pricing() {
         setSelectedTier(null);
       }
     } catch (err) {
-      clearTimeout(safetyTimer);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       reportError(err, { source: 'Pricing' });
       showToast(err instanceof Error ? err.message : 'Error al procesar el pago. Recarga la página e intenta de nuevo.', 'error');
       setLoading(false);

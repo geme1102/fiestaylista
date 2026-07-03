@@ -92,6 +92,4 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
   next();
 }
 
-export function trustCloudflare(ip: string): boolean {
-  return isCloudflareIP(ip);
-}
+

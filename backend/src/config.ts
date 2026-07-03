@@ -95,7 +95,7 @@ function validateConfig(): void {
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd) {
     warnConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
-    warnConfig('MERCADO_PAGO_WEBHOOK_SECRET', process.env.MERCADO_PAGO_WEBHOOK_SECRET);
+    if (!process.env.MERCADO_PAGO_WEBHOOK_SECRET) failConfig('MERCADO_PAGO_WEBHOOK_SECRET no está configurado');
     warnConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
     warnConfig('FROM_EMAIL', process.env.FROM_EMAIL);
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
@@ -108,6 +108,10 @@ function validateConfig(): void {
       const missing = cloudKeys.filter(k => !process.env[k]);
       console.error(`[config] Cloudinary configurado parcialmente. Faltan: ${missing.join(', ')}`);
     }
+
+    warnConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);
+    warnConfig('MERCADO_PAGO_PRO_YEARLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID);
+    warnConfig('MERCADO_PAGO_PRO_PLUS_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_PLUS_MONTHLY_PLAN_ID);
   }
 }
 
@@ -134,6 +138,7 @@ export const config = {
   PRO_MONTHLY_PRICE_CENTS: parseInt(process.env.PRO_MONTHLY_PRICE_CENTS || '59900', 10),
   PRO_YEARLY_PRICE_CENTS: parseInt(process.env.PRO_YEARLY_PRICE_CENTS || '660000', 10),
   PRO_PLUS_MONTHLY_PRICE_CENTS: parseInt(process.env.PRO_PLUS_MONTHLY_PRICE_CENTS || '99900', 10),
+  PRO_PLUS_YEARLY_PRICE_CENTS: parseInt(process.env.PRO_PLUS_YEARLY_PRICE_CENTS || '1098900', 10),
   PRO_MONTHLY_CHECKOUT_URL: process.env.PRO_MONTHLY_CHECKOUT_URL || (
     process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID
       ? `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID}`
@@ -144,7 +149,14 @@ export const config = {
       ? `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID}`
       : ''
   ),
-  PRO_PLUS_MONTHLY_CHECKOUT_URL: process.env.PRO_PLUS_MONTHLY_CHECKOUT_URL || (process.env.MERCADO_PAGO_PRO_PLUS_LINK_URL || ''),
+  PRO_PLUS_MONTHLY_CHECKOUT_URL: process.env.PRO_PLUS_MONTHLY_CHECKOUT_URL || (
+    process.env.MERCADO_PAGO_PRO_PLUS_MONTHLY_PLAN_ID
+      ? `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${process.env.MERCADO_PAGO_PRO_PLUS_MONTHLY_PLAN_ID}`
+      : ''
+  ),
+  PRO_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID || '',
+  PRO_YEARLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_YEARLY_PLAN_ID || '',
+  PRO_PLUS_MONTHLY_PLAN_ID: process.env.MERCADO_PAGO_PRO_PLUS_MONTHLY_PLAN_ID || '',
   ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   SENTRY_DSN: process.env.SENTRY_DSN || '',

@@ -67,15 +67,6 @@ export const giftLimiter = rateLimit({
   message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
 
-export const guestLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator,
-  message: msg('Demasiadas cuentas guest. Intenta de nuevo en un minuto.'),
-});
-
 export const refreshLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -92,15 +83,6 @@ export const contributeLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator,
   message: msg('Demasiadas contribuciones. Intenta de nuevo en un minuto.'),
-});
-
-export const consentLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator,
-  message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
 
 export const arcoLimiter = rateLimit({

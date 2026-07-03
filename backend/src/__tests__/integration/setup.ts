@@ -61,7 +61,7 @@ export async function cleanDatabase() {
   await sql.unsafe(`
     TRUNCATE TABLE
       gift_claims, gifts, photos, cash_contributions, cash_funds,
-      messages, guests, event_views, boost_payments, pro_payments,
+      messages, guests, event_views, pro_payments,
       failed_webhooks, platform_fees, refresh_tokens, consent_records,
       arco_requests, audit_logs, email_tracking, subscriptions, events, users
     RESTART IDENTITY CASCADE

@@ -40,7 +40,6 @@ vi.mock('../db/schema.js', () => ({
   refreshTokens: {},
   cashFunds: {},
   cashContributions: {},
-  boostPayments: {},
   failedWebhooks: {},
   platformFees: {},
   emailTracking: {},

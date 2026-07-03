@@ -145,6 +145,36 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   };
 }
 
+export async function createPreApproval(opts: {
+  planId: string;
+  payerEmail: string;
+  externalReference: string;
+  successUrl: string;
+  cancelUrl: string;
+  reason: string;
+}): Promise<{ initPoint: string; preapprovalId: string }> {
+  if (!client) {
+    throw new Error('Mercado Pago no está configurado');
+  }
+
+  const preapproval = new PreApproval(client);
+  const result = await retryable(() => preapproval.create({
+    body: {
+      preapproval_plan_id: opts.planId,
+      payer_email: opts.payerEmail,
+      external_reference: opts.externalReference,
+      back_url: opts.successUrl,
+      status: 'pending',
+      reason: opts.reason,
+    },
+  }));
+
+  return {
+    initPoint: result.init_point ?? '',
+    preapprovalId: result.id ?? '',
+  };
+}
+
 export async function cancelPreapproval(preapprovalId: string): Promise<void> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');

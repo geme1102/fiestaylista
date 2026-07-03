@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { events, gifts, photos, cashFunds } from '../db/schema.js';
+import { events, gifts, photos } from '../db/schema.js';
 import { ForbiddenError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -69,42 +69,4 @@ export async function requireEventOwnership(
   }
 }
 
-export async function requireCashFundOwnership(
-  req: AuthRequest,
-  _res: Response,
-  next: NextFunction,
-): Promise<void> {
-  try {
-    const cashFundId: string | undefined = req.params.cashFundId;
-    const userId: string | undefined = req.user?.userId;
 
-    if (!cashFundId) {
-      next(new NotFoundError('ID del fondo requerido'));
-      return;
-    }
-    if (!userId) {
-      next(new ForbiddenError('Acceso denegado'));
-      return;
-    }
-
-    const [result] = await db
-      .select({ ownerId: events.userId })
-      .from(cashFunds)
-      .innerJoin(events, eq(cashFunds.eventId, events.id))
-      .where(and(eq(cashFunds.id, cashFundId), isNull(events.deletedAt)))
-      .limit(1);
-
-    if (!result) {
-      next(new NotFoundError('Fondo no encontrado'));
-      return;
-    }
-    if (result.ownerId !== userId) {
-      next(new ForbiddenError('No tienes permiso para modificar este fondo'));
-      return;
-    }
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-}

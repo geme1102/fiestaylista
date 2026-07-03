@@ -19,6 +19,11 @@ const log = createModuleLogger('Subscriptions');
 
 const router = Router();
 
+const PLAN_IDS: Record<string, Record<string, string>> = {
+  pro: { month: config.PRO_MONTHLY_PLAN_ID, year: config.PRO_YEARLY_PLAN_ID },
+  pro_plus: { month: config.PRO_PLUS_MONTHLY_PLAN_ID },
+};
+
 const CHECKOUT_URLS: Record<string, Record<string, string>> = {
   pro: { month: config.PRO_MONTHLY_CHECKOUT_URL, year: config.PRO_YEARLY_CHECKOUT_URL },
   pro_plus: { month: config.PRO_PLUS_MONTHLY_CHECKOUT_URL },
@@ -42,6 +47,29 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
 
   if (data.tier === 'pro_plus' && data.interval !== 'month') {
     throw new ValidationError('Pro Plus solo está disponible en plan mensual');
+  }
+
+  const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
+  if ((sub?.tier === 'pro' || sub?.tier === 'pro_plus') && sub?.status === 'active') {
+    throw new ValidationError(`Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo`);
+  }
+
+  const planId = PLAN_IDS[data.tier]?.[data.interval];
+  const successUrl = data.successUrl || `${config.FRONTEND_URL}/dashboard?pro=activated`;
+  const cancelUrl = data.cancelUrl || `${config.FRONTEND_URL}/pricing`;
+
+  if (planId) {
+    const externalReference = `${data.tier}_${req.user!.userId}_${data.interval}`;
+    const result = await mercadopagoService.createPreApproval({
+      planId,
+      payerEmail: req.user!.email,
+      externalReference,
+      successUrl,
+      cancelUrl,
+      reason: `Fiesta y Lista ${data.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} ${data.interval === 'year' ? 'Anual' : 'Mensual'}`,
+    });
+    res.json({ url: result.initPoint });
+    return;
   }
 
   const url = CHECKOUT_URLS[data.tier]?.[data.interval];
@@ -119,9 +147,8 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
     try {
       await mercadopagoService.cancelPreapproval(sub.mpSubscriptionId);
     } catch (err) {
-      log.error({ err }, 'Error al cancelar en MercadoPago - la suscripción local se canceló pero MP podría seguir cobrando:');
-      await subscriptionService.cancelSubscription(req.user!.userId);
-      res.json({ message: 'Suscripción cancelada exitosamente', mpWarning: 'No pudimos cancelar el cobro automático en Mercado Pago. Si ves un cobro futuro, contáctanos para asistencia.' });
+      log.error({ err }, 'Error al cancelar en MercadoPago — no se cancela local para evitar desincronización:');
+      res.status(502).json({ error: 'No pudimos cancelar el cobro automático en Mercado Pago. Intenta de nuevo o contacta a soporte.' });
       return;
     }
   }

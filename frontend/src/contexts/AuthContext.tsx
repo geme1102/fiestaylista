@@ -90,6 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(res.user);
     } catch (err) {
       reportError(err, { source: 'AuthContext' });
+      if (err instanceof Error && !err.message.includes('Sesión expirada')) {
+        if (import.meta.env.DEV) console.error('[Auth] Error transitorio refrescando usuario:', err);
+        return;
+      }
       clearTokens();
       setUser(null);
     }

@@ -131,17 +131,6 @@ export const cashContributions = pgTable('cash_contributions', {
   statusCreatedAtIdx: index('cash_contributions_status_created_at_idx').on(table.status, table.createdAt),
 }));
 
-export const boostPayments = pgTable('boost_payments', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
-  mpPaymentId: text('mp_payment_id').notNull().unique(),
-  amount: integer('amount').notNull(),
-  status: text('status').notNull().default('completed'),
-  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  eventIdIdx: index('boost_payments_event_id_idx').on(table.eventId),
-}));
-
 export const proPayments = pgTable('pro_payments', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -305,7 +294,6 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   }),
   guests: many(guests),
   messages: many(messages),
-  boostPayments: many(boostPayments),
   views: many(eventViews),
 }));
 
@@ -363,13 +351,6 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 export const guestsRelations = relations(guests, ({ one }) => ({
   event: one(events, {
     fields: [guests.eventId],
-    references: [events.id],
-  }),
-}));
-
-export const boostPaymentsRelations = relations(boostPayments, ({ one }) => ({
-  event: one(events, {
-    fields: [boostPayments.eventId],
     references: [events.id],
   }),
 }));

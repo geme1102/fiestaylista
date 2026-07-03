@@ -17,6 +17,8 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
 
   await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'payment_' + paymentId}))`);
+
     const [existingPayment] = await tx
       .select({ id: proPayments.id })
       .from(proPayments)
@@ -42,6 +44,14 @@ export async function handleProPayment(paymentId: string, userId: string, interv
   });
 
   try {
+    const emailType = isProPlus ? 'pro_plus_confirmation' : 'pro_confirmation';
+    const [existingEmail] = await db
+      .select({ id: emailTracking.id })
+      .from(emailTracking)
+      .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, emailType)))
+      .limit(1);
+    if (existingEmail) return;
+
     const [user] = await db
       .select({ email: users.email, name: users.name })
       .from(users)
@@ -85,6 +95,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
           .catch((err) => log.error({ err }, `Error enviando email de confirmación PRO para ${userId}:`));
       }
     }
+    await db.insert(emailTracking).values({ userId, type: emailType }).onConflictDoNothing();
   } catch (err) {
     log.error({ err }, `Error enviando email de confirmación para ${userId}:`);
   }
@@ -114,6 +125,9 @@ function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; inter
   if (closeEnough(normalized, proMonthly)) return { tier: 'pro', interval: 'month' };
   if (closeEnough(normalized, proYearly)) return { tier: 'pro', interval: 'year' };
   if (closeEnough(normalized, proPlusMonthly)) return { tier: 'pro_plus', interval: 'month' };
+
+  const proPlusYearly = config.PRO_PLUS_YEARLY_PRICE_CENTS;
+  if (closeEnough(normalized, proPlusYearly)) return { tier: 'pro_plus', interval: 'year' };
 
   return null;
 }
@@ -179,7 +193,18 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
 
 export async function handleSubscriptionNotification(preapprovalId: string): Promise<void> {
   const info = await fetchPreapprovalInfo(preapprovalId);
-  let userId: string | null = info.externalReference;
+  let userId: string | null = null;
+  let detectedTier: 'pro' | 'pro_plus' | null = null;
+  let detectedInterval: 'month' | 'year' = 'month';
+  const ref = info.externalReference;
+
+  if (ref && ref.startsWith('pro_')) {
+    const isProPlus = ref.startsWith('pro_plus_');
+    const parts = ref.split('_');
+    userId = parts[isProPlus ? 2 : 1];
+    detectedTier = isProPlus ? 'pro_plus' : 'pro';
+    detectedInterval = (parts[isProPlus ? 3 : 2] || 'month') as 'month' | 'year';
+  }
 
   if (!userId) {
     if (!info.payerEmail) {
@@ -193,13 +218,16 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     }
   }
 
-  const detected = detectTierFromAmount(info.transactionAmount);
-  if (!detected) {
-    log.error({ preapprovalId, amount: info.transactionAmount }, 'Monto de suscripción no coincide con ningún plan conocido');
-    return;
+  if (!detectedTier) {
+    const detected = detectTierFromAmount(info.transactionAmount);
+    if (!detected) {
+      log.error({ preapprovalId, amount: info.transactionAmount }, 'Monto de suscripción no coincide con ningún plan conocido');
+      return;
+    }
+    detectedTier = detected.tier;
+    detectedInterval = detected.interval;
   }
-  const detectedTier = detected.tier;
-  const detectedInterval = detected.interval;
+
   const periodDays = detectedInterval === 'year' ? 365 : 30;
 
   if (info.status === 'active') {
@@ -217,12 +245,16 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       ? new Date(info.dateCreated)
       : new Date();
 
-    await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: preapprovalId,
-      tier: detectedTier,
-      status: 'active',
-      currentPeriodStart,
-      currentPeriodEnd,
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'preapproval_' + preapprovalId}))`);
+
+      await subscriptionService.createOrUpdateSubscription(userId, {
+        mpSubscriptionId: preapprovalId,
+        tier: detectedTier,
+        status: 'active',
+        currentPeriodStart,
+        currentPeriodEnd,
+      }, tx as unknown as typeof db);
     });
   } else if (info.status === 'authorized') {
     const currentPeriodStart = info.dateCreated
@@ -232,12 +264,16 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       ? new Date(info.nextChargeDate)
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: preapprovalId,
-      tier: detectedTier,
-      status: 'pending_approval',
-      currentPeriodStart,
-      currentPeriodEnd,
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'preapproval_' + preapprovalId}))`);
+
+      await subscriptionService.createOrUpdateSubscription(userId, {
+        mpSubscriptionId: preapprovalId,
+        tier: detectedTier,
+        status: 'pending_approval',
+        currentPeriodStart,
+        currentPeriodEnd,
+      }, tx as unknown as typeof db);
     });
   } else if (info.status === 'cancelled') {
     await subscriptionService.cancelSubscription(userId);
@@ -251,25 +287,17 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       .limit(1);
 
     if (pastDueUser?.email) {
-      // Dedup: solo enviar email de past_due una vez por ciclo de suscripción
-      const [recentEmail] = await db
-        .select({ id: emailTracking.id })
-        .from(emailTracking)
-        .where(and(
-          eq(emailTracking.userId, userId),
-          eq(emailTracking.type, 'past_due'),
-          sql`${emailTracking.sentAt} > NOW() - INTERVAL '7 days'`,
-        ))
-        .limit(1);
-
-      if (!recentEmail) {
-        emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {
-          log.error({ err, userId }, 'Error enviando email de past_due:');
-        });
-        db.insert(emailTracking).values({ userId, type: 'past_due' }).catch((err: Error) => {
-          log.error({ err, userId }, 'Error registrando tracking de past_due:');
-        });
+      try {
+        await db.insert(emailTracking).values({ userId, type: 'past_due' });
+      } catch {
+        await db.update(emailTracking)
+          .set({ sentAt: new Date() })
+          .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'past_due')));
       }
+
+      emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {
+        log.error({ err, userId }, 'Error enviando email de past_due:');
+      });
     }
   }
 }

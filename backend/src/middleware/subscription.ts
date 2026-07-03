@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts, subscriptions } from '../db/schema.js';
+import { users, events, subscriptions } from '../db/schema.js';
 import { ForbiddenError, ValidationError } from '../utils/errors.js';
 import { TIER_LIMITS, TIER_ORDER } from '../types/index.js';
 import type { AuthRequest, Tier } from '../types/index.js';
@@ -29,47 +29,6 @@ export function requireTier(minTier: Tier) {
 
       if (userTierValue < minTierValue) {
         throw new ForbiddenError(`Se requiere el plan ${minTier} para acceder a esta funcionalidad`);
-      }
-
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
-}
-
-export function checkEventLimit() {
-  return async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.user) {
-        throw new ForbiddenError('Acceso denegado');
-      }
-
-      const [user] = await db
-        .select({ tier: users.tier })
-        .from(users)
-        .where(eq(users.id, req.user.userId))
-        .limit(1);
-
-      if (!user) {
-        throw new ForbiddenError('Usuario no encontrado');
-      }
-
-      const tier = user.tier as Tier;
-      const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
-
-      const [countResult] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(events)
-        .where(and(
-          eq(events.userId, req.user.userId),
-          isNull(events.deletedAt),
-        ));
-
-      const eventCount = Number(countResult?.count ?? 0);
-
-      if (eventCount >= limits.maxEvents) {
-        throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos en tu plan ${tier}`);
       }
 
       next();
@@ -162,40 +121,4 @@ export function requireActiveSubscription() {
   };
 }
 
-export function checkGiftLimit(eventId: string) {
-  return async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.user) {
-        throw new ForbiddenError('Acceso denegado');
-      }
 
-      const [user] = await db
-        .select({ tier: users.tier })
-        .from(users)
-        .where(eq(users.id, req.user.userId))
-        .limit(1);
-
-      if (!user) {
-        throw new ForbiddenError('Usuario no encontrado');
-      }
-
-      const tier = user.tier as Tier;
-      const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
-
-      const [countResult] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(gifts)
-        .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)));
-
-      const giftCount = Number(countResult?.count ?? 0);
-
-      if (giftCount >= limits.maxGiftsPerEvent) {
-        throw new ValidationError(`Has alcanzado el límite de ${limits.maxGiftsPerEvent} regalos por evento en tu plan ${tier}`);
-      }
-
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
-}

@@ -45,7 +45,6 @@ vi.mock('../db/index.js', () => ({
 
 vi.mock('../db/schema.js', () => ({
   events: {},
-  boostPayments: {},
   cashContributions: {},
 }));
 
@@ -155,6 +154,69 @@ describe('fetchPaymentInfo', () => {
     expect(info.transactionAmount).toBe(50000);
     expect(info.payerName).toBe('Juan');
     expect(info.payerEmail).toBe('juan@test.com');
+  });
+});
+
+describe('createPreApproval', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('creates a preapproval and returns init point and id', async () => {
+    mockPreApprovalCreate.mockResolvedValueOnce({
+      init_point: 'https://mercadopago.com.co/checkout/pre-1',
+      id: 'pre-1',
+    });
+
+    const result = await import('../services/mercadopago.js').then(m => m.createPreApproval({
+      planId: 'plan-1',
+      payerEmail: 'test@test.com',
+      externalReference: 'pro_user-1_month',
+      successUrl: 'https://app.com/success',
+      cancelUrl: 'https://app.com/cancel',
+      reason: 'Fiesta y Lista Pro Mensual',
+    }));
+
+    expect(result.initPoint).toBe('https://mercadopago.com.co/checkout/pre-1');
+    expect(result.preapprovalId).toBe('pre-1');
+    expect(mockPreApprovalCreate).toHaveBeenCalledWith({
+      body: {
+        preapproval_plan_id: 'plan-1',
+        payer_email: 'test@test.com',
+        external_reference: 'pro_user-1_month',
+        back_url: 'https://app.com/success',
+        status: 'pending',
+        reason: 'Fiesta y Lista Pro Mensual',
+      },
+    });
+  });
+});
+
+describe('fetchPreapprovalInfo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns parsed preapproval info', async () => {
+    mockPreApprovalGet.mockResolvedValueOnce({
+      status: 'active',
+      external_reference: 'pro_user-1_month',
+      payer_email: 'test@test.com',
+      reason: 'Pro Mensual',
+      auto_recurring: { transaction_amount: 59900 },
+      next_charge_date: '2026-08-01T00:00:00Z',
+      date_created: '2026-07-01T00:00:00Z',
+    });
+
+    const { fetchPreapprovalInfo } = await import('../services/mercadopago.js');
+    const info = await fetchPreapprovalInfo('pre-1');
+
+    expect(info.status).toBe('active');
+    expect(info.externalReference).toBe('pro_user-1_month');
+    expect(info.payerEmail).toBe('test@test.com');
+    expect(info.transactionAmount).toBe(59900);
+    expect(info.nextChargeDate).toBe('2026-08-01T00:00:00Z');
+    expect(info.dateCreated).toBe('2026-07-01T00:00:00Z');
   });
 });
 

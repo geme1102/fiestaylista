@@ -84,8 +84,7 @@ vi.mock('../db/schema.js', () => ({
   refreshTokens: {},
   cashFunds: {},
   cashContributions: {},
-  boostPayments: {},
-  proPayments: {},
+      proPayments: {},
   failedWebhooks: {},
   platformFees: {},
   messages: {},
@@ -771,6 +770,37 @@ describe('Subscription Routes', () => {
       .send({});
 
     expect(res.status).toBe(200);
+    expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
+  });
+
+  it('POST /api/subscriptions/cancel - returns 502 when MP cancel fails, does not cancel locally', async () => {
+    mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: 'mp-1' });
+    mockMercadopagoService.cancelPreapproval.mockRejectedValue(new Error('MP API error'));
+
+    const res = await request(app)
+      .post('/api/subscriptions/cancel')
+      .set(auth)
+      .set('x-password', 'Password1')
+      .send({});
+
+    expect(res.status).toBe(502);
+    expect(res.body.error).toContain('No pudimos cancelar');
+    expect(mockSubscriptionService.cancelSubscription).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/subscriptions/cancel - cancels locally when no mpSubscriptionId', async () => {
+    mockSubscriptionService.cancelSubscription.mockResolvedValue({ success: true });
+
+    mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: null });
+
+    const res = await request(app)
+      .post('/api/subscriptions/cancel')
+      .set(auth)
+      .set('x-password', 'Password1')
+      .send({});
+
+    expect(res.status).toBe(200);
+    expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
   });
 
   it('POST /api/subscriptions/sync - sync subscription', async () => {

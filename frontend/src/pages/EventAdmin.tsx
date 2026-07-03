@@ -35,6 +35,7 @@ const GiftManagement = lazy(() => import('../components/admin/GiftManagement'));
 const PhotoGallery = lazy(() => import('../components/admin/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
 const GuestsPanel = lazy(() => import('../components/admin/GuestsPanel'));
 const MessagesPanel = lazy(() => import('../components/admin/MessagesPanel'));
+const CashFundSection = lazy(() => import('../components/CashFundSection'));
 
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
@@ -137,7 +138,7 @@ export default function EventAdmin() {
       photoCount: photos.length,
       maxPhotos: TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent,
       eventViews: 0,
-      isPro: user?.tier === 'pro',
+      isPro: user?.tier !== 'free',
       setupComplete: setupPercent >= 100,
     });
   }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements]);
@@ -747,6 +748,15 @@ onClick={() => {
             </div>
           )}
 
+          {/* Cash Fund Section for Admin */}
+          {(isBoosted || cashFund?.isActive) && id && (
+            <div className="mt-6">
+              <Suspense fallback={<div className="h-32 bg-gray-50 rounded-2xl animate-pulse" />}>
+                <CashFundSection eventId={id} isOwner={true} />
+              </Suspense>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
             <motion.button
@@ -1153,7 +1163,7 @@ onClick={() => {
           <span className="material-symbols-outlined">card_giftcard</span>
           <span className="font-label-md text-label-md">Planes</span>
           <span className="absolute -top-0.5 -right-2 text-[7px] font-black px-1 py-0.5 rounded-full bg-primary/10 text-primary">
-            {user?.tier === 'free' ? 'FREE' : 'PRO'}
+            {user?.tier === 'free' ? 'FREE' : user?.tier === 'pro_plus' ? 'PRO+' : 'PRO'}
           </span>
         </Link>
         <Link to="/account" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-primary-container transition-all active:scale-90 duration-200">

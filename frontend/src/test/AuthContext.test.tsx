@@ -214,7 +214,7 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user').textContent).toBe('Ana');
     });
 
-    mockGetMe.mockRejectedValue(new Error('fail'));
+    mockGetMe.mockRejectedValue(new Error('Sesión expirada'));
 
     fireEvent.click(screen.getByTestId('refreshUser'));
 

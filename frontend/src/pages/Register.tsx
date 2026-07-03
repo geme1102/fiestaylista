@@ -76,7 +76,7 @@ export default function Register() {
     try {
       await register(email, password, name, token ?? undefined);
       navigatedRef.current = true;
-      if (planParam === 'pro') {
+      if (planParam === 'pro' || planParam === 'pro_plus') {
         navigate(`/pricing?intent=pro&interval=${intervalParam || 'month'}`, { replace: true });
       } else {
         navigate('/onboarding', { replace: true });

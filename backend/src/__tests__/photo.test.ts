@@ -102,7 +102,7 @@ describe('addPhoto', () => {
       .mockResolvedValue([]);
 
     await expect(addPhoto('evt-1', 'https://example.com/photo.jpg')).rejects.toThrow(
-      'Has alcanzado el límite de 3 fotos por evento en tu plan free',
+      'Has alcanzado el límite de 0 fotos por evento en tu plan free',
     );
   });
 
@@ -115,7 +115,7 @@ describe('addPhoto', () => {
       .mockResolvedValueOnce([{ count: 1 }]);
     mockTx.limit
       .mockResolvedValueOnce([{ userId: 'user-1', isActive: true }])
-      .mockResolvedValueOnce([{ tier: 'free' }])
+      .mockResolvedValueOnce([{ tier: 'pro' }])
       .mockResolvedValue([]);
     mockTx.returning
       .mockResolvedValueOnce([{ id: 'photo-1', eventId: 'evt-1', url: 'https://example.com/photo.jpg' }])

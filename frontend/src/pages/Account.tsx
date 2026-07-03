@@ -260,11 +260,24 @@ export default function Account() {
                      subscription.status === 'canceled' ? 'Cancelado' :
                      subscription.status === 'incomplete' ? 'Incompleto' :
                      subscription.status === 'trialing' ? 'Prueba' :
+                     subscription.status === 'pending_approval' ? 'Pendiente de aprobación' :
                      subscription.status}
                   </span></p>
                   {subscription.currentPeriodEnd && (
                     <p>{subscription.status === 'canceled' ? 'Acceso Pro hasta' : 'Próxima factura'}: {formatDate(subscription.currentPeriodEnd)}</p>
                   )}
+                </div>
+              )}
+
+              {subscription?.status === 'pending_approval' && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-blue-600 text-sm mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>hourglass_top</span>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Suscripción pendiente de aprobación</p>
+                      <p className="text-xs text-blue-700 mt-1">Estamos esperando la confirmación del pago por parte de Mercado Pago. Este proceso suele tomar unos minutos. Te notificaremos cuando tu suscripción esté activa.</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -284,7 +297,7 @@ export default function Account() {
                             const successUrl = `${window.location.origin}/dashboard?pro=activated`;
                             const cancelUrl = `${window.location.origin}/account`;
                             const res = await apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
-                              tier: 'pro',
+                              tier: user?.tier ?? 'pro',
                               successUrl,
                               cancelUrl,
                             });
@@ -315,7 +328,7 @@ export default function Account() {
                   : 0;
 
                 // Still within grace period (less than 7 days since expiry)
-                if (user.tier === 'pro' && daysSinceExpiry <= 7) {
+                if (user.tier !== 'free' && daysSinceExpiry <= 7) {
                   return (
                     <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                       <div className="flex items-start gap-3">

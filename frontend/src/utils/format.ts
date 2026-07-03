@@ -14,7 +14,7 @@ const ALLOWED_REDIRECT_DOMAINS = [
 export function validateRedirectUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    if (parsed.protocol !== 'https:') {
       return '';
     }
     if (ALLOWED_REDIRECT_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d))) {

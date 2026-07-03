@@ -6,6 +6,35 @@ vi.mock('../config.js', () => ({
   },
 }));
 
+function mockReturning(rows: any[]) {
+  return { returning: vi.fn().mockResolvedValue(rows) };
+}
+
+function mockInsertChain(returningVal: { returning: any }) {
+  const onConflictDoUpdate = vi.fn().mockReturnValue(returningVal);
+  const values = vi.fn().mockReturnValue({ onConflictDoUpdate });
+  const insert = vi.fn().mockReturnValue({ values });
+  return { insert, values, onConflictDoUpdate, returning: returningVal.returning };
+}
+
+function mockUpdateChain() {
+  const where2 = vi.fn().mockResolvedValue(undefined);
+  const set2 = vi.fn().mockReturnValue({ where: where2 });
+  const update2 = vi.fn().mockReturnValue({ set: set2 });
+  return { update: update2, set: set2, where: where2 };
+}
+
+function mockSelectChain(limitResult: any[]) {
+  const limitSelect = vi.fn().mockResolvedValue(limitResult);
+  const orderBy = vi.fn().mockReturnValue({ limit: limitSelect });
+  const where = vi.fn().mockReturnValue({ orderBy });
+  const from = vi.fn().mockReturnValue({ where });
+  const select = vi.fn().mockReturnValue({ from });
+  return { select, from, where, orderBy, limit: limitSelect };
+}
+
+let mockDb: any;
+
 vi.mock('../db/index.js', () => ({
   db: {
     transaction: vi.fn(),
@@ -13,6 +42,7 @@ vi.mock('../db/index.js', () => ({
     insert: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    execute: vi.fn(),
   },
 }));
 
@@ -26,6 +56,7 @@ import {
   cancelSubscription,
   getCurrentSubscription,
   expireStaleSubscriptions,
+  createOrUpdateSubscription,
 } from '../services/subscription.js';
 
 const mockSub = {
@@ -75,6 +106,10 @@ describe('getCurrentSubscription', () => {
 });
 
 describe('cancelSubscription', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('cancels subscription without downgrading tier when not immediate', async () => {
     const { db } = await import('../db/index.js');
 
@@ -95,6 +130,10 @@ describe('cancelSubscription', () => {
 });
 
 describe('expireStaleSubscriptions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('returns 0 when no stale subscriptions', async () => {
     const { db } = await import('../db/index.js');
 
@@ -109,5 +148,80 @@ describe('expireStaleSubscriptions', () => {
 
     const count = await expireStaleSubscriptions();
     expect(count).toBe(0);
+  });
+});
+
+describe('createOrUpdateSubscription', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('unfreezes up to maxEvents (1) events for pro tier', async () => {
+    const { db } = await import('../db/index.js');
+
+    const returningVal = mockReturning([{ id: 'sub-1' }]);
+    const ins = mockInsertChain(returningVal);
+    const upd = mockUpdateChain();
+    const sel = mockSelectChain([{ id: 'evt-1' }]);
+
+    vi.mocked(db.insert).mockImplementation(ins.insert);
+    vi.mocked(db.update).mockImplementation(upd.update);
+    vi.mocked(db.select).mockImplementation(sel.select);
+
+    await createOrUpdateSubscription('user-1', {
+      mpSubscriptionId: null,
+      tier: 'pro',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(),
+    });
+
+    expect(sel.limit).toHaveBeenCalledWith(1);
+    expect(ins.returning).toHaveBeenCalled();
+  });
+
+  it('unfreezes up to maxEvents (3) events for pro_plus tier', async () => {
+    const { db } = await import('../db/index.js');
+
+    const returningVal = mockReturning([{ id: 'sub-1' }]);
+    const ins = mockInsertChain(returningVal);
+    const upd = mockUpdateChain();
+    const sel = mockSelectChain(Array.from({ length: 3 }, (_, i) => ({ id: `evt-${i + 1}` })));
+
+    vi.mocked(db.insert).mockImplementation(ins.insert);
+    vi.mocked(db.update).mockImplementation(upd.update);
+    vi.mocked(db.select).mockImplementation(sel.select);
+
+    await createOrUpdateSubscription('user-1', {
+      mpSubscriptionId: null,
+      tier: 'pro_plus',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(),
+    });
+
+    expect(sel.limit).toHaveBeenCalledWith(3);
+  });
+
+  it('does not unfreeze events when status is not active', async () => {
+    const { db } = await import('../db/index.js');
+
+    const returningVal = mockReturning([{ id: 'sub-1' }]);
+    const ins = mockInsertChain(returningVal);
+    const upd = mockUpdateChain();
+
+    vi.mocked(db.insert).mockImplementation(ins.insert);
+    vi.mocked(db.update).mockImplementation(upd.update);
+    vi.mocked(db.select).mockReturnValue({} as any);
+
+    await createOrUpdateSubscription('user-1', {
+      mpSubscriptionId: null,
+      tier: 'pro',
+      status: 'canceled',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(),
+    });
+
+    expect(db.select).not.toHaveBeenCalled();
   });
 });

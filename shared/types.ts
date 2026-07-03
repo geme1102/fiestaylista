@@ -11,7 +11,7 @@ export interface TierLimits {
 }
 
 export const TIER_LIMITS: Record<Tier, TierLimits> = {
-  free: { maxEvents: 1, maxGiftsPerEvent: 15, maxPhotosPerEvent: 3 },
+  free: { maxEvents: 1, maxGiftsPerEvent: 10, maxPhotosPerEvent: 0 },
   pro: { maxEvents: 1, maxGiftsPerEvent: 100, maxPhotosPerEvent: 20 },
   pro_plus: { maxEvents: 3, maxGiftsPerEvent: 100, maxPhotosPerEvent: 20 },
 };
