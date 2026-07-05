@@ -22,10 +22,12 @@ const PLANS = [
     popular: false,
     features: [
       { text: '1 evento', included: true },
-      { text: '15 regalos por evento', included: true },
-      { text: '3 fotos por evento', included: true },
-      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
-      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
+      { text: '10 regalos por evento', included: true },
+      { text: 'Notificaciones WhatsApp', included: true },
+      { text: 'Lluvia de Sobres', included: true },
+      { text: '100 regalos por evento', included: false },
+      { text: 'Fotos del evento', included: false },
+      { text: 'Panel de estadísticas', included: false },
     ],
   },
   {
@@ -39,9 +41,9 @@ const PLANS = [
       { text: '1 evento', included: true },
       { text: '100 regalos por evento', included: true },
       { text: '20 fotos por evento', included: true },
-      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
-      { text: 'Panel de estadísticas con gráficas', included: true },
-      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
+      { text: 'Notificaciones WhatsApp', included: true },
+      { text: 'Lluvia de Sobres', included: true },
+      { text: 'Panel de estadísticas', included: true },
     ],
   },
   {
@@ -50,14 +52,14 @@ const PLANS = [
     price: 99900,
     yearlyPrice: 1098900,
     popular: false,
-    badge: 'NUEVO',
+    badge: 'TODO INCLUIDO',
     features: [
       { text: '3 eventos', included: true },
       { text: '100 regalos por evento', included: true },
       { text: '20 fotos por evento', included: true },
-      { text: 'Lluvia de Sobres: tus invitados reportan sus aportes', included: true },
-      { text: 'Panel de estadísticas con gráficas', included: true },
-      { text: 'Tus invitados te avisan por WhatsApp al apartar un regalo', included: true },
+      { text: 'Notificaciones WhatsApp', included: true },
+      { text: 'Lluvia de Sobres', included: true },
+      { text: 'Panel de estadísticas', included: true },
     ],
   },
 ];
@@ -73,7 +75,7 @@ const ALL_INCLUDED = [
 
 const FAQS = [
   { q: '¿Cómo retiro el dinero que me den los invitados?', a: 'La Lluvia de Sobres funciona por transferencia directa: tus invitados envían su aporte a tu cuenta Nequi, Bancolombia o Daviplata. La app solo muestra cuánto han reportado. Tú recibes el dinero directamente.' },
-  { q: '¿Cuántos regalos puedo agregar?', a: 'En el plan Gratis puedes agregar hasta 15 regalos por evento. En el plan Pro son hasta 100 regalos por evento. Ambos planes incluyen 1 evento.' },
+  { q: '¿Cuántos regalos puedo agregar?', a: 'En el plan Gratis puedes agregar hasta 10 regalos por evento. En el plan Pro son hasta 100 regalos por evento. Ambos planes incluyen 1 evento.' },
   { q: '¿Puedo empezar gratis y luego actualizar?', a: 'Sí, empiezas sin pagar nada. Cuando quieras más regalos, actualizas a Pro y listo. Sin contratos ni permanencia.' },
   { q: '¿Es seguro para mis invitados?', a: 'Manejan su dinero directamente con su banco. Tus invitados transfieren a tu cuenta sin intermediarios.' },
 ];
@@ -258,6 +260,7 @@ export default function Pricing() {
               <button
                 data-testid="pricing-toggle-monthly"
                 onClick={() => setYearly(false)}
+                aria-pressed={!yearly}
                 className={cn(
                   'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
                   !yearly ? 'text-on-surface' : 'text-on-surface-variant',
@@ -268,6 +271,7 @@ export default function Pricing() {
               <button
                 data-testid="pricing-toggle-yearly"
                 onClick={() => setYearly(true)}
+                aria-pressed={yearly}
                 className={cn(
                   'px-8 py-2 rounded-full font-label-md text-label-md transition-all duration-300 z-10',
                   yearly ? 'text-on-surface' : 'text-on-surface-variant',
@@ -309,7 +313,8 @@ export default function Pricing() {
                     )}
                     <div
                       className={cn(
-                        'glass-card-gradient h-full p-8 rounded-3xl flex flex-col items-center text-center hover:-translate-y-2 hover:scale-[1.02] hover:shadow-xl transition-all duration-300',
+                        'h-full p-8 rounded-3xl flex flex-col items-center text-center hover:-translate-y-2 hover:shadow-xl transition-[transform,box-shadow] duration-300',
+                        plan.tier === 'free' ? 'bg-surface-container-low border border-outline/10' : 'glass-card-gradient',
                         plan.popular && 'glow-shadow-pro',
                       )}
                     >
@@ -350,19 +355,19 @@ export default function Pricing() {
                         </div>
                       ) : isDowngrade ? (
                         <div className="w-full py-4 text-center font-label-md text-label-md text-on-surface-variant bg-surface-container rounded-xl border-2 border-outline cursor-not-allowed">
-                          Plan no disponible
+                          Requiere plan superior
                         </div>
                       ) : (
                         <button
                           data-testid={plan.price === 0 ? 'cta-free' : plan.tier === 'pro_plus' ? 'cta-pro-plus' : 'cta-pro'}
                           onClick={() => handleSelect(plan.tier)}
                           disabled={loading}
-                          className={cn(
-                            'mt-auto w-full py-4 font-label-md text-label-md rounded-xl active:scale-95 transition-all duration-200',
-                            plan.popular
-                              ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110'
-                              : 'border-2 border-outline text-on-surface-variant hover:bg-surface-variant transition-colors',
-                          )}
+                            className={cn(
+                              'mt-auto w-full py-4 font-label-md text-label-md rounded-xl active:scale-95 transition-[transform,box-shadow] duration-200',
+                              plan.tier !== 'free'
+                                ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110'
+                                : 'border-2 border-outline text-on-surface-variant hover:bg-surface-variant',
+                            )}
                         >
                           {loading && selectedTier === plan.tier ? (
                             <span className="inline-flex items-center justify-center gap-2">
@@ -383,6 +388,13 @@ export default function Pricing() {
               })}
             </div>
           </section>
+
+          {/* Trust near CTAs */}
+          <div className="text-center mt-6">
+            <p className="text-sm text-on-surface-variant">
+              Cancela cuando quieras · Sin contratos · Pagos 100% seguros
+            </p>
+          </div>
 
           {/* Trust Signals */}
           <section className="max-w-3xl mx-auto px-4 mt-section-gap-mobile md:mt-section-gap-desktop text-center">
@@ -422,14 +434,18 @@ export default function Pricing() {
               {FAQS.map((faq, idx) => (
                 <div
                   key={idx}
-                  data-testid="faq-item"
                   className={cn(
-                    'glass-card rounded-2xl overflow-hidden cursor-pointer transition-all',
+                    'glass-card rounded-2xl overflow-hidden transition-all',
                     activeFaq === idx ? 'shadow-md' : '',
                   )}
-                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
                 >
-                  <div className="p-6 flex justify-between items-center">
+                  <button
+                    data-testid="faq-item"
+                    onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+                    aria-expanded={activeFaq === idx}
+                    aria-controls={`faq-answer-${idx}`}
+                    className="w-full flex justify-between items-center p-6 text-left cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:outline-none rounded-2xl"
+                  >
                     <span className="font-label-md text-label-md text-on-surface">{faq.q}</span>
                     <span className={cn(
                       'material-symbols-outlined text-on-surface-variant transition-transform duration-300',
@@ -437,11 +453,15 @@ export default function Pricing() {
                     )}>
                       expand_more
                     </span>
-                  </div>
-                  <div className={cn(
-                    'overflow-hidden transition-all duration-300',
-                    activeFaq === idx ? 'max-h-96' : 'max-h-0',
-                  )}>
+                  </button>
+                  <div
+                    id={`faq-answer-${idx}`}
+                    role="region"
+                    className={cn(
+                      'overflow-hidden transition-all duration-300',
+                      activeFaq === idx ? 'max-h-96' : 'max-h-0',
+                    )}
+                  >
                     <div className="px-6 pb-6 font-body-md text-body-md text-on-surface-variant border-t border-outline-variant pt-4">
                       {faq.a}
                     </div>
