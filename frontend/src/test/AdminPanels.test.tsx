@@ -141,7 +141,7 @@ describe('PhotoGallery', () => {
 
   it('shows empty state', () => {
     render(<PhotoGallery {...defaultPhotoProps} photos={[]} />);
-    expect(screen.getByText(/Aún no hay fotografías/)).toBeTruthy();
+    expect(screen.getByText(/Aún no hay fotos/)).toBeTruthy();
   });
 
   it('shows upload progress', () => {

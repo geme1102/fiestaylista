@@ -39,8 +39,12 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     const token = req.body?.turnstileToken;
 
     if (!config.TURNSTILE_SECRET_KEY) {
-      next();
-      return;
+      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        log.warn('Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo');
+        next();
+        return;
+      }
+      throw new ValidationError('Turnstile no está configurado');
     }
 
     if (!token) {
