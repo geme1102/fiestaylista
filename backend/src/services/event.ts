@@ -45,7 +45,7 @@ export async function createEvent(userId: string, data: CreateEventData) {
 
     const eventCount = Number(countResult?.count ?? 0);
     if (eventCount >= limits.maxEvents) {
-      throw new ValidationError(`Has alcanzado el límite de ${limits.maxEvents} eventos en tu plan ${tier}`);
+      throw new ForbiddenError(`Has alcanzado el límite de ${limits.maxEvents} eventos en tu plan ${tier}`);
     }
 
     const baseSlug = generateSlug(data.title);
@@ -61,19 +61,27 @@ export async function createEvent(userId: string, data: CreateEventData) {
       slug = `${baseSlug}-${attempt}`;
     }
 
-    const [event] = await tx
-      .insert(eventsTable)
-      .values({
-        userId,
-        title: data.title,
-        eventType: data.eventType,
-        hostPhone: data.hostPhone || null,
-        eventDate: data.eventDate ? new Date(data.eventDate) : null,
-        eventLocation: data.eventLocation || null,
-        eventNote: data.eventNote || null,
-        slug,
-      })
-      .returning();
+    let event: typeof eventsTable.$inferSelect | undefined;
+    try {
+      [event] = await tx
+        .insert(eventsTable)
+        .values({
+          userId,
+          title: data.title,
+          eventType: data.eventType,
+          hostPhone: data.hostPhone || null,
+          eventDate: data.eventDate ? new Date(data.eventDate) : null,
+          eventLocation: data.eventLocation || null,
+          eventNote: data.eventNote || null,
+          slug,
+        })
+        .returning();
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
+        throw new ValidationError('Ya existe un evento con ese nombre. Intenta con otro título.');
+      }
+      throw err;
+    }
 
     return event;
   });

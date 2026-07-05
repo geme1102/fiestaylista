@@ -116,14 +116,20 @@ export async function claimGift(giftId: string, claimedBy: string) {
     throw new ValidationError('El nombre es requerido');
   }
 
-  const [giftWithEvent] = await db
-    .select({ eventId: giftsTable.eventId })
-    .from(giftsTable)
-    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
-    .limit(1);
+  return await db.transaction(async (tx) => {
+    const [giftWithEvent] = await tx
+      .select({ eventId: giftsTable.eventId, isClaimed: giftsTable.isClaimed })
+      .from(giftsTable)
+      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
+      .limit(1);
 
-  if (giftWithEvent) {
-    const [event] = await db
+    if (!giftWithEvent) throw new NotFoundError('Regalo no encontrado');
+
+    if (giftWithEvent.isClaimed) {
+      throw new ValidationError('Este regalo ya ha sido reservado');
+    }
+
+    const [event] = await tx
       .select({ status: events.status })
       .from(events)
       .where(eq(events.id, giftWithEvent.eventId))
@@ -132,29 +138,21 @@ export async function claimGift(giftId: string, claimedBy: string) {
     if (event && event.status === 'completed') {
       throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
     }
-  }
 
-  const [updated] = await db
-    .update(giftsTable)
-    .set({
-      isClaimed: true,
-      claimedBy: cleanedName,
-    })
-    .where(and(eq(giftsTable.id, giftId), eq(giftsTable.isClaimed, false), isNull(giftsTable.deletedAt)))
-    .returning();
+    const [updated] = await tx
+      .update(giftsTable)
+      .set({
+        isClaimed: true,
+        claimedBy: cleanedName,
+      })
+      .where(and(eq(giftsTable.id, giftId), eq(giftsTable.isClaimed, false), isNull(giftsTable.deletedAt)))
+      .returning();
 
-  if (!updated) {
-    const [existing] = await db
-      .select({ id: giftsTable.id })
-      .from(giftsTable)
-      .where(eq(giftsTable.id, giftId))
-      .limit(1);
-    if (!existing) {
-      throw new NotFoundError('Regalo no encontrado');
+    if (!updated) {
+      throw new ValidationError('Este regalo ya ha sido reservado');
     }
-    throw new ValidationError('Este regalo ya ha sido reservado');
-  }
-  return updated;
+    return updated;
+  });
 }
 
 export async function releaseGift(giftId: string) {

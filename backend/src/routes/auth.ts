@@ -67,7 +67,10 @@ router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidatio
 
 router.post('/login', verifyTurnstile, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
-  const result = await authService.login(data.email, data.password);
+  const result = await authService.login(data.email, data.password, {
+    userAgent: req.headers['user-agent'],
+    ipAddress: req.ip,
+  });
   setRefreshCookie(res, result.refreshToken);
   res.json(result);
 }));

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import { db } from '../db/index.js';
-import { users } from '../db/schema.js';
+import { users, auditLogs } from '../db/schema.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
 import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens } from './auth-tokens.js';
@@ -108,6 +108,7 @@ export async function register(
 export async function login(
   email: string,
   password: string,
+  meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   const [user] = await db
     .select()
@@ -117,17 +118,42 @@ export async function login(
 
   if (!user) {
     await bcrypt.compare(password, DUMMY_HASH);
+    await db.insert(auditLogs).values({
+      action: 'auth.login.failed',
+      resource: 'user',
+      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'not_found' }),
+      ipAddress: meta?.ipAddress ?? null,
+      userAgent: meta?.userAgent ?? null,
+    });
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
     await bcrypt.compare(password, DUMMY_HASH);
+    await db.insert(auditLogs).values({
+      userId: user.id,
+      action: 'auth.login.failed',
+      resource: 'user',
+      resourceId: user.id,
+      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'guest_login_attempt' }),
+      ipAddress: meta?.ipAddress ?? null,
+      userAgent: meta?.userAgent ?? null,
+    });
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValid) {
+    await db.insert(auditLogs).values({
+      userId: user.id,
+      action: 'auth.login.failed',
+      resource: 'user',
+      resourceId: user.id,
+      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'wrong_password' }),
+      ipAddress: meta?.ipAddress ?? null,
+      userAgent: meta?.userAgent ?? null,
+    });
     throw new UnauthorizedError('Credenciales inválidas');
   }
 

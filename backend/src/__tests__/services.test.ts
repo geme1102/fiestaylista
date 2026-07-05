@@ -31,7 +31,7 @@ vi.mock('../db/index.js', () => ({
   desc: vi.fn((c: any) => c),
 }));
 
-vi.mock('../db/schema.js', () => ({ users: {}, refreshTokens: {}, events: {}, gifts: {}, giftClaims: {}, photos: {}, subscriptions: {}, cashFunds: {}, cashContributions: {}, messages: {}, guests: {} }));
+vi.mock('../db/schema.js', () => ({ users: {}, refreshTokens: {}, events: {}, gifts: {}, giftClaims: {}, photos: {}, subscriptions: {}, cashFunds: {}, cashContributions: {}, messages: {}, guests: {}, auditLogs: {} }));
 
 vi.mock('../utils/logger.js', () => ({
   createModuleLogger: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn(), fatal: vi.fn(), debug: vi.fn() }),
@@ -126,6 +126,7 @@ describe('Auth Service', () => {
       const { db } = await import('../db/index.js');
       const { login } = await import('../services/auth.js');
       vi.mocked(db.select).mockReturnValue(queryMock([[]]));
+      vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) } as any);
       await expect(login('no@one.com', 'p')).rejects.toThrow('Credenciales inválidas');
     });
   });
@@ -239,11 +240,9 @@ describe('Gift Service', () => {
     it('claims available gift', async () => {
       const { db } = await import('../db/index.js');
       const { claimGift } = await import('../services/gift.js');
-      const selectQ = queryMock([[{ eventId: 'e1' }], [{ status: 'active' }]]);
-      vi.mocked(db.select).mockReturnValue(selectQ);
-      const updateQ = queryMock([]);
-      updateQ._updateResult = [{ id: 'g1', isClaimed: true, claimedBy: 'Ana' }];
-      vi.mocked(db.update).mockReturnValue(updateQ);
+      const tx = queryMock([[{ eventId: 'e1', isClaimed: false }], [{ status: 'active' }]]);
+      tx._updateResult = [{ id: 'g1', isClaimed: true, claimedBy: 'Ana' }];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
       const result = await claimGift('g1', 'Ana');
       expect(result.isClaimed).toBe(true);
     });
