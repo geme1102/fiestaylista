@@ -34,6 +34,28 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
   }
 }
 
+export async function verifyTurnstileOptional(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    const token = req.body?.turnstileToken;
+
+    if (!config.TURNSTILE_SECRET_KEY) {
+      next();
+      return;
+    }
+
+    if (!token) {
+      log.warn('Token Turnstile no proporcionado — omitiendo verificación');
+      next();
+      return;
+    }
+
+    await verifyToken(token);
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function verifyToken(token: string): Promise<void> {
   const formData = new URLSearchParams();
   formData.append('secret', config.TURNSTILE_SECRET_KEY);

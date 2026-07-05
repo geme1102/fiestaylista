@@ -24,7 +24,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
       replaysOnErrorSampleRate: 1.0,
     });
   } catch (e) {
-    if (import.meta.env.DEV) console.error('[sentry] Error inicializando Sentry:', e);
+    console.error('[sentry] Error inicializando Sentry:', e);
   }
 }
 

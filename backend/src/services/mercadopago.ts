@@ -10,6 +10,13 @@ if (config.MERCADO_PAGO_ACCESS_TOKEN) {
   client = new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
 }
 
+export function mpNotificationUrl(): string {
+  const base = config.BACKEND_URL
+    .replace(/\/+$/, '')
+    .replace(/^([a-zA-Z]+:\/\/)?/, (_, proto) => proto || 'https://');
+  return `${base}/api/webhooks/mercadopago`;
+}
+
 export function serializeError(error: unknown): Error {
   if (error instanceof Error) return error;
   if (typeof error === 'object' && error !== null) {
@@ -74,6 +81,39 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
     payerName: info.payer?.first_name ?? '',
     payerEmail: info.payer?.email ?? '',
   };
+}
+
+export async function searchPaymentsByRef(externalReference: string): Promise<{
+  id: string;
+  status: string;
+  transactionAmount: number;
+} | null> {
+  if (!client) return null;
+
+  try {
+    const result = await retryable(async (signal) => {
+      const url = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}&limit=5`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
+        signal,
+      });
+      if (!res.ok) throw new Error(`MP API error: ${res.status}`);
+      return res.json() as Promise<{ results: Array<{ id: number; status: string; transaction_amount: number }> }>;
+    });
+
+    const results = result?.results ?? [];
+    const approved = results.find((p) => p.status === 'approved');
+    if (!approved) return null;
+
+    return {
+      id: String(approved.id),
+      status: approved.status,
+      transactionAmount: approved.transaction_amount,
+    };
+  } catch (err) {
+    log.error({ err }, 'Error searching payments by ref:');
+    return null;
+  }
 }
 
 export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{

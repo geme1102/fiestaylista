@@ -54,6 +54,23 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
   res.status(201).json({ photo });
 }));
 
+router.post('/guest', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const eventId = req.params.eventId as string | undefined;
+  if (!eventId) {
+    throw new ValidationError('ID del evento requerido');
+  }
+  const data = createPhotoSchema.parse(req.body);
+  const photo = await photoService.addPhoto(eventId, data.url, data.caption);
+
+  emitPhotoUploaded({
+    eventId,
+    photoUrl: data.url,
+    uploadedBy: 'El anfitrión',
+    timestamp: new Date().toISOString(),
+  });
+  res.status(201).json({ photo });
+}));
+
 const guestPhotoSchema = z.object({
   url: z.string().url('La URL de la foto es inválida').refine((u) => {
     try { const p = new URL(u); return p.protocol === 'https:'; } catch { return false; }

@@ -156,21 +156,17 @@ export async function claimGift(giftId: string, claimedBy: string) {
 }
 
 export async function releaseGift(giftId: string) {
-  return await db.transaction(async (tx) => {
-    await tx.delete(giftClaims).where(eq(giftClaims.giftId, giftId));
+  const [gift] = await db
+    .update(giftsTable)
+    .set({ isClaimed: false, claimedBy: null })
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
+    .returning();
 
-    const [gift] = await tx
-      .update(giftsTable)
-      .set({ isClaimed: false, claimedBy: null })
-      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
-      .returning();
+  if (!gift) {
+    throw new NotFoundError('Regalo no encontrado');
+  }
 
-    if (!gift) {
-      throw new NotFoundError('Regalo no encontrado');
-    }
-
-    return gift;
-  });
+  return gift;
 }
 
 export async function deleteGift(giftId: string) {
@@ -262,52 +258,12 @@ export async function getGiftClaims(giftId: string) {
 }
 
 export async function toggleGroupGift(giftId: string, isGroupGift: boolean) {
-  return await db.transaction(async (tx) => {
-    const [gift] = await tx
-      .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed, claimedBy: giftsTable.claimedBy, isGroupGift: giftsTable.isGroupGift, deletedAt: giftsTable.deletedAt })
-      .from(giftsTable)
-      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
-      .for('update')
-      .limit(1);
+  const [gift] = await db
+    .update(giftsTable)
+    .set({ isGroupGift })
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
+    .returning();
 
-    if (!gift) throw new NotFoundError('Regalo no encontrado');
-
-    if (isGroupGift) {
-      if (gift.claimedBy) {
-        await tx.insert(giftClaims).values({ giftId, claimedBy: gift.claimedBy });
-      }
-      const [updated] = await tx
-        .update(giftsTable)
-        .set({ isGroupGift: true, claimedBy: null })
-        .where(eq(giftsTable.id, giftId))
-        .returning();
-      return updated;
-    }
-
-    const existingClaims = await tx
-      .select()
-      .from(giftClaims)
-      .where(eq(giftClaims.giftId, giftId))
-      .limit(2);
-
-    if (existingClaims.length > 1) {
-      throw new ValidationError('No se puede cambiar a individual: el regalo tiene múltiples personas que ya se unieron');
-    }
-
-    const [updated] = await tx
-      .update(giftsTable)
-      .set({
-        isGroupGift: false,
-        claimedBy: existingClaims[0]?.claimedBy ?? null,
-        isClaimed: existingClaims.length === 1,
-      })
-      .where(eq(giftsTable.id, giftId))
-      .returning();
-
-    if (existingClaims.length === 1) {
-      await tx.delete(giftClaims).where(eq(giftClaims.giftId, giftId));
-    }
-
-    return updated;
-  });
+  if (!gift) throw new NotFoundError('Regalo no encontrado');
+  return gift;
 }
