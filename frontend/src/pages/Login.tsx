@@ -17,15 +17,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [buttonStatus, setButtonStatus] = useState<'idle' | 'loading' | 'success' | 'shake'>('idle');
   const navigatedRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isFormValid = email.length > 0 && password.length > 0;
 
   const { containerRef, token: turnstileToken, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
-  useEffect(() => { return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); }; }, []);
+  useEffect(() => { return () => {
+    if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+    if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+  }; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +50,10 @@ export default function Login() {
     }
 
     setLoading(true);
+    setButtonStatus('loading');
     safetyTimerRef.current = setTimeout(() => {
       setLoading(false);
+      setButtonStatus('idle');
       showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
     }, 15000);
 
@@ -54,6 +61,12 @@ export default function Login() {
       const res = await login(email, password, token ?? undefined);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       navigatedRef.current = true;
+
+      setButtonStatus('success');
+      setLoading(false);
+
+      await new Promise(r => setTimeout(r, 400));
+
       if (res.user && !res.user.emailVerified) {
         showToast('Inicio de sesión exitoso. Tu correo aún no está verificado — revisa tu bandeja de entrada.', 'info');
       }
@@ -72,6 +85,9 @@ export default function Login() {
     } catch (err) {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       reportError(err, { source: 'Login' });
+      setButtonStatus('shake');
+      setLoading(false);
+      shakeTimerRef.current = setTimeout(() => setButtonStatus('idle'), 500);
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('Credenciales inválidas')) {
         showToast('Credenciales inválidas. Verifica tu correo y contraseña e intenta de nuevo.', 'error');
@@ -80,8 +96,6 @@ export default function Login() {
       } else {
         showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -173,17 +187,25 @@ export default function Login() {
 
               <button
                 type="submit"
-                disabled={loading || !isFormValid}
+                disabled={loading || !isFormValid || buttonStatus === 'success'}
                 aria-busy={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
+                className={`w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 active:scale-[0.97] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${buttonStatus === 'shake' ? 'animate-shake' : ''}`}
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2">
                     <LoadingSpinner size="sm" />
                     Iniciando sesión...
                   </span>
+                ) : buttonStatus === 'success' ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+                    ¡Bienvenido!
+                  </span>
                 ) : 'Iniciar Sesión'}
               </button>
+              <span className="sr-only" role="status" aria-live="polite">
+                {loading ? 'Iniciando sesión, por favor espera' : buttonStatus === 'success' ? 'Sesión iniciada correctamente' : buttonStatus === 'shake' ? 'Error al iniciar sesión, verifica tus credenciales' : ''}
+              </span>
             </form>
 
             {turnstileError && (

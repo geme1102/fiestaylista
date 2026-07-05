@@ -93,7 +93,9 @@ describe('Login page', () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('user@test.com', 'MyPass1', 'tok-123');
     });
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+    }, { timeout: 2000 });
   });
 
   it('shows info toast when email is not verified', async () => {
