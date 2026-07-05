@@ -2,7 +2,9 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '../utils/cn';
+import { TIER_LIMITS } from '../types';
 import Logo from './Logo';
 import InstallPwaBanner from './InstallPwaBanner';
 
@@ -30,6 +32,11 @@ export default function Layout() {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const NAV_ITEMS = useNavItems(user?.tier);
+  const queryClient = useQueryClient();
+  const eventsCache = queryClient.getQueryData<{ events: unknown[] }>(['events']);
+  const eventCount = eventsCache?.events?.length ?? 0;
+  const limits = TIER_LIMITS[user?.tier ?? 'free'];
+  const atLimit = eventCount >= limits.maxEvents;
 
   return (
     <div className="min-h-screen bg-surface transition-colors pb-safe sm:pb-0">
@@ -67,13 +74,24 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link
-                to="/dashboard?create=true"
-                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-on-primary px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
-              >
-                <span className="material-symbols-outlined text-lg">add</span>
-                <span>Crear Evento</span>
-              </Link>
+              {atLimit ? (
+                <Link
+                  to="/pricing"
+                  aria-label="Desbloquear más eventos"
+                  className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-gold to-gold-light text-white px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-gold/20 transition-all active:scale-95 group"
+                >
+                  <span className="material-symbols-outlined text-lg group-hover:animate-[lock-bounce_0.3s_ease-out]">lock</span>
+                  <span>Desbloquear</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/dashboard?create=true"
+                  className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-on-primary px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface group"
+                >
+                  <span className="material-symbols-outlined text-lg transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-90">add</span>
+                  <span>Crear Evento</span>
+                </Link>
+              )}
               <span className="hidden sm:block text-sm text-on-surface-variant">
                 {user?.name}
               </span>

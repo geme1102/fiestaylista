@@ -294,9 +294,9 @@ export default function Dashboard() {
                   <button
                     onClick={() => navigate('/pricing')}
                     data-testid="upgrade-cta"
-                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-gold-light text-white rounded-full font-semibold shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 animate-pulse-cta"
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-gold-light text-white rounded-full font-semibold shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 animate-pulse-cta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface group"
                   >
-                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
+                    <span className="material-symbols-outlined text-lg group-hover:animate-[lock-bounce_0.3s_ease-out]">auto_awesome</span>
                     <span>Desbloquear más eventos</span>
                   </button>
                 ) : (
@@ -304,9 +304,9 @@ export default function Dashboard() {
                   onClick={() => setShowCreateModal(true)}
                   data-testid="new-event-button"
                   aria-label="Crear nuevo evento"
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface group"
                 >
-                  <span className="material-symbols-outlined text-lg">add</span>
+                  <span className="material-symbols-outlined text-lg transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-90">add</span>
                   <span>Nuevo Evento</span>
                 </button>
                 )}
@@ -503,8 +503,9 @@ export default function Dashboard() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             onClick={() => setShowCreateModal(true)}
+            disabled={showCreateModal}
             aria-label="Crear nuevo evento"
-            className="sm:hidden fixed bottom-24 right-5 z-[60] w-14 h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full shadow-xl shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all active:scale-90 flex items-center justify-center"
+            className="sm:hidden fixed bottom-24 right-5 z-[60] w-14 h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full shadow-xl shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
           </motion.button>
@@ -632,7 +633,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
       <button
         type="submit"
         disabled={creating || !formData.title.trim()}
-        className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
+        className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 btn-gpu disabled:opacity-50 flex items-center justify-center min-h-[52px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
       >
         {creating ? <><LoadingSpinner size="sm" /><span className="ml-2">Creando...</span></> : 'Crear Lista de Regalos'}
       </button>

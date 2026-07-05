@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
@@ -13,17 +14,20 @@ beforeEach(() => {
 });
 
 function renderLayout(initialRoute = '/dashboard') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter initialEntries={[initialRoute]}>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<div data-testid="dashboard-page">Dashboard</div>} />
-          <Route path="/pricing" element={<div data-testid="pricing-page">Pricing</div>} />
-          <Route path="/account" element={<div data-testid="account-page">Account</div>} />
-          <Route path="/statistics" element={<div data-testid="statistics-page">Statistics</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<div data-testid="dashboard-page">Dashboard</div>} />
+            <Route path="/pricing" element={<div data-testid="pricing-page">Pricing</div>} />
+            <Route path="/account" element={<div data-testid="account-page">Account</div>} />
+            <Route path="/statistics" element={<div data-testid="statistics-page">Statistics</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 

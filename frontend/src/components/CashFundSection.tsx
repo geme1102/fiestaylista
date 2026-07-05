@@ -137,7 +137,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             <p className="font-body-md text-body-md text-on-surface-variant mb-6">Permite que tus invitados te envíen regalos en efectivo de forma elegante y segura.</p>
             <button
               onClick={() => setBoostModal(true)}
-              className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
+              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
               Activar gratis
             </button>
@@ -333,7 +333,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             <p className="font-body-md text-body-md text-on-surface-variant mb-6">Permite que tus invitados te envíen regalos en efectivo de forma elegante y segura.</p>
             <button
               onClick={() => setBoostModal(true)}
-              className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
+              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
               Activar
             </button>
@@ -585,7 +585,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
           <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center">
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-[#994715] to-[#833e12] rounded-xl hover:shadow-lg btn-gpu disabled:opacity-50 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface">
             {loading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
           </button>
         </div>

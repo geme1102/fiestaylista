@@ -678,7 +678,7 @@ export default function EventAdmin() {
 onClick={() => {
                   setBoostModal(true);
                 }}
-              className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20"
+              className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full btn-gpu cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
               <span>Activar Lluvia de Sobres</span>
               <span className="bg-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">GRATIS</span>

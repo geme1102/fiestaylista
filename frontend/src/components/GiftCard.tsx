@@ -289,9 +289,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             onClick={() => { if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
             disabled={claimingId === gift.id}
             aria-busy={claimingId === gift.id}
-            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.97] hover:scale-[1.01] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.96] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 btn-gpu text-xs uppercase tracking-wider border-b-[3px] border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
-            <span className="material-symbols-outlined text-base group-hover:animate-bounce">card_giftcard</span>
+            <span className="material-symbols-outlined text-base group-hover:animate-[lightning-wiggle_0.4s_ease-in-out]">card_giftcard</span>
             {claimingId === gift.id ? (
               <span className="inline-flex items-center gap-2">
                 <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />

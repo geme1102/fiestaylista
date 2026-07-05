@@ -699,6 +699,40 @@ h1, h2, h3, h4, h5, h6 {
 
 /* === Mobile optimizations === */
 
+:root {
+  --btn-duration: 200ms;
+  --btn-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --btn-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lock-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes lightning-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes success-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  50% { box-shadow: 0 0 20px 6px rgba(74, 222, 128, 0.35); }
+}
+
+.btn-gpu {
+  transition-property: transform, box-shadow, opacity, background-color;
+  transition-duration: var(--btn-duration);
+  transition-timing-function: var(--btn-ease);
+}
+
+.btn-gpu-fast {
+  transition-property: transform, box-shadow, opacity, background-color;
+  transition-duration: 75ms;
+  transition-timing-function: var(--btn-ease);
+}
+
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }

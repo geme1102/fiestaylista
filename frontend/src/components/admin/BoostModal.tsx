@@ -65,7 +65,7 @@ export default function BoostModal({ open, loading, dialogRef, onConfirm, onClos
                 data-testid="pay-boost-button"
                 onClick={onConfirm}
                 disabled={loading}
-                className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
+                className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase btn-gpu shadow-md cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
                 {loading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'ACTIVAR GRATIS'}
               </motion.button>
