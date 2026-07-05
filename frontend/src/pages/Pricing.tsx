@@ -11,6 +11,7 @@ import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const PLANS = [
   {
@@ -357,19 +358,22 @@ export default function Pricing() {
                           onClick={() => handleSelect(plan.tier)}
                           disabled={loading}
                           className={cn(
-                            'mt-auto w-full py-4 font-label-md text-label-md rounded-xl active:scale-95 duration-200',
+                            'mt-auto w-full py-4 font-label-md text-label-md rounded-xl active:scale-95 transition-all duration-200',
                             plan.popular
-                              ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20'
+                              ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110'
                               : 'border-2 border-outline text-on-surface-variant hover:bg-surface-variant transition-colors',
                           )}
                         >
-                          {loading && selectedTier === plan.tier
-                            ? 'Procesando...'
-                            : plan.price === 0
-                              ? 'Empezar Gratis'
-                              : plan.tier === 'pro_plus'
-                                ? 'Actualizar a Pro Plus'
-                                : 'Actualizar a Pro'
+                          {loading && selectedTier === plan.tier ? (
+                            <span className="inline-flex items-center justify-center gap-2">
+                              <LoadingSpinner size="sm" />
+                              Procesando...
+                            </span>
+                          ) : plan.price === 0
+                            ? 'Empezar Gratis'
+                            : plan.tier === 'pro_plus'
+                              ? 'Actualizar a Pro Plus'
+                              : 'Actualizar a Pro'
                           }
                         </button>
                       )}

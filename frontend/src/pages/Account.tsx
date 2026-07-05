@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription, getPaymentHistory } from '../services/mercadopago';
@@ -10,6 +10,8 @@ import { formatDate, formatCOP, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { AchievementsStrip } from '../components/AchievementsStrip';
 import { useAchievements } from '../hooks/useAchievements';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { cn } from '../utils/cn';
 
 const AVATAR_MAP: Record<string, string> = {
   'avatar-1.png': '/illustrations/avatar-1.png',
@@ -42,6 +44,14 @@ export default function Account() {
   const [payments, setPayments] = useState<ProPayment[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState(false);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
+  const turnstileTokenRef = useRef(turnstileToken);
+  useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+
+  useEffect(() => {
+    return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -293,29 +303,60 @@ export default function Account() {
                         onClick={async () => {
                           if (retryingPayment) return;
                           setRetryingPayment(true);
+
+                          safetyTimerRef.current = setTimeout(() => {
+                            setRetryingPayment(false);
+                            showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+                          }, 15000);
+
                           try {
+                            let token = turnstileToken;
+                            if (!token) {
+                              if (!turnstileReady) {
+                                showToast('Verificando que no eres un robot...', 'info');
+                              }
+                              token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
+                              if (!token && turnstileError) {
+                                showToast(`Verificación de seguridad no disponible. ${turnstileError} Puedes continuar, pero si el problema persiste desactiva tu bloqueador de anuncios.`, 'info');
+                              } else if (!token) {
+                                showToast('Verificación de seguridad no disponible. Continuando...', 'info');
+                              }
+                            }
+
                             const successUrl = `${window.location.origin}/dashboard?pro=activated`;
                             const cancelUrl = `${window.location.origin}/account`;
                             const res = await apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
                               tier: user?.tier ?? 'pro',
                               successUrl,
                               cancelUrl,
+                              turnstileToken: token ?? undefined,
                             });
+                            if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
                             const redirectUrl = validateRedirectUrl(res.url);
                             if (!redirectUrl) {
                               showToast('Error al procesar la URL de pago', 'error');
+                              setRetryingPayment(false);
                               return;
                             }
                             window.location.href = redirectUrl;
                           } catch (err) {
+                            if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
                             reportError(err, { source: 'Account' });
                             showToast('Error al iniciar el proceso de pago', 'error');
                             setRetryingPayment(false);
                           }
                         }}
-                        className="mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-50"
+                        className={cn(
+                          'mt-3 px-4 py-3 rounded-xl font-label-md text-label-md min-h-[44px]',
+                          'inline-flex items-center justify-center gap-2',
+                          'bg-secondary-container text-on-secondary-container',
+                          'hover:brightness-110 active:scale-95 transition-all duration-200',
+                          'disabled:opacity-50 disabled:cursor-not-allowed',
+                        )}
                       >
-                        {retryingPayment ? 'Conectando...' : 'Reintentar pago'}
+                        {retryingPayment ? (
+                          <><LoadingSpinner size="sm" /> Conectando...</>
+                        ) : 'Reintentar pago'}
                       </button>
                     </div>
                   </div>
@@ -550,6 +591,7 @@ export default function Account() {
           </div>
         </div>
       )}
+      <div ref={containerRef} className="fixed bottom-0 right-0 z-50" />
     </div>
   );
 }
