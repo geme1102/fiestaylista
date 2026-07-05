@@ -16,7 +16,7 @@ interface SSEOptions {
 
 export function useSSE({
   eventId, sseTokenEndpoint, onGiftClaimed, onMessagePosted, onPhotoUploaded, onCashContribution,
-  maxRetries = 50, initialRetryDelay = 1000, onConnected, onDisconnected,
+  maxRetries = 10, initialRetryDelay = 1000, onConnected, onDisconnected,
 }: SSEOptions) {
   const cancelledRef = useRef(false);
   const sseConnectedRef = useRef(false);
@@ -66,8 +66,20 @@ export function useSSE({
         const data = await apiClient.post<{ token: string; url?: string }>(sseTokenEndpoint);
         token = data.token;
         sseUrl = data.url;
-      } catch {
-        if (!cancelledRef.current && retryCount < maxRetries) {
+      } catch (err) {
+        if (cancelledRef.current) return;
+
+        if (err instanceof Error) {
+          if (err.message.includes('Sesión expirada') || err.message.includes('No autorizado')) {
+            onDisconnectedRef.current?.();
+            return;
+          }
+          if (err.message.includes('Demasiadas solicitudes') || err.message.includes('demasiadas solicitudes')) {
+            retryDelay = Math.min(retryDelay * 4, 60000);
+          }
+        }
+
+        if (retryCount < maxRetries) {
           retryCount++;
           reconnectTimeout = setTimeout(connect, retryDelay);
           retryDelay = Math.min(retryDelay * 2, 30000);
