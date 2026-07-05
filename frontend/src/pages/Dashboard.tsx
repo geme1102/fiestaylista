@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +12,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { formatCOP } from '../utils/format';
 import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
+import { completeWelcome } from '../services/onboarding';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { WelcomeModal } from '../components/WelcomeModal';
 import InstallPwaBanner from '../components/InstallPwaBanner';
 import SubscriptionBanners from '../components/dashboard/SubscriptionBanners';
 
@@ -49,6 +51,13 @@ export default function Dashboard() {
   const [showFab, setShowFab] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (user && !user.welcomeTutorialCompleted) {
+      setShowWelcome(true);
+    }
+  }, [user?.welcomeTutorialCompleted]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -101,6 +110,20 @@ export default function Dashboard() {
 
     return () => clearInterval(interval);
   }, [location.search, refreshUser, queryClient]);
+
+  const handleCompleteWelcome = useCallback(async () => {
+    try {
+      await completeWelcome();
+      await refreshUser();
+    } catch (err) {
+      reportError(err, { source: 'Dashboard-welcome' });
+    }
+    setShowWelcome(false);
+  }, [refreshUser]);
+
+  const handleCreateFromWelcome = useCallback(() => {
+    setShowCreateModal(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowFab(window.scrollY > 250);
@@ -487,6 +510,14 @@ export default function Dashboard() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {showWelcome && (
+        <WelcomeModal
+          hasEvents={events.length > 0}
+          onCreateEvent={handleCreateFromWelcome}
+          onComplete={handleCompleteWelcome}
+        />
+      )}
     </div>
   );
 

@@ -19,6 +19,7 @@ interface UserResponse {
   tier: string;
   emailVerified: boolean;
   onboardingCompleted: boolean;
+  welcomeTutorialCompleted: boolean;
   createdAt: Date;
 }
 
@@ -32,6 +33,7 @@ function toUserResponse(user: typeof users.$inferSelect): UserResponse {
     tier: user.tier,
     emailVerified: user.emailVerified ?? false,
     onboardingCompleted: user.onboardingCompleted ?? false,
+    welcomeTutorialCompleted: user.welcomeTutorialCompleted ?? false,
     createdAt: user.createdAt,
   };
 }
@@ -183,6 +185,13 @@ export async function markOnboardingCompleted(userId: string): Promise<void> {
   await db
     .update(users)
     .set({ onboardingCompleted: true })
+    .where(eq(users.id, userId));
+}
+
+export async function markWelcomeCompleted(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({ welcomeTutorialCompleted: true })
     .where(eq(users.id, userId));
 }
 
