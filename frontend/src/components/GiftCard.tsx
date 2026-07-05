@@ -267,10 +267,14 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 <button
                   onClick={handleGroupClaim}
                   disabled={claiming || !claimName.trim()}
+                  aria-busy={claiming}
                   className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-secondary to-secondary-container text-white text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center"
                 >
                   {claiming ? (
-                    <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span className="inline-flex items-center gap-2">
+                      <span className="block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Uniendo...
+                    </span>
                   ) : (
                     'Unirme'
                   )}
@@ -284,10 +288,16 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           <button
             onClick={() => { if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) navigator.vibrate?.(10); onClaim(gift.id, gift.name); }}
             disabled={claimingId === gift.id}
+            aria-busy={claimingId === gift.id}
             className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 active:scale-[0.97] hover:scale-[1.01] text-white py-3 px-5 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm transition-all text-xs uppercase tracking-wider border-b-4 border-b-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="material-symbols-outlined text-base animate-bounce">card_giftcard</span>
-            {claimingId === gift.id ? <span className="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : 'Regalar este detalle'}
+            <span className="material-symbols-outlined text-base group-hover:animate-bounce">card_giftcard</span>
+            {claimingId === gift.id ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Apartando...
+              </span>
+            ) : 'Regalar este detalle'}
           </button>
         </div>
       )}

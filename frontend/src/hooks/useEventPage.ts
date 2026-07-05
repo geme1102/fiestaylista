@@ -41,6 +41,7 @@ export function useEventPage() {
   const abortRef = useRef<AbortController | null>(null);
   const loadEventRef = useRef<() => Promise<void>>(undefined);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const cancelPollRef = useRef<(() => void) | null>(null);
@@ -136,6 +137,7 @@ export function useEventPage() {
       cancelPoll();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
+      clearTimeout(safetyTimerRef.current);
     };
   }, [slug]);
 
@@ -182,11 +184,18 @@ export function useEventPage() {
     }
 
     setClaimingId(giftId);
+    safetyTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) {
+        setClaimingId(null);
+        showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+      }
+    }, 15000);
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event.id}/gifts/${giftId}/claim`, {
         claimedBy: guestName.trim(),
         turnstileToken: token ?? undefined,
       });
+      clearTimeout(safetyTimerRef.current);
       setGifts((prev) => prev.map((g) => (g.id === giftId ? res.gift : g)));
       setShowConfetti(true);
       setShowSuccessModal(true);
@@ -197,6 +206,7 @@ export function useEventPage() {
       }, 3000);
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
+      clearTimeout(safetyTimerRef.current);
       reportError(err, { source: 'useEventPage' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('ya ha sido reservado') || msg.toLowerCase().includes('already claimed')) {
