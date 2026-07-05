@@ -12,6 +12,7 @@ import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
 import NavbarPremium from '../components/NavbarPremium';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Badge } from '../components/ui/Badge';
 
 const PLANS = [
   {
@@ -307,9 +308,9 @@ export default function Pricing() {
                 return (
                   <div key={plan.tier} className={plan.popular ? 'relative' : ''}>
                     {plan.badge && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-6 py-1 rounded-full font-label-md text-label-md shadow-lg z-20 whitespace-nowrap">
+                      <Badge variant="primary" animated className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 shadow-lg">
                         {plan.badge}
-                      </div>
+                      </Badge>
                     )}
                     <div
                       className={cn(

@@ -7,6 +7,7 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Gift, GiftClaim } from '../types';
+import { use3DTilt } from '../hooks/use3DTilt';
 
 interface GiftCardProps {
   gift: Gift;
@@ -34,6 +35,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const tilt = use3DTilt(8);
 
   const onImgError = () => setImgError(true);
 
@@ -116,6 +118,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      ref={tilt.ref as React.RefObject<HTMLDivElement>}
+      onMouseMove={tilt.handleMouseMove}
+      onMouseLeave={tilt.handleMouseLeave}
       data-testid={`gift-card-${gift.id}`}
       className="bg-surface border border-rose-100/30 rounded-3xl p-5 relative shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/25 group overflow-hidden text-left"
     >

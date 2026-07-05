@@ -51,6 +51,10 @@ vi.mock('framer-motion', async () => {
         const { initial, animate, exit, transition, ...rest } = props as any;
         return <div {...rest}>{children}</div>;
       },
+      button: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+        const { initial, animate, exit, transition, whileHover, whileTap, ...rest } = props as any;
+        return <button {...rest}>{children}</button>;
+      },
     },
   };
 });

@@ -10,12 +10,13 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Pencil, Share2, Eye,
-  MessageSquare, Copy, Calendar, MapPin, Info,
+  ArrowLeft, Pencil, Eye,
+  Calendar, MapPin, Info,
   ChevronRight, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useDebounce } from '../hooks/useDebounce';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
 import { reportError } from '../lib/reportError';
@@ -26,8 +27,9 @@ import { completeOnboarding } from '../services/onboarding';
 import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
-import { suggestTemplate, getWhatsAppUrl } from '../utils/whatsapp';
+
 import { ConfirmModal } from '../components/ConfirmModal';
+import ShareButtons from '../components/ShareButtons';
 import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { useAchievements } from '../hooks/useAchievements';
@@ -428,14 +430,15 @@ export default function EventAdmin() {
     if (!event) return [];
     return GIFT_SUGGESTIONS[event.eventType] || [];
   }, [event]);
+  const debouncedQuery = useDebounce(newGiftName, 200);
   const filteredSuggestions = useMemo(() => {
-    if (!newGiftName) return suggestions;
-    const q = newGiftName.toLowerCase();
+    if (!debouncedQuery) return suggestions;
+    const q = debouncedQuery.toLowerCase();
     return suggestions.filter((s) =>
       s.toLowerCase().includes(q) &&
       !gifts.some((g) => g.name.toLowerCase() === s.toLowerCase())
     );
-  }, [suggestions, newGiftName, gifts]);
+  }, [suggestions, debouncedQuery, gifts]);
 
   const formatDateTime = useCallback((dateStr: string) => {
     const d = new Date(dateStr);
@@ -461,18 +464,6 @@ export default function EventAdmin() {
       setToggling(false);
       setToggleConfirm(false);
     }
-  };
-
-  const copyShareLink = () => {
-    if (!event) return;
-    if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
-    const url = `${window.location.origin}/e/${event.slug}`;
-    navigator.clipboard.writeText(url).then(() => {
-      showToast('¡Enlace exclusivo copiado al portapapeles! 🔗', 'success');
-    }).catch((err) => {
-      reportError(err, { source: 'EventAdmin' });
-      showToast('No se pudo copiar al portapapeles. Cópialo manualmente.', 'error');
-    });
   };
 
   if (loading) {
@@ -695,29 +686,9 @@ onClick={() => {
             </div>
           )}
 
-          {/* Action Buttons */}
+          {/* Share & Preview */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
-            <motion.button
-              whileHover={{ y: -3, scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                const url = `${window.location.origin}/e/${event.slug}`;
-                if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
-                if (navigator.share) {
-                  navigator.share({ title: event.title, url });
-                } else {
-                  copyShareLink();
-                }
-              }}
-              data-testid="share-event-button"
-              data-tour="share"
-              className="group relative bg-[#1c1a1f] hover:bg-black text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_10px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-white/10"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
-              <Share2 className="w-[18px] h-[18px] text-rose-300 stroke-[2.5]" />
-              <span>Compartir con Invitados</span>
-            </motion.button>
-
+            <ShareButtons slug={event.slug} title={event.title} hostName={user?.name} eventType={event.eventType} eventDate={event.eventDate} eventLocation={event.eventLocation} />
             <motion.a
               href={`/e/${event.slug}`}
               target="_blank"
@@ -731,34 +702,6 @@ onClick={() => {
               <span>Vista Previa de Invitado</span>
               <Eye className="w-[18px] h-[18px] text-primary stroke-[2.2]" />
             </motion.a>
-          </div>
-
-          {/* Utility Buttons */}
-          <div className="flex items-center justify-center gap-4 mt-6 pt-2 border-t border-rose-50">
-            <motion.button
-              whileHover={{ scale: 1.12, rotate: -5 }}
-              whileTap={{ scale: 0.88 }}
-              onClick={() => {
-                if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
-                window.open(getWhatsAppUrl(suggestTemplate(event.eventType), user?.name || '', event, !!event.eventLocation), '_blank');
-              }}
-              className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
-              title="Compartir por WhatsApp"
-              aria-label="Compartir por WhatsApp"
-            >
-              <MessageSquare className="w-[22px] h-[22px] fill-white" />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.12, rotate: 5 }}
-              whileTap={{ scale: 0.88 }}
-              onClick={copyShareLink}
-              className="w-11 h-11 bg-white hover:bg-rose-50/50 border border-rose-100/40 flex items-center justify-center rounded-full text-gray-700 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
-              title="Copiar enlace"
-              aria-label="Copiar enlace"
-            >
-              <Copy className="w-5 h-5 text-on-surface-variant stroke-[2.2]" />
-            </motion.button>
           </div>
 
           {/* Event Details Section */}

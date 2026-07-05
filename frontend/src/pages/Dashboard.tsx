@@ -9,6 +9,9 @@ import { showToast } from '../hooks/useToast';
 import { getCurrentSubscription } from '../services/mercadopago';
 import { THEME_COLORS, EVENT_LABELS, EVENT_ICONS, TIER_LIMITS, type EventType, type Event, type Subscription } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { SkeletonCard } from '../components/ui/Skeleton';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { formatCOP } from '../utils/format';
 import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
@@ -248,23 +251,7 @@ export default function Dashboard() {
           <div className="h-10 w-40 bg-surface-container-highest rounded-xl animate-pulse" />
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-surface-container-highest animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 bg-surface-container-highest rounded animate-pulse" />
-                  <div className="h-3 w-1/2 bg-surface-container-highest rounded animate-pulse" />
-                </div>
-              </div>
-              <div className="h-2 bg-surface-container-highest rounded-full animate-pulse" />
-              <div className="flex gap-2">
-                <div className="h-10 flex-1 bg-surface-container-highest rounded-lg animate-pulse" />
-                <div className="h-10 w-10 bg-surface-container-highest rounded-lg animate-pulse" />
-                <div className="h-10 w-10 bg-surface-container-highest rounded-lg animate-pulse" />
-              </div>
-            </div>
-          ))}
+          {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
         </div>
       </div>
     );
@@ -279,36 +266,34 @@ export default function Dashboard() {
             Mis Eventos <span className="text-on-surface-variant/50 font-normal text-xl sm:text-2xl">({eventCount})</span>
           </h1>
           <div className="flex items-center gap-3 mt-2">
-            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold">
-              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-                {user?.tier === 'free' ? 'redeem' : 'auto_awesome'}
-              </span>
+            <Badge variant={user?.tier === 'free' ? 'neutral' : user?.tier === 'pro_plus' ? 'gold' : 'primary'} size="sm" icon={user?.tier === 'free' ? 'redeem' : 'auto_awesome'}>
               {user?.tier === 'free' ? 'Plan Gratis' : user?.tier === 'pro_plus' ? 'Pro Plus' : 'Plan Pro'}
-            </span>
+            </Badge>
             <span className="text-sm text-on-surface-variant/70">
               Tus celebraciones, todas en un solo lugar.
             </span>
           </div>
         </div>
                 {eventCount >= limits.maxEvents ? (
-                  <button
+                  <Button
+                    variant="gold"
                     onClick={() => navigate('/pricing')}
                     data-testid="upgrade-cta"
-                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-gold-light text-white rounded-full font-semibold shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 animate-pulse-cta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface group"
+                    className="animate-pulse-cta"
+                    leftIcon={<span className="material-symbols-outlined">auto_awesome</span>}
                   >
-                    <span className="material-symbols-outlined text-lg group-hover:animate-[lock-bounce_0.3s_ease-out]">auto_awesome</span>
-                    <span>Desbloquear más eventos</span>
-                  </button>
+                    Desbloquear más eventos
+                  </Button>
                 ) : (
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => setShowCreateModal(true)}
                   data-testid="new-event-button"
                   aria-label="Crear nuevo evento"
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface group"
+                  leftIcon={<span className="material-symbols-outlined">add</span>}
                 >
-                  <span className="material-symbols-outlined text-lg transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-90">add</span>
-                  <span>Nuevo Evento</span>
-                </button>
+                  Nuevo Evento
+                </Button>
                 )}
       </div>
 
@@ -394,16 +379,14 @@ export default function Dashboard() {
                           {EVENT_ICONS[event.eventType]}
                         </div>
                         {isBoosted && (
-                          <span className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-amber-200/50 shadow-sm">
-                            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
+                          <Badge variant="gold" size="sm" icon="rocket_launch">
                             BOOST
-                          </span>
+                          </Badge>
                         )}
                         {event.status === 'completed' && (
-                          <span className="bg-primary-fixed/40 text-primary px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-primary/20 shadow-sm">
-                            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          <Badge variant="neutral" size="sm" icon="check_circle">
                             FINALIZADO
-                          </span>
+                          </Badge>
                         )}
                       </div>
 

@@ -10,6 +10,7 @@ import { LandingFeatures } from '../components/landing/LandingFeatures';
 import { LandingTestimonials } from '../components/landing/LandingTestimonials';
 import { LandingCTA } from '../components/landing/LandingCTA';
 import { LandingFooter } from '../components/landing/LandingFooter';
+import { SocialProofFloating } from '../components/landing/SocialProofFloating';
 
 const TYPING_PHRASES = ['decir adiós a los regalos repetidos', 'recibir justo lo que necesitas', 'celebrar sin complicaciones'];
 
@@ -102,6 +103,7 @@ export default function Landing() {
       <LandingCategoryCarousel onNavigate={navigate} />
       <LandingFeatures />
       <LandingTestimonials />
+      <SocialProofFloating />
       <LandingCTA onNavigate={navigate} />
       <LandingFooter />
     </main>
