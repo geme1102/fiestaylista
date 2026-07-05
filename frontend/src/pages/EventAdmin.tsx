@@ -557,24 +557,25 @@ export default function EventAdmin() {
                     <h2 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5 truncate">
                       {event.title}
                     </h2>
-                  <motion.button
-                    data-testid="edit-event-button"
-                    whileHover={{ scale: 1.15, rotate: 15 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                      setEditingDetails(true);
-                      setTitleDraft(event.title);
-                      setTypeDraft(event.eventType);
-                      setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
-                      setLocationDraft(event.eventLocation ?? '');
-                      setNoteDraft(event.eventNote ?? '');
-                    }}
-                    className="p-2.5 text-primary hover:text-on-primary hover:bg-primary rounded-xl transition-all cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center"
-                    title="Editar título del evento"
-                    aria-label="Editar título del evento"
-                  >
-                    <Pencil className="w-[18px] h-[18px]" />
-                  </motion.button>
+                    <motion.button
+                      type="button"
+                      data-testid="edit-event-button"
+                      whileHover={{ scale: 1.15, rotate: 15 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setEditingDetails(true);
+                        setTitleDraft(event.title);
+                        setTypeDraft(event.eventType);
+                        setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
+                        setLocationDraft(event.eventLocation ?? '');
+                        setNoteDraft(event.eventNote ?? '');
+                      }}
+                      className="min-w-[44px] min-h-[44px] p-2.5 text-primary hover:bg-primary/15 rounded-xl transition-[background-color,border-color] cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+                      title={`Editar evento ${event.title}`}
+                      aria-label={`Editar evento ${event.title}`}
+                    >
+                      <Pencil className="w-[18px] h-[18px]" />
+                    </motion.button>
                 </div>
 
                 <div className="flex items-center gap-3 mt-1.5">
