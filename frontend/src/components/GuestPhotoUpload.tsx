@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
+import { Button } from '../components/ui/Button';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 
 interface GuestPhotoUploadProps {
@@ -146,20 +147,9 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
           />
           <div ref={containerRef} />
 
-          <button
-            onClick={handleUpload}
-            disabled={uploading || !fileInputRef.current?.files?.[0]}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
-          >
-            {uploading ? (
-              <span className="flex items-center gap-2">
-                <span className="block w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Subiendo...
-              </span>
-            ) : (
-              'Subir foto 📸'
-            )}
-          </button>
+          <Button variant="primary" fullWidth loading={uploading} onClick={handleUpload} disabled={!fileInputRef.current?.files?.[0]}>
+            {uploading ? 'Subiendo...' : 'Subir foto 📸'}
+          </Button>
         </motion.div>
       )}
     </div>

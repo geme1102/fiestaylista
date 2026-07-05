@@ -4,6 +4,7 @@ import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { Button } from '../components/ui/Button';
 
 interface Message {
   id: string;
@@ -114,17 +115,9 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
                 required
               />
               <div ref={containerRef} />
-              <button
-                type="submit"
-                disabled={submitting || !guestName.trim() || !newMessage.trim()}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
-              >
-                {submitting ? (
-                  <span className="block w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  'Publicar mensaje 💬'
-                )}
-              </button>
+              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || !newMessage.trim()}>
+                {submitting ? 'Publicando...' : 'Publicar mensaje 💬'}
+              </Button>
             </div>
           </motion.form>
         )}

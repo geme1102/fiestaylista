@@ -5,7 +5,7 @@ import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { Button } from '../components/ui/Button';
 import Logo from '../components/Logo';
 import AuthBottomNav from '../components/AuthBottomNav';
 
@@ -124,13 +124,9 @@ export default function ForgotPassword() {
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
-              >
-                {loading ? <LoadingSpinner size="sm" /> : 'Enviar enlace'}
-              </button>
+              <Button variant="primary" fullWidth loading={loading} type="submit">
+                {loading ? 'Enviando...' : 'Enviar enlace'}
+              </Button>
 
               <p className="text-center text-sm text-on-surface-variant">
                 <Link to="/login" className="text-primary hover:text-primary-fixed-dim font-medium">

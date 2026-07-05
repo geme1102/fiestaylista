@@ -6,6 +6,7 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Button } from '../components/ui/Button';
 import NavbarPremium from '../components/NavbarPremium';
 import Logo from '../components/Logo';
 import AuthBottomNav from '../components/AuthBottomNav';
@@ -258,19 +259,9 @@ export default function Register() {
                 </label>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || !isFormValid}
-                aria-busy={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
-              >
-                {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Creando cuenta...
-                  </span>
-                ) : 'Empezar gratis'}
-              </button>
+              <Button variant="primary" fullWidth loading={loading} disabled={!isFormValid}>
+                {loading ? 'Creando cuenta...' : 'Empezar gratis'}
+              </Button>
             </form>
 
             <div ref={containerRef} className="absolute -z-10 opacity-0" />

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { Button } from '../components/ui/Button';
 import { reportError } from '../lib/reportError';
 
 interface RsvpFormProps {
@@ -133,17 +134,9 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                 <p className="text-xs text-error font-medium">{error}</p>
               )}
 
-              <button
-                type="submit"
-                disabled={submitting || !guestName.trim()}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center"
-              >
-                {submitting ? (
-                  <span className="block w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  'Confirmar asistencia'
-                )}
-              </button>
+              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim()}>
+                {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
+              </Button>
             </div>
           </motion.form>
         )}

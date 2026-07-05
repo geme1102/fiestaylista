@@ -8,6 +8,7 @@ import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Gift, GiftClaim } from '../types';
 import { use3DTilt } from '../hooks/use3DTilt';
+import { Badge } from '../components/ui/Badge';
 
 interface GiftCardProps {
   gift: Gift;
@@ -127,9 +128,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-50/60 to-transparent rounded-bl-full pointer-events-none -z-10" />
 
       <div className="absolute top-4 left-4 flex gap-1.5 z-10">
-        <span className="bg-amber-50 border border-amber-200/50 text-amber-800 text-[8px] md:text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider leading-none">
+        <Badge variant="neutral" size="sm" className="uppercase tracking-wider">
           REGALO
-        </span>
+        </Badge>
         {isAdmin && (
           <span className="bg-[#2a292e] text-white text-[8px] font-bold px-2 py-0.5 rounded tracking-wider uppercase leading-none">
             ADMIN VIEW
