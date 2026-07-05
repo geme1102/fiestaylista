@@ -257,9 +257,10 @@ describe('Gift Service', () => {
     it('releases claimed gift', async () => {
       const { db } = await import('../db/index.js');
       const { releaseGift } = await import('../services/gift.js');
-      const q = queryMock([]);
-      q._updateResult = [{ id: 'g1', isClaimed: false, claimedBy: null }];
-      vi.mocked(db.update).mockReturnValue(q);
+      const tx = queryMock([]);
+      tx._deleteResult = [];
+      tx._updateResult = [{ id: 'g1', isClaimed: false, claimedBy: null }];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
       const result = await releaseGift('g1');
       expect(result.isClaimed).toBe(false);
     });

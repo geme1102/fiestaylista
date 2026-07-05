@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import { Skeleton, SkeletonText, SkeletonCard } from '../components/ui/Skeleton';
+import { Skeleton, SkeletonText } from '../components/ui/Skeleton';
 
 describe('Skeleton', () => {
   it('renders with animate-pulse class', () => {
@@ -24,10 +24,4 @@ describe('SkeletonText', () => {
   });
 });
 
-describe('SkeletonCard', () => {
-  it('renders all sections', () => {
-    const { container } = render(<SkeletonCard />);
-    const items = container.querySelectorAll('.animate-pulse');
-    expect(items.length).toBe(6);
-  });
-});
+

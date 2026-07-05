@@ -229,5 +229,4 @@ export function stopSSEScavenger(): void {
   }
 }
 
-export { emitter, clients };
-export type { GiftClaimedEvent, MessagePostedEvent, CashContributionEvent, PhotoUploadedEvent };
+
