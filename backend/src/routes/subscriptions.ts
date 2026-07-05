@@ -9,6 +9,7 @@ import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
+import { sendError } from '../utils/response.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users, proPayments } from '../db/schema.js';
@@ -145,7 +146,7 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
 
   const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
   if (!sub) {
-    res.status(400).json({ error: 'No tienes una suscripción activa' });
+    sendError(res, 400, 'No tienes una suscripción activa');
     return;
   }
   let mpSubscriptionId = sub.mpSubscriptionId;
@@ -168,7 +169,7 @@ router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(as
       await mercadopagoService.cancelPreapproval(mpSubscriptionId);
     } catch (err) {
       log.error({ err }, 'Error al cancelar en MercadoPago — no se cancela local para evitar desincronización:');
-      res.status(502).json({ error: 'No pudimos cancelar el cobro automático en Mercado Pago. Intenta de nuevo o contacta a soporte.' });
+      sendError(res, 502, 'No pudimos cancelar el cobro automático en Mercado Pago. Intenta de nuevo o contacta a soporte.');
       return;
     }
   } else {

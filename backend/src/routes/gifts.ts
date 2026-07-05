@@ -7,6 +7,7 @@ import { requireEventOwnership } from '../middleware/ownership.js';
 import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
+import { sendError } from '../utils/response.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
@@ -187,37 +188,37 @@ const sseIpCount = new Map<string, number>();
 router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
-    res.status(400).json({ error: 'ID del evento requerido' });
+    sendError(res, 400, 'ID del evento requerido');
     return;
   }
 
   const authToken = req.headers.authorization?.replace('Bearer ', '') || (typeof req.query.token === 'string' ? req.query.token : null);
   if (!authToken) {
-    res.status(401).json({ error: 'Token requerido para suscripción SSE' });
+    sendError(res, 401, 'Token requerido para suscripción SSE');
     return;
   }
 
   try {
     const decoded = jwt.verify(authToken, config.JWT_SECRET, { algorithms: ['HS256'] }) as { scope: string; eventId: string };
     if (decoded.scope !== 'sse' || decoded.eventId !== eventId) {
-      res.status(403).json({ error: 'Token SSE inválido para este evento' });
+      sendError(res, 403, 'Token SSE inválido para este evento');
       return;
     }
   } catch {
-    res.status(403).json({ error: 'Token inválido' });
+    sendError(res, 403, 'Token inválido');
     return;
   }
 
   const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
   const ipConnections = sseIpCount.get(clientIp) ?? 0;
   if (ipConnections >= SSE_MAX_PER_IP) {
-    res.status(429).json({ error: 'Demasiadas conexiones SSE desde esta IP' });
+    sendError(res, 429, 'Demasiadas conexiones SSE desde esta IP');
     return;
   }
 
   const currentConnections = getClientCount(eventId);
   if (currentConnections >= SSE_MAX_CONNECTIONS_PER_EVENT) {
-    res.status(429).json({ error: 'Demasiadas conexiones SSE para este evento' });
+    sendError(res, 429, 'Demasiadas conexiones SSE para este evento');
     return;
   }
 

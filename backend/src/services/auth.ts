@@ -141,9 +141,10 @@ export async function login(
 
 export async function refreshToken(
   token: string,
+  meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ accessToken: string; refreshToken: string }> {
   try {
-    const decoded = await consumeRefreshToken(token);
+    const decoded = await consumeRefreshToken(token, meta);
 
     const [user] = await db
       .select({ id: users.id, email: users.email })

@@ -37,7 +37,7 @@ export async function persistRefreshToken(userId: string, token: string, client:
     ));
 }
 
-export async function consumeRefreshToken(token: string): Promise<JwtPayload> {
+export async function consumeRefreshToken(token: string, meta?: { userAgent?: string; ipAddress?: string }): Promise<JwtPayload> {
   let decoded: JwtPayload;
   try {
     decoded = jwt.verify(token, config.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
@@ -87,6 +87,8 @@ export async function consumeRefreshToken(token: string): Promise<JwtPayload> {
         resource: 'auth',
         resourceId: existing.userId,
         metadata: JSON.stringify({ detail: 'Refresh token reuse detected — all sessions revoked' }),
+        userAgent: meta?.userAgent ?? null,
+        ipAddress: meta?.ipAddress ?? null,
       }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
       await db
         .update(refreshTokens)

@@ -5,6 +5,7 @@ import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercado
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { sendError } from '../utils/response.js';
 import { db } from '../db/index.js';
 import { failedWebhooks } from '../db/schema.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -23,7 +24,7 @@ const mpWebhookPayloadSchema = z.object({
 const router = Router();
 
 router.post('/stripe', (_req: Request, res: Response) => {
-  res.status(410).json({ error: 'Stripe ha sido reemplazado por Mercado Pago' });
+  sendError(res, 410, 'Stripe ha sido reemplazado por Mercado Pago');
 });
 
 function verifyMpSignature(req: Request): boolean {

@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTier, requireActiveSubscription } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { sendError } from '../utils/response.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -60,7 +61,7 @@ router.get('/analytics/views/:eventId', requireAuth, requireTier('pro'), require
       .limit(1);
 
     if (!event || event.ownerId !== userId) {
-      res.status(404).json({ error: 'Evento no encontrado' });
+      sendError(res, 404, 'Evento no encontrado');
       return;
     }
 
@@ -74,7 +75,7 @@ router.post('/analytics/views/batch', requireAuth, requireTier('pro'), requireAc
   try {
     const parsed = z.object({ eventIds: z.array(z.string().uuid()).max(50) }).safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: 'Lista de IDs inválida' });
+      sendError(res, 400, 'Lista de IDs inválida');
       return;
     }
     const { eventIds } = parsed.data;

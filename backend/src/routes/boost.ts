@@ -30,7 +30,7 @@ router.post('/events/:eventId/boost', requireAuth, paymentLimiter, validateUuidP
   }
 
   const boostedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  await db.update(events).set({ boostedUntil: sql`${boostedUntil}::timestamp` }).where(eq(events.id, eventId));
+  await db.update(events).set({ boostedUntil: sql`${boostedUntil}::timestamptz` }).where(eq(events.id, eventId));
   await db.insert(cashFunds).values({ eventId, title: 'Lluvia de sobres', isActive: true }).onConflictDoNothing({ target: cashFunds.eventId });
   res.json({ message: 'Lluvia de sobres activada con éxito ⚡💰', boostedUntil });
 }));

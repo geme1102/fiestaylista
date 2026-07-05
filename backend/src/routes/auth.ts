@@ -25,17 +25,18 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
 }
 
 const registerSchema = z.object({
-  email: z.string().email('Correo electrónico inválido'),
+  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
   password: z
     .string()
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(72, 'La contraseña es demasiado larga')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').transform(s => s.trim()),
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es demasiado largo').transform(s => s.trim()),
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Correo electrónico inválido'),
+  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
@@ -44,7 +45,7 @@ const verifyEmailSchema = z.object({
 });
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Correo electrónico inválido'),
+  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
 });
 
 const resetPasswordSchema = z.object({
@@ -52,6 +53,7 @@ const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(72, 'La contraseña es demasiado larga')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
@@ -82,7 +84,10 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
       log.warn({ hasCookie: !!req.cookies?.[cookieName], origin: req.headers.origin }, 'Refresh sin token');
       throw new ValidationError('Token de refresco requerido');
     }
-    const result = await authService.refreshToken(refreshToken);
+    const result = await authService.refreshToken(refreshToken, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+    });
     setRefreshCookie(res, result.refreshToken);
     res.json(result);
   } catch (error) {

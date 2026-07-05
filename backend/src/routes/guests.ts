@@ -55,8 +55,8 @@ router.post('/events/:eventId/rsvp', rsvpLimiter, verifyTurnstile, validateUuidP
       email: data.email ? sanitizeAndStrip(data.email) : null,
       phone: data.phone ? sanitizeAndStrip(data.phone) : null,
       companions: data.companions,
-      dietaryRestrictions: data.dietaryRestrictions || null,
-      message: data.message || null,
+      dietaryRestrictions: data.dietaryRestrictions ? sanitizeAndStrip(data.dietaryRestrictions) : null,
+      message: data.message ? sanitizeAndStrip(data.message) : null,
     })
     .returning();
 

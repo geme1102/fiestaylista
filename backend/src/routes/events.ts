@@ -15,6 +15,10 @@ import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
 
+function normalizePhone(v: unknown) {
+  return typeof v === 'string' ? v.replace(/[\s\-()]/g, '') : v;
+}
+
 const phoneRegex = /^\+?\d{7,15}$/;
 
 const createEventSchema = z.object({
@@ -22,8 +26,8 @@ const createEventSchema = z.object({
   eventType: z.enum(EVENT_TYPES as [string, ...string[]], {
     errorMap: () => ({ message: 'Tipo de evento inválido' }),
   }),
-  hostPhone: z.string().regex(phoneRegex, 'Teléfono inválido').optional(),
-  eventDate: z.string().optional(),
+  hostPhone: z.preprocess(normalizePhone, z.string().regex(phoneRegex, 'Teléfono inválido')).optional(),
+  eventDate: z.string().datetime({ offset: true }).optional(),
   eventLocation: z.string().max(200).optional().transform(v => v ? stripHtml(v) : v),
   eventNote: z.string().max(1000).optional().transform(v => v ? stripHtml(v) : v),
 });
@@ -31,9 +35,9 @@ const createEventSchema = z.object({
 const updateEventSchema = z.object({
   title: z.string().min(1).max(200).optional().transform(v => v ? stripHtml(v) : v),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]]).optional(),
-  hostPhone: z.string().regex(phoneRegex, 'Teléfono inválido').optional(),
+  hostPhone: z.preprocess(normalizePhone, z.string().regex(phoneRegex, 'Teléfono inválido')).optional(),
   isActive: z.boolean().optional(),
-  eventDate: z.string().nullable().optional(),
+  eventDate: z.string().datetime({ offset: true }).nullable().optional(),
   eventLocation: z.string().max(200).nullable().optional().transform(v => v ? stripHtml(v) : v),
   eventNote: z.string().max(1000).nullable().optional().transform(v => v ? stripHtml(v) : v),
 });
