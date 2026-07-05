@@ -64,7 +64,7 @@ export default function EditEventModal({
                 onClick={onClose}
                 aria-label="Cerrar"
                 data-testid="close-edit-modal"
-                className="p-2.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
+                className="p-2.5 text-on-surface-variant hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -75,7 +75,7 @@ export default function EditEventModal({
               className="space-y-4 text-left"
             >
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre del evento</label>
+                <label className="block text-xs font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Nombre del evento</label>
                 <input
                   id="edit-title"
                   type="text"
@@ -90,7 +90,7 @@ export default function EditEventModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tipo de evento</label>
+                  <label className="block text-xs font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Tipo de evento</label>
                   <select
                     id="edit-type"
                     value={typeDraft}
@@ -104,7 +104,7 @@ export default function EditEventModal({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Fecha y Hora</label>
+                  <label className="block text-xs font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Fecha y Hora</label>
                   <input
                     id="edit-date"
                     type="datetime-local"
@@ -116,7 +116,7 @@ export default function EditEventModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar del evento</label>
+                <label className="block text-xs font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Lugar del evento</label>
                 <input
                   id="edit-location"
                   type="text"
@@ -131,7 +131,7 @@ export default function EditEventModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Notas para invitados</label>
+                <label className="block text-xs font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Notas para invitados</label>
                 <textarea
                   id="edit-note"
                   value={noteDraft}
@@ -146,7 +146,7 @@ export default function EditEventModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
+                  className="px-5 py-3 text-xs font-bold text-on-surface-variant hover:text-gray-800 cursor-pointer"
                 >
                   Salir sin guardar
                 </button>
@@ -158,7 +158,7 @@ export default function EditEventModal({
                   disabled={updatingDetails}
                   className="bg-primary hover:bg-primary text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {updatingDetails ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Guardar Cambios'}
+                  {updatingDetails ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Guardar cambios'}
                 </motion.button>
               </div>
             </form>

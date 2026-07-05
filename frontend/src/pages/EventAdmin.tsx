@@ -530,7 +530,7 @@ export default function EventAdmin() {
       <div className="max-w-4xl mx-auto px-4 mt-8 relative z-10">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-6 font-semibold px-2">
+        <div className="flex items-center gap-2 text-xs text-on-surface-variant mb-6 font-semibold px-2">
           <Link to="/dashboard" className="hover:text-rose-950 hover:underline transition-colors duration-200">Mis Eventos</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
           <span className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-primary font-black shadow-sm flex items-center gap-1">
@@ -602,7 +602,7 @@ export default function EventAdmin() {
             <div className="flex items-center justify-between sm:justify-start gap-4 bg-surface border border-primary/10 p-3.5 rounded-2xl shadow-sm self-stretch sm:self-center">
               <div className="flex flex-col text-left">
                 <span className="text-[9px] text-primary font-extrabold tracking-widest uppercase">ESTADO DE EVENTO</span>
-                <span className={`text-xs font-semibold tracking-wide ${event.isActive ? 'text-emerald-700 font-extrabold' : 'text-gray-400 font-medium'}`}>
+                <span className={`text-xs font-semibold tracking-wide ${event.isActive ? 'text-emerald-700 font-extrabold' : 'text-on-surface-variant font-medium'}`}>
                   {event.isActive ? '● ACTIVO EN LÍNEA' : '○ PAUSADO'}
                 </span>
               </div>
@@ -649,7 +649,7 @@ export default function EventAdmin() {
               <div className="flex flex-col text-left">
                 <span className="text-sm font-extrabold text-on-surface">Evento finalizado</span>
                 <span className="text-xs text-on-surface-variant font-medium mt-0.5">
-                  Los invitados ya no pueden apartar regalos ni usar La Jarra. La galería y el muro de mensajes siguen activos.
+                  Los invitados ya no pueden apartar regalos ni usar la Lluvia de Sobres. La galería y el muro de mensajes siguen activos.
                 </span>
               </div>
             </div>
@@ -757,7 +757,7 @@ onClick={() => {
               title="Copiar enlace"
               aria-label="Copiar enlace"
             >
-              <Copy className="w-5 h-5 text-gray-500 stroke-[2.2]" />
+              <Copy className="w-5 h-5 text-on-surface-variant stroke-[2.2]" />
             </motion.button>
           </div>
 
@@ -776,7 +776,7 @@ onClick={() => {
                   <Calendar className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fecha y Hora</span>
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Fecha y Hora</span>
                   <span className="text-primary text-[13px] font-extrabold leading-snug mt-1.5">
                     {event.eventDate ? formatDateTime(event.eventDate) : 'Sin definir'}
                   </span>
@@ -788,7 +788,7 @@ onClick={() => {
                   <MapPin className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Ubicación / Lugar</span>
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Ubicación / Lugar</span>
                   <span className="text-on-surface text-[13px] font-extrabold leading-snug mt-1.5">{event.eventLocation || 'Sin definir'}</span>
                 </div>
               </div>
@@ -798,7 +798,7 @@ onClick={() => {
                   <Info className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Indicaciones</span>
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Indicaciones</span>
                   <span className="text-gray-700 text-xs font-semibold leading-normal mt-1.5 line-clamp-3">{event.eventNote || 'Sin notas'}</span>
                 </div>
               </div>

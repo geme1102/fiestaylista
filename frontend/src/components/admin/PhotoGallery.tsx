@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, X, Star } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
 import { ConfirmModal } from '../ConfirmModal';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useLockedBody } from '../../hooks/useLockedBody';
 import type { Photo } from '../../types';
 
 const Z_LAYERS = {
@@ -32,6 +34,8 @@ export const PhotoGallery = memo(function PhotoGallery({
   fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview, onToggleFeatured,
 }: PhotoGalleryProps) {
+  const previewRef = useFocusTrap(!!selectedPhotoForPreview);
+  useLockedBody(!!selectedPhotoForPreview);
   return (
     <>
       <section className="mb-10">
@@ -39,7 +43,7 @@ export const PhotoGallery = memo(function PhotoGallery({
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
-              Álbum de Recuerdos <span className="text-gray-400 text-sm font-semibold">{photos.length}{maxPhotosPerEvent ? ` / ${maxPhotosPerEvent}` : ''}</span>
+              Álbum de Recuerdos <span className="text-on-surface-variant text-sm font-semibold">{photos.length}{maxPhotosPerEvent ? ` / ${maxPhotosPerEvent}` : ''}</span>
             </h3>
           </div>
         </div>
@@ -56,8 +60,8 @@ export const PhotoGallery = memo(function PhotoGallery({
         />
 
         {photos.length === 0 ? (
-          <p className="text-center text-gray-400 text-xs font-semibold mb-6 bg-white p-6 rounded-2xl border border-dashed border-gray-200">
-            📸 Aún no hay fotografías agregadas. Pulsa en Subir más fotos en el banner inferior.
+          <p className="text-center text-on-surface-variant text-xs font-semibold mb-6 bg-white p-6 rounded-2xl border border-dashed border-gray-200">
+            📸 Aún no hay fotos. Pulsa abajo para subir las primeras.
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mb-6">
@@ -105,10 +109,10 @@ export const PhotoGallery = memo(function PhotoGallery({
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-[10px] text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
+                  <span className="text-xs text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
                 </div>
 
-                <div className="mt-2.5 px-1 text-[11px] text-gray-500 font-bold flex justify-between gap-1 overflow-hidden">
+                <div className="mt-2.5 px-1 text-xs text-on-surface-variant font-bold flex justify-between gap-1 overflow-hidden">
                   <span className="truncate max-w-[70%] text-left">{photo.caption || 'Foto'}</span>
                 </div>
               </div>
@@ -118,25 +122,25 @@ export const PhotoGallery = memo(function PhotoGallery({
 
         {maxPhotosPerEvent === 0 ? (
           <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
-            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-gray-400">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-on-surface-variant">
               <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
             </div>
-            <span className="text-gray-400 font-black text-sm md:text-base tracking-tight">
+            <span className="text-on-surface-variant font-black text-sm md:text-base tracking-tight">
               Álbum de fotos exclusivo Plan Pro
             </span>
-            <span className="text-[10px] text-gray-400 font-bold mt-1">
+            <span className="text-xs text-on-surface-variant font-bold mt-1">
               Actualiza a Pro para activar esta función.
             </span>
           </div>
         ) : maxPhotosPerEvent && photos.length >= maxPhotosPerEvent ? (
           <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
-            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-gray-400">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-on-surface-variant">
               <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
             </div>
-            <span className="text-gray-400 font-black text-sm md:text-base tracking-tight">
+            <span className="text-on-surface-variant font-black text-sm md:text-base tracking-tight">
               Límite alcanzado ({photos.length}/{maxPhotosPerEvent})
             </span>
-            <span className="text-[10px] text-gray-400 font-bold mt-1">
+            <span className="text-xs text-on-surface-variant font-bold mt-1">
               Actualiza a Pro para subir más fotos.
             </span>
           </div>
@@ -162,7 +166,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                 />
               </div>
             )}
-            <span className="text-[10px] text-gray-400 font-bold mt-1">
+            <span className="text-xs text-on-surface-variant font-bold mt-1">
               Admite formatos JPG, JPEG o PNG hasta 10 megabytes.
             </span>
           </div>
@@ -172,6 +176,7 @@ export const PhotoGallery = memo(function PhotoGallery({
       <AnimatePresence>
         {selectedPhotoForPreview && (
           <motion.div
+            ref={previewRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

@@ -129,7 +129,7 @@ export default memo(function GiftManagement({
         <div className="mb-6 flex flex-col gap-2">
           <div className="flex items-center gap-1.5 px-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-bounce" />
-            <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">Sugerencias rápidas:</span>
+            <span className="text-xs text-on-surface-variant font-extrabold uppercase tracking-widest">Sugerencias rápidas:</span>
           </div>
 
           <div className="overflow-x-auto hide-scrollbar pb-2">

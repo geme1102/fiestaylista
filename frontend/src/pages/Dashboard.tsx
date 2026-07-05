@@ -338,7 +338,7 @@ export default function Dashboard() {
               <div className="min-w-0">
                 <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{stat.value}</p>
                 <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
-                <p className="text-[10px] text-on-surface-variant/40 mt-0.5">{stat.subtitle}</p>
+                <p className="text-xs text-on-surface-variant/70 mt-0.5">{stat.subtitle}</p>
               </div>
             </div>
           ))}

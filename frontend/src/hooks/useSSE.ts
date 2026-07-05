@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { reportError } from '../lib/reportError';
 import { apiClient } from '../services/api';
 
 interface SSEOptions {
@@ -67,6 +68,7 @@ export function useSSE({
         token = data.token;
         sseUrl = data.url;
       } catch (err) {
+        reportError(err, { source: 'useSSE-connect' });
         if (cancelledRef.current) return;
 
         if (err instanceof Error) {
@@ -96,7 +98,8 @@ export function useSSE({
           const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
           es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
         }
-      } catch {
+      } catch (err) {
+        reportError(err, { source: 'useSSE-EventSource' });
         sseConnectedRef.current = false;
         onDisconnectedRef.current?.();
         if (!cancelledRef.current && retryCount < maxRetries) {
@@ -131,7 +134,7 @@ export function useSSE({
             return;
           }
           handleMessage(data);
-        } catch { /* ignore parse errors */ }
+        } catch (err) { reportError(err, { source: 'useSSE-parse' }); }
       };
 
       es.onerror = () => {

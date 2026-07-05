@@ -5,6 +5,8 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { formatCOP } from '../utils/format';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import type { CashFund, CashContribution } from '../types';
 
 const MAX_RECENT_CONTRIBUTIONS = 5;
@@ -564,8 +566,10 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
 }
 
 function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; onClose: () => void; loading: boolean }) {
+  const boostRef = useFocusTrap(true);
+  useLockedBody(true);
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+    <div ref={boostRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
       <motion.div
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 
 interface WelcomeModalProps {
   hasEvents: boolean;
@@ -95,10 +97,14 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
 
   const stepData = STEPS[currentStep];
 
+  const dialogRef = useFocusTrap(!exiting);
+  useLockedBody(!exiting);
+
   return createPortal(
     <AnimatePresence>
       {!exiting && (
         <motion.div
+          ref={dialogRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

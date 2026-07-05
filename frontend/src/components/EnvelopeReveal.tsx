@@ -141,25 +141,23 @@ export function EnvelopeReveal({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleMiniCardClick(); }}
                   >
                     <span className="text-5xl mb-3 select-none">{eventEmoji}</span>
-                    <span className="text-xs px-3 py-1 rounded-full bg-black/5 text-gray-500 font-semibold mb-3 tracking-wide uppercase">
+                    <span className="text-xs px-3 py-1 rounded-full bg-black/5 text-on-surface-variant font-semibold mb-3 tracking-wide uppercase">
                       evento
                     </span>
                     <h2
-                      className="text-2xl font-bold text-gray-900 mb-1 leading-tight"
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
+                      className="text-2xl font-bold text-gray-900 mb-1 leading-tight font-outfit"
                     >
                       ¡Estás invitado!
                     </h2>
                     {hasName && (
                       <p
-                        className="text-base text-gray-600 mt-1"
-                        style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic' }}
+                        className="text-base text-gray-600 mt-1 font-script italic"
                       >
                         {displayName}
                       </p>
                     )}
                     <p
-                      className="text-xs text-gray-400 mt-4 flex items-center gap-1"
+                      className="text-xs text-on-surface-variant mt-4 flex items-center gap-1"
                     >
                       <span className="animate-tap-pulse">Toca para abrir</span>
                       <span className="animate-tap-pulse ml-1">→</span>
@@ -207,22 +205,13 @@ export function EnvelopeReveal({
                     </p>
                     {hasName ? (
                       <p
-                        className="text-lg md:text-xl leading-relaxed"
-                        style={{
-                          fontFamily: "'Playfair Display', serif",
-                          fontStyle: 'italic',
-                          color: '#d4a434',
-                        }}
+                        className="text-lg md:text-xl leading-relaxed font-script italic text-[#d4a434]"
                       >
                         {displayName}
                       </p>
                     ) : (
                       <p
-                        className="text-sm text-[rgba(212,164,52,0.4)]"
-                        style={{
-                          fontFamily: "'Playfair Display', serif",
-                          fontStyle: 'italic',
-                        }}
+                        className="text-sm font-script italic text-[rgba(212,164,52,0.4)]"
                       >
                         — tú —
                       </p>

@@ -37,7 +37,7 @@ export default function BoostModal({ open, loading, dialogRef, onConfirm, onClos
             <h4 className="text-xl font-black text-[#93400e] tracking-tight">
               Activar Lluvia de Sobres
             </h4>
-            <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-semibold">
+            <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed font-semibold">
               <strong>Gratuito — sin costo.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta bancaria. Válido por 30 días.
             </p>
 
@@ -56,7 +56,7 @@ export default function BoostModal({ open, loading, dialogRef, onConfirm, onClos
               </div>
             </div>
 
-            <p className="text-[10px] text-gray-400 font-semibold">Sin comisiones. La app solo muestra los aportes que los invitados registran voluntariamente.</p>
+            <p className="text-xs text-on-surface-variant font-semibold">Sin comisiones. La app solo muestra los aportes que los invitados registran voluntariamente.</p>
 
             <div className="flex flex-col gap-2.5 mt-2">
               <motion.button
@@ -72,7 +72,7 @@ export default function BoostModal({ open, loading, dialogRef, onConfirm, onClos
               <button
                 onClick={onClose}
                 disabled={loading}
-                className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-3 font-extrabold cursor-pointer disabled:opacity-50 min-h-[44px]"
+                className="w-full bg-transparent text-on-surface-variant hover:text-gray-700 text-xs py-3 font-extrabold cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 Ahora no, gracias
               </button>

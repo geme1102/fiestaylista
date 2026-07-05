@@ -17,6 +17,7 @@ import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
 import { EnvelopeReveal } from '../components/EnvelopeReveal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { apiClient } from '../services/api';
+import { reportError } from '../lib/reportError';
 import { getGiftCategory } from '../data/giftEmojis';
 
 function sanitizeForJSON(str: string): string {
@@ -77,7 +78,7 @@ export default function EventGuest() {
   useEffect(() => {
     if (!event || viewedEventRef.current === event.id) return;
     viewedEventRef.current = event.id;
-    apiClient.post('/api/analytics/view', { eventId: event.id }, { skipAuthRedirect: true }).catch(() => {});
+    apiClient.post('/api/analytics/view', { eventId: event.id }, { skipAuthRedirect: true }).catch((err) => reportError(err, { source: 'EventGuest-analytics' }));
   }, [event]);
 
   useEffect(() => {
@@ -103,8 +104,8 @@ export default function EventGuest() {
     try {
       if (sessionStorage.getItem(key) === 'done') return;
       sessionStorage.setItem(key, 'done');
-    } catch {
-      // sessionStorage unavailable — show envelope anyway
+    } catch (err) {
+      reportError(err, { source: 'EventGuest-sessionStorage' });
     }
     setShowEnvelope(true);
   }, [event, loading]);
