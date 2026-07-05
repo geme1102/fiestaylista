@@ -15,7 +15,8 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-type DbClient = typeof db;
+import type { PgTransaction } from 'drizzle-orm/pg-core';
+type DbClient = typeof db | PgTransaction<any, any, any>;
 
 export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');

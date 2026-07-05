@@ -208,6 +208,7 @@ const mockEventService = vi.hoisted(() => ({
 }));
 
 vi.mock('../services/event.js', () => mockEventService);
+vi.mock('../services/event-queries.js', () => mockEventService);
 
 const mockGiftService = vi.hoisted(() => ({
   addGift: vi.fn(),

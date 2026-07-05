@@ -77,7 +77,7 @@ export async function register(
       .returning();
 
     user = newUser;
-    tokens = await issueTokenPair(user.id, user.email);
+    tokens = await issueTokenPair(user.id, user.email, tx);
   });
 
   let emailSent = false;
