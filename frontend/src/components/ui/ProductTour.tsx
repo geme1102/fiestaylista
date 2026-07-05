@@ -48,11 +48,13 @@ function smoothScrollToTarget(selector: string): Promise<void> {
 export function ProductTour({
   steps,
   storageKey,
+  completed,
   onComplete,
   children,
 }: {
   steps: TourStep[];
   storageKey: string;
+  completed?: boolean;
   onComplete?: () => void;
   children?: ReactNode;
 }) {
@@ -72,10 +74,10 @@ export function ProductTour({
   }, [stepIndex, active, transitioning]);
 
   const start = useCallback(() => {
-    try { if (localStorage.getItem(storageKey) === 'done') return; } catch { return; }
+    try { if (completed || localStorage.getItem(storageKey) === 'done') return; } catch { return; }
     setActive(true);
     setStepIndex(0);
-  }, [storageKey]);
+  }, [storageKey, completed]);
 
   useEffect(() => {
     const timer = setTimeout(start, 800);

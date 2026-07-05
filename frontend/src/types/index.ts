@@ -8,6 +8,7 @@ export interface User {
   name: string;
   tier: Tier;
   emailVerified: boolean;
+  onboardingCompleted: boolean;
   createdAt: string;
 }
 

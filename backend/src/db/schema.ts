@@ -14,6 +14,7 @@ export const users = pgTable('users', {
   /** @deprecated No longer used in code — kept for migration compatibility */
   lastSequenceCheck: timestamp('last_sequence_check', { mode: 'date', withTimezone: true }),
   emailVerified: boolean('email_verified').notNull().default(false),
+  onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
   verificationToken: text('verification_token'),
   verificationTokenExpires: timestamp('verification_token_expires', { mode: 'date', withTimezone: true }),
   resetToken: text('reset_token'),

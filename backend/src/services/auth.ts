@@ -18,6 +18,7 @@ interface UserResponse {
   name: string;
   tier: string;
   emailVerified: boolean;
+  onboardingCompleted: boolean;
   createdAt: Date;
 }
 
@@ -30,6 +31,7 @@ function toUserResponse(user: typeof users.$inferSelect): UserResponse {
     name: user.name,
     tier: user.tier,
     emailVerified: user.emailVerified ?? false,
+    onboardingCompleted: user.onboardingCompleted ?? false,
     createdAt: user.createdAt,
   };
 }
@@ -175,6 +177,13 @@ export async function getUser(userId: string): Promise<UserResponse> {
   }
 
   return toUserResponse(user);
+}
+
+export async function markOnboardingCompleted(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({ onboardingCompleted: true })
+    .where(eq(users.id, userId));
 }
 
 export async function verifyEmail(token: string): Promise<void> {

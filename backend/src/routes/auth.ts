@@ -136,6 +136,11 @@ router.post('/reset-password', verifyTurnstile, resetLimiter, asyncHandlerWithVa
   res.json({ success: true });
 }));
 
+router.patch('/onboarding', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  await authService.markOnboardingCompleted(req.user!.userId);
+  res.json({ success: true });
+}));
+
 router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const isProduction = process.env.NODE_ENV === 'production';
   // Limpiar cookie antes de revocar para asegurar logout incluso si DB falla

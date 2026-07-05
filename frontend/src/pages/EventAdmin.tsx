@@ -22,6 +22,7 @@ import { reportError } from '../lib/reportError';
 import { showToast } from '../hooks/useToast';
 import { useSSE } from '../hooks/useSSE';
 import { uploadPhoto, addPhoto } from '../services/events';
+import { completeOnboarding } from '../services/onboarding';
 import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
@@ -49,7 +50,7 @@ interface AdminEvent {
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [event, setEvent] = useState<AdminEvent | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
@@ -138,10 +139,14 @@ export default function EventAdmin() {
   }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements]);
 
   const tourSteps: TourStep[] = useMemo(() => [
+    { target: '[data-tour="edit"]', title: 'Personaliza tu evento', body: 'Toca el lápiz para cambiar el nombre, la fecha, el lugar y el mensaje de bienvenida de tus invitados.', cta: 'Entendido', placement: 'bottom' },
     { target: '[data-tour="share"]', title: 'Comparte tu enlace', body: 'Envía tu lista por WhatsApp o copia el enlace. Tus invitados NO necesitan registrarse — ven la lista y apartan al instante.', cta: 'Genial', placement: 'bottom' },
-    { target: '[data-tour="preview"]', title: 'Vista previa', body: 'Mira exactamente lo que verán tus invitados. Abre tu evento público en una pestaña nueva.', cta: '¡Perfecto!', placement: 'bottom' },
-    { target: '[data-tour="add-gift"]', title: 'Añade regalos', body: 'Escribe lo que quieres recibir o elige de nuestras sugerencias rápidas. ¡Tu lista se arma en segundos!', cta: 'Entendido', requireClick: false, placement: 'bottom' },
+    { target: '[data-tour="guests"]', title: 'Tus invitados', body: 'Aquí verás quién confirmó asistencia y qué regalos apartaron, en tiempo real.', cta: '¡Listo!', placement: 'bottom' },
   ], []);
+
+  const handleTourComplete = useCallback(() => {
+    completeOnboarding().then(() => refreshUser());
+  }, [refreshUser]);
 
   const loadEvent = useCallback(async () => {
     try {
@@ -560,6 +565,7 @@ export default function EventAdmin() {
                     <motion.button
                       type="button"
                       data-testid="edit-event-button"
+                      data-tour="edit"
                       whileHover={{ scale: 1.15, rotate: 15 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => {
@@ -809,7 +815,7 @@ onClick={() => {
           </div>
         )}
 
-        <ProductTour steps={tourSteps} storageKey={`fy_tour_event_${id}`} />
+        <ProductTour steps={tourSteps} storageKey={`fy_tour_event_${id}`} completed={user?.onboardingCompleted} onComplete={handleTourComplete} />
 
         <div data-tour="add-gift">
         <SectionErrorBoundary sectionName="GiftManagement">
@@ -835,9 +841,11 @@ onClick={() => {
         </SectionErrorBoundary>
         </div>
 
+        <div data-tour="guests">
         <SectionErrorBoundary sectionName="GuestsPanel">
         <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><GuestsPanel eventId={id ?? ''} /></Suspense>
         </SectionErrorBoundary>
+        </div>
 
         <SectionErrorBoundary sectionName="MessagesPanel">
         <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>

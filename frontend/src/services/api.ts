@@ -35,7 +35,7 @@ export function getAccessToken(): string | null {
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 interface RequestOptions {
   headers?: Record<string, string>;
@@ -222,6 +222,9 @@ export const apiClient = {
   },
   put<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     return request<T>('PUT', path, body, options);
+  },
+  patch<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    return request<T>('PATCH', path, body, options);
   },
   del<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     return request<T>('DELETE', path, body, options);
