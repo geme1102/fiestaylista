@@ -32,6 +32,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigatedRef = useRef(false);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const params = new URLSearchParams(location.search);
   const planParam = params.get('plan');
@@ -40,12 +41,18 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
+  const isFormValid = name.length > 0 && email.length > 0 && password.length >= 8
+    && /[A-Z]/.test(password) && /[0-9]/.test(password) && acceptTerms && acceptPrivacy;
+
   const { containerRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
+  useEffect(() => { return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); }; }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!name || !email || !password) {
       showToast('Completa todos los campos', 'error');
       return;
@@ -77,8 +84,14 @@ export default function Register() {
     }
 
     setLoading(true);
+    safetyTimerRef.current = setTimeout(() => {
+      setLoading(false);
+      showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+    }, 15000);
+
     try {
       await register(email, password, name, token ?? undefined);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       navigatedRef.current = true;
       if (planParam === 'pro' || planParam === 'pro_plus') {
         navigate(`/pricing?intent=pro&interval=${intervalParam || 'month'}`, { replace: true });
@@ -86,6 +99,7 @@ export default function Register() {
         navigate('/onboarding', { replace: true });
       }
     } catch (err) {
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       reportError(err, { source: 'Register' });
       showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
@@ -245,10 +259,16 @@ export default function Register() {
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
+                disabled={loading || !isFormValid}
+                aria-busy={loading}
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
-                {loading ? <LoadingSpinner size="sm" /> : 'Empezar gratis'}
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Creando cuenta...
+                  </span>
+                ) : 'Empezar gratis'}
               </button>
             </form>
 

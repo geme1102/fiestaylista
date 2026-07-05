@@ -17,13 +17,18 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigatedRef = useRef(false);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const isFormValid = email.length > 0 && password.length > 0;
 
   const { containerRef, token: turnstileToken, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
+  useEffect(() => { return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); }; }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !password) {
       showToast('Completa todos los campos', 'error');
       return;
@@ -35,8 +40,14 @@ export default function Login() {
     }
 
     setLoading(true);
+    safetyTimerRef.current = setTimeout(() => {
+      setLoading(false);
+      showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+    }, 15000);
+
     try {
       const res = await login(email, password, token ?? undefined);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       navigatedRef.current = true;
       if (res.user && !res.user.emailVerified) {
         showToast('Inicio de sesión exitoso. Tu correo aún no está verificado — revisa tu bandeja de entrada.', 'info');
@@ -54,6 +65,7 @@ export default function Login() {
       }
       navigate('/dashboard', { replace: true });
     } catch (err) {
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       reportError(err, { source: 'Login' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('Credenciales inválidas')) {
@@ -156,10 +168,16 @@ export default function Login() {
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
+                disabled={loading || !isFormValid}
+                aria-busy={loading}
+                className="w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[44px]"
               >
-                {loading ? <LoadingSpinner size="sm" /> : 'Iniciar Sesión'}
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Iniciando sesión...
+                  </span>
+                ) : 'Iniciar Sesión'}
               </button>
             </form>
 
