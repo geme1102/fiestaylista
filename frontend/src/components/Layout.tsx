@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/cn';
+import Logo from './Logo';
 import InstallPwaBanner from './InstallPwaBanner';
 
 const BASE_NAV_ITEMS = [
@@ -40,9 +41,9 @@ export default function Layout() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-<picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" /></picture>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
+              <Link to="/dashboard" aria-label="Ir al inicio" className="flex items-center gap-2 shrink-0 group">
+<Logo className="w-[45px] h-[45px] transition-transform group-hover:scale-105" />
+                <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>

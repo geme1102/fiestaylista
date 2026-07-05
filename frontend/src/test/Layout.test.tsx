@@ -30,7 +30,7 @@ function renderLayout(initialRoute = '/dashboard') {
 describe('Layout', () => {
   it('renders logo and brand name', () => {
     renderLayout();
-    expect(screen.getByAltText('Fiesta y Lista')).toBeTruthy();
+    expect(screen.getByLabelText('Ir al inicio')).toBeTruthy();
     expect(screen.getByText('Fiesta y Lista')).toBeTruthy();
   });
 

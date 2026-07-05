@@ -6,6 +6,7 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Logo from '../components/Logo';
 import AuthBottomNav from '../components/AuthBottomNav';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,8 +66,8 @@ export default function ForgotPassword() {
         <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
-              <picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-9 h-9 object-contain" /></picture>
+            <Link to="/" aria-label="Ir al inicio" className="inline-flex items-center gap-2 mb-6 group">
+              <Logo className="w-9 h-9 transition-transform group-hover:scale-105" />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Fiesta y Lista
               </span>

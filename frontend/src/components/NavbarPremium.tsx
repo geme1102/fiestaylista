@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
+import Logo from './Logo';
 
 interface NavbarPremiumProps {
   hideCta?: boolean;
@@ -24,8 +25,8 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
       }`}
     >
       <div className={`flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
-        <Link to="/" className="flex items-center gap-3 group cursor-pointer">
-<picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-[45px] h-[45px] object-contain" /></picture>
+        <Link to="/" aria-label="Ir al inicio" className="flex items-center gap-3 group cursor-pointer">
+<Logo className="w-[45px] h-[45px] transition-transform group-hover:scale-105" />
           <span className="font-headline-md text-headline-md font-extrabold text-on-surface hidden sm:block">
             Fiesta y Lista
           </span>

@@ -49,7 +49,7 @@ describe('NavbarPremium', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, logout: vi.fn() });
     renderNavbar();
 
-    expect(screen.getByAltText('Fiesta y Lista')).toBeTruthy();
+    expect(screen.getByLabelText('Ir al inicio')).toBeTruthy();
     expect(screen.getByText('Fiesta y Lista')).toBeTruthy();
   });
 

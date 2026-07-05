@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import SplashIntro from './components/SplashIntro';
+import Logo from './components/Logo';
 import ErrorBoundary from './components/ErrorBoundary';
 import { reportError } from './lib/reportError';
 import { QueryProvider } from './components/QueryProvider';
@@ -170,7 +171,7 @@ export default function App() {
     <QueryProvider>
       <PwaUpdater />
       <ScrollToTop />
-    <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-16 h-16 object-contain" /></picture><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant/70 font-medium animate-pulse">Cargando...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant/70 font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
