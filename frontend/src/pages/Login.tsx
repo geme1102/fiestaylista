@@ -39,6 +39,10 @@ export default function Login() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
+    if (!token) {
+      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+      return;
+    }
 
     setLoading(true);
     safetyTimerRef.current = setTimeout(() => {
