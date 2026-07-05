@@ -68,10 +68,11 @@ export default function Layout() {
 
             <div className="flex items-center gap-3">
               <Link
-                to="/dashboard"
-                className="hidden md:inline-flex bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg transition-all active:scale-95"
+                to="/dashboard?create=true"
+                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-on-primary px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
               >
-                Crear Evento
+                <span className="material-symbols-outlined text-lg">add</span>
+                <span>Crear Evento</span>
               </Link>
               <span className="hidden sm:block text-sm text-on-surface-variant">
                 {user?.name}

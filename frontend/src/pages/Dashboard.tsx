@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [syncingPayment, setSyncingPayment] = useState(false);
   const [pollingPayment, setPollingPayment] = useState(false);
   const [paymentRejected, setPaymentRejected] = useState(false);
+  const [showFab, setShowFab] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState(false);
 
@@ -101,6 +102,28 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [location.search, refreshUser, queryClient]);
 
+  useEffect(() => {
+    const onScroll = () => setShowFab(window.scrollY > 250);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('create')) return;
+
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+
+    const maxEvents = TIER_LIMITS[user?.tier ?? 'free'].maxEvents;
+    if (events.length >= maxEvents) {
+      navigate('/pricing');
+    } else {
+      setShowCreateModal(true);
+    }
+  }, [location.search, events, user?.tier, navigate]);
+
   const handlePaymentSync = async () => {
     setSyncingPayment(true);
     try {
@@ -128,16 +151,23 @@ export default function Dashboard() {
       return;
     }
     setCreating(true);
+    const safetyTimer = setTimeout(() => {
+      setCreating(false);
+      showToast('La creación está tomando más de lo esperado. Intenta de nuevo.', 'error');
+    }, 15000);
     try {
       const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', formData);
+      clearTimeout(safetyTimer);
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       navigate(`/event/${res.event.id}`);
     } catch (err) {
+      clearTimeout(safetyTimer);
       reportError(err, { source: 'Dashboard' });
       showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
+      clearTimeout(safetyTimer);
       setCreating(false);
     }
   };
@@ -250,10 +280,11 @@ export default function Dashboard() {
                 <button
                   onClick={() => setShowCreateModal(true)}
                   data-testid="new-event-button"
+                  aria-label="Crear nuevo evento"
                   className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-sm min-h-[44px] flex items-center justify-center gap-2 active:scale-95"
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
-                  <span className="hidden sm:inline">Nuevo Evento</span>
+                  <span>Nuevo Evento</span>
                 </button>
                 )}
       </div>
@@ -440,6 +471,22 @@ export default function Dashboard() {
           </Modal>
         </AnimatePresence>
       )}
+
+      <AnimatePresence>
+        {showFab && eventCount < limits.maxEvents && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            onClick={() => setShowCreateModal(true)}
+            aria-label="Crear nuevo evento"
+            className="sm:hidden fixed bottom-24 right-5 z-[60] w-14 h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full shadow-xl shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all active:scale-90 flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -556,7 +603,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
         disabled={creating || !formData.title.trim()}
         className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center min-h-[52px]"
       >
-        {creating ? <LoadingSpinner size="sm" /> : 'Crear Lista de Regalos'}
+        {creating ? <><LoadingSpinner size="sm" /><span className="ml-2">Creando...</span></> : 'Crear Lista de Regalos'}
       </button>
 
       <details className="text-sm text-on-surface-variant">
