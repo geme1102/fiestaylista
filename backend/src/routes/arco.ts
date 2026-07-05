@@ -18,7 +18,7 @@ const arcoRequestSchema = z.object({
   details: z.string().optional(),
 });
 
-router.get('/my-data', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/my-data', requireAuth, arcoLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const data = await arcoService.getUserData(req.user!.userId);
   res.json({ data });
 }));
@@ -43,7 +43,7 @@ router.post('/delete-account', requireAuth, arcoLimiter, asyncHandler(async (req
   res.json({ success: true });
 }));
 
-router.post('/request', requireAuth, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/request', requireAuth, arcoLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = arcoRequestSchema.parse(req.body);
   const request = await arcoService.createArcoRequest(
     req.user!.userId,
@@ -53,7 +53,7 @@ router.post('/request', requireAuth, asyncHandlerWithValidation(async (req: Auth
   res.status(201).json({ request });
 }));
 
-router.get('/requests', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/requests', requireAuth, arcoLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const requests = await arcoService.getArcoRequests(req.user!.userId);
   res.json({ requests });
 }));

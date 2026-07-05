@@ -34,6 +34,10 @@ export default function ForgotPassword() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
+    if (!token) {
+      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -57,7 +61,7 @@ export default function ForgotPassword() {
         <meta name="twitter:title" content="Recuperar Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Recupera tu contraseña de Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen bg-surface pb-24 sm:pb-0">
+      <main className="min-h-screen bg-surface pb-24 sm:pb-0">
         <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -135,10 +139,10 @@ export default function ForgotPassword() {
             </form>
           )}
 
-          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+          <div ref={containerRef} className="absolute -z-10 opacity-0" />
         </div>
       </div>
-      </div>
+      </main>
       <AuthBottomNav />
     </>
   );

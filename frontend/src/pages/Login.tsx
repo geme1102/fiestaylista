@@ -82,7 +82,7 @@ export default function Login() {
         <meta name="twitter:title" content="Iniciar Sesión - Fiesta y Lista" />
         <meta name="twitter:description" content="Inicia sesión en Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen bg-surface pb-24 sm:pb-0">
+      <main className="min-h-screen bg-surface pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -172,10 +172,10 @@ export default function Login() {
                 </div>
               </div>
             )}
-            <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+            <div ref={containerRef} className="absolute -z-10 opacity-0" />
           </div>
         </div>
-      </div>
+      </main>
       <AuthBottomNav />
     </>
   );

@@ -138,3 +138,12 @@ export const publicStatsLimiter = rateLimit({
   keyGenerator,
   message: msg('Demasiadas solicitudes. Intenta de nuevo en un minuto.'),
 });
+
+export const rsvpLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: msg('Demasiados RSVP. Intenta de nuevo en un minuto.'),
+});

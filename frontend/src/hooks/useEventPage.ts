@@ -38,6 +38,7 @@ export function useEventPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
   const loadEventRef = useRef<() => Promise<void>>(undefined);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
@@ -57,8 +58,11 @@ export function useEventPage() {
   }, [guestName]);
 
   const loadEvent = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const data = await getEventBySlug(slug!);
+      const data = await getEventBySlug(slug!, controller.signal);
       if (!mountedRef.current) return;
       if (!data.event.isActive) {
         setError('Este evento no está disponible');
@@ -128,6 +132,7 @@ export function useEventPage() {
 
     return () => {
       mountedRef.current = false;
+      abortRef.current?.abort();
       cancelPoll();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);

@@ -28,6 +28,6 @@ export async function uploadPhoto(file: File, onProgress?: (pct: number) => void
   return apiClient.post<{ url: string }>('/api/upload', formData);
 }
 
-export function getEventBySlug(slug: string): Promise<{ event: Event; gifts: Gift[]; photos: Photo[] }> {
-  return apiClient.get<{ event: Event; gifts: Gift[]; photos: Photo[] }>(`/api/events/slug/${slug}`);
+export function getEventBySlug(slug: string, signal?: AbortSignal): Promise<{ event: Event; gifts: Gift[]; photos: Photo[] }> {
+  return apiClient.get<{ event: Event; gifts: Gift[]; photos: Photo[] }>(`/api/events/slug/${slug}`, { signal });
 }

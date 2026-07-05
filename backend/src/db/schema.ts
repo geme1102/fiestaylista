@@ -31,7 +31,7 @@ export const events = pgTable('events', {
   title: text('title').notNull(),
   eventType: text('event_type').notNull().default('BABY_SHOWER'),
   hostPhone: text('host_phone'),
-  slug: text('slug').notNull().unique(),
+  slug: text('slug').notNull(),
   status: eventStatusEnum('status').notNull().default('active'),
   isActive: boolean('is_active').notNull().default(true),
   boostedUntil: timestamp('boosted_until', { mode: 'date', withTimezone: true }),
@@ -48,6 +48,7 @@ export const events = pgTable('events', {
   userIdDeletedAtIdx: index('events_user_id_deleted_at_idx').on(table.userId, table.deletedAt),
   deletedAtIdx: index('events_deleted_at_idx').on(table.deletedAt),
   userIdIsActiveDeletedAtIdx: index('events_user_id_is_active_deleted_at_idx').on(table.userId, table.isActive, table.deletedAt),
+  slugUniqueActiveIdx: uniqueIndex('events_slug_unique').on(table.slug).where(isNull(table.deletedAt)),
 }));
 
 export const gifts = pgTable('gifts', {

@@ -36,6 +36,25 @@ export const MOCK_PHOTOS: Photo[] = [
   { id: 'photo-1', eventId: 'event-1', url: 'https://picsum.photos/400/300', caption: 'Decoración', createdAt: new Date().toISOString() },
 ];
 
+export const MOCK_CONTRIBUTIONS = [
+  { id: 'contrib-1', cashFundId: 'cf-1', eventId: 'event-1', contributorName: 'Carlos López', amount: 50000, message: '¡Felicidades!', status: 'completed' as const, createdAt: new Date().toISOString() },
+  { id: 'contrib-2', cashFundId: 'cf-1', eventId: 'event-1', contributorName: 'María García', amount: 100000, message: 'Muchas bendiciones', status: 'completed' as const, createdAt: new Date().toISOString() },
+];
+
+export const MOCK_MESSAGES = [
+  { id: 'msg-1', eventId: 'event-1', authorName: 'Ana Pérez', content: '¡Felicidades! Qué emoción', createdAt: new Date().toISOString() },
+  { id: 'msg-2', eventId: 'event-1', authorName: 'Luis Gómez', content: 'Los quiero mucho', createdAt: new Date().toISOString() },
+];
+
+export const MOCK_GROUP_GIFT = {
+  ...MOCK_GIFTS[0],
+  id: 'gift-3',
+  name: 'Cuna para bebé',
+  isGroupGift: true as const,
+  targetAmount: 300000,
+  collectedAmount: 120000,
+};
+
 export const MOCK_SUBSCRIPTION: Subscription = {
   id: 'sub-1',
   userId: 'user-pro-1',

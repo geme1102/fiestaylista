@@ -142,7 +142,7 @@ export function startCronJobs(): void {
     try {
       const result = await db
         .delete(failedWebhooks)
-        .where(sql`${failedWebhooks.createdAt} < NOW() - INTERVAL '7 days' AND (${failedWebhooks.status} = 'completed' OR ${failedWebhooks.retryCount} >= 5)`);
+        .where(sql`(${failedWebhooks.createdAt} < NOW() - INTERVAL '7 days' AND ${failedWebhooks.status} = 'completed') OR (${failedWebhooks.createdAt} < NOW() - INTERVAL '1 day' AND ${failedWebhooks.status} = 'pending' AND ${failedWebhooks.retryCount} >= 5)`);
       if (result && result.length > 0) {
         log.info(`Limpieza de webhooks: ${result.length}`);
       }

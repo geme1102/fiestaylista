@@ -12,7 +12,8 @@ import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users, proPayments } from '../db/schema.js';
-import type { AuthRequest } from '../types/index.js';
+import type { AuthRequest, Tier } from '../types/index.js';
+import { TIER_ORDER } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Subscriptions');
@@ -50,8 +51,12 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
   }
 
   const sub = await subscriptionService.getCurrentSubscription(req.user!.userId);
-  if ((sub?.tier === 'pro' || sub?.tier === 'pro_plus') && sub?.status === 'active') {
-    throw new ValidationError(`Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo`);
+  if (sub && sub.status === 'active') {
+    const currentLevel = TIER_ORDER[(sub.tier ?? 'free') as Tier];
+    const requestedLevel = TIER_ORDER[data.tier];
+    if (requestedLevel <= currentLevel) {
+      throw new ValidationError(`Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo`);
+    }
   }
 
   const planId = PLAN_IDS[data.tier]?.[data.interval];
@@ -84,7 +89,7 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   const userId = req.user!.userId;
 
   const sub = await subscriptionService.getCurrentSubscription(userId);
-  if ((sub?.tier === 'pro' || sub?.tier === 'pro_plus') && sub?.status === 'active') {
+  if (sub && sub.status === 'active') {
     res.json({ tier: sub.tier, synced: false, message: `Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo` });
     return;
   }

@@ -108,10 +108,38 @@
       "breakpoints": true
     },
     {
+      "idx": 15,
+      "version": "7",
+      "when": 1782140100000,
+      "tag": "0015_timestamptz",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782140200000,
+      "tag": "0016_add_frozen_at_and_tier_check",
+      "breakpoints": true
+    },
+    {
       "idx": 17,
       "version": "7",
       "when": 1782140400000,
       "tag": "0017_make_gift_name_unique_soft_delete_aware",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782150000000,
+      "tag": "0018_add_check_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1782240000000,
+      "tag": "0019_make_events_slug_soft_delete_aware",
       "breakpoints": true
     }
   ]

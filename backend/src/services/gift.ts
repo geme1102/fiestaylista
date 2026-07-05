@@ -119,7 +119,7 @@ export async function claimGift(giftId: string, claimedBy: string) {
   const [giftWithEvent] = await db
     .select({ eventId: giftsTable.eventId })
     .from(giftsTable)
-    .where(eq(giftsTable.id, giftId))
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
     .limit(1);
 
   if (giftWithEvent) {
@@ -212,7 +212,7 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
   const [giftWithEvent] = await db
     .select({ eventId: giftsTable.eventId })
     .from(giftsTable)
-    .where(eq(giftsTable.id, giftId))
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
     .limit(1);
 
   if (giftWithEvent) {
@@ -231,7 +231,7 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
     const [gift] = await tx
       .select({ isGroupGift: giftsTable.isGroupGift, isClaimed: giftsTable.isClaimed })
       .from(giftsTable)
-      .where(eq(giftsTable.id, giftId))
+      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
       .for('update')
       .limit(1);
 
@@ -253,7 +253,8 @@ export async function getGiftClaims(giftId: string) {
     .select()
     .from(giftClaims)
     .where(eq(giftClaims.giftId, giftId))
-    .orderBy(desc(giftClaims.createdAt));
+    .orderBy(desc(giftClaims.createdAt))
+    .limit(100);
 
   return claims;
 }
@@ -262,7 +263,7 @@ export async function toggleGroupGift(giftId: string, isGroupGift: boolean) {
   const [gift] = await db
     .update(giftsTable)
     .set({ isGroupGift })
-    .where(eq(giftsTable.id, giftId))
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
     .returning();
 
   if (!gift) throw new NotFoundError('Regalo no encontrado');

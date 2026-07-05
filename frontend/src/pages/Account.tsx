@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentSubscription, getPaymentHistory } from '../services/mercadopago';
@@ -42,36 +42,36 @@ export default function Account() {
   const [payments, setPayments] = useState<ProPayment[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState(false);
-  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    return () => {
-      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
     let mounted = true;
     Promise.all([
-      getCurrentSubscription()
+      getCurrentSubscription(signal)
         .then((res) => { if (mounted) setSubscription(res.subscription); })
         .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') return;
           reportError(err, { source: 'Account' });
           const message = err instanceof Error ? err.message : 'Error al cargar suscripción';
           showToast(message, 'error');
           if (mounted) setSubError(true);
           if (import.meta.env.DEV) console.error('[Account] subscription error:', err);
         }),
-      getPaymentHistory()
+      getPaymentHistory(signal)
         .then((res) => { if (mounted) setPayments(res.payments); })
-        .catch((err) => { reportError(err, { source: 'Account' }); if (mounted) setPaymentsError(true); }),
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') return;
+          reportError(err, { source: 'Account' });
+          if (mounted) setPaymentsError(true);
+        }),
     ]).finally(() => {
       if (mounted) {
         setLoadingSub(false);
         setPaymentsLoading(false);
       }
     });
-    return () => { mounted = false; };
+    return () => { abortController.abort(); mounted = false; };
   }, []);
 
   const handleCancelSubscription = async () => {
@@ -132,7 +132,7 @@ export default function Account() {
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setDeletePassword('');
-      deleteTimerRef.current = setTimeout(() => { logout(); }, 2000);
+      logout();
     } catch (err) {
       reportError(err, { source: 'Account' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');

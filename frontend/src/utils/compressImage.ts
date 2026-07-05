@@ -3,12 +3,11 @@ const JPEG_QUALITY = 0.82;
 
 export function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    if (file.type === 'image/gif') {
+    // PNG y GIF: devolver original para preservar transparencia
+    if (file.type === 'image/gif' || file.type === 'image/png') {
       resolve(file);
       return;
     }
-
-    const isPng = file.type === 'image/png';
 
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -29,29 +28,16 @@ export function compressImage(file: File): Promise<Blob> {
       const ctx = canvas.getContext('2d');
       if (!ctx) { reject(new Error('No se pudo crear el contexto del canvas')); return; }
 
-      if (isPng) {
-        ctx.clearRect(0, 0, width, height);
-      }
       ctx.drawImage(img, 0, 0, width, height);
 
-      if (isPng) {
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Error al comprimir la imagen'));
-          },
-          'image/png',
-        );
-      } else {
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Error al comprimir la imagen'));
-          },
-          'image/jpeg',
-          JPEG_QUALITY,
-        );
-      }
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Error al comprimir la imagen'));
+        },
+        'image/jpeg',
+        JPEG_QUALITY,
+      );
     };
 
     img.onerror = () => {

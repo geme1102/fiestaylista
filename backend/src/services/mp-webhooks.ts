@@ -4,8 +4,10 @@ import { db } from '../db/index.js';
 import { users, subscriptions, proPayments, emailTracking } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
+import * as mercadopagoService from './mercadopago.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { TIER_ORDER } from '../types/index.js';
 
 const log = createModuleLogger('MP');
 
@@ -15,6 +17,9 @@ export async function handleProPayment(paymentId: string, userId: string, interv
   const expectedAmount = interval === 'year'
     ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
     : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
+
+  let oldMpSubscriptionId: string | null = null;
+  let oldTier: string | null = null;
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'payment_' + paymentId}))`);
@@ -30,14 +35,14 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       return;
     }
 
-    // Preservar el mpSubscriptionId existente si lo hay
-    // (el COALESCE en createOrUpdateSubscription también protege esto)
     const currentSub = await db
-      .select({ mpSubscriptionId: subscriptions.mpSubscriptionId })
+      .select({ mpSubscriptionId: subscriptions.mpSubscriptionId, tier: subscriptions.tier })
       .from(subscriptions)
       .where(eq(subscriptions.userId, userId))
       .limit(1);
     const existingId = currentSub[0]?.mpSubscriptionId ?? null;
+    oldMpSubscriptionId = existingId;
+    oldTier = currentSub[0]?.tier ?? null;
 
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId: existingId,
@@ -51,6 +56,30 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       .values({ userId, mpPaymentId: paymentId, amount: expectedAmount, interval, tier })
       .onConflictDoNothing();
   });
+
+  // Cancelar preapproval anterior si es un upgrade
+  if (oldTier && oldTier !== 'free' && oldTier !== tier) {
+    const oldLevel = TIER_ORDER[oldTier as keyof typeof TIER_ORDER] ?? 0;
+    const newLevel = TIER_ORDER[tier] ?? 0;
+    if (oldLevel < newLevel) {
+      try {
+        if (oldMpSubscriptionId) {
+          await mercadopagoService.cancelPreapproval(oldMpSubscriptionId);
+          log.info({ oldMpSubscriptionId, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por upgrade');
+        } else {
+          const oldInterval = interval;
+          const oldExternalRef = `${oldTier}_${userId}_${oldInterval}`;
+          const oldPreapproval = await mercadopagoService.searchPreapprovalsByRef(oldExternalRef);
+          if (oldPreapproval && oldPreapproval.id) {
+            await mercadopagoService.cancelPreapproval(oldPreapproval.id);
+            log.info({ oldMpSubscriptionId: oldPreapproval.id, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por upgrade (por external_reference)');
+          }
+        }
+      } catch (err) {
+        log.warn({ err, userId, from: oldTier, to: tier }, 'Error no crítico cancelando preapproval anterior en upgrade');
+      }
+    }
+  }
 
   try {
     const emailType = isProPlus ? 'pro_plus_confirmation' : 'pro_confirmation';
@@ -247,6 +276,11 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       return;
     }
 
+    if (currentSub && currentSub.mpSubscriptionId === preapprovalId && currentSub.status === 'active') {
+      log.info({ preapprovalId, userId }, 'Preapproval ya procesado, ignorando webhook duplicado');
+      return;
+    }
+
     const currentPeriodEnd = info.nextChargeDate
       ? new Date(info.nextChargeDate)
       : new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
@@ -296,12 +330,18 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       .limit(1);
 
     if (pastDueUser?.email) {
+      // Evitar emails duplicados — unique constraint on (userId, type)
+      const [existing] = await db
+        .select({ id: emailTracking.id })
+        .from(emailTracking)
+        .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'past_due')))
+        .limit(1);
+      if (existing) return;
+
       try {
         await db.insert(emailTracking).values({ userId, type: 'past_due' });
       } catch {
-        await db.update(emailTracking)
-          .set({ sentAt: new Date() })
-          .where(and(eq(emailTracking.userId, userId), eq(emailTracking.type, 'past_due')));
+        return; // race condition: otro webhook ya insertó
       }
 
       emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {

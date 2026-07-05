@@ -67,29 +67,29 @@ export async function getCashFund(eventId: string) {
 }
 
 export async function reconcileCashFunds(): Promise<{ fixed: number; checked: number }> {
-  let checked = 0;
   let fixed = 0;
+
+  const totals = await db
+    .select({
+      cashFundId: cashContributions.cashFundId,
+      total: sql<number>`COALESCE(SUM(${cashContributions.amount}), 0)::int`,
+    })
+    .from(cashContributions)
+    .where(ne(cashContributions.status, 'cancelled'))
+    .groupBy(cashContributions.cashFundId);
+
+  const totalMap = new Map(totals.map(t => [t.cashFundId, t.total]));
 
   const funds = await db
     .select({
       id: cashFunds.id,
-      eventId: cashFunds.eventId,
       collectedAmount: cashFunds.collectedAmount,
     })
     .from(cashFunds)
     .limit(500);
 
   for (const fund of funds) {
-    checked++;
-    const [row] = await db
-      .select({ total: sql<number>`COALESCE(SUM(${cashContributions.amount}), 0)::int` })
-      .from(cashContributions)
-      .where(and(
-        eq(cashContributions.cashFundId, fund.id),
-        ne(cashContributions.status, 'cancelled'),
-      ));
-
-    const expected = row?.total ?? 0;
+    const expected = totalMap.get(fund.id) ?? 0;
     if (fund.collectedAmount !== expected) {
       await db
         .update(cashFunds)
@@ -99,7 +99,7 @@ export async function reconcileCashFunds(): Promise<{ fixed: number; checked: nu
     }
   }
 
-  return { fixed, checked };
+  return { fixed, checked: funds.length };
 }
 
 export async function getPromisedAmount(cashFundId: string): Promise<number> {

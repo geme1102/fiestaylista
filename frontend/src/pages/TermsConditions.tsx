@@ -98,7 +98,7 @@ export default function TermsConditions() {
   const content = lang === 'es' ? ES : EN;
 
   return (
-    <div className="min-h-screen bg-surface">
+    <main className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -135,6 +135,6 @@ export default function TermsConditions() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

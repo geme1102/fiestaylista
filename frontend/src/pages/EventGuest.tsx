@@ -190,7 +190,7 @@ export default function EventGuest() {
         </script>
       </Helmet>
 
-      <div className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <main className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         <Suspense fallback={null}><ConfettiCanvas ref={confettiRef} /></Suspense>
 
         <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16">
@@ -590,7 +590,7 @@ export default function EventGuest() {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </>
   );
 }

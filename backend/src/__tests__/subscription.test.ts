@@ -136,6 +136,7 @@ describe('expireStaleSubscriptions', () => {
     const { db } = await import('../db/index.js');
 
     const mockTx: any = {
+      execute: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),

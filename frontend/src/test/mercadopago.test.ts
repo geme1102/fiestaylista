@@ -57,7 +57,7 @@ describe('mercadopago service', () => {
 
     const result = await getCurrentSubscription();
 
-    expect(mockGet).toHaveBeenCalledWith('/api/subscriptions/current');
+    expect(mockGet).toHaveBeenCalledWith('/api/subscriptions/current', { signal: undefined });
     expect(result.subscription?.tier).toBe('premium');
   });
 });

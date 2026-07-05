@@ -17,6 +17,7 @@ vi.mock('../middleware/rateLimit.js', () => ({
   giftLimiter: vi.fn((_req, _res, next) => next()),
   contributeLimiter: vi.fn((_req, _res, next) => next()),
   apiLimiter: vi.fn((_req, _res, next) => next()),
+  rsvpLimiter: vi.fn((_req, _res, next) => next()),
 }));
 vi.mock('../middleware/auth.js', () => ({
   requireAuth: vi.fn((_req, _res, next) => next()),

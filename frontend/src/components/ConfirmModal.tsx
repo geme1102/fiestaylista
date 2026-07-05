@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import { cn } from '../utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,6 +13,7 @@ export const ConfirmModal = memo(function ConfirmModal({ message, onConfirm, onC
   destructive?: boolean;
 }) {
   const dialogRef = useFocusTrap(true);
+  useLockedBody(true);
 
   return (
     <AnimatePresence>
@@ -36,7 +38,7 @@ export const ConfirmModal = memo(function ConfirmModal({ message, onConfirm, onC
           className="w-full max-w-md bg-surface p-8 rounded-3xl shadow-2xl text-center"
         >
           {destructive && (
-            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 min-w-[44px] min-h-[44px]" aria-hidden="true">
               <span className="material-symbols-outlined text-4xl" aria-hidden="true">warning</span>
             </div>
           )}

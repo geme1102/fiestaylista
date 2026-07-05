@@ -29,12 +29,34 @@ export async function sendRawEmail(options: { from: string; to: string; subject:
   return sendEmail(options);
 }
 
+const FOOTER_END = '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />\n        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>';
+
+const UNSUBSCRIBE_FOOTER = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">
+          <tr>
+            <td style="text-align:center;color:#9ca3af;font-size:12px">
+              <p style="margin:0 0 8px">— El equipo de Fiesta y Lista</p>
+              <p style="margin:0">
+                <a href="${config.FRONTEND_URL}/account" style="color:#9ca3af;text-decoration:underline">Cancelar suscripción</a>
+              </p>
+            </td>
+          </tr>
+        </table>`;
+
 async function sendEmail(options: { from: string; to: string; subject: string; html: string }): Promise<void> {
   if (!resend) {
     throw new Error('Email service not configured: RESEND_API_KEY is missing');
   }
   try {
-    await resend.emails.send(options);
+    const htmlWithUnsubscribe = options.html.replace(FOOTER_END, UNSUBSCRIBE_FOOTER);
+    await resend.emails.send({
+      ...options,
+      html: htmlWithUnsubscribe,
+      headers: {
+        'List-Unsubscribe': `<${config.FRONTEND_URL}/account>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
   } catch (err) {
     log.error({ err }, 'Error sending email:');
     throw new Error(

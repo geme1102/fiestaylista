@@ -172,7 +172,7 @@ export function ProductTour({
 
   useEffect(() => {
     if (!active || stepIndex < steps.length) return;
-    localStorage.setItem(storageKey, 'done');
+    try { localStorage.setItem(storageKey, 'done'); } catch {}
     setActive(false);
     onComplete?.();
   }, [active, stepIndex, steps.length, storageKey, onComplete]);

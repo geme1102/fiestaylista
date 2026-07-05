@@ -12,6 +12,7 @@ import { guests } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
+import { rsvpLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -40,7 +41,7 @@ router.get('/events/:eventId/guests', requireAuth, requireEventOwnership, valida
   res.json({ guests: eventGuests, hasMore: eventGuests.length === limit });
 }));
 
-router.post('/events/:eventId/rsvp', verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/events/:eventId/rsvp', rsvpLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 

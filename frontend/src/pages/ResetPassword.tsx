@@ -50,6 +50,10 @@ export default function ResetPassword() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
+    if (!token) {
+      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -95,7 +99,7 @@ export default function ResetPassword() {
         <meta name="twitter:title" content="Nueva Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
+      <main className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Ir al inicio">
@@ -204,9 +208,9 @@ export default function ResetPassword() {
             </p>
           </form>
 
-          <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+          <div ref={containerRef} className="absolute -z-10 opacity-0" />
         </div>
-      </div>
+      </main>
       <AuthBottomNav />
     </>
   );

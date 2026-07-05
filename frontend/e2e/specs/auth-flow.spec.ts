@@ -64,11 +64,10 @@ test.describe('Auth Flow', () => {
     await login.goto();
     await login.login(MOCK_USERS.free.email, 'ValidPass1');
     await page.waitForURL('**/dashboard', { timeout: 10000 });
-    await page.waitForTimeout(2000);
     const navbar = new NavbarPageObject(page);
-    await navbar.logoutButton.waitFor({ state: 'visible' });
+    await navbar.logoutButton.waitFor({ state: 'visible', timeout: 5000 });
     await navbar.clickLogout();
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/', { timeout: 10000 });
   });
 
   test('A8 - Ruta protegida redirige a login', async ({ page }) => {

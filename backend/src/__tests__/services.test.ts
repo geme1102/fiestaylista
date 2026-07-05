@@ -87,7 +87,7 @@ beforeEach(() => { vi.clearAllMocks(); });
 describe('Auth Service', () => {
   describe('hashToken', () => {
     it('returns a hex string', async () => {
-      const { hashToken } = await import('../services/auth.js');
+      const { hashToken } = await import('../services/auth-tokens.js');
       expect(hashToken('test-token')).toMatch(/^[a-f0-9]{64}$/);
     });
   });

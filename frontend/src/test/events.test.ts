@@ -82,7 +82,7 @@ describe('events service', () => {
 
     const result = await getEventBySlug('mi-evento');
 
-    expect(mockGet).toHaveBeenCalledWith('/api/events/slug/mi-evento');
+    expect(mockGet).toHaveBeenCalledWith('/api/events/slug/mi-evento', { signal: undefined });
     expect(result.event.id).toBe('1');
   });
 });

@@ -31,11 +31,13 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [boostModal, setBoostModal] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canContribute = !isOwner && fund?.isActive;
 
   const loadFund = useCallback(async () => {
+    setLoadError(false);
     try {
       const res = await getCashFund(eventId);
       setFund(res.cashFund);
@@ -51,6 +53,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
       }
     } catch (err) {
       reportError(err, { source: 'CashFundSection' });
+      setLoadError(true);
       const message = err instanceof Error ? err.message : 'Error al cargar la Lluvia de Sobres. Recarga la página e intenta de nuevo.';
       showToast(message, 'error');
       if (import.meta.env.DEV) console.error('[CashFund] loadFund error:', err);
@@ -102,6 +105,21 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   if (loading) {
     return (
       <div className={`mb-12 rounded-2xl bg-surface-container-high animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mb-12 rounded-2xl border border-red-200 bg-red-50/90 p-6 text-center">
+        <span className="material-symbols-outlined text-4xl text-red-400 mb-2" aria-hidden="true">error_outline</span>
+        <p className="text-sm text-red-700 mb-4">No pudimos cargar la Lluvia de Sobres.</p>
+        <button
+          onClick={loadFund}
+          className="px-5 py-2.5 bg-red-500 text-white text-sm font-semibold rounded-xl min-h-[44px]"
+        >
+          Reintentar
+        </button>
+      </div>
     );
   }
 

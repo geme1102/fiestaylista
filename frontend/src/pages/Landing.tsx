@@ -95,7 +95,7 @@ export default function Landing() {
           })}
         </script>
       </Helmet>
-      <div className="min-h-screen bg-surface">
+      <main className="min-h-screen bg-surface">
       <FloatingOrbs />
       <LandingNavbar scrolled={scrolled > 50} isAuthenticated={isAuthenticated} />
       <LandingHero typedText={typedText} isAuthenticated={isAuthenticated} onNavigate={navigate} />
@@ -104,7 +104,7 @@ export default function Landing() {
       <LandingTestimonials />
       <LandingCTA onNavigate={navigate} />
       <LandingFooter />
-    </div>
+    </main>
     </>
   );
 }

@@ -98,4 +98,8 @@ export const PAGE_META: Record<string, { title: string; desc: string; keywords?:
     desc: 'Organiza los regalos de primera comunión. Tus invitados eligen sin repetir, desde el celular. Fácil, rápido y gratis.',
     keywords: 'fiestaylista comunión, lista de regalos comunión',
   },
+  '/statistics': {
+    title: 'Estadísticas - Fiesta y Lista',
+    desc: 'Estadísticas de tus eventos en Fiesta y Lista. Visualiza visitas, regalos, fotos y más.',
+  },
 };

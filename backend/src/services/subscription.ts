@@ -101,10 +101,38 @@ async function freezeUserEvents(userId: string, txClient?: typeof db) {
 async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
   const conn = txClient || db;
   const now = new Date();
+
+  // Congelar todos los eventos activos
   await conn
     .update(events)
     .set({ isActive: false, frozenAt: now, updatedAt: now })
     .where(and(inArray(events.userId, userIds), eq(events.isActive, true), isNull(events.deletedAt)));
+
+  // Restaurar hasta maxEvents según el tier actual de cada usuario
+  // (tras expireStaleSubscriptions el tier es 'free', maxEvents = 1)
+  for (const userId of userIds) {
+    const [userRow] = await conn
+      .select({ tier: users.tier })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const limits = TIER_LIMITS[userRow?.tier as keyof typeof TIER_LIMITS] ?? TIER_LIMITS.free;
+
+    const eventsToKeep = await conn
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)))
+      .orderBy(desc(events.frozenAt))
+      .limit(limits.maxEvents);
+
+    if (eventsToKeep.length > 0) {
+      await conn
+        .update(events)
+        .set({ isActive: true, frozenAt: null, updatedAt: now })
+        .where(inArray(events.id, eventsToKeep.map(e => e.id)));
+    }
+  }
 
   const userRows = await conn
     .select({ id: users.id, email: users.email, name: users.name })
@@ -194,25 +222,36 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const freezeThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   const result = await db.transaction(async (tx) => {
-    const toFreeze = await tx
+    // Bloquear filas con FOR UPDATE SKIP LOCKED para evitar que dos cron concurrentes
+    // procesen las mismas suscripciones
+    const staleRows = await tx.execute(sql`
+      SELECT id, user_id FROM ${subsTable} 
+      WHERE current_period_end <= ${freezeThreshold} 
+        AND status IN ('active', 'past_due', 'canceled') 
+      FOR UPDATE SKIP LOCKED
+    `) as unknown as { id: string; user_id: string }[];
+
+    const userIds: string[] = [];
+    const staleIds: string[] = [];
+    for (const row of staleRows) {
+      const r = row as Record<string, unknown>;
+      if (r.user_id) userIds.push(r.user_id as string);
+      if (r.id) staleIds.push(r.id as string);
+    }
+
+    if (userIds.length === 0) return 0;
+
+    await tx
       .update(subsTable)
       .set({ status: 'canceled', tier: 'free', updatedAt: new Date() })
-      .where(and(
-        lte(subsTable.currentPeriodEnd, freezeThreshold),
-        sql`${subsTable.status} IN ('active', 'past_due', 'canceled')`,
-      ))
-      .returning({ userId: subsTable.userId });
+      .where(inArray(subsTable.id, staleIds));
 
-    const userIds = toFreeze.map(s => s.userId).filter(Boolean);
+    await tx
+      .update(users)
+      .set({ tier: 'free', updatedAt: new Date() })
+      .where(inArray(users.id, userIds));
 
-    if (userIds.length > 0) {
-      await tx
-        .update(users)
-        .set({ tier: 'free', updatedAt: new Date() })
-        .where(inArray(users.id, userIds));
-
-      await batchFreezeEvents(userIds, tx as unknown as typeof db);
-    }
+    await batchFreezeEvents(userIds, tx as unknown as typeof db);
 
     return userIds.length;
   });
@@ -228,40 +267,45 @@ export async function purgeExpiredData(): Promise<number> {
   const now = new Date();
   const purgeThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const expiredEvents = await db
-    .select({ id: events.id, userId: events.userId })
-    .from(events)
-    .where(and(
-      sql`${events.frozenAt} IS NOT NULL`,
-      lte(events.frozenAt, purgeThreshold),
-      sql`${events.deletedAt} IS NULL`,
-    ));
+  interface PurgeRow { id: string; user_id: string }
+  const { eventsToPurge, photosByEvent, userIds } = await db.transaction(async (tx) => {
+    // Bloquear eventos expirados con SKIP LOCKED para que dos cron no procesen los mismos
+    const expired = await tx.execute(sql`
+      SELECT id, user_id FROM ${events}
+      WHERE frozen_at IS NOT NULL
+        AND frozen_at <= ${purgeThreshold}
+        AND deleted_at IS NULL
+      FOR UPDATE SKIP LOCKED
+    `) as unknown as PurgeRow[];
 
-  if (expiredEvents.length === 0) return 0;
+    if (expired.length === 0) return { eventsToPurge: [], photosByEvent: new Map<string, { url: string }[]>(), userIds: [] as string[] };
 
-  const userIds = [...new Set(expiredEvents.map(e => e.userId))];
+    const userIds = [...new Set(expired.map(r => r.user_id))];
+    const allEventIds = expired.map(r => r.id);
 
-  const allEventIds = expiredEvents.map(e => e.id);
+    const allPhotos = await tx
+      .select({ url: photos.url, eventId: photos.eventId })
+      .from(photos)
+      .where(inArray(photos.eventId, allEventIds));
 
-  const allPhotos = await db
-    .select({ url: photos.url, eventId: photos.eventId })
-    .from(photos)
-    .where(inArray(photos.eventId, allEventIds));
+    const photosByEvent = new Map<string, { url: string }[]>();
+    for (const p of allPhotos) {
+      if (!photosByEvent.has(p.eventId)) photosByEvent.set(p.eventId, []);
+      photosByEvent.get(p.eventId)!.push(p);
+    }
 
-  const photosByEvent = new Map<string, { url: string }[]>();
-  for (const p of allPhotos) {
-    if (!photosByEvent.has(p.eventId)) photosByEvent.set(p.eventId, []);
-    photosByEvent.get(p.eventId)!.push(p);
-  }
+    await tx.delete(events).where(inArray(events.id, allEventIds));
 
-  await db
-    .delete(events)
-    .where(inArray(events.id, allEventIds));
+    return { eventsToPurge: expired as PurgeRow[], photosByEvent, userIds };
+  });
 
+  if (eventsToPurge.length === 0) return 0;
+
+  // Cloudinary cleanup fuera de la transacción (no se puede hacer rollback)
   let purged = 0;
   for (const userId of userIds) {
     try {
-      const userEventIds = expiredEvents.filter(e => e.userId === userId).map(e => e.id);
+      const userEventIds = eventsToPurge.filter(e => e.user_id === userId).map(e => e.id);
       const userPhotos = userEventIds.flatMap(eid => photosByEvent.get(eid) || []);
 
       for (const photo of userPhotos) {

@@ -33,6 +33,20 @@ function PageTransition({ children }: { children: ReactNode }) {
     </motion.div>
   );
 }
+function PwaUpdater() {
+  useEffect(() => {
+    let refreshing = false;
+    const handler = () => {
+      if (refreshing) return;
+      refreshing = true;
+      setTimeout(() => window.location.reload(), 100);
+    };
+    navigator.serviceWorker?.addEventListener('controllerchange', handler);
+    return () => navigator.serviceWorker?.removeEventListener('controllerchange', handler);
+  }, []);
+  return null;
+}
+
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -125,21 +139,6 @@ function TitleUpdater() {
       <meta name="robots" content={isUnknown ? 'noindex, nofollow' : 'index, follow'} />
       <link rel="canonical" href={`${window.location.origin}${canonicalPath}`} />
       <link rel="alternate" href={`${window.location.origin}${canonicalPath}`} hrefLang="es-CO" />
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": title,
-          "description": meta.desc,
-          "url": `${window.location.origin}${canonicalPath}`,
-          "inLanguage": "es-CO",
-          "isPartOf": {
-            "@type": "WebApplication",
-            "name": "Fiesta y Lista",
-            "url": "https://fiestaylista.com"
-          }
-        })}
-      </script>
     </Helmet>
   );
 }
@@ -169,6 +168,7 @@ export default function App() {
 
   return (
     <QueryProvider>
+      <PwaUpdater />
       <ScrollToTop />
     <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><picture><source srcSet="/logo.webp" type="image/webp" /><img src="/logo.png" alt="Fiesta y Lista" className="w-16 h-16 object-contain" /></picture><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant/70 font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />

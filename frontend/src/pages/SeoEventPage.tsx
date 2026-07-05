@@ -128,7 +128,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
           })}
         </script>
       </Helmet>
-      <div className="min-h-screen bg-surface">
+      <main className="min-h-screen bg-surface">
         <NavbarPremium />
 
         <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
@@ -190,7 +190,7 @@ function SeoEventPage({ eventKey }: { eventKey: string }) {
             <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm">shield</span> Datos protegidos</span>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }

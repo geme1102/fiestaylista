@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { checkActiveEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
+import * as eventQueries from '../services/event-queries.js';
 import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { stripHtml } from '../utils/sanitize.js';
@@ -38,7 +39,7 @@ const updateEventSchema = z.object({
 });
 
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
-  const events = await eventService.getUserEvents(req.user!.userId);
+  const events = await eventQueries.getUserEvents(req.user!.userId);
   res.json({ events });
 }));
 
@@ -50,7 +51,7 @@ router.post('/', requireAuth, asyncHandlerWithValidation(async (req: AuthRequest
 
 router.get('/slug/:slug', viewLimiter, (_req, res, next) => { res.set('Cache-Control', 'public, max-age=60, s-maxage=120'); next(); }, asyncHandler(async (req, res) => {
   const eventSlug = req.params.slug as string;
-  const result = await eventService.getEventBySlug(eventSlug, {
+  const result = await eventQueries.getEventBySlug(eventSlug, {
     limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,
     cursor: req.query.giftCursor as string | undefined,
   }, {
@@ -62,7 +63,7 @@ router.get('/slug/:slug', viewLimiter, (_req, res, next) => { res.set('Cache-Con
 
 router.get('/:id', requireAuth, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.id as string;
-  const result = await eventService.getEvent(eventId, req.user!.userId, {
+  const result = await eventQueries.getEvent(eventId, req.user!.userId, {
     limit: req.query.giftLimit ? Number(req.query.giftLimit) : undefined,
     cursor: req.query.giftCursor as string | undefined,
   }, {

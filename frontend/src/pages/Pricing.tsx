@@ -6,6 +6,7 @@ import { createCheckoutSession } from '../services/mercadopago';
 import { showToast } from '../hooks/useToast';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import type { Tier } from '../types';
+import { TIER_ORDER } from '../types';
 import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
 import { validateRedirectUrl } from '../utils/format';
@@ -217,7 +218,7 @@ export default function Pricing() {
           })}
         </script>
       </Helmet>
-      <div className="min-h-screen bg-surface">
+      <main className="min-h-screen bg-surface">
         <NavbarPremium />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
@@ -294,6 +295,9 @@ export default function Pricing() {
               {PLANS.map((plan) => {
                 const price = yearly && plan.tier !== 'pro_plus' ? plan.yearlyPrice : plan.price;
                 const isCurrent = user?.tier === plan.tier;
+                const userTierLevel = user ? TIER_ORDER[user.tier] : -1;
+                const planTierLevel = TIER_ORDER[plan.tier];
+                const isDowngrade = userTierLevel >= 0 && planTierLevel < userTierLevel;
 
                 return (
                   <div key={plan.tier} className={plan.popular ? 'relative' : ''}>
@@ -342,6 +346,10 @@ export default function Pricing() {
                       {isCurrent ? (
                         <div className="w-full py-4 text-center font-label-md text-label-md text-primary bg-primary/10 rounded-xl border-2 border-primary/20">
                           Plan Actual
+                        </div>
+                      ) : isDowngrade ? (
+                        <div className="w-full py-4 text-center font-label-md text-label-md text-on-surface-variant bg-surface-container rounded-xl border-2 border-outline cursor-not-allowed">
+                          Plan no disponible
                         </div>
                       ) : (
                         <button
@@ -446,7 +454,7 @@ export default function Pricing() {
             </Link>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }

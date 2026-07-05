@@ -11,10 +11,10 @@ export function createCheckoutSession(tier: Tier, successUrl?: string, cancelUrl
   });
 }
 
-export function getCurrentSubscription(): Promise<{ subscription: Subscription | null }> {
-  return apiClient.get<{ subscription: Subscription | null }>('/api/subscriptions/current');
+export function getCurrentSubscription(signal?: AbortSignal): Promise<{ subscription: Subscription | null }> {
+  return apiClient.get<{ subscription: Subscription | null }>('/api/subscriptions/current', { signal });
 }
 
-export function getPaymentHistory(): Promise<{ payments: ProPayment[] }> {
-  return apiClient.get<{ payments: ProPayment[] }>('/api/subscriptions/payments');
+export function getPaymentHistory(signal?: AbortSignal): Promise<{ payments: ProPayment[] }> {
+  return apiClient.get<{ payments: ProPayment[] }>('/api/subscriptions/payments', { signal });
 }

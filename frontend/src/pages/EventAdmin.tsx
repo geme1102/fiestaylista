@@ -8,11 +8,10 @@ const Z_LAYERS = {
 
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, Pencil, Share2, Eye,
   MessageSquare, Copy, Calendar, MapPin, Info,
-  X, Check,
   ChevronRight, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +30,10 @@ import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar'
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { useAchievements } from '../hooks/useAchievements';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
+import EventAdminLoadingSkeleton from '../components/admin/EventAdminLoadingSkeleton';
+import EditEventModal from '../components/admin/EditEventModal';
+import BoostModal from '../components/admin/BoostModal';
+
 const GiftManagement = lazy(() => import('../components/admin/GiftManagement'));
 const PhotoGallery = lazy(() => import('../components/admin/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
 const GuestsPanel = lazy(() => import('../components/admin/GuestsPanel'));
@@ -41,16 +44,6 @@ interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
 }
-
-const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
-  { value: 'BABY_SHOWER', icon: '🍼', label: 'Baby Shower' },
-  { value: 'WEDDING', icon: '💍', label: 'Boda' },
-  { value: 'BIRTHDAY', icon: '🎂', label: 'Cumpleaños' },
-  { value: 'BAPTISM', icon: '🕊️', label: 'Bautizo' },
-  { value: 'COMMUNION', icon: '✨', label: 'Comunión' },
-  { value: 'OTHER', icon: '🎊', label: 'Otro' },
-  { value: 'HOUSE_WARMING', icon: '🏠', label: 'Casa Shower' },
-];
 
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
@@ -477,70 +470,7 @@ export default function EventAdmin() {
   };
 
   if (loading) {
-    return (
-      <div className="animate-pulse">
-        {/* Nav skeleton */}
-        <div className="flex items-center gap-4 mb-8 py-2">
-          <div className="w-11 h-11 bg-surface-container-high rounded-2xl" />
-          <div className="space-y-2">
-            <div className="h-3 w-24 bg-surface-container-high rounded" />
-            <div className="h-5 w-40 bg-surface-container-high rounded-lg" />
-          </div>
-          <div className="ml-auto flex items-center gap-2 bg-surface-container-high/50 px-3 py-1.5 rounded-full">
-            <div className="w-2.5 h-2.5 bg-surface-container-high rounded-full" />
-            <div className="h-3 w-28 bg-surface-container-high rounded" />
-          </div>
-        </div>
-
-        {/* Breadcrumb skeleton */}
-        <div className="h-4 w-48 bg-surface-container-high rounded mb-6" />
-
-        {/* Main card skeleton */}
-        <div className="bg-surface/80 rounded-[32px] p-6 md:p-8 border border-white/70 mb-8">
-          {/* Card header */}
-          <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-primary/10">
-            <div className="flex items-center gap-[18px]">
-              <div className="w-[72px] h-[72px] bg-surface-container-high rounded-2xl" />
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-48 bg-surface-container-high rounded-lg" />
-                  <div className="w-9 h-9 bg-surface-container-high rounded-xl" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-6 w-20 bg-surface-container-high rounded-full" />
-                  <div className="h-6 w-16 bg-surface-container-high rounded-full" />
-                </div>
-                <div className="h-5 w-36 bg-surface-container-high rounded-full" />
-              </div>
-            </div>
-            {/* Toggle skeleton */}
-            <div className="flex items-center gap-4 bg-surface-container-high/30 p-3.5 rounded-2xl self-stretch sm:self-center">
-              <div className="space-y-1.5">
-                <div className="h-2.5 w-24 bg-surface-container-high rounded" />
-                <div className="h-3 w-20 bg-surface-container-high rounded" />
-              </div>
-              <div className="w-14 h-[30px] bg-surface-container-high rounded-full" />
-            </div>
-          </div>
-
-          {/* Action buttons skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
-            <div className="h-14 bg-surface-container-high rounded-2xl" />
-            <div className="h-14 bg-surface-container-high/50 rounded-2xl" />
-          </div>
-
-          {/* Details cards skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-primary/10">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 bg-surface-container-high/50 rounded-2xl" />
-            ))}
-          </div>
-        </div>
-
-        {/* Gift management skeleton */}
-        <div className="h-64 bg-surface-container-high/30 rounded-[32px]" />
-      </div>
-    );
+    return <EventAdminLoadingSkeleton />;
   }
 
   if (!event) {
@@ -934,211 +864,31 @@ onClick={() => {
         </SectionErrorBoundary>
       </div>
 
-      {/* Edit Details Modal */}
-      <AnimatePresence>
-        {editingDetails && (
-          <div
-            ref={editDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Editar información del evento"
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
-            style={{ zIndex: Z_LAYERS.modal }}
-            onKeyDown={(e) => { if (e.key === 'Escape') setEditingDetails(false); }}
-            onClick={(e) => { if (e.target === e.currentTarget) setEditingDetails(false); }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-surface rounded-[32px] max-w-lg w-full max-h-[90dvh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-gray-100 flex flex-col gap-5 relative"
-            >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-pink-100/40 rounded-full blur-3xl -z-10 pointer-events-none" />
+      <EditEventModal
+        open={editingDetails}
+        titleDraft={titleDraft}
+        typeDraft={typeDraft}
+        dateDraft={dateDraft}
+        locationDraft={locationDraft}
+        noteDraft={noteDraft}
+        updatingDetails={updatingDetails}
+        dialogRef={editDialogRef}
+        onTitleChange={setTitleDraft}
+        onTypeChange={setTypeDraft}
+        onDateChange={setDateDraft}
+        onLocationChange={setLocationDraft}
+        onNoteChange={setNoteDraft}
+        onSave={handleUpdateDetails}
+        onClose={() => setEditingDetails(false)}
+      />
 
-                <div className="flex items-center justify-between pb-3.5 border-b border-gray-200">
-                <div className="flex items-center gap-1.5 text-left">
-                  <span className="text-xl">✨</span>
-                  <h4 className="text-lg font-black text-gray-900 tracking-tight">Editar Información de Evento</h4>
-                </div>
-                <button
-                  onClick={() => setEditingDetails(false)}
-                  aria-label="Cerrar"
-                  data-testid="close-edit-modal"
-                  className="p-2.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleUpdateDetails(); }}
-                className="space-y-4 text-left"
-              >
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre del evento</label>
-                  <input
-                    id="edit-title"
-                    type="text"
-                    value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold"
-                    autoComplete="off"
-                    enterKeyHint="next"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tipo de evento</label>
-                    <select
-                      id="edit-type"
-                      value={typeDraft}
-                      onChange={(e) => setTypeDraft(e.target.value as EventType)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
-                    >
-                      {EVENT_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Fecha y Hora</label>
-                    <input
-                      id="edit-date"
-                      type="datetime-local"
-                      value={dateDraft}
-                      onChange={(e) => setDateDraft(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Lugar del evento</label>
-                  <input
-                    id="edit-location"
-                    type="text"
-                    value={locationDraft}
-                    onChange={(e) => setLocationDraft(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
-                    placeholder="Ej: Salón de eventos, Ciudad"
-                    autoComplete="street-address"
-                    inputMode="text"
-                    enterKeyHint="next"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Notas para invitados</label>
-                  <textarea
-                    id="edit-note"
-                    value={noteDraft}
-                    onChange={(e) => setNoteDraft(e.target.value)}
-                    rows={3}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-semibold text-gray-700 resize-none"
-                    placeholder="Ej: No se aceptan regalos envueltos"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3.5 pt-4 border-t border-gray-200 mt-5">
-                  <button
-                    type="button"
-                    onClick={() => setEditingDetails(false)}
-                    className="px-5 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 cursor-pointer"
-                  >
-                    Salir sin guardar
-                  </button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    data-testid="save-event-changes"
-                    disabled={updatingDetails}
-                    className="bg-primary hover:bg-primary text-white px-6 py-3.5 rounded-full text-xs font-black tracking-wide shadow-md transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {updatingDetails ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Guardar Cambios'}
-                  </motion.button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Lluvia de Sobres / Boost Modal */}
-      <AnimatePresence>
-        {boostModal && (
-          <div
-            ref={boostDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Activar Lluvia de Sobres"
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-            style={{ zIndex: Z_LAYERS.modal }}
-            onKeyDown={(e) => { if (e.key === 'Escape') setBoostModal(false); }}
-            onClick={(e) => { if (e.target === e.currentTarget) setBoostModal(false); }}
-          >
-            <motion.div
-              initial={{ scale: 0.94, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.94, opacity: 0 }}
-              className="bg-surface rounded-[36px] max-w-md w-full p-6 md:p-8 shadow-2xl border border-orange-100 flex flex-col gap-4 text-center relative overflow-hidden"
-            >
-              <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-amber-200/20 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-              <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-amber-700 rounded-3xl flex items-center justify-center mx-auto text-white text-3xl shadow-md border border-amber-200/50">
-                ⚡
-              </div>
-
-              <h4 className="text-xl font-black text-[#93400e] tracking-tight">
-                Activar Lluvia de Sobres
-              </h4>
-              <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-semibold">
-                <strong>Gratuito — sin costo.</strong> Tus invitados podrán enviarte dinero directo a tu cuenta bancaria. Válido por 30 días.
-              </p>
-
-              <div className="bg-amber-50/70 p-[18px] rounded-2xl border border-amber-200/50 text-left space-y-2.5">
-                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
-                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Cada invitado transfiere directo a tu cuenta</span>
-                </div>
-                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
-                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Ellos registran su aporte y aparece en la lista</span>
-                </div>
-                <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
-                  <Check className="w-4 h-4 text-amber-700 font-extrabold shrink-0" />
-                  <span>Llevas el control de lo que recibes</span>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-gray-400 font-semibold">Sin comisiones. La app solo muestra los aportes que los invitados registran voluntariamente.</p>
-
-              <div className="flex flex-col gap-2.5 mt-2">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  data-testid="pay-boost-button"
-                onClick={handleBoost}
-                  disabled={boostLoading}
-                  className="w-full bg-[#994715] hover:bg-[#833e12] text-white py-3.5 rounded-full text-xs font-black tracking-wider uppercase transition-all shadow-md cursor-pointer disabled:opacity-50"
-                >
-                    {boostLoading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'ACTIVAR GRATIS'}
-                </motion.button>
-                <button
-                  onClick={() => setBoostModal(false)}
-                  disabled={boostLoading}
-                  className="w-full bg-transparent text-gray-400 hover:text-gray-700 text-xs py-3 font-extrabold cursor-pointer disabled:opacity-50 min-h-[44px]"
-                >
-                  Ahora no, gracias
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <BoostModal
+        open={boostModal}
+        loading={boostLoading}
+        dialogRef={boostDialogRef}
+        onConfirm={handleBoost}
+        onClose={() => setBoostModal(false)}
+      />
 
       {/* Toggle Confirm Modal */}
       {toggleConfirm && (

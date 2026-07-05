@@ -71,6 +71,10 @@ export default function Register() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
+    if (!token) {
+      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -103,7 +107,7 @@ export default function Register() {
         <meta name="twitter:title" content="Registrarse - Fiesta y Lista" />
         <meta name="twitter:description" content="Crea tu cuenta gratis en Fiesta y Lista." />
       </Helmet>
-      <div className="min-h-screen bg-surface pb-24 sm:pb-0">
+      <main className="min-h-screen bg-surface pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
@@ -248,10 +252,10 @@ export default function Register() {
               </button>
             </form>
 
-            <div ref={containerRef} className="absolute -z-10 opacity-0 pointer-events-none" />
+            <div ref={containerRef} className="absolute -z-10 opacity-0" />
           </div>
         </div>
-      </div>
+      </main>
       <AuthBottomNav />
     </>
   );

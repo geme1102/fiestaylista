@@ -81,11 +81,11 @@ describe('Pricing', () => {
     expect(screen.getAllByText('Plan Actual').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('Empezar Gratis navigates to dashboard when authenticated', () => {
-    mockUseAuth.mockReturnValue({ user: { tier: 'pro', name: 'Ana' }, isAuthenticated: true, isLoading: false });
+  it('Empezar Gratis redirects to register when not authenticated', () => {
+    mockUseAuth.mockReturnValue({ user: null, isAuthenticated: false, isLoading: false });
     renderPricing();
     fireEvent.click(screen.getByTestId('cta-free'));
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/register?plan=free');
   });
 
   it('Actualizar a Pro redirects to register when not authenticated', () => {

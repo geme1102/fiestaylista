@@ -2,7 +2,7 @@ import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireAnyAuth, optionalAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -63,7 +63,7 @@ router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidatio
   res.status(201).json(result);
 }));
 
-router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/login', verifyTurnstile, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password);
   setRefreshCookie(res, result.refreshToken);
@@ -77,9 +77,9 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
     }
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieName = isProduction ? '__Secure-refreshToken' : 'refreshToken';
-    const refreshToken = req.cookies?.[cookieName] || (typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : null);
+    const refreshToken = req.cookies?.[cookieName] ?? null;
     if (!refreshToken) {
-      log.warn({ hasCookie: !!req.cookies?.[cookieName], hasBody: !!req.body?.refreshToken, origin: req.headers.origin }, 'Refresh sin token');
+      log.warn({ hasCookie: !!req.cookies?.[cookieName], origin: req.headers.origin }, 'Refresh sin token');
       throw new ValidationError('Token de refresco requerido');
     }
     const result = await authService.refreshToken(refreshToken);
@@ -137,11 +137,18 @@ router.post('/reset-password', verifyTurnstile, resetLimiter, asyncHandlerWithVa
 }));
 
 router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
-  if (req.user) {
-    await authService.revokeAllUserTokens(req.user.userId);
-  }
   const isProduction = process.env.NODE_ENV === 'production';
+  // Limpiar cookie antes de revocar para asegurar logout incluso si DB falla
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', { path: '/api/auth/refresh' });
+
+  if (req.user) {
+    try {
+      await authService.revokeAllUserTokens(req.user.userId);
+    } catch (err) {
+      log.error({ err, userId: req.user.userId }, 'Error revocando tokens en logout:');
+    }
+  }
+
   res.json({ success: true });
 }));
 

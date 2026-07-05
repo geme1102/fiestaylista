@@ -1,6 +1,6 @@
-import { EventType, Tier, TierLimits, TIER_LIMITS } from '@shared/types';
-export type { EventType, Tier, TierLimits };
-export { TIER_LIMITS };
+import { EventType, Tier, TierLimits, SubscriptionStatus, TIER_LIMITS, TIER_ORDER } from '@shared/types';
+export type { EventType, Tier, TierLimits, SubscriptionStatus };
+export { TIER_LIMITS, TIER_ORDER };
 
 export interface User {
   id: string;
@@ -64,7 +64,7 @@ export interface Subscription {
   id: string;
   userId: string;
   tier: Tier;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'pending_approval';
+  status: SubscriptionStatus;
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   mpSubscriptionId?: string;

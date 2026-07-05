@@ -100,7 +100,7 @@ function validateConfig(): void {
     warnConfig('FROM_EMAIL', process.env.FROM_EMAIL);
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
     warnConfig('BACKEND_URL', process.env.BACKEND_URL);
-    warnConfig('FRONTEND_URL', process.env.FRONTEND_URL);
+    if (!process.env.FRONTEND_URL) failConfig('FRONTEND_URL no está configurado');
 
     const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
     const present = cloudKeys.filter(k => process.env[k]);
