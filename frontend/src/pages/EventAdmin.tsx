@@ -25,6 +25,7 @@ import { uploadPhoto, addPhoto } from '../services/events';
 import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
 import { validateRedirectUrl } from '../utils/format';
+import { suggestTemplate, getWhatsAppUrl } from '../utils/whatsapp';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
@@ -732,7 +733,7 @@ onClick={() => {
               whileTap={{ scale: 0.88 }}
               onClick={() => {
                 if (id) try { localStorage.setItem(`fy_shared_${id}`, 'true'); } catch {}
-                window.open(`https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${event.title}\n${window.location.origin}/e/${event.slug}`)}`, '_blank');
+                window.open(getWhatsAppUrl(suggestTemplate(event.eventType), user?.name || '', event, !!event.eventLocation), '_blank');
               }}
               className="w-11 h-11 bg-gradient-to-b from-[#2cbd5e] to-[#25d366] flex items-center justify-center rounded-full text-white cursor-pointer shadow-md hover:shadow-green-500/20 transition-all"
               title="Compartir por WhatsApp"

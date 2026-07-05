@@ -1,13 +1,26 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { reportError } from '../lib/reportError';
 import { cn } from '../utils/cn';
+import { suggestTemplate, getWhatsAppUrl } from '../utils/whatsapp';
+import type { EventType } from '../types';
 
-const ShareButtons = memo(function ShareButtons({ slug, title }: { slug: string; title: string }) {
+interface ShareButtonsProps {
+  slug: string;
+  title: string;
+  hostName?: string;
+  eventType?: EventType;
+  eventDate?: string | null;
+  eventLocation?: string | null;
+}
+
+const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventType, eventDate, eventLocation }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const url = `${window.location.origin}/e/${slug}`;
-  const text = `🎉 Te invito a ver mi lista de regalos: ${title}\n${url}`;
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+  const whatsappUrl = eventType
+    ? getWhatsAppUrl(suggestTemplate(eventType), hostName || '', { title, slug, eventType, eventDate, eventLocation }, !!eventLocation)
+    : `https://wa.me/?text=${encodeURIComponent(`🎉 Te invito a ver mi lista de regalos: ${title}\n${url}`)}`;
 
   useEffect(() => {
     return () => {
