@@ -14,6 +14,7 @@ const PhotoSlideshow = lazy(() => import('../components/PhotoSlideshow'));
 const ConfettiCanvas = lazy(() => import('../components/ConfettiCanvas').then(m => ({ default: m.ConfettiCanvas })));
 import { useEventPage } from '../hooks/useEventPage';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
+import { EnvelopeReveal } from '../components/EnvelopeReveal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import { apiClient } from '../services/api';
 import { getGiftCategory } from '../data/giftEmojis';
@@ -54,6 +55,7 @@ export default function EventGuest() {
     handleClaim, handleDownload, reloadEvent,
   } = useEventPage();
 
+  const [showEnvelope, setShowEnvelope] = useState(false);
   const [slideshowIndex, setSlideshowIndex] = useState<number | null>(null);
 
   const [lastClaimedGift, setLastClaimedGift] = useState('');
@@ -94,6 +96,22 @@ export default function EventGuest() {
   useEffect(() => {
     claimNameRef.current = guestName;
   }, [guestName]);
+
+  useEffect(() => {
+    if (!event || loading) return;
+    const key = `fy_envelope_${event.slug}`;
+    try {
+      if (sessionStorage.getItem(key) === 'done') return;
+      sessionStorage.setItem(key, 'done');
+    } catch {
+      // sessionStorage unavailable — show envelope anyway
+    }
+    setShowEnvelope(true);
+  }, [event, loading]);
+
+  const handleEnvelopeComplete = useCallback(() => {
+    setShowEnvelope(false);
+  }, []);
 
   if (loading) {
     return (
@@ -192,6 +210,15 @@ export default function EventGuest() {
 
       <main className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         <Suspense fallback={null}><ConfettiCanvas ref={confettiRef} /></Suspense>
+
+        {showEnvelope && event && (
+          <EnvelopeReveal
+            guestName={guestName}
+            eventEmoji={EVENT_ICONS[event.eventType]}
+            onComplete={handleEnvelopeComplete}
+            confettiBurst={() => confettiRef.current?.triggerBurst()}
+          />
+        )}
 
         <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16">
           <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@
 @theme {
   --font-outfit: 'Outfit', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --font-script: 'Playfair Display', serif;
 
 
   --font-display-lg: 'Outfit', sans-serif;
@@ -250,6 +251,38 @@
   50% { box-shadow: 0 0 25px rgba(184, 137, 73, 0.4), 0 0 10px rgba(184, 137, 73, 0.2); border-color: rgba(184, 137, 73, 0.6); }
 }
 
+/* Envelope reveal keyframes */
+@keyframes seal-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(212,164,52,0.3); }
+  50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(212,164,52,0.6); }
+}
+
+@keyframes seal-break {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0px); }
+  60% { transform: scale(1.3) rotate(20deg); opacity: 1; filter: blur(0px); }
+  100% { transform: scale(1.3) rotate(20deg); opacity: 0; filter: blur(4px); }
+}
+
+@keyframes envelope-enter {
+  0% { transform: scale(0.85) translateY(20px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes text-reveal {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes card-emerge {
+  0% { transform: translateY(80%) scale(0.9); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes tap-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* Apple-style easing curve */
 :root {
   --apple-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -286,6 +319,11 @@
 .premium-animated-bg { background: linear-gradient(135deg, #fffafb 0%, #fff0f5 25%, #fdf4ff 50%, #fff5f8 75%, #fffafb 100%); background-size: 400% 400%; animation: mesh-pulse 15s ease infinite; }
 .glowing-gold-border { animation: intense-glow 4s infinite ease-in-out; }
 
+.animate-seal-pulse { animation: seal-pulse 2s ease-in-out infinite; }
+.animate-envelope-enter { animation: envelope-enter 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.animate-text-reveal { animation: text-reveal 0.4s ease-out forwards; }
+.animate-card-emerge { animation: card-emerge 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.animate-tap-pulse { animation: tap-pulse 1.5s ease-in-out infinite; }
 
 .gold-metallic-gradient-text {
   background: linear-gradient(135deg, #b8860b 0%, #e6ca65 30%, #b88923 60%, #996515 100%);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
@@ -16,6 +16,8 @@ interface GuestEvent {
 
 export function useEventPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const toParam = searchParams.get('to');
   const [event, setEvent] = useState<GuestEvent | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -23,6 +25,8 @@ export function useEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState(() => {
+    const fromUrl = toParam ? decodeURIComponent(toParam).replace(/_/g, ' ') : '';
+    if (fromUrl) return fromUrl;
     try { return localStorage.getItem(`guestName:${slug}`) ?? ''; } catch { return ''; }
   });
   const [shaking, setShaking] = useState(false);
@@ -275,7 +279,7 @@ export function useEventPage() {
     : '';
 
   return {
-    event, gifts, photos, loading, error,
+    event, gifts, photos, loading, error, toParam,
     claimingId, guestName, setGuestName, shaking,
     showConfetti, showSuccessModal, setShowSuccessModal,
     easyReadMode, setEasyReadMode,
