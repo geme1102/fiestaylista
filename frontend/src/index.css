@@ -703,6 +703,49 @@ button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }
 
+/* === FASE 2: Cross-browser compatibility (Android ↔ iOS) === */
+
+@utility min-h-screen {
+  min-height: 100dvh;
+}
+
+@utility h-screen {
+  height: 100dvh;
+}
+
+.pt-safe {
+  padding-top: calc(0px + constant(safe-area-inset-top, 0px));
+  padding-top: calc(0px + env(safe-area-inset-top, 0px));
+}
+
+.select-custom {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%238b7079' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 12px;
+  padding-right: 40px;
+}
+
+@layer base {
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  select,
+  textarea {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
 /* Press feedback visual en todos los botones — previene doble click */
 button:not(:disabled):active,
 [role="button"]:not(:disabled):active {

@@ -63,7 +63,7 @@ export default function ForgotPassword() {
         <meta name="twitter:description" content="Recupera tu contraseña de Fiesta y Lista." />
       </Helmet>
       <main className="min-h-screen bg-surface pb-24 sm:pb-0">
-        <div className="flex items-center justify-center px-4 min-h-[calc(100vh-6rem)] sm:min-h-screen">
+        <div className="flex items-center justify-center px-4 min-h-[calc(100dvh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" aria-label="Ir al inicio" className="inline-flex items-center gap-2 mb-6 group">

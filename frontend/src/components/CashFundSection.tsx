@@ -421,7 +421,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
                 id="bank-type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all select-custom"
               >
                 <option value="nequi">Nequi</option>
                 <option value="daviplata">Daviplata</option>

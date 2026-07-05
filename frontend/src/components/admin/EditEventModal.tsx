@@ -95,7 +95,7 @@ export default function EditEventModal({
                     id="edit-type"
                     value={typeDraft}
                     onChange={(e) => onTypeChange(e.target.value as EventType)}
-                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
+                    className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700 select-custom"
                   >
                     {EVENT_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
