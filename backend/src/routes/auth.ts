@@ -2,7 +2,7 @@ import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireAnyAuth, optionalAuth } from '../middleware/auth.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -58,14 +58,14 @@ const resetPasswordSchema = z.object({
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
 
-router.post('/register', verifyTurnstile, authLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/register', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
   setRefreshCookie(res, result.refreshToken);
   res.status(201).json(result);
 }));
 
-router.post('/login', verifyTurnstile, authLimiter, asyncHandlerWithValidation(async (req, res) => {
+router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password, {
     userAgent: req.headers['user-agent'],
@@ -85,7 +85,7 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
     const refreshToken = req.cookies?.[cookieName] ?? null;
     if (!refreshToken) {
       log.warn({ hasCookie: !!req.cookies?.[cookieName], origin: req.headers.origin }, 'Refresh sin token');
-      throw new ValidationError('Token de refresco requerido');
+      throw new UnauthorizedError('Token de refresco requerido');
     }
     const result = await authService.refreshToken(refreshToken, {
       userAgent: req.headers['user-agent'],

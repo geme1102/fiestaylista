@@ -398,7 +398,7 @@ describe('Auth Routes', () => {
       .post('/api/auth/refresh')
       .set('x-refresh-request', 'true');
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 
   it('GET /api/auth/me - success', async () => {
