@@ -45,8 +45,7 @@ export default function Login() {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
     if (!token) {
-      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
-      return;
+      if (import.meta.env.DEV) console.warn('[Login] Turnstile no disponible — continuando sin verificación');
     }
 
     setLoading(true);
