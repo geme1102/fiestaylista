@@ -764,6 +764,7 @@ button, a, input, select, textarea, [role="button"] {
   button {
     -webkit-appearance: none;
     appearance: none;
+    font: inherit;
   }
 
   input[type="text"],
@@ -777,6 +778,22 @@ button, a, input, select, textarea, [role="button"] {
   textarea {
     -webkit-appearance: none;
     appearance: none;
+    font: inherit;
+  }
+
+  input[type="file"] {
+    font: inherit;
+  }
+
+  ::file-selector-button {
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    margin-right: 0.5rem;
   }
 }
 
@@ -795,9 +812,10 @@ button:not(:disabled):active,
   }
 
   /* Reset universal de hover states en dispositivos táctiles */
+  /* Sin !important para no anular transforms inline de Framer Motion */
   @media (hover: none) {
     *:hover {
-      transform: none !important;
+      transform: none;
     }
   }
 }

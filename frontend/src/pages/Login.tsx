@@ -188,7 +188,7 @@ export default function Login() {
                 type="submit"
                 disabled={loading || !isFormValid || buttonStatus === 'success'}
                 aria-busy={loading}
-                className={`w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg hover:shadow-primary/25 active:scale-[0.97] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${buttonStatus === 'shake' ? 'animate-shake' : ''} ${buttonStatus === 'success' ? 'btn-success-glow' : ''}`}
+                className={`w-full py-3 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/25 active:scale-[0.97] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${buttonStatus === 'shake' ? 'animate-shake' : ''} ${buttonStatus === 'success' ? 'btn-success-glow' : ''}`}
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2">

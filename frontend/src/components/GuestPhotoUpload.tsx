@@ -130,8 +130,16 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
             accept="image/*"
             capture="environment"
             onChange={handleFileSelect}
-            className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary-fixed file:text-primary hover:file:bg-primary-fixed/70 transition-all cursor-pointer"
+            className="hidden"
           />
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => fileInputRef.current?.click()}
+            leftIcon={<span className="material-symbols-outlined text-base">photo_camera</span>}
+          >
+            {preview ? 'Cambiar foto' : 'Seleccionar foto 📷'}
+          </Button>
 
           {preview && (
             <div className="relative rounded-xl overflow-hidden">

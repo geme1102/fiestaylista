@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
 
@@ -26,9 +26,9 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 const SIZES: Record<Size, string> = {
-  sm: 'px-4 py-2 text-sm min-h-[36px] rounded-lg',
-  md: 'px-5 py-2.5 text-sm min-h-[44px] rounded-xl',
-  lg: 'px-7 py-3.5 text-base min-h-[52px] rounded-xl',
+  sm: 'px-4 py-2 text-sm min-h-[36px] min-w-[80px] rounded-lg',
+  md: 'px-5 py-2.5 text-sm min-h-[44px] min-w-[100px] rounded-xl',
+  lg: 'px-7 py-3.5 text-base min-h-[52px] min-w-[120px] rounded-xl',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -36,7 +36,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
