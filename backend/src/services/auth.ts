@@ -110,7 +110,8 @@ export async function login(
   password: string,
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
-  const [user] = await db
+  try {
+    const [user] = await db
     .select()
     .from(users)
     .where(eq(users.email, email.toLowerCase()))
@@ -118,19 +119,19 @@ export async function login(
 
   if (!user) {
     await bcrypt.compare(password, DUMMY_HASH);
-    await db.insert(auditLogs).values({
+    db.insert(auditLogs).values({
       action: 'auth.login.failed',
       resource: 'user',
       metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'not_found' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
-    });
+    }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
     await bcrypt.compare(password, DUMMY_HASH);
-    await db.insert(auditLogs).values({
+    db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
       resource: 'user',
@@ -138,14 +139,14 @@ export async function login(
       metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'guest_login_attempt' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
-    });
+    }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValid) {
-    await db.insert(auditLogs).values({
+    db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
       resource: 'user',
@@ -153,7 +154,7 @@ export async function login(
       metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'wrong_password' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
-    });
+    }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
@@ -163,6 +164,10 @@ export async function login(
     user: toUserResponse(user),
     ...tokens,
   };
+} catch (error) {
+  log.error({ err: error, email }, 'Error inesperado en login:');
+  throw error;
+}
 }
 
 export async function refreshToken(
