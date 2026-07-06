@@ -80,13 +80,23 @@ export async function reconcileCashFunds(): Promise<{ fixed: number; checked: nu
 
   const totalMap = new Map(totals.map(t => [t.cashFundId, t.total]));
 
-  const funds = await db
-    .select({
-      id: cashFunds.id,
-      collectedAmount: cashFunds.collectedAmount,
-    })
-    .from(cashFunds)
-    .limit(500);
+  const funds: { id: string; collectedAmount: number }[] = [];
+  const pageSize = 500;
+  let offset = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const page = await db
+      .select({
+        id: cashFunds.id,
+        collectedAmount: cashFunds.collectedAmount,
+      })
+      .from(cashFunds)
+      .limit(pageSize)
+      .offset(offset);
+    if (page.length === 0) break;
+    funds.push(...page);
+    offset += pageSize;
+  }
 
   for (const fund of funds) {
     const expected = totalMap.get(fund.id) ?? 0;
@@ -144,7 +154,7 @@ export async function createPromise(
     const [event] = await tx
       .select({ id: events.id })
       .from(events)
-      .where(and(eq(events.id, fund.eventId), isNull(events.deletedAt), eq(events.isActive, true)))
+      .where(and(eq(events.id, fund.eventId), eq(events.status, 'active'), isNull(events.deletedAt), eq(events.isActive, true)))
       .limit(1);
 
     if (!event) throw new ValidationError('El evento ya no está disponible');

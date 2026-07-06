@@ -136,7 +136,7 @@ export const cashContributions = pgTable('cash_contributions', {
 
 export const proPayments = pgTable('pro_payments', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   mpPaymentId: text('mp_payment_id').notNull().unique(),
   amount: integer('amount').notNull(),
   interval: text('interval').notNull().default('month'),
@@ -235,7 +235,7 @@ export const refreshTokens = pgTable('refresh_tokens', {
 
 export const consentRecords = pgTable('consent_records', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   type: text('type').notNull(),
   version: text('version').notNull().default('1.0'),
   ipAddress: text('ip_address'),
@@ -248,7 +248,7 @@ export const consentRecords = pgTable('consent_records', {
 
 export const arcoRequests = pgTable('arco_requests', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   requestType: text('request_type').notNull(),
   details: text('details'),
   status: text('status').notNull().default('pending'),

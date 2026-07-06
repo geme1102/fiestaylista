@@ -15,7 +15,7 @@ export function buildPaginationConditions(
   params: PaginationParams,
   defaultLimit = 50,
 ): { limit: number; cursorCondition: SQL | undefined } {
-  const limit = Math.min(Math.max(1, params.limit ?? defaultLimit), 200);
+  const limit = isNaN(params.limit as number) ? defaultLimit : Math.min(Math.max(1, params.limit ?? defaultLimit), 200);
   const cursorCondition = params.cursor
     ? sql`${cursorField} < ${params.cursor}`
     : undefined;

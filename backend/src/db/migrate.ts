@@ -55,6 +55,16 @@ const COLUMN_MIGRATIONS: string[] = [
   `CREATE INDEX IF NOT EXISTS "photos_is_featured_idx" ON "photos"("is_featured")`,
 
   `CREATE INDEX IF NOT EXISTS "events_frozen_at_idx" ON "events"("frozen_at") WHERE "frozen_at" IS NOT NULL`,
+
+  `ALTER TABLE "consent_records" DROP CONSTRAINT IF EXISTS consent_records_user_id_fkey, ADD CONSTRAINT consent_records_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+  `ALTER TABLE "consent_records" ALTER COLUMN "user_id" DROP NOT NULL`,
+  `ALTER TABLE "arco_requests" DROP CONSTRAINT IF EXISTS arco_requests_user_id_fkey, ADD CONSTRAINT arco_requests_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+  `ALTER TABLE "arco_requests" ALTER COLUMN "user_id" DROP NOT NULL`,
+
+  `ALTER TABLE "pro_payments" DROP CONSTRAINT IF EXISTS pro_payments_user_id_fkey, ADD CONSTRAINT pro_payments_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+  `ALTER TABLE "pro_payments" ALTER COLUMN "user_id" DROP NOT NULL`,
+
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_check" CHECK (amount > 0); END IF; END $$`,
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

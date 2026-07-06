@@ -136,7 +136,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(mockLoginApi).toHaveBeenCalledWith('a@b.com', '12345678', undefined);
     });
-    expect(mockSetTokens).toHaveBeenCalledWith('tok-1', 'rt-1');
+    expect(mockSetTokens).toHaveBeenCalledWith('tok-1');
     expect(screen.getByTestId('user').textContent).toBe('Ana');
   });
 
@@ -152,7 +152,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(mockRegisterApi).toHaveBeenCalledWith('a@b.com', '12345678', 'Ana', undefined);
     });
-    expect(mockSetTokens).toHaveBeenCalledWith('tok-1', 'rt-1');
+    expect(mockSetTokens).toHaveBeenCalledWith('tok-1');
     expect(screen.getByTestId('user').textContent).toBe('Ana');
   });
 

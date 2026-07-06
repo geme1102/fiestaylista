@@ -245,7 +245,10 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
     } catch { /* ya desconectado */ }
   }, SSE_CONNECTION_TIMEOUT_MS);
 
+  let cleaned = false;
   const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
     clearInterval(keepAlive);
     clearTimeout(connectionTimeout);
     unsubscribeClient(eventId, res);

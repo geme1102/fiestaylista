@@ -8,6 +8,7 @@ import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
+import * as mpWebhooks from '../services/mp-webhooks.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/response.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
@@ -126,6 +127,46 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
     });
     res.json({ tier, synced: true, message: 'Suscripción activada' });
     return;
+  }
+
+  // No local record found — search Mercado Pago directly (webhook recovery)
+  const intervals = ['month', 'year'] as const;
+  const tiers = ['pro', 'pro_plus'] as const;
+  for (const tier of tiers) {
+    for (const interval of intervals) {
+      if (tier === 'pro_plus' && interval === 'year') continue;
+      const ref = `${tier}_${userId}_${interval}`;
+      try {
+        const mpPayment = await mercadopagoService.searchPaymentsByRef(ref);
+        if (!mpPayment) continue;
+        await mpWebhooks.handlePaymentNotification(mpPayment.id);
+        const [newPayment] = await db
+          .select()
+          .from(proPayments)
+          .where(and(
+            eq(proPayments.userId, userId),
+            eq(proPayments.mpPaymentId, mpPayment.id),
+          ))
+          .limit(1);
+        if (newPayment) {
+          const periodDays = newPayment.interval === 'year' ? 365 : 30;
+          const periodStart = newPayment.createdAt ?? new Date();
+          const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
+          if (periodEnd <= new Date()) continue;
+          await subscriptionService.createOrUpdateSubscription(userId, {
+            mpSubscriptionId: null,
+            tier: newPayment.tier as 'pro' | 'pro_plus',
+            status: 'active',
+            currentPeriodStart: periodStart,
+            currentPeriodEnd: periodEnd,
+          });
+          res.json({ tier: newPayment.tier, synced: true, message: 'Suscripción activada desde Mercado Pago' });
+          return;
+        }
+      } catch (err) {
+        log.error({ err, ref }, 'Error buscando pago en MP durante sync:');
+      }
+    }
   }
 
   res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Después de pagar, espera unos minutos y vuelve a intentar. Si el problema persiste, contacta a soporte.' });

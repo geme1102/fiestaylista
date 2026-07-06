@@ -85,7 +85,7 @@ router.post('/guest-upload', apiLimiter, verifyTurnstile, validateUuidParam('eve
   const [event] = await db
     .select({ id: events.id })
     .from(events)
-    .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
+    .where(and(eq(events.id, eventId), eq(events.status, 'active'), eq(events.isActive, true), isNull(events.deletedAt)))
     .limit(1);
 
   if (!event) throw new NotFoundError('Evento no encontrado o inactivo');

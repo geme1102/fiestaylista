@@ -101,7 +101,7 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
       {
         folder: 'fiestaylista',
         resource_type: 'image',
-        transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
+        transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto', flags: 'strip_exif' }],
       },
       (err, result) => {
         if (err) reject(err);
@@ -172,6 +172,22 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
       if (!req.file) {
         throw new ValidationError('No se proporcionó ningún archivo');
       }
+
+      if (config.TURNSTILE_SECRET_KEY) {
+        const token = req.body?.turnstileToken;
+        if (!token) throw new ValidationError('Token de seguridad requerido');
+        const formData = new URLSearchParams();
+        formData.append('secret', config.TURNSTILE_SECRET_KEY);
+        formData.append('response', token);
+        const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+          method: 'POST', body: formData,
+        });
+        const result = await verifyRes.json() as { success: boolean; 'error-codes'?: string[] };
+        if (!result.success) {
+          throw new ValidationError('No se pudo verificar que no eres un robot');
+        }
+      }
+
       const filePath = req.file.path;
       const rawBuffer = await readFileHeader(filePath);
       const { valid, detectedMime } = validateMagicBytes(rawBuffer);

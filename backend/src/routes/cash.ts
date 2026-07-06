@@ -78,4 +78,17 @@ router.get('/cash-fund/:cashFundId/contributions', validateUuidParam('cashFundId
   res.json({ contributions: result.data, nextCursor: result.nextCursor });
 }));
 
+router.post('/events/:eventId/cash-fund/:cashFundId/contributions/:contributionId/cancel',
+  requireAuth,
+  requireEventOwnership,
+  validateUuidParam('eventId'),
+  validateUuidParam('cashFundId'),
+  validateUuidParam('contributionId'),
+  asyncHandler(async (req: AuthRequest, res) => {
+    const { cashFundId, contributionId } = req.params as { cashFundId: string; contributionId: string };
+    const result = await cashFundService.cancelContribution(contributionId, cashFundId);
+    res.json(result);
+  }),
+);
+
 export default router;

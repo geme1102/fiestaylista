@@ -177,7 +177,7 @@ export async function deleteGift(giftId: string) {
   const [gift] = await db
     .update(giftsTable)
     .set({ deletedAt: new Date() })
-    .where(eq(giftsTable.id, giftId))
+    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
     .returning();
 
   if (!gift) {

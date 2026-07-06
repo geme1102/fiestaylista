@@ -1,11 +1,12 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { failedWebhooks, refreshTokens, eventViews, auditLogs } from './db/schema.js';
+import { failedWebhooks, refreshTokens, eventViews, auditLogs, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings } from './services/subscription.js';
 import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
+import * as mercadopagoService from './services/mercadopago.js';
 import { createModuleLogger } from './utils/logger.js';
 
 const log = createModuleLogger('Cron');
@@ -81,6 +82,49 @@ export function startCronJobs(): void {
         }
       } catch (error) {
         log.error({ error }, 'Error enviando warnings de purga:');
+      }
+
+      await reconcileStuckSubscriptions();
+    });
+  };
+
+  const reconcileStuckSubscriptions = async () => {
+    await runWithLock('reconcile-subscriptions', async () => {
+      try {
+        const stuck = await db
+          .select({ id: subscriptions.id, userId: subscriptions.userId, tier: subscriptions.tier, currentPeriodStart: subscriptions.currentPeriodStart, currentPeriodEnd: subscriptions.currentPeriodEnd })
+          .from(subscriptions)
+          .where(and(
+            sql`${subscriptions.status} IN ('pending_approval', 'incomplete')`,
+            sql`${subscriptions.createdAt} < NOW() - INTERVAL '1 hour'`,
+          ));
+
+        for (const sub of stuck) {
+          try {
+            const interval = sub.currentPeriodEnd && sub.currentPeriodStart
+              ? (sub.currentPeriodEnd.getTime() - sub.currentPeriodStart.getTime() > 330 * 24 * 60 * 60 * 1000 ? 'year' : 'month')
+              : 'month';
+            const ref = `${sub.tier}_${sub.userId}_${interval}`;
+            const mpPayment = await mercadopagoService.searchPaymentsByRef(ref);
+            if (mpPayment) {
+              await mpWebhooks.handlePaymentNotification(mpPayment.id);
+            } else {
+              // Also check preapprovals
+              const preapproval = await mercadopagoService.searchPreapprovalsByRef(ref);
+              if (preapproval) {
+                await mpWebhooks.handleSubscriptionNotification(preapproval.id);
+              }
+            }
+          } catch (err) {
+            log.error({ err, userId: sub.userId }, 'Error reconciliando suscripción atascada:');
+          }
+        }
+
+        if (stuck.length > 0) {
+          log.info({ count: stuck.length }, 'Suscripciones atascadas reconciliadas');
+        }
+      } catch (error) {
+        log.error({ error }, 'Error en reconciliación de suscripciones:');
       }
     });
   };

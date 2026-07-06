@@ -22,6 +22,7 @@ vi.mock('../middleware/rateLimit.js', () => ({
 vi.mock('../middleware/auth.js', () => ({
   requireAuth: vi.fn((_req, _res, next) => next()),
   requireAnyAuth: vi.fn((_req, _res, next) => next()),
+  requireEmailVerified: vi.fn((_req, _res, next) => next()),
 }));
 vi.mock('../middleware/ownership.js', () => ({
   requireEventOwnership: vi.fn((_req, _res, next) => next()),

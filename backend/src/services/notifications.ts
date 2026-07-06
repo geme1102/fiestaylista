@@ -209,6 +209,7 @@ export function startSSEScavenger(): void {
         // Ping to detect dead connections
         try {
           client.write(':ping\n\n');
+          touchClient(client);
         } catch {
           eventClients.delete(client);
           deliveryBuffer.delete(client);

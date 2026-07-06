@@ -119,6 +119,7 @@ vi.mock('../middleware/auth.js', () => ({
     }
     next();
   },
+  requireEmailVerified: (_req: any, _res: Response, next: NextFunction) => next(),
 }));
 
 vi.mock('../middleware/rateLimit.js', () => {
@@ -278,7 +279,7 @@ const mockArcoService = vi.hoisted(() => ({
 
 vi.mock('../services/arco.js', () => mockArcoService);
 
-const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', boostedUntil: null, viewCount: 0, createdAt: new Date(), updatedAt: new Date() }));
+const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', boostedUntil: null, viewCount: 0, createdAt: new Date(), updatedAt: new Date(), emailVerified: true }));
 
 const mockNotifications = vi.hoisted(() => ({
   emitGiftClaimed: vi.fn(),

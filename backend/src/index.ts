@@ -111,8 +111,7 @@ if (cluster.isPrimary && workerCount > 1) {
       gracefulShutdown('uncaughtException', 1);
     });
     process.on('unhandledRejection', (reason) => {
-      logger.fatal({ err: reason }, 'Promesa rechazada no capturada');
-      gracefulShutdown('unhandledRejection', 1);
+      logger.error({ err: reason }, 'Promesa rechazada no capturada — el servidor continúa funcionando');
     });
     })();
   } catch (e) {

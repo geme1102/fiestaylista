@@ -59,6 +59,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('turnstileToken', token ?? '');
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
