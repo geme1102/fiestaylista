@@ -17,7 +17,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('../hooks/useTurnstile', () => ({
-  useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), error: null }),
+  useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), error: null, reset: vi.fn() }),
 }));
 
 vi.mock('../hooks/useToast', () => ({
