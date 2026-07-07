@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { User, AuthResponse } from '../types';
 import { login as loginApi, register as registerApi, getMe } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, tryRefreshToken, apiClient } from '../services/api';
@@ -19,6 +20,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -81,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     clearTokens();
     setUser(null);
-    window.location.href = '/';
+    navigate('/');
   }, []);
 
   const refreshUser = useCallback(async () => {

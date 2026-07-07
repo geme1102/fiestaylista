@@ -64,7 +64,8 @@ export async function processReminders(): Promise<ReminderResult> {
           userId: row.userId,
           type: 'reminder',
         });
-      } catch {
+      } catch (err) {
+        log.warn({ err }, 'Error insertando emailTracking para reminder — intentando update');
         await db.update(emailTracking)
           .set({ sentAt: new Date() })
           .where(and(eq(emailTracking.userId, row.userId), eq(emailTracking.type, 'reminder')));

@@ -271,8 +271,8 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   if (info.status === 'active') {
     const currentSub = await subscriptionService.getCurrentSubscription(userId);
 
-    if (currentSub && currentSub.status === 'canceled' && !currentSub.mpSubscriptionId) {
-      log.warn({ userId }, 'Ignorando webhook tardío — suscripción cancelada manualmente');
+    if (currentSub && currentSub.status === 'canceled') {
+      log.warn({ userId, preapprovalId }, 'Ignorando webhook tardío — suscripción cancelada');
       return;
     }
 

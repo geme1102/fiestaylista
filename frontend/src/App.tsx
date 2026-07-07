@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -22,6 +22,10 @@ const pageVariants = {
 };
 
 function PageTransition({ children }: { children: ReactNode }) {
+  const shouldReduceMotion = useReducedMotion();
+  if (shouldReduceMotion) {
+    return <>{children}</>;
+  }
   return (
     <motion.div
       variants={pageVariants}
@@ -35,17 +39,28 @@ function PageTransition({ children }: { children: ReactNode }) {
   );
 }
 function PwaUpdater() {
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
   useEffect(() => {
     let refreshing = false;
     const handler = () => {
       if (refreshing) return;
       refreshing = true;
-      setTimeout(() => window.location.reload(), 100);
+      setUpdateAvailable(true);
+      setTimeout(() => window.location.reload(), 2000);
     };
     navigator.serviceWorker?.addEventListener('controllerchange', handler);
     return () => navigator.serviceWorker?.removeEventListener('controllerchange', handler);
   }, []);
-  return null;
+
+  if (!updateAvailable) return null;
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] bg-primary text-on-primary px-6 py-3 rounded-2xl shadow-2xl font-semibold text-sm animate-fade-in" role="status">
+      <span className="material-symbols-outlined text-sm align-middle mr-2" aria-hidden="true">system_update</span>
+      ¡Nueva versión disponible! Actualizando...
+    </div>
+  );
 }
 
 const Landing = lazy(() => import('./pages/Landing'));

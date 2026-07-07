@@ -9,7 +9,7 @@ import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.
 import { ValidationError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireEmailVerified } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 
 const router = Router();
@@ -29,7 +29,7 @@ const promiseSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
-router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/events/:eventId/cash-fund', requireAuth, requireEmailVerified, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -80,6 +80,7 @@ router.get('/cash-fund/:cashFundId/contributions', validateUuidParam('cashFundId
 
 router.post('/events/:eventId/cash-fund/:cashFundId/contributions/:contributionId/cancel',
   requireAuth,
+  requireEmailVerified,
   requireEventOwnership,
   validateUuidParam('eventId'),
   validateUuidParam('cashFundId'),

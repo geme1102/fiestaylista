@@ -116,7 +116,7 @@ export default memo(function GiftManagement({
                     onShowSuggestionsChange(false);
                   }
                 }}
-                className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-primary-fixed transition-colors font-semibold focus:bg-primary-fixed focus:outline-none"
+                className="w-full text-left px-4 py-2.5 min-h-[44px] text-sm text-on-surface hover:bg-primary-fixed transition-colors font-semibold focus:bg-primary-fixed focus:outline-none"
               >
                 + {s}
               </button>
@@ -145,7 +145,7 @@ export default memo(function GiftManagement({
                     type="button"
                     disabled={suggestionLoadingRef.current || addedGifts.has(s)}
                     onClick={() => handleAddSuggestion(s)}
-                    className="text-xs font-bold py-2 px-[18px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-surface hover:bg-primary-fixed border-outline-variant text-on-surface hover:border-primary/40 disabled:opacity-50"
+                    className="text-xs font-bold py-2 px-[18px] min-h-[44px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-surface hover:bg-primary-fixed border-outline-variant text-on-surface hover:border-primary/40 disabled:opacity-50"
                   >
                     <span className="text-primary font-black">+</span>
                     <span>{s}</span>

@@ -100,7 +100,13 @@ function validateConfig(): void {
     warnConfig('FROM_EMAIL', process.env.FROM_EMAIL);
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
     warnConfig('BACKEND_URL', process.env.BACKEND_URL);
+    if (process.env.BACKEND_URL && !process.env.BACKEND_URL.startsWith('http://') && !process.env.BACKEND_URL.startsWith('https://')) {
+      console.error('[config] BACKEND_URL debe comenzar con http:// o https://');
+    }
     if (!process.env.FRONTEND_URL) failConfig('FRONTEND_URL no está configurado');
+    if (!process.env.FRONTEND_URL.startsWith('http://') && !process.env.FRONTEND_URL.startsWith('https://')) {
+      failConfig('FRONTEND_URL debe comenzar con http:// o https://');
+    }
 
     const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
     const present = cloudKeys.filter(k => process.env[k]);

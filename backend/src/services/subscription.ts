@@ -311,7 +311,7 @@ export async function purgeExpiredData(): Promise<number> {
       for (const photo of userPhotos) {
         const publicId = getPublicIdFromUrl(photo.url);
         if (publicId) {
-          cloudinary.uploader.destroy(publicId).catch(() => {});
+          cloudinary.uploader.destroy(publicId).catch((err: Error) => log.warn({ err }, 'Error eliminando foto de Cloudinary durante purga'));
         }
       }
 

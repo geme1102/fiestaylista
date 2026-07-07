@@ -141,6 +141,20 @@
       "when": 1782240000000,
       "tag": "0019_make_events_slug_soft_delete_aware",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1782240001000,
+      "tag": "0020_add_onboarding_completed",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1782240002000,
+      "tag": "0021_add_welcome_tutorial_completed",
+      "breakpoints": true
     }
   ]
 }

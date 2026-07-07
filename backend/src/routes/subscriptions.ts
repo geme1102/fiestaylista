@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq, desc, and, sql } from 'drizzle-orm';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireEmailVerified } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
@@ -45,7 +45,7 @@ const cancelSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para confirmar'),
 });
 
-router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/create-checkout', verifyTurnstile, requireAuth, requireEmailVerified, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = checkoutSchema.parse(req.body);
 
   if (data.tier === 'pro_plus' && data.interval !== 'month') {
@@ -172,8 +172,8 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   res.json({ tier: 'free', synced: false, message: 'No encontramos un pago reciente. Después de pagar, espera unos minutos y vuelve a intentar. Si el problema persiste, contacta a soporte.' });
 }));
 
-router.post('/cancel', requireAuth, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const password = (req.headers['x-password'] as string) || cancelSchema.parse(req.body).password;
+router.post('/cancel', requireAuth, requireEmailVerified, cancelLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+  const { password } = cancelSchema.parse(req.body);
 
   const [user] = await db
     .select({ passwordHash: users.passwordHash })

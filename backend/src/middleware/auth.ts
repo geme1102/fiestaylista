@@ -63,14 +63,6 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
       next(error);
       return;
     }
-    if (error instanceof jwt.JsonWebTokenError) {
-      next(new UnauthorizedError('Token inválido'));
-      return;
-    }
-    if (error instanceof jwt.TokenExpiredError) {
-      next(new UnauthorizedError('Token expirado'));
-      return;
-    }
     next(error);
   }
 }
@@ -91,10 +83,13 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
     let decoded: JwtPayload | GuestJwtPayload;
     try {
       decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-    } catch {
+    } catch (firstError) {
       try {
         decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
       } catch {
+        if (firstError instanceof jwt.TokenExpiredError) {
+          throw new UnauthorizedError('Token expirado');
+        }
         throw new UnauthorizedError('Token inválido');
       }
     }
@@ -116,14 +111,6 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       next(error);
-      return;
-    }
-    if (error instanceof jwt.JsonWebTokenError) {
-      next(new UnauthorizedError('Token inválido'));
-      return;
-    }
-    if (error instanceof jwt.TokenExpiredError) {
-      next(new UnauthorizedError('Token expirado'));
       return;
     }
     next(error);
@@ -148,12 +135,14 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
     let decoded: JwtPayload | GuestJwtPayload;
     try {
       decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-    } catch {
+    } catch (firstError) {
       try {
         decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
       } catch {
-        next();
-        return;
+        if (firstError instanceof jwt.TokenExpiredError) {
+          throw new UnauthorizedError('Token expirado');
+        }
+        throw new UnauthorizedError('Token inválido');
       }
     }
 

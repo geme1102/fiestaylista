@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import type { Photo } from '../types';
 
 interface PhotoSlideshowProps {
@@ -10,6 +12,8 @@ interface PhotoSlideshowProps {
 
 export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: PhotoSlideshowProps) {
   const [current, setCurrent] = useState(initialIndex);
+  const slideshowRef = useFocusTrap(true);
+  useLockedBody(true);
 
   const prev = useCallback(() => {
     setCurrent((i) => (i > 0 ? i - 1 : photos.length - 1));
@@ -33,7 +37,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
   if (!photo) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
+    <div ref={slideshowRef} className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 z-10">
         <button
           onClick={onClose}
@@ -80,6 +84,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
             <img
               src={photo.url}
               alt={photo.caption || `Foto ${current + 1}`}
+              loading="lazy"
               className="max-w-full max-h-[75vh] object-contain rounded-xl"
             />
             {photo.caption && (

@@ -773,8 +773,7 @@ describe('Subscription Routes', () => {
     const res = await request(app)
       .post('/api/subscriptions/cancel')
       .set(auth)
-      .set('x-password', 'Password1')
-      .send({});
+      .send({ password: 'Password1' });
 
     expect(res.status).toBe(200);
     expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
@@ -787,8 +786,7 @@ describe('Subscription Routes', () => {
     const res = await request(app)
       .post('/api/subscriptions/cancel')
       .set(auth)
-      .set('x-password', 'Password1')
-      .send({});
+      .send({ password: 'Password1' });
 
     expect(res.status).toBe(502);
     expect(res.body.error).toContain('No pudimos cancelar');
@@ -803,8 +801,7 @@ describe('Subscription Routes', () => {
     const res = await request(app)
       .post('/api/subscriptions/cancel')
       .set(auth)
-      .set('x-password', 'Password1')
-      .send({});
+      .send({ password: 'Password1' });
 
     expect(res.status).toBe(200);
     expect(mockMercadopagoService.searchPreapprovalsByRef).toHaveBeenCalled();
@@ -821,8 +818,7 @@ describe('Subscription Routes', () => {
     const res = await request(app)
       .post('/api/subscriptions/cancel')
       .set(auth)
-      .set('x-password', 'Password1')
-      .send({});
+      .send({ password: 'Password1' });
 
     expect(res.status).toBe(200);
     expect(mockMercadopagoService.searchPreapprovalsByRef).toHaveBeenCalled();

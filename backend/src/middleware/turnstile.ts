@@ -48,9 +48,7 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     }
 
     if (!token) {
-      log.warn('Token Turnstile no proporcionado — omitiendo verificación');
-      next();
-      return;
+      throw new ValidationError('Token de seguridad requerido');
     }
 
     await verifyToken(token);

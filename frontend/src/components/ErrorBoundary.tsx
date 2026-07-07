@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode, createRef } from 'react';
+import { Link } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 
 interface Props {
@@ -125,9 +126,9 @@ export default class ErrorBoundary extends Component<Props, State> {
                   Recargar página
                 </button>
               </div>
-              <a href="/" className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors duration-200 border-b border-transparent hover:border-primary pb-1 mt-2">
+              <Link to="/" className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors duration-200 border-b border-transparent hover:border-primary pb-1 mt-2">
                 Volver al inicio
-              </a>
+              </Link>
             </div>
             <div className="pt-12 opacity-30">
               <p className="font-caption text-caption uppercase tracking-widest text-on-surface-variant">

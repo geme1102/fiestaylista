@@ -231,33 +231,33 @@ export function startCronJobs(): void {
     }
   };
 
-  cleanupExpiredRefreshTokens();
-  cleanupEventViews();
-  cleanupAuditLogs();
+  cleanupExpiredRefreshTokens().catch((err) => log.error({ err }, 'cleanupExpiredRefreshTokens falló'));
+  cleanupEventViews().catch((err) => log.error({ err }, 'cleanupEventViews falló'));
+  cleanupAuditLogs().catch((err) => log.error({ err }, 'cleanupAuditLogs falló'));
 
-  retryFailedWebhooks();
-  cleanupExpiredWebhooks();
-  runDaily();
-  reconcileCashFundsJob();
+  retryFailedWebhooks().catch((err) => log.error({ err }, 'retryFailedWebhooks falló'));
+  cleanupExpiredWebhooks().catch((err) => log.error({ err }, 'cleanupExpiredWebhooks falló'));
+  runDaily().catch((err) => log.error({ err }, 'runDaily falló'));
+  reconcileCashFundsJob().catch((err) => log.error({ err }, 'reconcileCashFundsJob falló'));
 
   const WEBHOOK_RETRY_MS = 60 * 1000;
 
   cronInterval = setInterval(() => {
-    runDaily();
-    cleanupExpiredWebhooks();
-    cleanupExpiredRefreshTokens();
-    cleanupEventViews();
-    cleanupAuditLogs();
+    runDaily().catch((err) => log.error({ err }, 'runDaily falló'));
+    cleanupExpiredWebhooks().catch((err) => log.error({ err }, 'cleanupExpiredWebhooks falló'));
+    cleanupExpiredRefreshTokens().catch((err) => log.error({ err }, 'cleanupExpiredRefreshTokens falló'));
+    cleanupEventViews().catch((err) => log.error({ err }, 'cleanupEventViews falló'));
+    cleanupAuditLogs().catch((err) => log.error({ err }, 'cleanupAuditLogs falló'));
   }, DAILY_MS);
 
   webhookRetryInterval = setInterval(() => {
-    retryFailedWebhooks();
+    retryFailedWebhooks().catch((err) => log.error({ err }, 'retryFailedWebhooks falló'));
   }, WEBHOOK_RETRY_MS);
 
   const CASH_RECONCILLE_MS = 6 * 60 * 60 * 1000;
 
   cashReconcileInterval = setInterval(() => {
-    reconcileCashFundsJob();
+    reconcileCashFundsJob().catch((err) => log.error({ err }, 'reconcileCashFundsJob falló'));
   }, CASH_RECONCILLE_MS);
 
   log.info('Jobs iniciados correctamente');

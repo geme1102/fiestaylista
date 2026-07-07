@@ -94,7 +94,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
   } catch (err) {
     const publicId = getPublicIdFromUrl(url);
     if (publicId) {
-      cloudinary.uploader.destroy(publicId).catch(() => {});
+      cloudinary.uploader.destroy(publicId).catch((err) => log.warn({ err }, 'Error eliminando imagen de Cloudinary tras fallo en DB'));
     }
     throw err;
   }

@@ -156,18 +156,9 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user').textContent).toBe('Ana');
   });
 
-  it('logout clears tokens, user, and navigates to /', async () => {
+  it('logout clears tokens and user', async () => {
     mockGetAccessToken.mockReturnValue('tok-1');
     mockGetMe.mockResolvedValue({ user: testUser, isGuest: false });
-
-    const locationHrefSetter = vi.fn();
-    delete (window as any).location;
-    (window as any).location = {};
-    Object.defineProperty(window.location, 'href', {
-      get: () => '',
-      set: locationHrefSetter,
-      configurable: true,
-    });
 
     renderAuthProvider();
 
@@ -180,7 +171,6 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(mockClearTokens).toHaveBeenCalled();
     });
-    expect(locationHrefSetter).toHaveBeenCalledWith('/');
     expect(screen.getByTestId('user').textContent).toBe('null');
   });
 

@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '../utils/cn';
@@ -27,7 +27,7 @@ function useNavItems(tier: string | undefined) {
   }, [tier]);
 }
 
-export default function Layout() {
+const Layout = memo(function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -203,4 +203,6 @@ export default function Layout() {
       </nav>
     </div>
   );
-}
+});
+
+export default Layout;

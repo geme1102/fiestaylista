@@ -42,7 +42,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     type="button"
                     data-testid="logout-button"
                     onClick={logout}
-                    className="hidden sm:inline-block text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
+                    className="hidden sm:inline-flex items-center min-h-[44px] text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-4 py-2 border border-outline/30 rounded-full"
                   >
                     Cerrar Sesión
                   </button>

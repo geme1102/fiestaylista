@@ -42,7 +42,7 @@ export async function register(
   email: string,
   password: string,
   name: string,
-): Promise<{ user: UserResponse; accessToken: string; refreshToken: string; emailSent: boolean }> {
+): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   const emailLower = email.toLowerCase();
   const verificationToken = randomBytes(32).toString('hex');
 
@@ -56,6 +56,7 @@ export async function register(
   let user: typeof users.$inferSelect = null!;
   let tokens: { accessToken: string; refreshToken: string } = null!;
 
+  try {
   await db.transaction(async (tx) => {
     const [existing] = await tx
       .select({ id: users.id })
@@ -83,14 +84,15 @@ export async function register(
     user = newUser;
     tokens = await issueTokenPair(user.id, user.email, tx);
   });
+  } catch (err) {
+    log.error({ err }, 'Error en transacción de registro');
+    throw err;
+  }
 
-  let emailSent = false;
   try {
     if (isEmailConfigured()) {
       sendVerificationEmail(user.email, verificationToken)
-        .then(() => { emailSent = true; })
         .catch((err) => log.error({ err }, 'Error enviando email de verificación:'));
-      emailSent = true;
     } else {
       log.warn('Email service not configured — verification email not sent');
     }
@@ -101,7 +103,6 @@ export async function register(
   return {
     user: toUserResponse(user),
     ...tokens,
-    emailSent,
   };
 }
 

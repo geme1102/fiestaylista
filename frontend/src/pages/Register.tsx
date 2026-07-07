@@ -238,7 +238,7 @@ export default function Register() {
                   />
                   <span className="text-xs text-on-surface-variant">
                     Acepto los{' '}
-                    <Link to="/terminos-y-condiciones" target="_blank" className="text-primary hover:underline">Términos y Condiciones</Link>
+                    <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Términos y Condiciones</a>
                     {' '}y confirmo que soy mayor de 14 años.
                   </span>
                 </label>
@@ -252,7 +252,7 @@ export default function Register() {
                   />
                   <span className="text-xs text-on-surface-variant">
                     Acepto la{' '}
-                    <Link to="/politica-de-privacidad" target="_blank" className="text-primary hover:underline">Política de Privacidad</Link>
+                    <a href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Política de Privacidad</a>
                     {' '}y el tratamiento de mis datos personales según la Ley 1581 de 2012.
                   </span>
                 </label>

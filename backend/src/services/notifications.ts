@@ -1,5 +1,8 @@
 import { EventEmitter } from 'node:events';
 import type { Response } from 'express';
+import { createModuleLogger } from '../utils/logger.js';
+
+const log = createModuleLogger('Notifications');
 
 interface GiftClaimedEvent {
   eventId: string;
@@ -51,7 +54,7 @@ export function subscribeClient(eventId: string, res: Response): void {
   const buf = deliveryBuffer.get(res);
   if (buf) {
     for (const msg of buf) {
-      try { res.write(msg); } catch { break; }
+      try { res.write(msg); } catch (err) { log.error({ err }, 'Error escribiendo mensaje SSE almacenado'); break; }
     }
     deliveryBuffer.delete(res);
   }
@@ -89,8 +92,8 @@ function broadcastToClients(eventId: string, data: Record<string, unknown>): voi
     try {
       client.write(payload);
       touchClient(client);
-    } catch {
-      // Buffer for retry — connection might be temporarily unavailable
+    } catch (err) {
+      log.warn({ err }, 'Error en broadcast SSE — encolando para reintento');
       let buf = deliveryBuffer.get(client);
       if (!buf) {
         buf = [];
@@ -111,7 +114,8 @@ function retryBuffered(res: Response): void {
     try {
       res.write(msg);
       touchClient(res);
-    } catch {
+    } catch (err) {
+      log.warn({ err }, 'Error en reintento SSE — manteniendo en buffer');
       remaining.push(msg);
     }
   }
@@ -135,8 +139,8 @@ export function emitGiftClaimed(data: GiftClaimedEvent): void {
       claimedBy: data.claimedBy,
       type: 'gift:claimed',
     });
-  } catch {
-    // no interrumpir el flujo principal
+  } catch (err) {
+    log.error({ err }, 'Error emitiendo evento gift:claimed');
   }
 }
 
@@ -148,8 +152,8 @@ export function emitMessagePosted(data: MessagePostedEvent): void {
       authorName: data.authorName,
       messagePreview: data.messagePreview,
     });
-  } catch {
-    // no-op
+  } catch (err) {
+    log.error({ err }, 'Error emitiendo evento message:posted');
   }
 }
 
@@ -161,8 +165,8 @@ export function emitPhotoUploaded(data: PhotoUploadedEvent): void {
       uploadedBy: data.uploadedBy,
       photoUrl: data.photoUrl,
     });
-  } catch {
-    // no-op
+  } catch (err) {
+    log.error({ err }, 'Error emitiendo evento photo:uploaded');
   }
 }
 
@@ -175,8 +179,8 @@ export function emitCashContribution(data: CashContributionEvent): void {
       amount: data.amount,
       contributionType: data.type,
     });
-  } catch {
-    // no-op
+  } catch (err) {
+    log.error({ err }, 'Error emitiendo evento cash:contribution');
   }
 }
 
@@ -198,8 +202,8 @@ export function startSSEScavenger(): void {
         if (lastActive && (now - lastActive) > SSE_HALF_OPEN_TIMEOUT_MS) {
           try {
             client.end();
-          } catch {
-            // already dead
+          } catch (err) {
+            log.warn({ err }, 'Error cerrando conexión SSE');
           }
           eventClients.delete(client);
           deliveryBuffer.delete(client);
@@ -210,7 +214,8 @@ export function startSSEScavenger(): void {
         try {
           client.write(':ping\n\n');
           touchClient(client);
-        } catch {
+        } catch (err) {
+          log.warn({ err }, 'Error en ping SSE — eliminando cliente');
           eventClients.delete(client);
           deliveryBuffer.delete(client);
           clientActivity.delete(client);

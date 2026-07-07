@@ -43,7 +43,7 @@ export default function EditEventModal({
           role="dialog"
           aria-modal="true"
           aria-label="Editar información del evento"
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[70]"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[70] [overscroll-behavior:contain]"
           onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
           onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >

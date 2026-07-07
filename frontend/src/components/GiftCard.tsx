@@ -266,7 +266,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowClaimForm(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-all"
+                  className="flex-1 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold text-on-surface-variant bg-surface-container-high hover:bg-surface-container-highest transition-all"
                 >
                   Cancelar
                 </button>
@@ -274,7 +274,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                   onClick={handleGroupClaim}
                   disabled={claiming || !claimName.trim()}
                   aria-busy={claiming}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-secondary to-secondary-container text-white text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center"
+                  className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-secondary to-secondary-container text-white text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center"
                 >
                   {claiming ? (
                     <span className="inline-flex items-center gap-2">

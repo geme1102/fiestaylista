@@ -584,6 +584,11 @@ h1, h2, h3, h4, h5, h6 {
   .glass-ghost::before { display: none; }
 }
 
+/* iOS safe area: use dvh instead of vh to avoid toolbar overlap */
+.min-h-screen {
+  min-height: 100dvh;
+}
+
 /* WCAG 2.1 AA focus ring */
 *:focus-visible {
   outline: 2px solid var(--color-primary);

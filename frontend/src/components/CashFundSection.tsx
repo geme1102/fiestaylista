@@ -36,6 +36,8 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [loadError, setLoadError] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const { containerRef: boostTurnstileRef, token: boostTurnstileToken, ready: boostTurnstileReady } = useTurnstile();
+
   const canContribute = !isOwner && fund?.isActive;
 
   const loadFund = useCallback(async () => {
@@ -87,7 +89,11 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const handleBoost = async () => {
     setBoostLoading(true);
     try {
-      await boostEvent(eventId);
+      let token: string | null = boostTurnstileToken;
+      if (!token) {
+        token = await waitForTurnstile(() => boostTurnstileToken);
+      }
+      await boostEvent(eventId, token ?? undefined);
       showToast('Lluvia de sobres activada 🚀', 'success');
       setBoostModal(false);
       loadFund();
@@ -145,7 +151,10 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             </button>
           </div>
           {boostModal && (
-            <BoostModal onConfirm={handleBoost} onClose={() => setBoostModal(false)} loading={boostLoading} />
+            <>
+              <div ref={boostTurnstileRef} className="hidden" />
+              <BoostModal onConfirm={handleBoost} onClose={() => setBoostModal(false)} loading={boostLoading} />
+            </>
           )}
         </section>
       );

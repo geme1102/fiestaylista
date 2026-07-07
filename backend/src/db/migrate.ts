@@ -65,6 +65,34 @@ const COLUMN_MIGRATIONS: string[] = [
   `ALTER TABLE "pro_payments" ALTER COLUMN "user_id" DROP NOT NULL`,
 
   `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_check" CHECK (amount > 0); END IF; END $$`,
+
+  // 0020: Add onboarding_completed column
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboarding_completed" boolean DEFAULT false`,
+  `UPDATE "users" SET "onboarding_completed" = false WHERE "onboarding_completed" IS NULL`,
+  `ALTER TABLE "users" ALTER COLUMN "onboarding_completed" SET NOT NULL`,
+
+  // 0021: Add welcome_tutorial_completed column
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "welcome_tutorial_completed" boolean DEFAULT false`,
+  `UPDATE "users" SET "welcome_tutorial_completed" = false WHERE "welcome_tutorial_completed" IS NULL`,
+  `ALTER TABLE "users" ALTER COLUMN "welcome_tutorial_completed" SET NOT NULL`,
+];
+
+// Stable names matching COLUMN_MIGRATIONS order — new migrations must append here + to COLUMN_MIGRATIONS.
+const COLUMN_MIGRATION_NAMES = [
+  'photos_deleted_at',
+  'guests_table',
+  'cash_funds_bank_fields',
+  'gifts_is_group_gift',
+  'gift_claims_table',
+  'messages_table',
+  'events_frozen_at',
+  'users_tier_check',
+  'events_status_photos',
+  'events_frozen_at_idx',
+  'consent_arco_pro_fk',
+  'cash_contributions_amount_check',
+  'onboarding_completed',
+  'welcome_tutorial_completed',
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
@@ -110,14 +138,40 @@ const TIMESTAMPTZ_ALTERS: string[] = [
   `ALTER TABLE audit_logs ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC'`,
 ];
 
+const TIMESTAMPTZ_MIGRATION_NAME = 'timestamptz_conversion';
+
 export async function runMigrations(): Promise<void> {
   try {
+    // Ensure migration_journal table exists
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS "migration_journal" (
+        "id" SERIAL PRIMARY KEY,
+        "name" TEXT NOT NULL UNIQUE,
+        "applied_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    const appliedRows = await sql`SELECT "name" FROM "migration_journal"`;
+    const appliedNames = new Set(appliedRows.map((r: any) => r.name));
+
     await sql.begin(async (tx) => {
-      for (const statement of COLUMN_MIGRATIONS) {
-        await tx.unsafe(statement);
+      for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
+        const name = COLUMN_MIGRATION_NAMES[i];
+        if (!appliedNames.has(name)) {
+          log.info({ migration: name }, 'Aplicando migración');
+          await tx.unsafe(COLUMN_MIGRATIONS[i]);
+          await tx`INSERT INTO "migration_journal" ("name") VALUES (${name}) ON CONFLICT DO NOTHING`;
+          log.info({ migration: name }, 'Migración aplicada');
+        }
       }
-      for (const statement of TIMESTAMPTZ_ALTERS) {
-        await tx.unsafe(statement);
+
+      if (!appliedNames.has(TIMESTAMPTZ_MIGRATION_NAME)) {
+        log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Aplicando migración timestamptz');
+        for (const statement of TIMESTAMPTZ_ALTERS) {
+          await tx.unsafe(statement);
+        }
+        await tx`INSERT INTO "migration_journal" ("name") VALUES (${TIMESTAMPTZ_MIGRATION_NAME}) ON CONFLICT DO NOTHING`;
+        log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Migración timestamptz aplicada');
       }
     });
     log.info('Migraciones aplicadas correctamente');

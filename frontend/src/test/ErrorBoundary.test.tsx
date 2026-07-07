@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@sentry/react', () => ({ captureException: vi.fn() }));
 
@@ -14,21 +15,25 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
 describe('ErrorBoundary', () => {
   it('renders children when no error', () => {
-    render(<ErrorBoundary><ProblemChild /></ErrorBoundary>);
+    renderWithRouter(<ErrorBoundary><ProblemChild /></ErrorBoundary>);
     expect(screen.getByText('Todo bien')).toBeTruthy();
   });
 
   it('renders error UI when child throws', () => {
-    render(<ErrorBoundary><ProblemChild shouldThrow /></ErrorBoundary>);
+    renderWithRouter(<ErrorBoundary><ProblemChild shouldThrow /></ErrorBoundary>);
     expect(screen.getByText('Algo salió mal')).toBeTruthy();
     expect(screen.getByText('Intentar de nuevo')).toBeTruthy();
     expect(screen.getByText('Recargar página')).toBeTruthy();
   });
 
   it('retry button is rendered', () => {
-    render(<ErrorBoundary><ProblemChild shouldThrow /></ErrorBoundary>);
+    renderWithRouter(<ErrorBoundary><ProblemChild shouldThrow /></ErrorBoundary>);
     const btn = screen.getByText('Intentar de nuevo');
     expect(btn).toBeTruthy();
   });

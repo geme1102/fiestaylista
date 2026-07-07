@@ -47,7 +47,7 @@ describe('cashFund service', () => {
 
     await boostEvent('evt-1');
 
-    expect(mockPost).toHaveBeenCalledWith('/api/events/evt-1/boost');
+    expect(mockPost).toHaveBeenCalledWith('/api/events/evt-1/boost', { turnstileToken: undefined });
   });
 
   it('createPromise posts promise to /api/cash-fund/promise', async () => {

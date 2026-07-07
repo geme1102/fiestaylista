@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import { useDebounce } from '../hooks/useDebounce';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
@@ -33,6 +34,7 @@ import ShareButtons from '../components/ShareButtons';
 import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { useAchievements } from '../hooks/useAchievements';
+import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import EventAdminLoadingSkeleton from '../components/admin/EventAdminLoadingSkeleton';
 import EditEventModal from '../components/admin/EditEventModal';
@@ -89,19 +91,14 @@ export default function EventAdmin() {
   const mountedRef = useRef(true);
   const editDialogRef = useFocusTrap(!!editingDetails);
   const boostDialogRef = useFocusTrap(!!boostModal);
+  const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
-  useEffect(() => {
-    if (editingDetails || boostModal) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = prev; };
-    }
-  }, [editingDetails, boostModal]);
+  useLockedBody(!!editingDetails || !!boostModal);
 
   const isBoosted = useMemo(() =>
     !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
@@ -400,7 +397,11 @@ export default function EventAdmin() {
     if (!id) return;
     setBoostLoading(true);
     try {
-      const res = await boostEvent(id!);
+      let token: string | null = boostTurnstileToken;
+      if (!token) {
+        token = await waitForTurnstile(() => boostTurnstileToken);
+      }
+      const res = await boostEvent(id!, token ?? undefined);
       if (res.url) {
         const validatedUrl = validateRedirectUrl(res.url);
         if (validatedUrl) {
@@ -835,6 +836,7 @@ onClick={() => {
         onClose={() => setEditingDetails(false)}
       />
 
+      <div ref={boostTurnstileRef} className="hidden" />
       <BoostModal
         open={boostModal}
         loading={boostLoading}

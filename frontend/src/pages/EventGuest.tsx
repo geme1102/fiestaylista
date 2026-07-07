@@ -13,6 +13,8 @@ const CashFundSection = lazy(() => import('../components/CashFundSection'));
 const PhotoSlideshow = lazy(() => import('../components/PhotoSlideshow'));
 const ConfettiCanvas = lazy(() => import('../components/ConfettiCanvas').then(m => ({ default: m.ConfettiCanvas })));
 import { useEventPage } from '../hooks/useEventPage';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import { EVENT_LABELS, EVENT_ICONS, THEME_COLORS } from '../types';
 import { EnvelopeReveal } from '../components/EnvelopeReveal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
@@ -58,6 +60,9 @@ export default function EventGuest() {
 
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [slideshowIndex, setSlideshowIndex] = useState<number | null>(null);
+
+  const successRef = useFocusTrap(showSuccessModal);
+  useLockedBody(showSuccessModal);
 
   const [lastClaimedGift, setLastClaimedGift] = useState('');
   const [lastClaimedBy, setLastClaimedBy] = useState('');
@@ -155,9 +160,9 @@ export default function EventGuest() {
           </div>
           <h1 className="text-2xl font-bold text-on-surface mb-2">Evento no encontrado</h1>
           <p className="text-on-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
-          <a href="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
+          <Link to="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
             Ir al inicio
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -556,7 +561,7 @@ export default function EventGuest() {
           )}
 
           <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
-            <p>Hecho por <a href="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</a></p>
+            <p>Hecho por <Link to="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</Link></p>
           </div>
         </div>
 
@@ -579,6 +584,7 @@ export default function EventGuest() {
 
         {showSuccessModal && (
           <div
+            ref={successRef}
             data-testid="success-modal"
             className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl"
             role="dialog"
