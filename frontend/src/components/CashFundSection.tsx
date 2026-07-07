@@ -36,7 +36,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [loadError, setLoadError] = useState(false);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { containerRef: boostTurnstileRef, token: boostTurnstileToken, ready: boostTurnstileReady } = useTurnstile();
+  const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
 
   const canContribute = !isOwner && fund?.isActive;
 
