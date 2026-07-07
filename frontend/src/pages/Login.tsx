@@ -23,7 +23,7 @@ export default function Login() {
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isFormValid = email.length > 0 && password.length > 0;
 
-  const { containerRef, token: turnstileToken, error: turnstileError } = useTurnstile();
+  const { containerRef, token: turnstileToken, error: turnstileError, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -34,6 +34,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
     if (!email || !password) {
       showToast('Completa todos los campos', 'error');
@@ -83,6 +84,7 @@ export default function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      resetTurnstile();
       reportError(err, { source: 'Login' });
       setButtonStatus('shake');
       setLoading(false);

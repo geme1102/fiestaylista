@@ -183,7 +183,15 @@ export default function Dashboard() {
       showToast('La creación está tomando más de lo esperado. Intenta de nuevo.', 'error');
     }, 15000);
     try {
-      const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', formData);
+      const cleanedData = {
+        title: formData.title.trim(),
+        eventType: formData.eventType,
+        hostPhone: formData.hostPhone || undefined,
+        eventDate: formData.eventDate ? new Date(formData.eventDate).toISOString() : undefined,
+        eventLocation: formData.eventLocation || undefined,
+        eventNote: formData.eventNote || undefined,
+      };
+      const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', cleanedData);
       clearTimeout(safetyTimer);
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);

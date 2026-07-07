@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import { db } from '../db/index.js';
 import { users, auditLogs } from '../db/schema.js';
-import { UnauthorizedError, ValidationError } from '../utils/errors.js';
+import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
 import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens } from './auth-tokens.js';
 export { hashToken, revokeAllUserTokens } from './auth-tokens.js';
@@ -65,7 +65,7 @@ export async function register(
       .limit(1);
 
     if (existing) {
-      throw new ValidationError('El correo electrónico ya está registrado');
+      throw new ConflictError('El correo electrónico ya está registrado');
     }
 
     const [newUser] = await tx
@@ -85,6 +85,10 @@ export async function register(
     tokens = await issueTokenPair(user.id, user.email, tx);
   });
   } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
+      throw new ConflictError('El correo electrónico ya está registrado');
+    }
+    if (err instanceof ConflictError) throw err;
     log.error({ err }, 'Error en transacción de registro');
     throw err;
   }

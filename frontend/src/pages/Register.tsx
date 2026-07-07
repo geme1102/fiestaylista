@@ -46,7 +46,7 @@ export default function Register() {
   const isFormValid = name.length > 0 && email.length > 0 && password.length >= 8
     && /[A-Z]/.test(password) && /[0-9]/.test(password) && acceptTerms && acceptPrivacy;
 
-  const { containerRef, token: turnstileToken } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -101,6 +101,7 @@ export default function Register() {
       }
     } catch (err) {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      resetTurnstile();
       reportError(err, { source: 'Register' });
       showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {

@@ -56,7 +56,7 @@ describe('auth service', () => {
       email: 'user@test.com',
       password: 'MyPass1!',
       turnstileToken: 'tok-123',
-    });
+    }, { skipAuthRedirect: true });
     expect(result.user.emailVerified).toBe(true);
   });
 

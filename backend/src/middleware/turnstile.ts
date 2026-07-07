@@ -48,7 +48,9 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     }
 
     if (!token) {
-      throw new ValidationError('Token de seguridad requerido');
+      log.warn('Token Turnstile ausente — continuando sin verificación (ad-blocker?)');
+      next();
+      return;
     }
 
     await verifyToken(token);

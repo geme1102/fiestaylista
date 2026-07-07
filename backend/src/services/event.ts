@@ -51,7 +51,7 @@ export async function createEvent(userId: string, data: CreateEventData) {
     const baseSlug = generateSlug(data.title);
 
     let slug = baseSlug;
-    for (let attempt = 1; attempt < 10; attempt++) {
+    for (let attempt = 1; attempt < 100; attempt++) {
       const existing = await tx
         .select({ id: eventsTable.id })
         .from(eventsTable)
@@ -78,7 +78,7 @@ export async function createEvent(userId: string, data: CreateEventData) {
         .returning();
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
-        throw new ValidationError('Ya existe un evento con ese nombre. Intenta con otro título.');
+        throw new ValidationError('Ya existe un evento con ese nombre o slug. Intenta con otro título.');
       }
       throw err;
     }

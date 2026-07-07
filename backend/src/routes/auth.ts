@@ -25,18 +25,18 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
 }
 
 const registerSchema = z.object({
-  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
+  email: z.string().transform(s => s.trim().toLowerCase()).pipe(z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo')),
   password: z
     .string()
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .max(72, 'La contraseña es demasiado larga')
+    .max(64, 'La contraseña es demasiado larga')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es demasiado largo').transform(s => s.trim()),
+  name: z.string().transform(s => s.trim()).pipe(z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es demasiado largo')),
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
+  email: z.string().transform(s => s.trim().toLowerCase()).pipe(z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo')),
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
@@ -45,7 +45,7 @@ const verifyEmailSchema = z.object({
 });
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo'),
+  email: z.string().transform(s => s.trim().toLowerCase()).pipe(z.string().email('Correo electrónico inválido').max(254, 'Email demasiado largo')),
 });
 
 const resetPasswordSchema = z.object({
@@ -53,7 +53,7 @@ const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .max(72, 'La contraseña es demasiado larga')
+    .max(64, 'La contraseña es demasiado larga')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
@@ -62,7 +62,8 @@ router.post('/register', verifyTurnstileOptional, authLimiter, asyncHandlerWithV
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
   setRefreshCookie(res, result.refreshToken);
-  res.status(201).json(result);
+  const { refreshToken: _, ...safeResult } = result;
+  res.status(201).json(safeResult);
 }));
 
 router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithValidation(async (req, res) => {
@@ -72,7 +73,8 @@ router.post('/login', verifyTurnstileOptional, authLimiter, asyncHandlerWithVali
     ipAddress: req.ip,
   });
   setRefreshCookie(res, result.refreshToken);
-  res.json(result);
+  const { refreshToken: _, ...safeResult } = result;
+  res.json(safeResult);
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {

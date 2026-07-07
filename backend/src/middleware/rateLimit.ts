@@ -147,3 +147,12 @@ export const rsvpLimiter = rateLimit({
   keyGenerator,
   message: msg('Demasiados RSVP. Intenta de nuevo en un minuto.'),
 });
+
+export const createEventLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: msg('Demasiados eventos creados. Intenta de nuevo en un minuto.'),
+});

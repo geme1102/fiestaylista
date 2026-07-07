@@ -10,7 +10,7 @@ import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.
 import { stripHtml } from '../utils/sanitize.js';
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
-import { viewLimiter } from '../middleware/rateLimit.js';
+import { createEventLimiter, viewLimiter } from '../middleware/rateLimit.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 
 const router = Router();
@@ -47,7 +47,7 @@ router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   res.json({ events });
 }));
 
-router.post('/', requireAuth, requireEmailVerified, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, requireEmailVerified, createEventLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = createEventSchema.parse(req.body) as CreateEventData;
   const event = await eventService.createEvent(req.user!.userId, data);
   res.status(201).json({ event });
