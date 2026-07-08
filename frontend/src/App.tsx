@@ -47,7 +47,6 @@ function PwaUpdater() {
       if (refreshing) return;
       refreshing = true;
       setUpdateAvailable(true);
-      setTimeout(() => window.location.reload(), 2000);
     };
     navigator.serviceWorker?.addEventListener('controllerchange', handler);
     return () => navigator.serviceWorker?.removeEventListener('controllerchange', handler);
@@ -56,10 +55,14 @@ function PwaUpdater() {
   if (!updateAvailable) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] bg-primary text-on-primary px-6 py-3 rounded-2xl shadow-2xl font-semibold text-sm animate-fade-in" role="status">
+    <button
+      onClick={() => window.location.reload()}
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] bg-primary text-on-primary px-6 py-3 rounded-2xl shadow-2xl font-semibold text-sm animate-fade-in cursor-pointer hover:scale-105 transition-transform"
+      role="status"
+    >
       <span className="material-symbols-outlined text-sm align-middle mr-2" aria-hidden="true">system_update</span>
-      ¡Nueva versión disponible! Actualizando...
-    </div>
+      ¡Nueva versión disponible! Toca para actualizar
+    </button>
   );
 }
 

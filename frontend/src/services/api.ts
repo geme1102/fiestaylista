@@ -257,9 +257,6 @@ export const apiClient = {
               resolve(doUpload(accessToken));
               return;
             }
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
-            }
             reject(new Error('Sesión expirada. Serás redirigido al inicio de sesión.'));
             return;
           }

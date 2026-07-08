@@ -14,5 +14,5 @@ export function logout(): Promise<{ success: boolean }> {
 }
 
 export function getMe(): Promise<{ user: User | null; isGuest?: boolean }> {
-  return apiClient.get<{ user: User | null; isGuest?: boolean }>('/api/auth/me');
+  return apiClient.get<{ user: User | null; isGuest?: boolean }>('/api/auth/me', { skipAuthRedirect: true, skipRefresh: true });
 }

@@ -66,7 +66,7 @@ describe('auth service', () => {
 
     const result = await getMe();
 
-    expect(mockGet).toHaveBeenCalledWith('/api/auth/me');
+    expect(mockGet).toHaveBeenCalledWith('/api/auth/me', { skipAuthRedirect: true, skipRefresh: true });
     expect(result.user).toEqual({ id: '1', name: 'Test' });
   });
 });
