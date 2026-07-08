@@ -87,9 +87,7 @@ export default function Account() {
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
     try {
-      const res = await apiClient.post<{ message: string; mpWarning?: string }>('/api/subscriptions/cancel', {}, {
-        headers: { 'x-password': cancelPassword },
-      });
+      const res = await apiClient.post<{ message: string; mpWarning?: string }>('/api/subscriptions/cancel', { password: cancelPassword });
       showToast(res.message, 'success');
       if (res.mpWarning) {
         showToast(res.mpWarning, 'info');
@@ -136,9 +134,7 @@ export default function Account() {
   const handleDeleteAccount = async () => {
     setDeletingAccount(true);
     try {
-      await apiClient.post('/api/auth/arco/delete-account', {}, {
-        headers: { 'x-password': deletePassword },
-      });
+      await apiClient.post('/api/auth/arco/delete-account', { password: deletePassword });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteConfirm(false);
       setDeletePassword('');

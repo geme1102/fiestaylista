@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-import { requireAuth, requireEmailVerified } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { arcoLimiter } from '../middleware/rateLimit.js';
 import * as arcoService from '../services/arco.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
@@ -23,7 +23,7 @@ router.get('/my-data', requireAuth, arcoLimiter, asyncHandler(async (req: AuthRe
   res.json({ data });
 }));
 
-router.post('/delete-account', requireAuth, requireEmailVerified, arcoLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/delete-account', requireAuth, arcoLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const { password } = z.object({ password: z.string().min(1, 'Contraseña requerida para eliminar la cuenta') }).parse(req.body);
 
   const [user] = await db

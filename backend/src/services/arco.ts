@@ -1,12 +1,11 @@
 import { eq, and, inArray } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
-import { randomBytes } from 'node:crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
+import { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('ARCO');
@@ -137,22 +136,8 @@ export async function deleteUserAccount(userId: string) {
     }
   }
 
-  // Soft-delete: anonimizar datos personales en vez de hard-delete
-  // para preservar integridad referencial de eventos, regalos, etc.
-  await db.update(users)
-    .set({
-      email: `deleted-${userId.slice(0, 8)}@anonymous.fiestaylista.com`,
-      name: 'Usuario Eliminado',
-      tier: 'free',
-      passwordHash: await bcrypt.hash(randomBytes(32).toString('hex'), 12),
-      emailVerified: false,
-      verificationToken: null,
-      verificationTokenExpires: null,
-      resetToken: null,
-      resetTokenExpires: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, userId));
+  await revokeAllUserTokens(userId);
+  await db.delete(users).where(eq(users.id, userId));
 }
 
 export async function createArcoRequest(

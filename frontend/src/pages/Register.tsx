@@ -76,6 +76,8 @@ export default function Register() {
       return;
     }
 
+    setLoading(true);
+
     let token = turnstileToken;
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
@@ -84,7 +86,6 @@ export default function Register() {
       if (import.meta.env.DEV) console.warn('[Register] Turnstile no disponible — continuando sin verificación');
     }
 
-    setLoading(true);
     safetyTimerRef.current = setTimeout(() => {
       setLoading(false);
       showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');

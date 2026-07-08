@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { reportError } from '../lib/reportError';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
@@ -101,8 +101,7 @@ interface ArcoRequest {
 
 export default function ArcoRights() {
   const [lang, setLang] = useState<Lang>('es');
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<ArcoRequest[]>([]);
   const [showRequests, setShowRequests] = useState(false);
@@ -145,11 +144,11 @@ export default function ArcoRights() {
   const handleDeleteAccount = async () => {
     setLoading(true);
     try {
-      await apiClient.post('/api/auth/arco/delete-account', {}, { headers: { 'x-password': deletePassword } });
+      await apiClient.post('/api/auth/arco/delete-account', { password: deletePassword });
       showToast('Cuenta eliminada permanentemente', 'success');
       setShowDeleteModal(false);
       setDeletePassword('');
-      navTimerRef.current = setTimeout(() => { navigate('/'); }, 2000);
+      logout();
     } catch (err) {
       reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');

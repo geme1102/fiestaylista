@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 const mockLoginApi = vi.hoisted(() => vi.fn());
 const mockRegisterApi = vi.hoisted(() => vi.fn());
 const mockGetMe = vi.hoisted(() => vi.fn());
+const mockLogout = vi.hoisted(() => vi.fn(() => Promise.resolve({ success: true })));
 const mockSetTokens = vi.hoisted(() => vi.fn());
 const mockClearTokens = vi.hoisted(() => vi.fn());
 const mockGetAccessToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | null>(() => null));
@@ -15,6 +16,7 @@ vi.mock('../services/auth', () => ({
   login: mockLoginApi,
   register: mockRegisterApi,
   getMe: mockGetMe,
+  logout: mockLogout,
 }));
 
 vi.mock('../services/api', () => ({

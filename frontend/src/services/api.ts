@@ -30,6 +30,7 @@ interface RequestOptions {
   timeout?: number;
   signal?: AbortSignal;
   skipAuthRedirect?: boolean;
+  skipRefresh?: boolean;
 }
 
 async function request<T>(method: HttpMethod, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
@@ -98,6 +99,16 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       }
 
       if (res.status === 401) {
+        if (options?.skipRefresh) {
+          let errorMsg = 'Error 401';
+          try {
+            const err = await res.json();
+            errorMsg = err.error ?? err.message ?? errorMsg;
+          } catch {
+            // ignore
+          }
+          throw new Error(errorMsg);
+        }
         const refreshed = await tryRefreshToken();
         if (refreshed) {
           headers['Authorization'] = `Bearer ${accessToken}`;

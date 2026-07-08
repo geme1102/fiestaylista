@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User, AuthResponse } from '../types';
-import { login as loginApi, register as registerApi, getMe } from '../services/auth';
+import { login as loginApi, register as registerApi, getMe, logout as logoutApi } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, tryRefreshToken, apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    apiClient.post('/api/auth/logout').catch((err) => {
+    logoutApi().catch((err) => {
       reportError(err, { source: 'AuthContext' });
       if (import.meta.env.DEV) console.error('[Auth] Error en logout:', err);
     });
