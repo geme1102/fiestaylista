@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await getMe();
         if (!mountedRef.current) return;
-        if (res.isGuest) {
+        if (!res.user || res.isGuest) {
           clearTokens();
           setUser(null);
         } else {
@@ -74,6 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {
     const res = await loginApi(email, password, turnstileToken);
+    if (!res.accessToken || !res.user) {
+      throw new Error('Respuesta inválida del servidor. Intenta de nuevo más tarde.');
+    }
     setTokens(res.accessToken);
     setUser(res.user);
     return res;
@@ -81,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (email: string, password: string, name: string, turnstileToken?: string) => {
     const res = await registerApi(email, password, name, turnstileToken);
+    if (!res.accessToken || !res.user) {
+      throw new Error('Respuesta inválida del servidor al registrarse. Intenta de nuevo.');
+    }
     setTokens(res.accessToken);
     setUser(res.user);
     return res;
@@ -99,6 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const res = await getMe();
+      if (!res.user) {
+        clearTokens();
+        setUser(null);
+        return;
+      }
       setUser(res.user);
     } catch (err) {
       reportError(err, { source: 'AuthContext' });

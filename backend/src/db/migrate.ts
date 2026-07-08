@@ -141,42 +141,72 @@ const TIMESTAMPTZ_ALTERS: string[] = [
 const TIMESTAMPTZ_MIGRATION_NAME = 'timestamptz_conversion';
 
 export async function runMigrations(): Promise<void> {
-  try {
-    // Ensure migration_journal table exists
-    await sql.unsafe(`
-      CREATE TABLE IF NOT EXISTS "migration_journal" (
-        "id" SERIAL PRIMARY KEY,
-        "name" TEXT NOT NULL UNIQUE,
-        "applied_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `);
+  // Ensure migration_journal table exists
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS "migration_journal" (
+      "id" SERIAL PRIMARY KEY,
+      "name" TEXT NOT NULL UNIQUE,
+      "applied_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
-    const appliedRows = await sql`SELECT "name" FROM "migration_journal"`;
-    const appliedNames = new Set(appliedRows.map((r: any) => r.name));
+  const appliedRows = await sql`SELECT "name" FROM "migration_journal"`;
+  const appliedNames = new Set(appliedRows.map((r: any) => r.name));
 
-    await sql.begin(async (tx) => {
-      for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
-        const name = COLUMN_MIGRATION_NAMES[i];
-        if (!appliedNames.has(name)) {
-          log.info({ migration: name }, 'Aplicando migración');
-          await tx.unsafe(COLUMN_MIGRATIONS[i]);
-          await tx`INSERT INTO "migration_journal" ("name") VALUES (${name}) ON CONFLICT DO NOTHING`;
-          log.info({ migration: name }, 'Migración aplicada');
-        }
-      }
+  // Apply each column migration individually (not in a single transaction)
+  // so a single failure doesn't block the rest.
+  for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
+    const name = COLUMN_MIGRATION_NAMES[i];
+    if (appliedNames.has(name)) continue;
 
-      if (!appliedNames.has(TIMESTAMPTZ_MIGRATION_NAME)) {
-        log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Aplicando migración timestamptz');
-        for (const statement of TIMESTAMPTZ_ALTERS) {
-          await tx.unsafe(statement);
-        }
-        await tx`INSERT INTO "migration_journal" ("name") VALUES (${TIMESTAMPTZ_MIGRATION_NAME}) ON CONFLICT DO NOTHING`;
-        log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Migración timestamptz aplicada');
-      }
-    });
-    log.info('Migraciones aplicadas correctamente');
-  } catch (e) {
-    log.error('Migraciones fallidas, rollback ejecutado');
-    throw e;
+    log.info({ migration: name }, 'Aplicando migración');
+    try {
+      await sql.begin(async (tx) => {
+        await tx.unsafe(COLUMN_MIGRATIONS[i]);
+        await tx`INSERT INTO "migration_journal" ("name") VALUES (${name}) ON CONFLICT DO NOTHING`;
+      });
+      log.info({ migration: name }, 'Migración aplicada');
+    } catch (err) {
+      log.warn({ migration: name, err }, 'Migración falló — saltando');
+    }
   }
+
+  // Apply timestamptz conversion, each ALTER individually wrapped in IF EXISTS
+  if (!appliedNames.has(TIMESTAMPTZ_MIGRATION_NAME)) {
+    log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Aplicando migración timestamptz');
+    let anyFailed = false;
+
+    for (const statement of TIMESTAMPTZ_ALTERS) {
+      // Only run if the column exists
+      const match = statement.match(/ALTER TABLE (\w+) ALTER COLUMN (\w+)/i);
+      if (match) {
+        const table = match[1];
+        const column = match[2];
+        try {
+          const exists = await sql`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = ${table} AND column_name = ${column}
+          `;
+          if (exists.length > 0) {
+            await sql.unsafe(statement);
+          } else {
+            log.warn({ table, column }, 'Columna no existe, saltando conversión timestamptz');
+            anyFailed = true;
+          }
+        } catch (err) {
+          log.warn({ table, column, err }, 'Error en conversión timestamptz — saltando');
+          anyFailed = true;
+        }
+      }
+    }
+
+    if (!anyFailed) {
+      await sql`INSERT INTO "migration_journal" ("name") VALUES (${TIMESTAMPTZ_MIGRATION_NAME}) ON CONFLICT DO NOTHING`;
+      log.info({ migration: TIMESTAMPTZ_MIGRATION_NAME }, 'Migración timestamptz aplicada');
+    } else {
+      log.warn('Algunas conversiones timestamptz fallaron — no se marca como aplicada');
+    }
+  }
+
+  log.info('Migraciones ejecutadas');
 }

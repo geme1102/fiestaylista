@@ -1,7 +1,6 @@
 console.log('[startup] Iniciando servidor...');
 
 import cluster from 'node:cluster';
-import http from 'node:http';
 import { config } from './config.js';
 import { sql } from './db/index.js';
 import { runMigrations } from './db/migrate.js';
@@ -12,8 +11,6 @@ import { stopSSEScavenger } from './services/notifications.js';
 import { logger } from './utils/logger.js';
 
 console.log('[startup] Imports cargados correctamente');
-
-let app: Express | undefined;
 
 const workerCount = config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : (config.NODE_ENV === 'production' ? 1 : 0);
 
@@ -40,38 +37,33 @@ if (cluster.isPrimary && workerCount > 1) {
   process.on('SIGTERM', () => shutdownSignal('SIGTERM'));
   process.on('SIGINT', () => shutdownSignal('SIGINT'));
 } else {
+  let app: Express;
+
   try {
     console.log('[startup] Creando aplicación...');
     app = createApp();
     console.log('[startup] Aplicación creada exitosamente');
   } catch (e) {
     console.error('[startup] Error creando aplicación:', e);
-    console.log('[startup] Iniciando servidor de respaldo (solo healthcheck)...');
     app = express();
-    app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+    app.get('/api/health', (_req, res) => res.json({ status: 'error', message: 'Falló al crear la app Express' }));
+    app.get('/health', (_req, res) => res.json({ status: 'error', message: 'Falló al crear la app Express' }));
   }
 
-  try {
-    ;(async () => {
+  (async () => {
     console.log('[startup] Aplicando migraciones antes de iniciar servidor...');
+    let migrationsOk = false;
     try {
       await runMigrations();
+      migrationsOk = true;
       console.log('[startup] Migraciones aplicadas correctamente');
     } catch (err) {
-      logger.fatal({ err }, 'Error aplicando migraciones — abortando inicio');
-      console.log('[startup] Error en migraciones, iniciando servidor de respaldo...');
-      const fs = http.createServer((_req: any, res: any) => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok', migrations: 'failed' }));
-      });
-      fs.listen(config.PORT, () => {
-        console.log('[startup] Servidor de respaldo (sin migraciones) en puerto', config.PORT);
-      });
-      return;
+      logger.fatal({ err }, 'Error aplicando migraciones — el servidor continuará en modo degradado');
+      console.log('[startup] Error en migraciones, continuando en modo degradado...');
     }
 
     console.log('[startup] Iniciando servidor en puerto', config.PORT);
-    const server = app!.listen(config.PORT, () => {
+    const server = app.listen(config.PORT, () => {
       logger.info({
         port: config.PORT,
         environment: config.NODE_ENV,
@@ -79,7 +71,7 @@ if (cluster.isPrimary && workerCount > 1) {
         backend: config.BACKEND_URL,
         workerId: cluster.isWorker ? `worker-${cluster.worker?.id}` : 'primary',
       }, 'Servidor iniciado');
-      startCronJobs();
+      if (migrationsOk) startCronJobs();
     });
 
     server.timeout = 30000;
@@ -91,7 +83,7 @@ if (cluster.isPrimary && workerCount > 1) {
     function gracefulShutdown(signal: string, exitCode = 0) {
       logger.warn({ signal, exitCode }, 'Cerrando servidor...');
       stopSSEScavenger();
-      stopCronJobs();
+      if (migrationsOk) stopCronJobs();
       server.close(() => {
         sql.end({ timeout: 5 }).then(() => {
           logger.info('Conexiones cerradas correctamente.');
@@ -113,18 +105,5 @@ if (cluster.isPrimary && workerCount > 1) {
     process.on('unhandledRejection', (reason) => {
       logger.error({ err: reason }, 'Promesa rechazada no capturada — el servidor continúa funcionando');
     });
-    })();
-  } catch (e) {
-    console.error('[startup] Error fatal al iniciar el servidor:', e);
-    console.log('[startup] Iniciando servidor HTTP mínimo en puerto', config.PORT);
-    const fallbackServer = http.createServer((_req: any, res: any) => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok' }));
-    });
-    fallbackServer.listen(config.PORT, () => {
-      console.log('[startup] Servidor de respaldo escuchando en puerto', config.PORT);
-    });
-  }
+  })();
 }
-
-export default app;
