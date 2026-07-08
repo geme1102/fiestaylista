@@ -62,6 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { mountedRef.current = false; };
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      clearTokens();
+      setUser(null);
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('auth:session-expired', handler);
+    return () => window.removeEventListener('auth:session-expired', handler);
+  }, [navigate]);
+
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {
     const res = await loginApi(email, password, turnstileToken);
     setTokens(res.accessToken);

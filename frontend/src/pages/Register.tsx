@@ -265,7 +265,7 @@ export default function Register() {
               </Button>
             </form>
 
-            <div ref={containerRef} className="absolute -z-10 opacity-0" />
+            <div ref={containerRef} className="absolute" />
           </div>
         </div>
       </main>

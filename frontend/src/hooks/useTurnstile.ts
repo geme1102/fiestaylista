@@ -37,12 +37,16 @@ export function useTurnstile() {
   const widgetId = useRef<string | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorCountRef = useRef(0);
+  const isMountedRef = useRef(true);
+  const MAX_ERROR_TOTAL = 5;
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
   }, []);
@@ -64,10 +68,15 @@ export function useTurnstile() {
           'error-callback': () => {
             setToken(null);
             errorCountRef.current += 1;
+            if (errorCountRef.current >= MAX_ERROR_TOTAL) {
+              setError('La verificación de seguridad no está disponible después de varios intentos. Desactiva tu bloqueador de anuncios o intenta con otro navegador.');
+              return;
+            }
             if (errorCountRef.current >= 2 && widgetId.current && window.turnstile) {
               try {
                 window.turnstile.remove(widgetId.current);
               } catch {}
+              if (!isMountedRef.current) return;
               widgetId.current = window.turnstile.render(containerRef.current!, {
                 sitekey: SITE_KEY,
                 callback: (t: string) => { setToken(t); setError(null); },

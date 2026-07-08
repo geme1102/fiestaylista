@@ -133,8 +133,9 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
           }
         } else {
+          clearTokens();
           if (typeof window !== 'undefined' && !options?.skipAuthRedirect) {
-            window.location.href = '/login';
+            window.dispatchEvent(new CustomEvent('auth:session-expired'));
           }
           throw new Error('Sesión expirada. Serás redirigido al inicio de sesión.');
         }

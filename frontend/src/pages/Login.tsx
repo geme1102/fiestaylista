@@ -41,6 +41,9 @@ export default function Login() {
       return;
     }
 
+    setLoading(true);
+    setButtonStatus('loading');
+
     let token = turnstileToken;
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
@@ -48,9 +51,6 @@ export default function Login() {
     if (!token) {
       if (import.meta.env.DEV) console.warn('[Login] Turnstile no disponible — continuando sin verificación');
     }
-
-    setLoading(true);
-    setButtonStatus('loading');
     safetyTimerRef.current = setTimeout(() => {
       setLoading(false);
       setButtonStatus('idle');
@@ -218,7 +218,7 @@ export default function Login() {
                 </div>
               </div>
             )}
-            <div ref={containerRef} className="absolute -z-10 opacity-0" />
+            <div ref={containerRef} className="absolute" />
           </div>
         </div>
       </main>

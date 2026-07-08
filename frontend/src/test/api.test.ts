@@ -220,21 +220,22 @@ describe('401 refresh token flow', () => {
     expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 
-  it('redirects to /login when refresh fails', async () => {
+  it('clears tokens and dispatches session-expired when refresh fails', async () => {
     mockFetchOnce(401);
     mockFetchOnce(401);
 
-    const originalLocation = window.location.href;
-    delete (window as any).location;
-    (window as any).location = { href: '' };
+    const events: string[] = [];
+    const handler = (e: Event) => events.push(e.type);
+    window.addEventListener('auth:session-expired', handler);
 
     setTokens('expired-token');
     await expect(apiClient.get('/api/protected')).rejects.toThrow(
       'Sesión expirada'
     );
-    expect(window.location.href).toBe('/login');
+    expect(getAccessToken()).toBeNull();
+    expect(events).toContain('auth:session-expired');
 
-    window.location.href = originalLocation;
+    window.removeEventListener('auth:session-expired', handler);
   });
 });
 
