@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +19,7 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
   const [lineIdx, setLineIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -33,7 +34,8 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
           setDisplayed(current.slice(0, charIdx + 1));
           setCharIdx((i) => i + 1);
         } else {
-          setTimeout(() => setDeleting(true), pauseTime);
+          clearTimeout(pauseTimerRef.current);
+          pauseTimerRef.current = setTimeout(() => setDeleting(true), pauseTime);
         }
       } else {
         if (charIdx > 0) {
@@ -45,7 +47,10 @@ function useTypewriter(texts: string[], typingSpeed = 55, deletingSpeed = 30, pa
         }
       }
     }, deleting ? deletingSpeed : typingSpeed);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      clearTimeout(pauseTimerRef.current);
+    };
   }, [charIdx, deleting, lineIdx, texts, typingSpeed, deletingSpeed, pauseTime]);
 
   return displayed;

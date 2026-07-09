@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -75,9 +75,15 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
     setStep((s) => s + 1);
   }, [isLast]);
 
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => timersRef.current.forEach(clearTimeout);
+  }, []);
+
   const handleSkip = useCallback(() => {
     setExiting(true);
-    setTimeout(onComplete, 300);
+    timersRef.current.push(setTimeout(onComplete, 300));
   }, [onComplete]);
 
   const handleFinish = useCallback(() => {
@@ -86,7 +92,7 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
     if (!hasEvents) {
       onCreateEvent();
     }
-    setTimeout(onComplete, 300);
+    timersRef.current.push(setTimeout(onComplete, 300));
   }, [hasEvents, onCreateEvent, onComplete, exiting]);
 
   const slideVariants = {

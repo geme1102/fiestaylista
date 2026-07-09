@@ -19,15 +19,17 @@ interface MessagesPanelProps {
 export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`);
       setMessages(res.messages || []);
     } catch (err) {
       reportError(err, { source: 'MessagesPanel' });
-      showToast('Error al cargar los mensajes', 'error');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,23 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
             <div key={i} className="h-16 bg-surface-container-highest rounded-xl animate-pulse" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-4 bg-surface-container rounded-2xl text-center">
+        <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-3">
+          <span className="material-symbols-outlined text-xl text-red-400">error_outline</span>
+        </div>
+        <p className="text-sm font-semibold text-on-surface-variant">Error al cargar mensajes</p>
+        <button
+          onClick={loadMessages}
+          className="mt-3 px-4 py-2 text-xs font-semibold text-primary bg-primary-fixed/30 rounded-full min-h-[36px]"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }

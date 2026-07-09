@@ -46,6 +46,7 @@ export function useEventPage() {
   const loadEventRef = useRef<() => Promise<void>>(undefined);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const cancelPollRef = useRef<(() => void) | null>(null);
@@ -142,6 +143,7 @@ export function useEventPage() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
       clearTimeout(safetyTimerRef.current);
+      clearTimeout(shakeTimerRef.current);
     };
   }, [slug]);
 
@@ -178,7 +180,8 @@ export function useEventPage() {
       inputRef.current?.focus();
       inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setShaking(true);
-      setTimeout(() => setShaking(false), 600);
+      clearTimeout(shakeTimerRef.current);
+      shakeTimerRef.current = setTimeout(() => setShaking(false), 600);
       return;
     }
 
@@ -246,7 +249,14 @@ export function useEventPage() {
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
       reportError(err, { source: 'useEventPage' });
-      window.open(url, '_blank');
+      try {
+        const safe = new URL(url);
+        if (safe.protocol === 'https:' || safe.protocol === 'http:') {
+          window.open(url, '_blank');
+        }
+      } catch {
+        /* invalid URL — ignore */
+      }
     }
   }, []);
 

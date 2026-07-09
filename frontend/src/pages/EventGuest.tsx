@@ -380,7 +380,7 @@ export default function EventGuest() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
             >
-              <RsvpForm eventId={event.id} eventTitle={event.title} guestName={guestName} />
+              <SectionErrorBoundary sectionName="RsvpForm"><RsvpForm eventId={event.id} eventTitle={event.title} guestName={guestName} /></SectionErrorBoundary>
             </motion.div>
           )}
 
@@ -447,6 +447,7 @@ export default function EventGuest() {
               </div>
             )}
 
+            <SectionErrorBoundary sectionName="GiftCardGrid">
             <AnimatePresence mode="wait">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredGifts.map((gift) => (
@@ -459,6 +460,7 @@ export default function EventGuest() {
                 ))}
               </div>
             </AnimatePresence>
+            </SectionErrorBoundary>
 
             {claimedGifts.length > 0 && (
               <motion.div
@@ -471,6 +473,7 @@ export default function EventGuest() {
                   <span>💝</span>
                   Ya apartados ({categoryFilter ? claimedGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter).length : claimedGifts.length})
                 </h3>
+                <SectionErrorBoundary sectionName="ClaimedGiftsGrid">
                 <AnimatePresence mode="wait">
                   <div className="space-y-2">
                     {(categoryFilter ? claimedGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter) : claimedGifts).map((gift) => (
@@ -482,6 +485,7 @@ export default function EventGuest() {
                     ))}
                   </div>
                 </AnimatePresence>
+                </SectionErrorBoundary>
               </motion.div>
             )}
           </div>
@@ -509,7 +513,7 @@ export default function EventGuest() {
               )}
             </div>
 
-            <GuestPhotoUpload eventId={event.id} onUploaded={reloadEvent} />
+            <SectionErrorBoundary sectionName="GuestPhotoUpload"><GuestPhotoUpload eventId={event.id} onUploaded={reloadEvent} /></SectionErrorBoundary>
 
             {photos.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -545,7 +549,7 @@ export default function EventGuest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
           >
-            <MessageWall eventId={event.id} guestName={guestName} />
+            <SectionErrorBoundary sectionName="MessageWall"><MessageWall eventId={event.id} guestName={guestName} /></SectionErrorBoundary>
           </motion.div>
 
           {event.status !== 'completed' && (

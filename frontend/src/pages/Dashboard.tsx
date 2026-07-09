@@ -19,6 +19,7 @@ import { cn } from '../utils/cn';
 import { completeWelcome } from '../services/onboarding';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { WelcomeModal } from '../components/WelcomeModal';
+import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import InstallPwaBanner from '../components/InstallPwaBanner';
 import SubscriptionBanners from '../components/dashboard/SubscriptionBanners';
 
@@ -367,6 +368,7 @@ export default function Dashboard() {
           </div>
         </section>
       ) : (
+            <SectionErrorBoundary sectionName="DashboardEventCards">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {events.map((event) => {
                 const theme = THEME_COLORS[event.eventType];
@@ -463,6 +465,7 @@ export default function Dashboard() {
                 );
               })}
             </div>
+            </SectionErrorBoundary>
       )}
 
       {deleteConfirm && (

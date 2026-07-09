@@ -60,6 +60,7 @@ export default function EventAdmin() {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const [newGiftName, setNewGiftName] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -144,7 +145,9 @@ export default function EventAdmin() {
   ], []);
 
   const handleTourComplete = useCallback(() => {
-    completeOnboarding().then(() => refreshUser());
+    completeOnboarding().then(() => refreshUser()).catch((err) => {
+      reportError(err, { source: 'EventAdmin' });
+    });
   }, [refreshUser]);
 
   const loadEvent = useCallback(async () => {
@@ -166,7 +169,7 @@ export default function EventAdmin() {
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
     } catch (err) {
       reportError(err, { source: 'EventAdmin' });
-      showToast('Error al cargar el evento. Recarga la página e intenta de nuevo.', 'error');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -472,6 +475,26 @@ export default function EventAdmin() {
   }
 
   if (!event) {
+    if (loadError) {
+      return (
+        <div className="text-center py-20 px-4">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center text-4xl">
+            ⚠️
+          </div>
+          <p className="text-on-surface-variant font-semibold mb-2">Error al cargar el evento</p>
+          <p className="text-sm text-on-surface-variant/60 mb-6 max-w-md mx-auto">Revisa tu conexión e intenta de nuevo.</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <button
+              onClick={() => { setLoadError(false); setLoading(true); loadEvent(); }}
+              className="px-6 py-3 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg"
+            >
+              Reintentar
+            </button>
+            <Link to="/dashboard" className="px-6 py-3 min-h-[44px] border border-outline-variant text-on-surface rounded-full font-semibold inline-block hover:bg-surface-container-low">Volver al dashboard</Link>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="text-center py-20 px-4">
         <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed-dim flex items-center justify-center text-4xl">
@@ -681,9 +704,11 @@ onClick={() => {
           {/* Cash Fund Section for Admin */}
           {(isBoosted || cashFund?.isActive) && id && (
             <div className="mt-6">
+              <SectionErrorBoundary sectionName="CashFundSectionAdmin">
               <Suspense fallback={<div className="h-32 bg-gray-50 rounded-2xl animate-pulse" />}>
                 <CashFundSection eventId={id} isOwner={true} />
               </Suspense>
+              </SectionErrorBoundary>
             </div>
           )}
 

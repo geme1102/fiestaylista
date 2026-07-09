@@ -26,6 +26,11 @@ export function EnvelopeReveal({
   const [backdropVisible, setBackdropVisible] = useState(true);
   const expandingCardRef = useRef(false);
   const hasCompleted = useRef(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => timersRef.current.forEach(clearTimeout);
+  }, []);
 
   // Phase transitions
   useEffect(() => {
@@ -50,14 +55,14 @@ export function EnvelopeReveal({
     if (phase !== 'waiting') return;
     setPhase('breaking');
 
-    setTimeout(() => {
+    timersRef.current.push(setTimeout(() => {
       setShowMiniCard(true);
       confettiBurst();
-    }, 800);
+    }, 800));
 
-    setTimeout(() => {
+    timersRef.current.push(setTimeout(() => {
       setPhase('card');
-    }, 1200);
+    }, 1200));
   }, [phase, confettiBurst]);
 
   const handleMiniCardClick = useCallback(() => {
@@ -68,9 +73,9 @@ export function EnvelopeReveal({
     setMiniCardScale(1.05);
     setMiniCardOpacity(0);
 
-    setTimeout(() => setEnvelopeOpacity(0), 100);
-    setTimeout(() => setEnvelopeBlur(12), 100);
-    setTimeout(() => cleanup(), 600);
+    timersRef.current.push(setTimeout(() => setEnvelopeOpacity(0), 100));
+    timersRef.current.push(setTimeout(() => setEnvelopeBlur(12), 100));
+    timersRef.current.push(setTimeout(() => cleanup(), 600));
   }, [cleanup]);
 
   const displayName = guestName || 'ti';

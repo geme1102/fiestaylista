@@ -21,7 +21,7 @@ interface GuestsPanelProps {
 export default function GuestsPanel({ eventId }: GuestsPanelProps) {
   const [showAll, setShowAll] = useState(false);
 
-  const { data: guests = [], isLoading } = useQuery({
+  const { data: guests = [], isLoading, isError } = useQuery({
     queryKey: ['guests', eventId],
     queryFn: () => apiClient.get<{ guests: Guest[] }>(`/api/events/${eventId}/guests`),
     select: (data) => data.guests || [],
@@ -32,6 +32,18 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
   const notConfirmed = guests.filter((g) => !g.isConfirmed);
   const totalCompanions = confirmed.reduce((sum, g) => sum + g.companions, 0);
   const totalPeople = confirmed.length + totalCompanions;
+
+  if (isError) {
+    return (
+      <div className="glass rounded-3xl p-6 md:p-8 border border-outline-variant/20 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <span className="material-symbols-outlined text-2xl text-red-400">error_outline</span>
+        </div>
+        <p className="text-sm font-semibold text-on-surface-variant">Error al cargar invitados</p>
+        <p className="text-xs text-on-surface-variant/60 mt-1">Revisa tu conexión e intenta de nuevo.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

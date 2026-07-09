@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
 
@@ -39,12 +39,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
+  const rippleTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    return () => {
+      mq.removeEventListener('change', handler);
+      rippleTimersRef.current.forEach(clearTimeout);
+    };
   }, []);
 
   const handleClick = useCallback(
@@ -52,7 +56,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       const rect = e.currentTarget.getBoundingClientRect();
       const id = Date.now();
       setRipples((prev) => [...prev, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
-      setTimeout(() => setRipples((prev) => prev.filter((r) => r.id !== id)), 600);
+      const timer = setTimeout(() => {
+        rippleTimersRef.current.delete(timer);
+        setRipples((prev) => prev.filter((r) => r.id !== id));
+      }, 600);
+      rippleTimersRef.current.add(timer);
       onClick?.(e);
     },
     [onClick],

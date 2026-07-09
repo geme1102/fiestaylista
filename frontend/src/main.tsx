@@ -2,13 +2,24 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Toaster } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import * as Sentry from '@sentry/react';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import CookieBanner from './components/CookieBanner';
 import App from './App';
 import './index.css';
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.warn('[global] Unhandled rejection:', event.reason);
+  toast.error('Ocurrió un error inesperado. Recarga la página si el problema persiste.');
+});
+
+window.onerror = (_message, _source, _lineno, _colno, error) => {
+  if (!error) return;
+  console.warn('[global] Unhandled error:', error);
+  toast.error('Ocurrió un error inesperado. Recarga la página si el problema persiste.');
+};
 
 if (import.meta.env.VITE_SENTRY_DSN) {
   try {
