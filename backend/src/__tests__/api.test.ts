@@ -259,6 +259,7 @@ const mockSubscriptionService = vi.hoisted(() => ({
   getCurrentSubscription: vi.fn(),
   cancelSubscription: vi.fn(),
   createOrUpdateSubscription: vi.fn(),
+  reconcileSubscriptionOnLogin: vi.fn(),
 }));
 
 vi.mock('../services/subscription.js', () => mockSubscriptionService);

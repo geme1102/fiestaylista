@@ -5,6 +5,7 @@ import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middle
 import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
+import { reconcileSubscriptionOnLogin } from '../services/subscription.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -73,6 +74,7 @@ router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithVali
     ipAddress: req.ip,
   });
   setRefreshCookie(res, result.refreshToken);
+  reconcileSubscriptionOnLogin(result.user.id);
   const { refreshToken: _, ...safeResult } = result;
   res.json(safeResult);
 }));

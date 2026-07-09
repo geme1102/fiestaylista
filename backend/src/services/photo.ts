@@ -114,12 +114,13 @@ export async function deletePhoto(photoId: string) {
   const publicId = getPublicIdFromUrl(photo.url);
   if (publicId) {
     try {
+      let timer: ReturnType<typeof setTimeout>;
       await Promise.race([
         cloudinary.uploader.destroy(publicId),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Cloudinary request timed out')), 10000),
-        ),
-      ]);
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Cloudinary request timed out')), 10000);
+        }),
+      ]).finally(() => clearTimeout(timer!));
     } catch (err) {
       log.error({ err }, 'Error al eliminar de Cloudinary:');
     }

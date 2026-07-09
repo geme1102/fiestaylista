@@ -119,14 +119,15 @@ export async function deleteUserAccount(userId: string) {
     for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
       const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
       const results = await Promise.allSettled(
-        batch.map(publicId =>
-          Promise.race([
+        batch.map(publicId => {
+          let timer: ReturnType<typeof setTimeout>;
+          return Promise.race([
             cloudinary.uploader.destroy(publicId),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Cloudinary timeout')), 10000),
-            ),
-          ]),
-        ),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => reject(new Error('Cloudinary timeout')), 10000);
+            }),
+          ]).finally(() => clearTimeout(timer!));
+        }),
       );
       for (const result of results) {
         if (result.status === 'rejected') {

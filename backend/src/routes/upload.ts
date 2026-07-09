@@ -114,12 +114,13 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
 }
 
 async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): Promise<string> {
+  let timer: ReturnType<typeof setTimeout>;
   return Promise.race([
     cloudinaryUpload(filePath, mimeType),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Cloudinary upload timed out after 25s')), 25000),
-    ),
-  ]);
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Cloudinary upload timed out after 25s')), 25000);
+    }),
+  ]).finally(() => clearTimeout(timer!));
 }
 
 router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next: NextFunction) => {
@@ -179,12 +180,18 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
         const formData = new URLSearchParams();
         formData.append('secret', config.TURNSTILE_SECRET_KEY);
         formData.append('response', token);
-        const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-          method: 'POST', body: formData,
-        });
-        const result = await verifyRes.json() as { success: boolean; 'error-codes'?: string[] };
-        if (!result.success) {
-          throw new ValidationError('No se pudo verificar que no eres un robot');
+        const ac = new AbortController();
+        const turnstileTimer = setTimeout(() => ac.abort(), 10000);
+        try {
+          const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST', body: formData, signal: ac.signal,
+          });
+          const result = await verifyRes.json() as { success: boolean; 'error-codes'?: string[] };
+          if (!result.success) {
+            throw new ValidationError('No se pudo verificar que no eres un robot');
+          }
+        } finally {
+          clearTimeout(turnstileTimer);
         }
       }
 

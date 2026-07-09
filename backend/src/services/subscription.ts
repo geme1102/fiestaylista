@@ -7,6 +7,7 @@ import { getPublicIdFromUrl } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
 import { TIER_LIMITS, type Tier, type SubscriptionStatus } from '../types/index.js';
+import { fetchPreapprovalInfo } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Subscription');
@@ -156,6 +157,28 @@ export async function getCurrentSubscription(userId: string) {
     .limit(1);
 
   return sub || null;
+}
+
+export async function reconcileSubscriptionOnLogin(userId: string): Promise<void> {
+  try {
+    const sub = await getCurrentSubscription(userId);
+    if (!sub || sub.status === 'active' || !sub.mpSubscriptionId) return;
+
+    const mpInfo = await fetchPreapprovalInfo(sub.mpSubscriptionId);
+    if (mpInfo.status === 'active' || mpInfo.status === 'authorized') {
+      const tier = mpInfo.externalReference.startsWith('pro_plus') ? 'pro_plus' : 'pro';
+      await createOrUpdateSubscription(userId, {
+        mpSubscriptionId: sub.mpSubscriptionId,
+        tier,
+        status: 'active',
+        currentPeriodStart: mpInfo.dateCreated ? new Date(mpInfo.dateCreated) : new Date(),
+        currentPeriodEnd: mpInfo.nextChargeDate ? new Date(mpInfo.nextChargeDate) : new Date(),
+      });
+      log.info({ userId }, 'Suscripción reconciliada on-login');
+    }
+  } catch (err) {
+    log.warn({ err, userId }, 'No se pudo reconciliar suscripción on-login');
+  }
 }
 
 export async function cancelSubscription(userId: string, immediate = false) {
