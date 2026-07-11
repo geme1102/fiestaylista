@@ -721,11 +721,6 @@ h1, h2, h3, h4, h5, h6 {
   75% { transform: rotate(5deg); }
 }
 
-@keyframes success-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-  50% { box-shadow: 0 0 20px 6px rgba(74, 222, 128, 0.35); }
-}
-
 .btn-gpu {
   transition-property: transform, box-shadow, opacity, background-color;
   transition-duration: var(--btn-duration);

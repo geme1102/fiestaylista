@@ -11,6 +11,7 @@ import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/response.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Analytics');
@@ -33,8 +34,8 @@ router.post('/analytics/view', viewLimiter, verifyTurnstile, asyncHandler(async 
     await db.transaction(async (tx) => {
       await tx.insert(eventViews).values({
         eventId,
-        referrer: (req.headers.referer || req.headers.referrer || 'direct') as string,
-        userAgent: (req.headers['user-agent'] || 'unknown') as string,
+        referrer: sanitizeAndStrip(String(req.headers.referer || req.headers.referrer || 'direct')).slice(0, 200),
+        userAgent: sanitizeAndStrip(String(req.headers['user-agent'] || 'unknown')).slice(0, 200),
       });
 
       await tx

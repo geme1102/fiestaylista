@@ -21,11 +21,22 @@ if (cluster.isPrimary && workerCount > 1) {
     cluster.fork();
   }
 
+  let restartAttempts = 0;
+  const MAX_RESTART_ATTEMPTS = 10;
+  const RESTART_BACKOFF_BASE_MS = 1000;
+
   cluster.on('exit', (worker, code, signal) => {
-    logger.warn({ pid: worker.process.pid, code, signal }, 'Worker muerto — reiniciando');
-    cluster.fork();
+    restartAttempts++;
+    if (restartAttempts > MAX_RESTART_ATTEMPTS) {
+      logger.fatal({ attempts: restartAttempts }, 'Demasiados reinicios de worker — abortando cluster');
+      process.exit(1);
+    }
+    const delay = Math.min(RESTART_BACKOFF_BASE_MS * Math.pow(2, restartAttempts - 1), 30000);
+    logger.warn({ pid: worker.process.pid, code, signal, attempts: restartAttempts, delay }, 'Worker muerto — reiniciando con backoff');
+    setTimeout(() => cluster.fork(), delay);
   });
 
+  // Reset counter on SIGTERM (intentional shutdown, not crash)
   const shutdownSignal = (signal: string) => {
     logger.warn({ signal }, 'Cerrando cluster...');
     for (const id in cluster.workers) {
@@ -114,7 +125,8 @@ if (cluster.isPrimary && workerCount > 1) {
       gracefulShutdown('uncaughtException', 1);
     });
     process.on('unhandledRejection', (reason) => {
-      logger.error({ err: reason }, 'Promesa rechazada no capturada — el servidor continúa funcionando');
+      logger.fatal({ err: reason }, 'Promesa rechazada no capturada — reiniciando servidor');
+      gracefulShutdown('unhandledRejection', 1);
     });
   })();
 }
