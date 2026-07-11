@@ -207,6 +207,11 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
   }
 
   if (info.status === 'refunded' || info.status === 'charged_back') {
+    await db
+      .update(proPayments)
+      .set({ status: 'refunded' })
+      .where(eq(proPayments.mpPaymentId, paymentId))
+      .catch((err: unknown) => log.error({ err, paymentId }, 'Error marcando pago como reembolsado:'));
     if (info.payerEmail) {
       const userId = await findUserIdByEmail(info.payerEmail);
       if (userId) await subscriptionService.cancelSubscription(userId, true);

@@ -37,8 +37,14 @@ const checkoutSchema = z.object({
     errorMap: () => ({ message: 'Plan inválido. Debe ser pro o pro_plus' }),
   }),
   interval: z.enum(['month', 'year']).default('month'),
-  successUrl: z.string().url('URL de éxito inválida').optional(),
-  cancelUrl: z.string().url('URL de cancelación inválida').optional(),
+  successUrl: z.string().url('URL de éxito inválida').optional().refine(
+    u => !u || u.startsWith(config.FRONTEND_URL),
+    { message: 'URL de éxito debe ser del dominio de la aplicación' },
+  ),
+  cancelUrl: z.string().url('URL de cancelación inválida').optional().refine(
+    u => !u || u.startsWith(config.FRONTEND_URL),
+    { message: 'URL de cancelación debe ser del dominio de la aplicación' },
+  ),
 });
 
 const cancelSchema = z.object({
@@ -108,6 +114,24 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
     .limit(1);
 
   if (payment) {
+    // Re-verificar con MP que el pago siga approved (previene reactivación post-reembolso)
+    if (payment.mpPaymentId) {
+      try {
+        const mpInfo = await mercadopagoService.fetchPaymentInfo(payment.mpPaymentId);
+        if (mpInfo.status === 'refunded' || mpInfo.status === 'charged_back') {
+          await db
+            .update(proPayments)
+            .set({ status: 'refunded' })
+            .where(eq(proPayments.id, payment.id))
+            .catch(() => {});
+          res.json({ tier: 'free', synced: false, message: 'Este pago fue reembolsado. Suscríbete de nuevo para continuar.' });
+          return;
+        }
+      } catch (err) {
+        log.error({ err, mpPaymentId: payment.mpPaymentId }, 'Error verificando pago con MP durante sync:');
+      }
+    }
+
     const periodDays = payment.interval === 'year' ? 365 : 30;
     const periodStart = payment.createdAt ?? new Date();
     const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);

@@ -27,6 +27,7 @@ const sql = postgres(config.DATABASE_URL, {
   connect_timeout: 30,
   idle_timeout: 30,
   max_lifetime: 60 * 30,
+  prepare: false,
 });
 
 const db = drizzle(sql, { schema });

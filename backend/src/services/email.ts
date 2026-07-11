@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { eq } from 'drizzle-orm';
+import { createHmac } from 'node:crypto';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { emailSuppressions } from '../db/schema.js';
@@ -76,7 +77,8 @@ export async function sendEmail(
 
     const headers: Record<string, string> = {};
     if (allowsUnsubscribe) {
-      headers['List-Unsubscribe'] = `${config.FRONTEND_URL}/unsubscribe`;
+      const token = createHmac('sha256', options.to).update(config.JWT_SECRET).digest('hex').slice(0, 32);
+      headers['List-Unsubscribe'] = `${config.FRONTEND_URL}/unsubscribe?token=${token}`;
       headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
     }
 
