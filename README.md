@@ -42,9 +42,8 @@ cd ../frontend && npm install
 | Variable | Requerida | Descripción |
 |----------|-----------|-------------|
 | `DATABASE_URL` | Sí | URL de conexión a PostgreSQL |
-| `JWT_SECRET` | Sí | Secreto para firmar tokens de acceso (mín. 32 chars, único entre los 3) |
+| `JWT_SECRET` | Sí | Secreto para firmar tokens de acceso (mín. 32 chars, único entre los 2) |
 | `JWT_REFRESH_SECRET` | Sí | Secreto para firmar tokens de refresco (único) |
-| `JWT_GUEST_SECRET` | Sí | Secreto para firmar tokens de invitados (único) |
 | `FRONTEND_URL` | Sí | URL del frontend (ej: `http://localhost:5173`) |
 | `TURNSTILE_SECRET_KEY` | Prod | Secret key de Cloudflare Turnstile |
 | `MERCADO_PAGO_ACCESS_TOKEN` | Prod | Token de acceso de Mercado Pago |

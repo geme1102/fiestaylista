@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const tierRef = useRef(user?.tier);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
   const [syncingPayment, setSyncingPayment] = useState(false);
@@ -116,6 +117,12 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [location.search, refreshUser, queryClient]);
 
+  useEffect(() => {
+    return () => {
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+    };
+  }, []);
+
   const handleCompleteWelcome = useCallback(async () => {
     try {
       await completeWelcome();
@@ -179,7 +186,7 @@ export default function Dashboard() {
       return;
     }
     setCreating(true);
-    const safetyTimer = setTimeout(() => {
+    safetyTimerRef.current = setTimeout(() => {
       setCreating(false);
       showToast('La creación está tomando más de lo esperado. Intenta de nuevo.', 'error');
     }, 15000);
@@ -193,17 +200,17 @@ export default function Dashboard() {
         eventNote: formData.eventNote || undefined,
       };
       const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', cleanedData);
-      clearTimeout(safetyTimer);
+      clearTimeout(safetyTimerRef.current!);
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
       navigate(`/event/${res.event.id}`);
     } catch (err) {
-      clearTimeout(safetyTimer);
+      clearTimeout(safetyTimerRef.current!);
       reportError(err, { source: 'Dashboard' });
       showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
-      clearTimeout(safetyTimer);
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       setCreating(false);
     }
   };
