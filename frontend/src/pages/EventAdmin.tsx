@@ -784,7 +784,7 @@ onClick={() => {
           </div>
         )}
 
-        <ProductTour steps={tourSteps} storageKey={`fy_tour_event_${id}`} completed={user?.onboardingCompleted} onComplete={handleTourComplete} />
+        <ProductTour steps={tourSteps} storageKey="fy_tour_event_admin" completed={user?.onboardingCompleted} onComplete={handleTourComplete} />
 
         <div data-tour="add-gift">
         <SectionErrorBoundary sectionName="GiftManagement">

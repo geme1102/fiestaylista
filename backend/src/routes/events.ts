@@ -7,7 +7,7 @@ import * as eventService from '../services/event.js';
 import * as eventQueries from '../services/event-queries.js';
 import type { CreateEventData, UpdateEventData } from '../services/event.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { stripHtml } from '../utils/sanitize.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { EVENT_TYPES } from '../types/index.js';
 import type { AuthRequest } from '../types/index.js';
 import { createEventLimiter, viewLimiter } from '../middleware/rateLimit.js';
@@ -22,24 +22,24 @@ function normalizePhone(v: unknown) {
 const phoneRegex = /^\+?\d{7,15}$/;
 
 const createEventSchema = z.object({
-  title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo').transform(stripHtml),
+  title: z.string().min(1, 'El título es requerido').max(200, 'El título es demasiado largo').transform(sanitizeAndStrip),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]], {
     errorMap: () => ({ message: 'Tipo de evento inválido' }),
   }),
   hostPhone: z.preprocess(normalizePhone, z.string().regex(phoneRegex, 'Teléfono inválido')).optional(),
   eventDate: z.string().datetime({ offset: true }).optional(),
-  eventLocation: z.string().max(200).optional().transform(v => v ? stripHtml(v) : v),
-  eventNote: z.string().max(1000).optional().transform(v => v ? stripHtml(v) : v),
+  eventLocation: z.string().max(200).optional().transform(v => sanitizeAndStrip(v || '')),
+  eventNote: z.string().max(1000).optional().transform(v => sanitizeAndStrip(v || '')),
 });
 
 const updateEventSchema = z.object({
-  title: z.string().min(1).max(200).optional().transform(v => v ? stripHtml(v) : v),
+  title: z.string().min(1).max(200).optional().transform(v => v ? sanitizeAndStrip(v) : undefined),
   eventType: z.enum(EVENT_TYPES as [string, ...string[]]).optional(),
   hostPhone: z.preprocess(normalizePhone, z.string().regex(phoneRegex, 'Teléfono inválido')).optional(),
   isActive: z.boolean().optional(),
   eventDate: z.string().datetime({ offset: true }).nullable().optional(),
-  eventLocation: z.string().max(200).nullable().optional().transform(v => v ? stripHtml(v) : v),
-  eventNote: z.string().max(1000).nullable().optional().transform(v => v ? stripHtml(v) : v),
+  eventLocation: z.string().max(200).nullable().optional().transform(v => v ? sanitizeAndStrip(v) : undefined),
+  eventNote: z.string().max(1000).nullable().optional().transform(v => v ? sanitizeAndStrip(v) : undefined),
 });
 
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {

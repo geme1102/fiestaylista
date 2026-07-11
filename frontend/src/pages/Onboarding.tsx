@@ -25,6 +25,7 @@ export default function Onboarding() {
   const [title, setTitle] = useState('');
   const [eventNote, setEventNote] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState('💍');
   const [selectedLabel, setSelectedLabel] = useState('Boda');
 
@@ -73,7 +74,7 @@ export default function Onboarding() {
           <h1 className="font-display-lg text-display-lg text-primary">Fiesta y Lista</h1>
         </div>
         <button
-          onClick={() => { if (window.confirm('¿Salir del asistente? Puedes crear tu primer evento desde el panel principal.')) skip(); }}
+          onClick={() => setShowExitModal(true)}
           className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-90 transition-transform p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Salir del asistente"
         >
@@ -238,6 +239,20 @@ export default function Onboarding() {
           />
         ))}
       </nav>
+
+      {/* Exit Confirmation Modal */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowExitModal(false)}>
+          <div className="glass-card-premium rounded-2xl p-6 max-w-sm mx-4" onClick={e => e.stopPropagation()}>
+            <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¿Salir del asistente?</h2>
+            <p className="text-on-surface-variant mb-6">Puedes crear tu primer evento desde el panel principal cuando quieras.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowExitModal(false)} className="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container-high">Cancelar</button>
+              <button onClick={skip} className="px-4 py-2 rounded-full bg-primary text-white font-medium">Salir</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

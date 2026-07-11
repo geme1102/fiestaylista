@@ -6,7 +6,23 @@ import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 
 export async function getUserEvents(userId: string) {
   const userEvents = await db
-    .select()
+    .select({
+      id: eventsTable.id,
+      userId: eventsTable.userId,
+      title: eventsTable.title,
+      eventType: eventsTable.eventType,
+      slug: eventsTable.slug,
+      status: eventsTable.status,
+      isActive: eventsTable.isActive,
+      eventDate: eventsTable.eventDate,
+      eventLocation: eventsTable.eventLocation,
+      viewCount: eventsTable.viewCount,
+      boostedUntil: eventsTable.boostedUntil,
+      frozenAt: eventsTable.frozenAt,
+      createdAt: eventsTable.createdAt,
+      updatedAt: eventsTable.updatedAt,
+      deletedAt: eventsTable.deletedAt,
+    })
     .from(eventsTable)
     .where(and(eq(eventsTable.userId, userId), sql`${eventsTable.deletedAt} IS NULL`))
     .orderBy(eventsTable.createdAt)

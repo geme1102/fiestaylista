@@ -45,9 +45,13 @@ if (cluster.isPrimary && workerCount > 1) {
     console.log('[startup] Aplicación creada exitosamente');
   } catch (e) {
     console.error('[startup] Error creando aplicación:', e);
+    if (config.NODE_ENV === 'production') {
+      logger.fatal({ err: e }, 'createApp() falló en producción — abortando');
+      process.exit(1);
+    }
     app = express();
-    app.get('/api/health', (_req, res) => res.json({ status: 'error', message: 'Falló al crear la app Express' }));
-    app.get('/health', (_req, res) => res.json({ status: 'error', message: 'Falló al crear la app Express' }));
+    app.get('/api/health', (_req, res) => res.status(500).json({ status: 'error', message: 'Falló al crear la app Express' }));
+    app.get('/health', (_req, res) => res.status(500).json({ status: 'error', message: 'Falló al crear la app Express' }));
   }
 
   (async () => {

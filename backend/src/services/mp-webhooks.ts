@@ -36,7 +36,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       return;
     }
 
-    const currentSub = await db
+    const currentSub = await tx
       .select({ mpSubscriptionId: subscriptions.mpSubscriptionId, tier: subscriptions.tier })
       .from(subscriptions)
       .where(eq(subscriptions.userId, userId))
@@ -207,14 +207,18 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
   }
 
   if (info.status === 'refunded' || info.status === 'charged_back') {
-    await db
+    const [updated] = await db
       .update(proPayments)
       .set({ status: 'refunded' })
       .where(eq(proPayments.mpPaymentId, paymentId))
-      .catch((err: unknown) => log.error({ err, paymentId }, 'Error marcando pago como reembolsado:'));
-    if (info.payerEmail) {
-      const userId = await findUserIdByEmail(info.payerEmail);
-      if (userId) await subscriptionService.cancelSubscription(userId, true);
+      .returning({ id: proPayments.id, userId: proPayments.userId })
+      .catch((err: unknown) => {
+        log.error({ err, paymentId }, 'Error marcando pago como reembolsado:');
+        return [];
+      });
+    // Solo cancelar suscripción si este pago era realmente un pago Pro
+    if (updated?.userId) {
+      await subscriptionService.cancelSubscription(updated.userId, true);
     }
     return;
   }

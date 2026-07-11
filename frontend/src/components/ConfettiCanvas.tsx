@@ -129,33 +129,36 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      backgroundStarsRef.current.forEach((star) => {
-        star.phase += star.speed;
-        const scale = 0.5 + Math.sin(star.phase) * 0.5;
-        const currentOpacity = star.opacity * (0.3 + scale * 0.7);
-        const currentSize = star.size + (star.targetSize - star.size) * scale;
+      const hasActiveParticles = particlesRef.current.length > 0;
+      if (hasActiveParticles) {
+        backgroundStarsRef.current.forEach((star) => {
+          star.phase += star.speed;
+          const scale = 0.5 + Math.sin(star.phase) * 0.5;
+          const currentOpacity = star.opacity * (0.3 + scale * 0.7);
+          const currentSize = star.size + (star.targetSize - star.size) * scale;
 
-        ctx.save();
-        ctx.globalAlpha = currentOpacity;
-        ctx.fillStyle = '#fce7f3';
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#f43f5e';
+          ctx.save();
+          ctx.globalAlpha = currentOpacity;
+          ctx.fillStyle = '#fce7f3';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#f43f5e';
 
-        ctx.beginPath();
-        ctx.moveTo(star.x, star.y - currentSize);
-        ctx.lineTo(star.x + currentSize / 2, star.y);
-        ctx.lineTo(star.x, star.y + currentSize);
-        ctx.lineTo(star.x - currentSize / 2, star.y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+          ctx.beginPath();
+          ctx.moveTo(star.x, star.y - currentSize);
+          ctx.lineTo(star.x + currentSize / 2, star.y);
+          ctx.lineTo(star.x, star.y + currentSize);
+          ctx.lineTo(star.x - currentSize / 2, star.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
 
-        star.y += 0.15;
-        if (star.y > canvas.height) {
+          star.y += 0.15;
+          if (star.y > canvas.height) {
           star.y = -10;
           star.x = Math.random() * canvas.width;
         }
       });
+      }
 
       particlesRef.current.forEach((p) => {
         p.y += p.speedY;
@@ -197,6 +200,12 @@ export const ConfettiCanvas = forwardRef<ConfettiCanvasRef, object>(function Con
       });
 
       particlesRef.current = particlesRef.current.filter((p) => p.opacity > 0 && p.y < canvas.height + 20);
+
+      // Detener el loop de render cuando no hay partículas activas para ahorrar CPU/batería
+      if (particlesRef.current.length === 0) {
+        animationFrameRef.current = null;
+        return;
+      }
 
       animationFrameRef.current = requestAnimationFrame(render);
     };

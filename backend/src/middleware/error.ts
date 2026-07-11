@@ -24,6 +24,10 @@ function logError(err: unknown, errorId: string, req?: Request): void {
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
+  if (res.headersSent) {
+    return;
+  }
+
   const errorId = randomUUID();
 
   if (err instanceof AppError) {
