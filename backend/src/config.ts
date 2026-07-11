@@ -88,7 +88,7 @@ function validateConfig(): void {
     warnConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
     if (!process.env.MERCADO_PAGO_WEBHOOK_SECRET) failConfig('MERCADO_PAGO_WEBHOOK_SECRET no está configurado');
     warnConfig('RESEND_API_KEY', process.env.RESEND_API_KEY);
-    warnConfig('FROM_EMAIL', process.env.FROM_EMAIL);
+    if (!process.env.FROM_EMAIL) failConfig('FROM_EMAIL no está configurado');
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
     warnConfig('BACKEND_URL', process.env.BACKEND_URL);
     if (process.env.BACKEND_URL && !process.env.BACKEND_URL.startsWith('http://') && !process.env.BACKEND_URL.startsWith('https://')) {
