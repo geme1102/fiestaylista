@@ -1,5 +1,8 @@
 import { Resend } from 'resend';
+import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
+import { db } from '../db/index.js';
+import { emailSuppressions } from '../db/schema.js';
 
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -54,6 +57,17 @@ export async function sendEmail(
   if (!resend) {
     throw new Error('Email service not configured: RESEND_API_KEY is missing');
   }
+
+  const [suppressed] = await db
+    .select({ id: emailSuppressions.id })
+    .from(emailSuppressions)
+    .where(eq(emailSuppressions.email, options.to))
+    .limit(1);
+  if (suppressed) {
+    log.info({ to: options.to }, 'Email suprimido — no enviado (bounce/complaint previo)');
+    return;
+  }
+
   try {
     const allowsUnsubscribe = options.emailType ? emailTypeAllowsUnsubscribe(options.emailType) : false;
     const htmlFinal = allowsUnsubscribe

@@ -74,6 +74,11 @@ export async function processReminders(): Promise<ReminderResult> {
     } catch (error) {
       log.error({ error }, `Error enviando email a ${row.userEmail}:`);
     }
+
+    // Throttle: 500ms delay between sends to avoid Resend rate limits
+    if (rows.indexOf(row) < rows.length - 1) {
+      await new Promise(r => setTimeout(r, 500));
+    }
   }
 
   return {

@@ -211,6 +211,16 @@ export const emailTracking = pgTable('email_tracking', {
   userIdTypeSentAtIdx: index('email_tracking_user_id_type_sent_at_idx').on(table.userId, table.type, table.sentAt),
 }));
 
+export const emailSuppressions = pgTable('email_suppressions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  reason: text('reason').notNull(),
+  occurredAt: timestamp('occurred_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  emailIdx: uniqueIndex('email_suppressions_email_unique_idx').on(table.email),
+  occurredAtIdx: index('email_suppressions_occurred_at_idx').on(table.occurredAt),
+}));
+
 export const eventViews = pgTable('event_views', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),

@@ -75,6 +75,15 @@ const COLUMN_MIGRATIONS: string[] = [
   `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "welcome_tutorial_completed" boolean DEFAULT false`,
   `UPDATE "users" SET "welcome_tutorial_completed" = false WHERE "welcome_tutorial_completed" IS NULL`,
   `ALTER TABLE "users" ALTER COLUMN "welcome_tutorial_completed" SET NOT NULL`,
+
+  // 0022: email_suppressions table for bounce/complaint handling
+  `CREATE TABLE IF NOT EXISTS "email_suppressions" (
+    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "email" text NOT NULL,
+    "reason" text NOT NULL,
+    "occurred_at" timestamptz DEFAULT now() NOT NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "email_suppressions_email_unique_idx" ON "email_suppressions"("email")`,
 ];
 
 // Stable names matching COLUMN_MIGRATIONS order — new migrations must append here + to COLUMN_MIGRATIONS.
@@ -93,6 +102,7 @@ const COLUMN_MIGRATION_NAMES = [
   'cash_contributions_amount_check',
   'onboarding_completed',
   'welcome_tutorial_completed',
+  'email_suppressions',
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
