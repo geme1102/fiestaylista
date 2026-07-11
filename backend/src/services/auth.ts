@@ -6,9 +6,10 @@ import { db } from '../db/index.js';
 import { users, auditLogs } from '../db/schema.js';
 import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
-import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens } from './auth-tokens.js';
-export { hashToken, revokeAllUserTokens } from './auth-tokens.js';
+import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
+export { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining } from '../middleware/lockout.js';
 
 const log = createModuleLogger('Auth');
 
@@ -76,7 +77,7 @@ export async function register(
         name,
         tier: 'free',
         emailVerified: false,
-        verificationToken,
+        verificationToken: hashToken(verificationToken),
         verificationTokenExpires,
       })
       .returning();
@@ -134,8 +135,14 @@ export async function login(
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
+  if (await isLocked(user.id)) {
+    const remaining = await getLockoutRemaining(user.id);
+    throw new UnauthorizedError(`Cuenta bloqueada temporalmente por muchos intentos fallidos. Intenta de nuevo en ${remaining} segundos.`);
+  }
+
   if (user.email.endsWith('@guest.fiestaylista.com')) {
     await bcrypt.compare(password, DUMMY_HASH);
+    recordFailedAttempt(user.id);
     db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
@@ -151,6 +158,7 @@ export async function login(
   const isValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValid) {
+    recordFailedAttempt(user.id);
     db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
@@ -163,6 +171,7 @@ export async function login(
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
+  resetLockout(user.id);
   const tokens = await issueTokenPair(user.id, user.email);
 
   return {
@@ -236,7 +245,7 @@ export async function verifyEmail(token: string): Promise<void> {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.verificationToken, token))
+    .where(eq(users.verificationToken, hashToken(token)))
     .limit(1);
 
   if (!user) {
@@ -278,7 +287,7 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
 
   await db
     .update(users)
-    .set({ verificationToken, verificationTokenExpires, updatedAt: new Date() })
+    .set({ verificationToken: hashToken(verificationToken), verificationTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
   if (isEmailConfigured()) {
@@ -310,7 +319,7 @@ export async function forgotPassword(email: string): Promise<void> {
 
   await db
     .update(users)
-    .set({ resetToken, resetTokenExpires, updatedAt: new Date() })
+    .set({ resetToken: hashToken(resetToken), resetTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
   try {
@@ -329,7 +338,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.resetToken, token))
+    .where(eq(users.resetToken, hashToken(token)))
     .limit(1);
 
   if (!user) {

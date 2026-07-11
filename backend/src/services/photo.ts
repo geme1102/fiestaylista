@@ -6,7 +6,7 @@ import { db } from '../db/index.js';
 import { photos as photosTable, events, users } from '../db/schema.js';
 import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
-import { getPublicIdFromUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -93,7 +93,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
     });
   } catch (err) {
     const publicId = getPublicIdFromUrl(url);
-    if (publicId) {
+    if (publicId && isOwnCloudinaryUrl(url)) {
       cloudinary.uploader.destroy(publicId).catch((err) => log.warn({ err }, 'Error eliminando imagen de Cloudinary tras fallo en DB'));
     }
     throw err;
@@ -112,7 +112,7 @@ export async function deletePhoto(photoId: string) {
   }
 
   const publicId = getPublicIdFromUrl(photo.url);
-  if (publicId) {
+  if (publicId && isOwnCloudinaryUrl(photo.url)) {
     try {
       let timer: ReturnType<typeof setTimeout>;
       await Promise.race([

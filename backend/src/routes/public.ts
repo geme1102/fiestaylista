@@ -33,7 +33,7 @@ router.get('/public/events', publicStatsLimiter, cacheControl(3600), asyncHandle
     .select({ slug: events.slug, updatedAt: events.updatedAt })
     .from(events)
     .where(sql`${events.isActive} = true AND ${events.deletedAt} IS NULL AND ${events.status} = 'active'`)
-    .limit(500);
+    .limit(50);
 
   res.json(rows.map((r) => r.slug).filter(Boolean));
 }));

@@ -58,7 +58,17 @@ export async function createOrUpdateCashFund(eventId: string, _userId: string, d
 
 export async function getCashFund(eventId: string) {
   const [fund] = await db
-    .select()
+    .select({
+      id: cashFunds.id,
+      eventId: cashFunds.eventId,
+      title: cashFunds.title,
+      description: cashFunds.description,
+      targetAmount: cashFunds.targetAmount,
+      collectedAmount: cashFunds.collectedAmount,
+      isActive: cashFunds.isActive,
+      createdAt: cashFunds.createdAt,
+      updatedAt: cashFunds.updatedAt,
+    })
     .from(cashFunds)
     .where(eq(cashFunds.eventId, eventId))
     .limit(1);
@@ -261,10 +271,20 @@ export async function cancelContribution(
   return { contribution: result.contribution, cashFund: result.fund };
 }
 
+export interface SafeContribution {
+  id: string;
+  cashFundId: string;
+  contributorName: string;
+  message: string | null;
+  amount: number;
+  status: string;
+  createdAt: Date;
+}
+
 export async function getContributions(
   cashFundId: string,
   params: PaginationParams = {},
-): Promise<PaginatedResult<typeof cashContributions.$inferSelect>> {
+): Promise<PaginatedResult<SafeContribution>> {
   const { limit, cursorCondition } = buildPaginationConditions(
     cashContributions.createdAt as unknown as SQL,
     params,
@@ -276,7 +296,15 @@ export async function getContributions(
     : eq(cashContributions.cashFundId, cashFundId);
 
   const rows = await db
-    .select()
+    .select({
+      id: cashContributions.id,
+      cashFundId: cashContributions.cashFundId,
+      contributorName: cashContributions.contributorName,
+      message: cashContributions.message,
+      amount: cashContributions.amount,
+      status: cashContributions.status,
+      createdAt: cashContributions.createdAt,
+    })
     .from(cashContributions)
     .where(conditions)
     .orderBy(desc(cashContributions.createdAt))

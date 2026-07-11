@@ -1,14 +1,19 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, requireAnyAuth, optionalAuth } from '../middleware/auth.js';
+import { hashToken } from '../services/auth-tokens.js';
+import { refreshTokens } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
+import { db } from '../db/index.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { reconcileSubscriptionOnLogin } from '../services/subscription.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
@@ -33,7 +38,7 @@ const registerSchema = z.object({
     .max(64, 'La contraseña es demasiado larga')
     .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
-  name: z.string().transform(s => s.trim()).pipe(z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es demasiado largo')),
+  name: z.string().transform(s => sanitizeAndStrip(s.trim())).pipe(z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es demasiado largo')),
 });
 
 const loginSchema = z.object({
@@ -67,7 +72,7 @@ router.post('/register', authLimiter, verifyTurnstile, asyncHandlerWithValidatio
   res.status(201).json(safeResult);
 }));
 
-router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
+router.post('/login', authLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password, {
     userAgent: req.headers['user-agent'],
@@ -96,7 +101,8 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
       ipAddress: req.ip,
     });
     setRefreshCookie(res, result.refreshToken);
-    res.json(result);
+    const { refreshToken: _, ...safeResult } = result;
+    res.json(safeResult);
   } catch (error) {
     if (error instanceof ValidationError || error instanceof UnauthorizedError) {
       throw error;
@@ -166,11 +172,35 @@ router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRe
     sameSite: isProduction ? 'none' : 'lax',
   });
 
-  if (req.user) {
+  let userId: string | undefined = req.user?.userId;
+
+  // Si el access token expiró (req.user no set), intentar identificar al usuario
+  // mediante el refresh token en la cookie
+  if (!userId) {
+    const cookieName = isProduction ? '__Secure-refreshToken' : 'refreshToken';
+    const refreshTokenCookie = req.cookies?.[cookieName] ?? null;
+    if (refreshTokenCookie) {
+      try {
+        const tokenHash = hashToken(refreshTokenCookie);
+        const [tokenRecord] = await db
+          .select({ userId: refreshTokens.userId })
+          .from(refreshTokens)
+          .where(eq(refreshTokens.tokenHash, tokenHash))
+          .limit(1);
+        if (tokenRecord) {
+          userId = tokenRecord.userId;
+        }
+      } catch (err) {
+        log.error({ err }, 'Error identificando usuario por refresh token en logout:');
+      }
+    }
+  }
+
+  if (userId) {
     try {
-      await authService.revokeAllUserTokens(req.user.userId);
+      await authService.revokeAllUserTokens(userId);
     } catch (err) {
-      log.error({ err, userId: req.user.userId }, 'Error revocando tokens en logout:');
+      log.error({ err, userId }, 'Error revocando tokens en logout:');
     }
   }
 

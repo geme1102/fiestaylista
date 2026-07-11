@@ -5,6 +5,7 @@ import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
+import { verifyTurnstile } from '../middleware/turnstile.js';
 import { requireTier, requireActiveSubscription } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -20,7 +21,7 @@ const viewSchema = z.object({
   eventId: z.string().uuid('ID de evento invalido'),
 });
 
-router.post('/analytics/view', viewLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.post('/analytics/view', viewLimiter, verifyTurnstile, asyncHandler(async (req: Request, res: Response) => {
   try {
     const parsed = viewSchema.safeParse(req.body);
     if (!parsed.success) {

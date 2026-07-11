@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../config.js', () => ({
   config: {
     NODE_ENV: 'test',
+    CLOUDINARY_CLOUD_NAME: 'demo',
   },
 }));
 
@@ -180,13 +181,13 @@ describe('deletePhoto', () => {
   it('calls cloudinary destroy for cloudinary URLs', async () => {
     (db as any).returning.mockResolvedValueOnce([{
       id: 'photo-1',
-      url: 'https://res.cloudinary.com/demo/image/upload/v1/event/abc123.jpg',
+      url: 'https://res.cloudinary.com/demo/image/upload/v1/fiestaylista/event/abc123.jpg',
     }]);
 
     const { v2: cloudinary } = await import('cloudinary');
     const result = await deletePhoto('photo-1');
     expect(result).toEqual({ success: true });
-    expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('event/abc123');
+    expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('fiestaylista/event/abc123');
   });
 });
 

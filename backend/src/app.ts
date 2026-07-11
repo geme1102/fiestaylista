@@ -37,6 +37,22 @@ export function createApp() {
         dsn: config.SENTRY_DSN,
         environment: config.NODE_ENV,
         tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 0,
+        beforeSend(event) {
+          const scrubKeys = ['payerEmail', 'hostPhone', 'bankPhone', 'contributorName', 'eventLocation', 'email', 'password', 'token', 'secret', 'authorization', 'cookie'];
+          const scrub = (obj: unknown) => {
+            if (!obj || typeof obj !== 'object') return;
+            for (const key of Object.keys(obj as Record<string, unknown>)) {
+              const lower = key.toLowerCase();
+              if (scrubKeys.some(k => lower.includes(k))) {
+                (obj as Record<string, unknown>)[key] = '[REDACTED]';
+              } else {
+                scrub((obj as Record<string, unknown>)[key]);
+              }
+            }
+          };
+          scrub(event);
+          return event;
+        },
       });
     } catch (e) {
       console.error('[sentry] Error inicializando Sentry:', e);
@@ -46,7 +62,19 @@ export function createApp() {
   const app = express();
 
   app.use(compression({ threshold: 512, level: 6 }));
-  app.set('trust proxy', config.NODE_ENV === 'production' ? 2 : 0);
+  app.set('trust proxy', config.NODE_ENV === 'production' ? 1 : 0);
+
+  // HTTP→HTTPS redirect en producción (defense-in-depth; Railway termina TLS)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (config.NODE_ENV === 'production' && req.protocol === 'http' && req.path !== '/health') {
+      const safeHost = req.hostname && req.hostname !== 'unknown'
+        ? req.hostname
+        : new URL(config.BACKEND_URL).hostname;
+      res.redirect(301, `https://${safeHost}${req.originalUrl}`);
+      return;
+    }
+    next();
+  });
 
   app.use((req: Request, _res: Response, next: NextFunction) => {
     (req as AppRequest).requestId = randomUUID();
@@ -67,9 +95,7 @@ export function createApp() {
       config.FRONTEND_URL,
       ...(config.ALLOWED_ORIGINS ?? []),
     ].filter(Boolean);
-    const isAllowed = origin && (allowedOrigins.includes(origin) ||
-      (config.NODE_ENV === 'production' &&
-        /^https:\/\/[a-zA-Z0-9-]+--fiestaylista\.netlify\.app$/.test(origin)));
+    const isAllowed = origin && allowedOrigins.includes(origin);
     if (isAllowed) {
       res.setHeader('Access-Control-Allow-Origin', origin!);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -94,7 +120,7 @@ export function createApp() {
         scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
         scriptSrcAttr: ["'none'"],
         frameSrc: ["'self'", "https://mpago.la", "https://challenges.cloudflare.com"],
-        imgSrc: ["'self'", "https:", "data:", "blob:"],
+        imgSrc: ["'self'", "https://res.cloudinary.com", "data:", "blob:"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         styleSrcAttr: ["'unsafe-inline'"],
@@ -114,7 +140,7 @@ export function createApp() {
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
     xContentTypeOptions: true,
-    xFrameOptions: false,
+    xFrameOptions: { action: 'sameorigin' },
   }));
 
   app.use(cookieParser());

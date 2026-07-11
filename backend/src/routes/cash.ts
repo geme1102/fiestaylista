@@ -1,22 +1,26 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { eq, and, isNull } from 'drizzle-orm';
 
 import { contributeLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
 import { getPromisedAmount } from '../services/cashFund.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
-import { ValidationError } from '../utils/errors.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { requireAuth, requireEmailVerified } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
+import { db } from '../db/index.js';
+import { events, cashFunds } from '../db/schema.js';
 
 const router = Router();
 
 const createFundSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().max(1000).optional(),
+  title: z.string().min(1).max(200).transform(s => sanitizeAndStrip(s)).optional(),
+  description: z.string().max(1000).transform(s => sanitizeAndStrip(s)).optional(),
   targetAmount: z.number().int().min(0).optional(),
   bankPhone: z.string().max(20).optional().nullable(),
   bankType: z.string().max(20).optional().nullable(),
@@ -48,6 +52,13 @@ router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHand
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
+  const [event] = await db
+    .select({ isActive: events.isActive })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!event || !event.isActive) throw new NotFoundError('Evento no encontrado');
+
   const fund = await cashFundService.getCashFund(eventId);
   let promisedTotal = 0;
   if (fund) {
@@ -70,6 +81,14 @@ router.post('/cash-fund/promise', contributeLimiter, verifyTurnstile, asyncHandl
 router.get('/cash-fund/:cashFundId/contributions', validateUuidParam('cashFundId'), asyncHandler(async (req, res) => {
   const cashFundId = req.params.cashFundId as string;
   if (!cashFundId) throw new ValidationError('ID del fondo requerido');
+
+  const [activeEvent] = await db
+    .select({ isActive: events.isActive })
+    .from(events)
+    .innerJoin(cashFunds, eq(events.id, cashFunds.eventId))
+    .where(and(eq(cashFunds.id, cashFundId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!activeEvent || !activeEvent.isActive) throw new NotFoundError('Evento no encontrado');
 
   const result = await cashFundService.getContributions(cashFundId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,

@@ -27,7 +27,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
       throw new ValidationError('Token de seguridad requerido');
     }
 
-    await verifyToken(token);
+    await verifyToken(token, req.ip);
     next();
   } catch (error) {
     next(error);
@@ -53,17 +53,20 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
       return;
     }
 
-    await verifyToken(token);
+    await verifyToken(token, req.ip);
     next();
   } catch (error) {
     next(error);
   }
 }
 
-async function verifyToken(token: string): Promise<void> {
+async function verifyToken(token: string, remoteIp?: string): Promise<void> {
   const formData = new URLSearchParams();
   formData.append('secret', config.TURNSTILE_SECRET_KEY);
   formData.append('response', token);
+  if (remoteIp) {
+    formData.append('remoteip', remoteIp);
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);

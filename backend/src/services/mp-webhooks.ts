@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { users, subscriptions, proPayments, emailTracking } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
+import { escapeHtml } from './email.js';
 import * as mercadopagoService from './mercadopago.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -108,7 +109,7 @@ export async function handleProPayment(paymentId: string, userId: string, interv
                 <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#ec4899);width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
                 <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
               </div>
-              <h1 style="text-align:center;color:#1f2937;font-size:20px">¡Bienvenido a PRO Plus, ${user.name}!</h1>
+              <h1 style="text-align:center;color:#1f2937;font-size:20px">¡Bienvenido a PRO Plus, ${escapeHtml(user.name)}!</h1>
               <p style="color:#6b7280;text-align:center;margin:16px 0">Tu suscripción ${period} ya está activa. Ahora tienes acceso a todas las funciones premium con más espacio para tus eventos.</p>
               <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;margin:16px 0">
                 <p style="margin:0;color:#5b21b6;font-size:14px"><strong>Qué incluye:</strong></p>
@@ -194,6 +195,11 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
       const parts = ref.split('_');
       const userId = parts[isProPlus ? 2 : 1];
+      await db
+        .update(proPayments)
+        .set({ status: 'refunded' })
+        .where(eq(proPayments.mpPaymentId, paymentId))
+        .catch((err: unknown) => log.error({ err }, 'Error marcando pago como reembolsado:'));
       if (userId) await subscriptionService.cancelSubscription(userId, true);
     }
     return;
@@ -242,6 +248,15 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     userId = parts[isProPlus ? 2 : 1];
     detectedTier = isProPlus ? 'pro_plus' : 'pro';
     detectedInterval = (parts[isProPlus ? 3 : 2] || 'month') as 'month' | 'year';
+
+    const expectedAmount = detectedInterval === 'year'
+      ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
+      : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
+    const diff = Math.abs(info.transactionAmount - expectedAmount);
+    if (diff > 1 && diff / expectedAmount > 0.01) {
+      log.error({ preapprovalId, expectedAmount, receivedAmount: info.transactionAmount, tier: detectedTier, interval: detectedInterval }, 'Monto de suscripción no coincide con el plan detectado');
+      return;
+    }
   }
 
   if (!userId) {

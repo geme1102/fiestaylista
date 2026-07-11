@@ -148,7 +148,7 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
             eq(proPayments.mpPaymentId, mpPayment.id),
           ))
           .limit(1);
-        if (newPayment) {
+        if (newPayment && newPayment.status !== 'refunded') {
           const periodDays = newPayment.interval === 'year' ? 365 : 30;
           const periodStart = newPayment.createdAt ?? new Date();
           const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);

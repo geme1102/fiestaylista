@@ -40,7 +40,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\/api\/(?!auth\/|subscriptions\/)(?!.*\/subscribe).*/i,
+            urlPattern: /^https?:\/\/.*\/api\/(?!auth\/|subscriptions\/|events\/[^/]+\/messages|events\/[^/]+\/guests|events\/[^/]+\/cash-fund|cash-fund\/)(?!.*\/subscribe).*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

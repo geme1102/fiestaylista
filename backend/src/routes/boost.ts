@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -39,7 +39,7 @@ router.get('/events/:eventId/boost-status', validateUuidParam('eventId'), asyncH
   const [event] = await db
     .select({ boostedUntil: events.boostedUntil })
     .from(events)
-    .where(eq(events.id, eventId))
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt), sql`${events.isActive} = true`))
     .limit(1);
 
   if (!event) throw new NotFoundError('Evento no encontrado');

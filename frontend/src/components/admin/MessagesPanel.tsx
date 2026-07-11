@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../../services/api';
 import { reportError } from '../../lib/reportError';
-import { showToast } from '../../hooks/useToast';
 
 
 interface Message {

@@ -5,7 +5,7 @@ import { config } from '../config.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
-import type { AuthRequest, JwtPayload, GuestJwtPayload } from '../types/index.js';
+import type { AuthRequest, JwtPayload } from '../types/index.js';
 
 // Tokens SSE (EventSource) se firman con JWT_SECRET pero deben servir ÚNICAMENTE
 // para el endpoint /subscribe. Si se presentan como access token en cualquier
@@ -33,23 +33,10 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
       throw new UnauthorizedError('Token de acceso requerido');
     }
 
-    let decoded: JwtPayload | GuestJwtPayload;
-    try {
-      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-    } catch {
-      try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
-      } catch {
-        throw new UnauthorizedError('Token inválido');
-      }
-    }
+    const decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
 
     if (isSseToken(decoded)) {
       throw new UnauthorizedError('Token inválido');
-    }
-
-    if ('isGuest' in decoded && (decoded as GuestJwtPayload).isGuest) {
-      throw new UnauthorizedError('Los tokens de invitado no tienen acceso a esta funcionalidad');
     }
 
     req.user = {
@@ -61,6 +48,14 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       next(error);
+      return;
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      next(new UnauthorizedError('Token expirado'));
+      return;
+    }
+    if (error instanceof jwt.NotBeforeError || error instanceof jwt.JsonWebTokenError) {
+      next(new UnauthorizedError('Token inválido'));
       return;
     }
     next(error);
@@ -80,26 +75,10 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
       throw new UnauthorizedError('Token de acceso requerido');
     }
 
-    let decoded: JwtPayload | GuestJwtPayload;
-    try {
-      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-    } catch (firstError) {
-      try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
-      } catch {
-        if (firstError instanceof jwt.TokenExpiredError) {
-          throw new UnauthorizedError('Token expirado');
-        }
-        throw new UnauthorizedError('Token inválido');
-      }
-    }
+    const decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
 
     if (isSseToken(decoded)) {
       throw new UnauthorizedError('Token inválido');
-    }
-
-    if ('isGuest' in decoded && (decoded as GuestJwtPayload).isGuest) {
-      throw new UnauthorizedError('Los tokens de invitado no tienen acceso a esta funcionalidad');
     }
 
     req.user = {
@@ -111,6 +90,14 @@ export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunct
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       next(error);
+      return;
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      next(new UnauthorizedError('Token expirado'));
+      return;
+    }
+    if (error instanceof jwt.NotBeforeError || error instanceof jwt.JsonWebTokenError) {
+      next(new UnauthorizedError('Token inválido'));
       return;
     }
     next(error);
@@ -132,19 +119,7 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
       return;
     }
 
-    let decoded: JwtPayload | GuestJwtPayload;
-    try {
-      decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-    } catch (firstError) {
-      try {
-        decoded = jwt.verify(token, config.JWT_GUEST_SECRET, { algorithms: ['HS256'] }) as GuestJwtPayload;
-      } catch {
-        if (firstError instanceof jwt.TokenExpiredError) {
-          throw new UnauthorizedError('Token expirado');
-        }
-        throw new UnauthorizedError('Token inválido');
-      }
-    }
+    const decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
 
     if (isSseToken(decoded)) {
       next();
@@ -154,7 +129,6 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      isGuest: 'isGuest' in decoded && (decoded as GuestJwtPayload).isGuest,
     };
 
     next();

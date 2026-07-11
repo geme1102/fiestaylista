@@ -46,7 +46,7 @@ export default async (request: Request, context: Context) => {
   }
 
   try {
-    const apiRes = await fetch(`https://fiestaylista-production.up.railway.app/api/events/slug/${slug}`, {
+    const apiRes = await fetch(`https://fiestaylista.com/api/events/slug/${encodeURIComponent(slug)}`, {
       headers: { "Accept": "application/json" },
       signal: AbortSignal.timeout(5000),
     });
@@ -83,8 +83,10 @@ export default async (request: Request, context: Context) => {
     if (event.eventDate) jsonLd.startDate = event.eventDate;
     if (event.eventLocation) jsonLd.location = { "@type": "Place", "name": event.eventLocation };
 
+    const jsonLdStr = JSON.stringify(jsonLd).replace(/<\//g, '<\\/');
+
     const html = buildHtml({
-      title, description, canonical, ogImage, jsonLd: JSON.stringify(jsonLd), typeLabel,
+      title, description, canonical, ogImage, jsonLd: jsonLdStr, typeLabel,
       totalGifts, claimedGifts, emoji,
     });
 

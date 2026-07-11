@@ -83,7 +83,7 @@ router.put('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), 
   res.json({ event });
 }));
 
-router.delete('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:id', requireAuth, requireEmailVerified, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const result = await eventService.deleteEvent(req.params.id as string, req.user!.userId);
   res.json(result);
 }));

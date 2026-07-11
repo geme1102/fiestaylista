@@ -11,7 +11,7 @@ if (config.RESEND_API_KEY) {
   resend = new Resend(config.RESEND_API_KEY);
 }
 
-function escapeHtml(str: string): string {
+export function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 

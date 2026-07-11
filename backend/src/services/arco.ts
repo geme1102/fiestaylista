@@ -3,7 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { getPublicIdFromUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
 import { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -112,6 +112,7 @@ export async function deleteUserAccount(userId: string) {
       .where(inArray(photos.eventId, eventIds));
 
     const cloudinaryDeletes = userPhotos
+      .filter(p => isOwnCloudinaryUrl(p.url))
       .map(p => getPublicIdFromUrl(p.url))
       .filter(Boolean) as string[];
 

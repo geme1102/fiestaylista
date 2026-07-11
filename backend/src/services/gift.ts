@@ -2,7 +2,7 @@ import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
 import { users, events, gifts as giftsTable, giftClaims } from '../db/schema.js';
-import { sanitize } from '../utils/sanitize.js';
+import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
 import { NotFoundError, ValidationError, ConflictError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier } from '../types/index.js';
@@ -235,7 +235,7 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
 
     const [claim] = await tx
       .insert(giftClaims)
-      .values({ giftId, claimedBy: cleanedName, message: message || null })
+      .values({ giftId, claimedBy: cleanedName, message: message ? sanitizeAndStrip(message) : null })
       .returning();
 
     return { claim };

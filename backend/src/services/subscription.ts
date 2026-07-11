@@ -3,7 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users, events, photos, proPayments, emailTracking } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { getPublicIdFromUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
 import { TIER_LIMITS, type Tier, type SubscriptionStatus } from '../types/index.js';
@@ -332,9 +332,11 @@ export async function purgeExpiredData(): Promise<number> {
       const userPhotos = userEventIds.flatMap(eid => photosByEvent.get(eid) || []);
 
       for (const photo of userPhotos) {
-        const publicId = getPublicIdFromUrl(photo.url);
-        if (publicId) {
-          cloudinary.uploader.destroy(publicId).catch((err: Error) => log.warn({ err }, 'Error eliminando foto de Cloudinary durante purga'));
+        if (isOwnCloudinaryUrl(photo.url)) {
+          const publicId = getPublicIdFromUrl(photo.url);
+          if (publicId) {
+            cloudinary.uploader.destroy(publicId).catch((err: Error) => log.warn({ err }, 'Error eliminando foto de Cloudinary durante purga'));
+          }
         }
       }
 

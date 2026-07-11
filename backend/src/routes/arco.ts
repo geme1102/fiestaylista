@@ -7,6 +7,7 @@ import { arcoLimiter } from '../middleware/rateLimit.js';
 import * as arcoService from '../services/arco.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { UnauthorizedError } from '../utils/errors.js';
+import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import type { AuthRequest } from '../types/index.js';
@@ -15,7 +16,7 @@ const router = Router();
 
 const arcoRequestSchema = z.object({
   requestType: z.enum(['access', 'rectify', 'cancel', 'oppose']),
-  details: z.string().optional(),
+  details: z.string().max(2000).transform(s => sanitizeAndStrip(s)).optional(),
 });
 
 router.get('/my-data', requireAuth, arcoLimiter, asyncHandler(async (req: AuthRequest, res) => {

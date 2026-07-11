@@ -39,6 +39,14 @@ router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => 
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
   }
+  const [event] = await db
+    .select({ isActive: events.isActive })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!event || !event.isActive) {
+    throw new NotFoundError('Evento no encontrado');
+  }
   const gifts = await giftService.getEventGifts(eventId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     cursor: req.query.cursor as string | undefined,
@@ -118,7 +126,7 @@ router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstile, validateU
   res.status(201).json(result);
 }));
 
-router.get('/:giftId/claims', validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req, res) => {
+router.get('/:giftId/claims', giftLimiter, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
@@ -148,6 +156,14 @@ router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandle
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
   }
+  const [event] = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!event) {
+    throw new NotFoundError('Evento no encontrado');
+  }
   const sseToken = jwt.sign(
     { eventId, scope: 'sse', userId: req.user!.userId },
     config.JWT_SECRET,
@@ -156,7 +172,7 @@ router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandle
   res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
-router.post('/public-sse-token', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
+router.post('/public-sse-token', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

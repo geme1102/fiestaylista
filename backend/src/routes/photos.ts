@@ -28,6 +28,14 @@ router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (re
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
   }
+  const [event] = await db
+    .select({ isActive: events.isActive })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!event || !event.isActive) {
+    throw new NotFoundError('Evento no encontrado');
+  }
   const photos = await photoService.getEventPhotos(eventId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     cursor: req.query.cursor as string | undefined,

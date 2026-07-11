@@ -56,7 +56,11 @@ function verifyMpSignature(req: Request): boolean {
       const tsPart = signature.split(',').find(p => p.trim().startsWith('ts='));
       if (tsPart) {
         const ts = Number(tsPart.split('=')[1]);
-        if (!isNaN(ts) && Math.abs(Date.now() - ts * 1000) > 5 * 60 * 1000) {
+        if (isNaN(ts)) {
+          log.warn('Firma con timestamp inválido');
+          return false;
+        }
+        if (Math.abs(Date.now() - ts * 1000) > 5 * 60 * 1000) {
           log.warn('Firma con timestamp fuera de ventana de 5 minutos');
           return false;
         }
