@@ -53,18 +53,12 @@ function validateConfig(): void {
   if (!process.env.JWT_REFRESH_SECRET) {
     failConfig('JWT_REFRESH_SECRET no está configurado');
   }
-  if (!process.env.JWT_GUEST_SECRET) {
-    failConfig('JWT_GUEST_SECRET no está configurado');
-  }
 
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
     failConfig('JWT_SECRET debe tener al menos 32 caracteres');
   }
   if (process.env.JWT_REFRESH_SECRET && process.env.JWT_REFRESH_SECRET.length < 32) {
     failConfig('JWT_REFRESH_SECRET debe tener al menos 32 caracteres');
-  }
-  if (process.env.JWT_GUEST_SECRET && process.env.JWT_GUEST_SECRET.length < 32) {
-    failConfig('JWT_GUEST_SECRET debe tener al menos 32 caracteres');
   }
 
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_SECRET || '')) {
@@ -73,13 +67,10 @@ function validateConfig(): void {
   if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_REFRESH_SECRET || '')) {
     failConfig('JWT_REFRESH_SECRET debe cambiarse del valor por defecto');
   }
-  if (DEFAULT_JWT_SECRETS.includes(process.env.JWT_GUEST_SECRET || '')) {
-    failConfig('JWT_GUEST_SECRET debe cambiarse del valor por defecto');
-  }
 
-  const secrets = [process.env.JWT_SECRET, process.env.JWT_REFRESH_SECRET, process.env.JWT_GUEST_SECRET];
+  const secrets = [process.env.JWT_SECRET, process.env.JWT_REFRESH_SECRET];
   if (new Set(secrets).size !== secrets.length) {
-    failConfig('JWT_SECRET, JWT_REFRESH_SECRET y JWT_GUEST_SECRET deben ser diferentes entre sí');
+    failConfig('JWT_SECRET y JWT_REFRESH_SECRET deben ser diferentes entre sí');
   }
 
   // Validar NODE_ENV
@@ -101,7 +92,7 @@ function validateConfig(): void {
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
     warnConfig('BACKEND_URL', process.env.BACKEND_URL);
     if (process.env.BACKEND_URL && !process.env.BACKEND_URL.startsWith('http://') && !process.env.BACKEND_URL.startsWith('https://')) {
-      console.error('[config] BACKEND_URL debe comenzar con http:// o https://');
+      failConfig('BACKEND_URL debe comenzar con http:// o https://');
     }
     if (!process.env.FRONTEND_URL) failConfig('FRONTEND_URL no está configurado');
     if (!process.env.FRONTEND_URL.startsWith('http://') && !process.env.FRONTEND_URL.startsWith('https://')) {
@@ -127,11 +118,10 @@ export const config = {
   DATABASE_URL: process.env.DATABASE_URL || '',
   JWT_SECRET: process.env.JWT_SECRET || '',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
-  JWT_GUEST_SECRET: process.env.JWT_GUEST_SECRET || '',
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, '').trim(),
-  FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://fiestaylista.netlify.app` : 'http://localhost:5173')).trim(),
+  FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://fiestaylista.com` : 'http://localhost:5173')).trim(),
   PORT: (() => { const p = parseInt(process.env.PORT || '3001', 10); return Number.isNaN(p) ? 3001 : p; })(),
   NODE_ENV: process.env.NODE_ENV as string,
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
@@ -166,7 +156,7 @@ export const config = {
   ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   SENTRY_DSN: process.env.SENTRY_DSN || '',
-  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '15', 10),
+  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '10', 10),
   CLUSTER_WORKERS: parseInt(process.env.CLUSTER_WORKERS || '0', 10),
   PAYMENT_RATE_LIMIT: parseInt(process.env.PAYMENT_RATE_LIMIT || '10', 10),
   WEBHOOK_RATE_LIMIT: parseInt(process.env.WEBHOOK_RATE_LIMIT || '300', 10),
