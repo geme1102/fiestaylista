@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 vi.mock('../config.js', () => ({
   config: {
     JWT_SECRET: 'test-access-secret-at-least-32-characters-long',
-    JWT_GUEST_SECRET: 'test-guest-secret-at-least-32-characters-long',
   },
 }));
 
@@ -27,7 +26,7 @@ function signGuestSseToken(): string {
 
 interface MockReq {
   headers: { authorization?: string };
-  user?: { userId?: string; email?: string; isGuest?: boolean };
+  user?: { userId?: string; email?: string };
 }
 
 function buildReq(token?: string): MockReq {

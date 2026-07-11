@@ -5,7 +5,6 @@ vi.mock('../config.js', () => ({
     NODE_ENV: 'test',
     JWT_SECRET: 'test-secret',
     JWT_REFRESH_SECRET: 'test-refresh-secret',
-    JWT_GUEST_SECRET: 'test-guest-secret',
     FRONTEND_URL: 'http://localhost:5173',
     FROM_EMAIL: 'test@test.com',
     RESEND_API_KEY: 're_test',

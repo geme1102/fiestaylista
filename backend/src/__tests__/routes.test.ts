@@ -7,7 +7,6 @@ vi.mock('../config.js', () => ({
     NODE_ENV: 'test',
     JWT_SECRET: 'test-secret-key-not-for-production',
     JWT_REFRESH_SECRET: 'test-refresh-secret-key',
-    JWT_GUEST_SECRET: 'test-guest-secret-key',
     FRONTEND_URL: 'http://localhost:5173',
     BACKEND_URL: 'http://localhost:3001',
     MERCADO_PAGO_ACCESS_TOKEN: '',

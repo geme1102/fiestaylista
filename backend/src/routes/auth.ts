@@ -113,10 +113,6 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
 }));
 
 router.get('/me', requireAnyAuth, asyncHandler(async (req: AuthRequest, res) => {
-  if (req.user?.isGuest) {
-    res.json({ user: null, isGuest: true });
-    return;
-  }
   const user = await authService.getUser(req.user!.userId);
   res.json({ user });
 }));

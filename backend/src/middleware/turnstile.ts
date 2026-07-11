@@ -34,32 +34,6 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
   }
 }
 
-export async function verifyTurnstileOptional(req: Request, _res: Response, next: NextFunction): Promise<void> {
-  try {
-    const token = req.body?.turnstileToken;
-
-    if (!config.TURNSTILE_SECRET_KEY) {
-      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
-        log.warn('Bypass: sin TURNSTILE_SECRET_KEY en entorno no productivo');
-        next();
-        return;
-      }
-      throw new ValidationError('Turnstile no está configurado');
-    }
-
-    if (!token) {
-      log.warn('Token Turnstile ausente — continuando sin verificación (ad-blocker?)');
-      next();
-      return;
-    }
-
-    await verifyToken(token, req.ip);
-    next();
-  } catch (error) {
-    next(error);
-  }
-}
-
 async function verifyToken(token: string, remoteIp?: string): Promise<void> {
   const formData = new URLSearchParams();
   formData.append('secret', config.TURNSTILE_SECRET_KEY);
