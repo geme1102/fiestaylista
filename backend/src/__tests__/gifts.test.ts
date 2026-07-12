@@ -32,6 +32,7 @@ vi.mock('../middleware/subscription.js', () => ({
 }));
 vi.mock('../middleware/turnstile.js', () => ({
   verifyTurnstile: vi.fn((_req, _res, next) => next()),
+  verifyTurnstileOptional: vi.fn((_req, _res, next) => next()),
 }));
 vi.mock('../middleware/validateUuid.js', () => ({
   validateUuidParam: () => (_req: unknown, _res: unknown, next: () => void) => next(),

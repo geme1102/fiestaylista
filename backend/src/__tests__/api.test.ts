@@ -176,6 +176,7 @@ vi.mock('../middleware/subscription.js', () => ({
 
 vi.mock('../middleware/turnstile.js', () => ({
   verifyTurnstile: (_req: Request, _res: Response, next: NextFunction) => next(),
+  verifyTurnstileOptional: (_req: Request, _res: Response, next: NextFunction) => next(),
 }));
 
 vi.mock('../middleware/validateUuid.js', () => ({

@@ -6,7 +6,7 @@ import { refreshTokens } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { reconcileSubscriptionOnLogin } from '../services/subscription.js';
@@ -73,7 +73,7 @@ const resetPasswordSchema = z.object({
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
 
-router.post('/register', authLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
+router.post('/register', authLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
   setRefreshCookie(res, result.refreshToken);
@@ -81,7 +81,7 @@ router.post('/register', authLimiter, verifyTurnstile, asyncHandlerWithValidatio
   res.status(201).json(safeResult);
 }));
 
-router.post('/login', authLimiter, verifyTurnstile, asyncHandlerWithValidation(async (req, res) => {
+router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
   const data = loginSchema.parse(req.body);
   const result = await authService.login(data.email, data.password, {
     userAgent: req.headers['user-agent'],
