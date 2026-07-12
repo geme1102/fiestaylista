@@ -119,9 +119,7 @@ export async function login(
   try {
     const rows = await sql`
       SELECT
-        id, email, password_hash, name, tier, email_verified, created_at,
-        COALESCE(onboarding_completed, false) AS onboarding_completed,
-        COALESCE(welcome_tutorial_completed, false) AS welcome_tutorial_completed
+        id, email, password_hash, name, tier, email_verified, created_at
       FROM users
       WHERE email = ${email.toLowerCase()}
       LIMIT 1
@@ -135,8 +133,6 @@ export async function login(
           tier: string;
           email_verified: boolean;
           created_at: Date;
-          onboarding_completed: boolean;
-          welcome_tutorial_completed: boolean;
         }
       | undefined;
 
@@ -198,8 +194,8 @@ export async function login(
       name: user.name,
       tier: user.tier,
       emailVerified: user.email_verified,
-      onboardingCompleted: user.onboarding_completed,
-      welcomeTutorialCompleted: user.welcome_tutorial_completed,
+      onboardingCompleted: false,
+      welcomeTutorialCompleted: false,
       createdAt: user.created_at,
     },
     ...tokens,
@@ -242,9 +238,7 @@ export async function refreshToken(
 export async function getUser(userId: string): Promise<UserResponse> {
   const rows = await sql`
     SELECT
-      id, email, name, tier, email_verified, created_at,
-      COALESCE(onboarding_completed, false) AS onboarding_completed,
-      COALESCE(welcome_tutorial_completed, false) AS welcome_tutorial_completed
+      id, email, name, tier, email_verified, created_at
     FROM users
     WHERE id = ${userId}
     LIMIT 1
@@ -257,8 +251,6 @@ export async function getUser(userId: string): Promise<UserResponse> {
         tier: string;
         email_verified: boolean;
         created_at: Date;
-        onboarding_completed: boolean;
-        welcome_tutorial_completed: boolean;
       }
     | undefined;
 
@@ -272,8 +264,8 @@ export async function getUser(userId: string): Promise<UserResponse> {
     name: user.name,
     tier: user.tier,
     emailVerified: user.email_verified,
-    onboardingCompleted: user.onboarding_completed,
-    welcomeTutorialCompleted: user.welcome_tutorial_completed,
+    onboardingCompleted: false,
+    welcomeTutorialCompleted: false,
     createdAt: user.created_at,
   };
 }

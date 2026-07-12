@@ -117,7 +117,7 @@ describe('Auth Service', () => {
       vi.mocked(db.select).mockReturnValue(queryMock([[{ count: 0 }]]));
       vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) } as any);
       vi.mocked(db.delete).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) } as any);
-      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'test@test.com', password_hash: 'hash', name: 'T', tier: 'free', email_verified: true, created_at: new Date(), onboarding_completed: false, welcome_tutorial_completed: false }] as any);
+      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'test@test.com', password_hash: 'hash', name: 'T', tier: 'free', email_verified: true, created_at: new Date() }] as any);
       const result = await login('test@test.com', 'password123');
       expect(result.user.email).toBe('test@test.com');
     });
@@ -135,7 +135,7 @@ describe('Auth Service', () => {
     it('returns user', async () => {
       const { sql } = await import('../db/index.js');
       const { getUser } = await import('../services/auth.js');
-      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'e@e.com', name: 'N', tier: 'free', email_verified: true, created_at: new Date(), onboarding_completed: false, welcome_tutorial_completed: false }] as any);
+      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'e@e.com', name: 'N', tier: 'free', email_verified: true, created_at: new Date() }] as any);
       const user = await getUser('u1');
       expect(user.email).toBe('e@e.com');
     });
