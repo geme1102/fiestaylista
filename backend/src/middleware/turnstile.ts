@@ -53,7 +53,11 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
       return;
     }
 
-    await verifyToken(token, req.ip);
+    try {
+      await verifyToken(token, req.ip);
+    } catch (err) {
+      log.warn({ err, ip: req.ip, path: req.path }, 'Verificación Turnstile falló — continuando con rate limiter');
+    }
     next();
   } catch (error) {
     next(error);
