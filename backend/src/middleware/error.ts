@@ -46,5 +46,6 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 
   logError(err, errorId, req);
 
-  res.status(500).json({ error: 'Error interno del servidor', errorId });
+  const errMsg = err instanceof Error ? err.message : 'Error desconocido';
+  res.status(500).json({ error: 'Error interno del servidor', errorId, detail: errMsg.slice(0, 300) });
 }
