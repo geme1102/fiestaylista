@@ -50,8 +50,12 @@ export default function Login() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
-    if (!token) {
-      if (import.meta.env.DEV) console.warn('[Login] Turnstile no disponible — continuando sin verificación');
+    if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+      setLoading(false);
+      setButtonStatus('idle');
+      showToast('Verificación de seguridad pendiente. Intenta de nuevo en un momento.', 'info');
+      resetTurnstile();
+      return;
     }
     safetyTimerRef.current = setTimeout(() => {
       setLoading(false);
