@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
-import { db } from '../db/index.js';
+import { db, sql } from '../db/index.js';
 import { users, auditLogs } from '../db/schema.js';
 import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
@@ -117,11 +117,28 @@ export async function login(
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   try {
-    const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email.toLowerCase()))
-    .limit(1);
+    const rows = await sql`
+      SELECT
+        id, email, password_hash, name, tier, email_verified, created_at,
+        COALESCE(onboarding_completed, false) AS onboarding_completed,
+        COALESCE(welcome_tutorial_completed, false) AS welcome_tutorial_completed
+      FROM users
+      WHERE email = ${email.toLowerCase()}
+      LIMIT 1
+    `;
+    const user = rows[0] as
+      | {
+          id: string;
+          email: string;
+          password_hash: string;
+          name: string;
+          tier: string;
+          email_verified: boolean;
+          created_at: Date;
+          onboarding_completed: boolean;
+          welcome_tutorial_completed: boolean;
+        }
+      | undefined;
 
   if (!user) {
     await bcrypt.compare(password, DUMMY_HASH);
@@ -155,7 +172,7 @@ export async function login(
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
-  const isValid = await bcrypt.compare(password, user.passwordHash);
+  const isValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isValid) {
     recordFailedAttempt(user.id);
@@ -175,12 +192,21 @@ export async function login(
   const tokens = await issueTokenPair(user.id, user.email);
 
   return {
-    user: toUserResponse(user),
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      tier: user.tier,
+      emailVerified: user.email_verified,
+      onboardingCompleted: user.onboarding_completed,
+      welcomeTutorialCompleted: user.welcome_tutorial_completed,
+      createdAt: user.created_at,
+    },
     ...tokens,
   };
 } catch (error) {
-  log.error({ err: error, email }, 'Error inesperado en login:');
-  throw error;
+    log.error({ err: error, email }, 'Error inesperado en login:');
+    throw error;
 }
 }
 
@@ -214,17 +240,42 @@ export async function refreshToken(
 }
 
 export async function getUser(userId: string): Promise<UserResponse> {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const rows = await sql`
+    SELECT
+      id, email, name, tier, email_verified, created_at,
+      COALESCE(onboarding_completed, false) AS onboarding_completed,
+      COALESCE(welcome_tutorial_completed, false) AS welcome_tutorial_completed
+    FROM users
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  const user = rows[0] as
+    | {
+        id: string;
+        email: string;
+        name: string;
+        tier: string;
+        email_verified: boolean;
+        created_at: Date;
+        onboarding_completed: boolean;
+        welcome_tutorial_completed: boolean;
+      }
+    | undefined;
 
   if (!user) {
     throw new UnauthorizedError('Usuario no encontrado');
   }
 
-  return toUserResponse(user);
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    tier: user.tier,
+    emailVerified: user.email_verified,
+    onboardingCompleted: user.onboarding_completed,
+    welcomeTutorialCompleted: user.welcome_tutorial_completed,
+    createdAt: user.created_at,
+  };
 }
 
 export async function markOnboardingCompleted(userId: string): Promise<void> {

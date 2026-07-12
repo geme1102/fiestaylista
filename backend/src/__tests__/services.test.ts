@@ -22,7 +22,7 @@ vi.mock('jsonwebtoken', () => ({
 
 vi.mock('../db/index.js', () => ({
   db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), transaction: vi.fn(), execute: vi.fn() },
-  sql: vi.fn((s: any) => ({ toSQL: () => ({ sql: s[0] }) })),
+  sql: vi.fn(() => Promise.resolve([] as any)),
   eq: vi.fn((a: any, b: any) => ({ a, b })),
   and: vi.fn((...a: any[]) => a),
   or: vi.fn((...a: any[]) => a),
@@ -112,11 +112,12 @@ describe('Auth Service', () => {
 
   describe('login', () => {
     it('returns tokens for valid credentials', async () => {
-      const { db } = await import('../db/index.js');
+      const { db, sql } = await import('../db/index.js');
       const { login } = await import('../services/auth.js');
-      vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'u1', email: 'test@test.com', name: 'T', tier: 'free', emailVerified: true, createdAt: new Date(), passwordHash: 'hash' }]]));
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ count: 0 }]]));
       vi.mocked(db.insert).mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) } as any);
       vi.mocked(db.delete).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) } as any);
+      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'test@test.com', password_hash: 'hash', name: 'T', tier: 'free', email_verified: true, created_at: new Date(), onboarding_completed: false, welcome_tutorial_completed: false }] as any);
       const result = await login('test@test.com', 'password123');
       expect(result.user.email).toBe('test@test.com');
     });
@@ -132,16 +133,15 @@ describe('Auth Service', () => {
 
   describe('getUser', () => {
     it('returns user', async () => {
-      const { db } = await import('../db/index.js');
+      const { sql } = await import('../db/index.js');
       const { getUser } = await import('../services/auth.js');
-      vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'u1', email: 'e@e.com', name: 'N', tier: 'free', emailVerified: true, createdAt: new Date() }]]));
-      expect((await getUser('u1')).email).toBe('e@e.com');
+      vi.mocked(sql).mockResolvedValueOnce([{ id: 'u1', email: 'e@e.com', name: 'N', tier: 'free', email_verified: true, created_at: new Date(), onboarding_completed: false, welcome_tutorial_completed: false }] as any);
+      const user = await getUser('u1');
+      expect(user.email).toBe('e@e.com');
     });
 
     it('throws if not found', async () => {
-      const { db } = await import('../db/index.js');
       const { getUser } = await import('../services/auth.js');
-      vi.mocked(db.select).mockReturnValue(queryMock([[]]));
       await expect(getUser('x')).rejects.toThrow('Usuario no encontrado');
     });
   });
