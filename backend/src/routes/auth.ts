@@ -19,6 +19,8 @@ import type { AuthRequest } from '../types/index.js';
 const router = Router();
 const log = createModuleLogger('AuthRoutes');
 
+const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
 function setRefreshCookie(res: Response, refreshToken: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
   res.cookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', refreshToken, {
@@ -26,7 +28,14 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
     path: '/api/auth/refresh',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: REFRESH_MAX_AGE,
+  });
+  res.cookie('hasRefresh', '1', {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    maxAge: REFRESH_MAX_AGE,
   });
 }
 
@@ -164,6 +173,11 @@ router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRe
   const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', {
     path: '/api/auth/refresh',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  });
+  res.clearCookie('hasRefresh', {
+    path: '/',
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
   });

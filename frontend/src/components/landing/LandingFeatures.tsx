@@ -64,8 +64,8 @@ export function LandingFeatures() {
               </div>
             </motion.div>
             <motion.div className="absolute z-20 w-28 h-32 md:w-32 md:h-36 bg-white p-2 pb-6 md:pb-8 shadow-xl rounded-sm -rotate-3 transition-all duration-300">
-              <div className="w-full h-full bg-gray-100 rounded-[2px] overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=200" alt="Evento" className="w-full h-full object-cover" loading="lazy" />
+              <div className="w-full h-full bg-gradient-to-br from-brand-pink/15 via-brand-peach/10 to-brand-pink/5 rounded-[2px] overflow-hidden flex items-center justify-center">
+                <Camera className="w-8 h-8 md:w-10 md:h-10 text-brand-pink/40" strokeWidth={1.5} />
               </div>
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm flex items-center justify-center shadow-lg transform -translate-y-2">

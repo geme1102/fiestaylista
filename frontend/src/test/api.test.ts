@@ -208,6 +208,7 @@ describe('request retry and error handling', () => {
 
 describe('401 refresh token flow', () => {
   it('refreshes token on 401 and retries request', async () => {
+    document.cookie = 'hasRefresh=1';
     mockFetchOnce(401);
     mockFetchOnce(200, { accessToken: 'new-token' });
     mockFetchOnce(200, { data: 'success' });
@@ -241,6 +242,7 @@ describe('401 refresh token flow', () => {
 
 describe('tryRefreshToken', () => {
   it('returns true on success and stores token', async () => {
+    document.cookie = 'hasRefresh=1';
     mockFetchOnce(200, { accessToken: 'fresh-token' });
 
     const result = await tryRefreshToken();
@@ -250,6 +252,7 @@ describe('tryRefreshToken', () => {
   });
 
   it('returns false on failure', async () => {
+    document.cookie = 'hasRefresh=1';
     mockFetchOnce(401);
 
     const result = await tryRefreshToken();

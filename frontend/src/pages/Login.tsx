@@ -21,9 +21,9 @@ export default function Login() {
   const navigatedRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const isFormValid = email.length > 0 && password.length > 0;
 
   const { containerRef, token: turnstileToken, error: turnstileError, reset: resetTurnstile } = useTurnstile();
+  const isFormValid = email.length > 0 && password.length > 0 && (!!turnstileToken || !import.meta.env.VITE_TURNSTILE_SITE_KEY);
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -31,6 +31,8 @@ export default function Login() {
     if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
     if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
   }; }, []);
+
+  const turnstileVerifying = !turnstileToken && !!import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileError;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +204,11 @@ export default function Login() {
                     <span className="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
                     ¡Bienvenido!
                   </span>
+                ) : turnstileVerifying ? (
+                  <span className="inline-flex items-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Verificando seguridad...
+                  </span>
                 ) : 'Iniciar Sesión'}
               </button>
               <span className="sr-only" role="status" aria-live="polite">
@@ -210,12 +217,21 @@ export default function Login() {
             </form>
 
             {turnstileError && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 text-sm text-amber-800 mt-6">
-                <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">shield_person</span>
-                <div className="space-y-1">
-                  <p className="font-medium">Verificación de seguridad no disponible</p>
-                  <p className="text-amber-700/80">{turnstileError}</p>
+              <div className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 text-sm text-amber-800 mt-6">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">shield_person</span>
+                  <div className="space-y-1">
+                    <p className="font-medium">Verificación de seguridad no disponible</p>
+                    <p className="text-amber-700/80">{turnstileError}</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => resetTurnstile()}
+                  className="self-start px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium text-sm transition-colors"
+                >
+                  Reintentar verificación
+                </button>
               </div>
             )}
             <div ref={containerRef} className="absolute" />

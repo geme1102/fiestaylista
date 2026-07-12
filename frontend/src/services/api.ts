@@ -181,6 +181,9 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
 let refreshPromise: Promise<boolean> | null = null;
 
 export async function tryRefreshToken(): Promise<boolean> {
+  if (typeof document !== 'undefined' && !document.cookie.includes('hasRefresh=1')) {
+    return false;
+  }
   if (refreshPromise) return refreshPromise;
   refreshPromise = (async () => {
     try {
