@@ -249,7 +249,7 @@ export async function expireStaleSubscriptions(): Promise<number> {
     // procesen las mismas suscripciones
     const staleRows = await tx.execute(sql`
       SELECT id, user_id FROM ${subsTable} 
-      WHERE current_period_end <= ${freezeThreshold} 
+      WHERE current_period_end <= ${freezeThreshold.toISOString()}::timestamptz 
         AND status IN ('active', 'past_due', 'canceled') 
       FOR UPDATE SKIP LOCKED
     `) as unknown as { id: string; user_id: string }[];
@@ -296,7 +296,7 @@ export async function purgeExpiredData(): Promise<number> {
     const expired = await tx.execute(sql`
       SELECT id, user_id FROM ${events}
       WHERE frozen_at IS NOT NULL
-        AND frozen_at <= ${purgeThreshold}
+        AND frozen_at <= ${purgeThreshold.toISOString()}::timestamptz
         AND deleted_at IS NULL
       FOR UPDATE SKIP LOCKED
     `) as unknown as PurgeRow[];

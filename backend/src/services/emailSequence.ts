@@ -60,7 +60,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
 
     batchCount++;
     const condition: SQL | undefined = minCreatedAt
-      ? and(eq(users.emailVerified, true), sql`${users.createdAt} > ${minCreatedAt}`)
+      ? and(eq(users.emailVerified, true), sql`${users.createdAt} > ${minCreatedAt.toISOString()}::timestamptz`)
       : eq(users.emailVerified, true);
 
     const rows: { id: string; email: string; name: string; tier: string; createdAt: Date }[] = await db

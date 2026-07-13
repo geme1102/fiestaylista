@@ -15,7 +15,7 @@ export async function isLocked(userId: string): Promise<boolean> {
     .where(and(
       eq(auditLogs.userId, userId),
       eq(auditLogs.action, 'auth.login.failed'),
-      sql`${auditLogs.createdAt} >= ${windowStart}`,
+      sql`${auditLogs.createdAt} >= ${windowStart.toISOString()}::timestamptz`,
     ))
     .limit(1);
 
