@@ -1,6 +1,6 @@
 import { Router, type Response } from 'express';
 import { z } from 'zod';
-import { requireAuth, requireAnyAuth, optionalAuth } from '../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { hashToken } from '../services/auth-tokens.js';
 import { refreshTokens } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -88,7 +88,9 @@ router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithVali
     ipAddress: req.ip,
   });
   setRefreshCookie(res, result.refreshToken);
-  reconcileSubscriptionOnLogin(result.user.id);
+  reconcileSubscriptionOnLogin(result.user.id).catch((err: unknown) =>
+    log.error({ err, userId: result.user.id }, 'Error reconciliando suscripción on-login'),
+  );
   const { refreshToken: _, ...safeResult } = result;
   res.json(safeResult);
 }));
@@ -121,7 +123,7 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
   }
 }));
 
-router.get('/me', requireAnyAuth, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/me', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   const user = await authService.getUser(req.user!.userId);
   res.json({ user });
 }));

@@ -98,9 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (import.meta.env.DEV) console.error('[Auth] Error en logout:', err);
     });
     clearTokens();
+    try { document.cookie = 'hasRefresh=; max-age=0; path=/'; } catch {}
     setUser(null);
     navigate('/');
-  }, []);
+  }, [navigate]);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -113,8 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(res.user);
     } catch (err) {
       reportError(err, { source: 'AuthContext' });
-      if (err instanceof Error && !err.message.includes('Sesión expirada')) {
+      if (err instanceof Error && !err.message.includes('Sesión expirada') && !err.message.includes('No autorizado')) {
         if (import.meta.env.DEV) console.error('[Auth] Error transitorio refrescando usuario:', err);
+        showToast('No se pudieron cargar tus datos. Manteniendo la sesión actual.', 'info');
         return;
       }
       clearTokens();

@@ -124,7 +124,8 @@ export async function login(
                onboarding_completed, welcome_tutorial_completed
         FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
       `;
-    } catch {
+    } catch (err) {
+      log.warn({ err }, 'Query con columnas opcionales falló — usando fallback');
       rows = await sql`
         SELECT id, email, password_hash, name, tier, email_verified, created_at
         FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
@@ -251,7 +252,8 @@ export async function getUser(userId: string): Promise<UserResponse> {
              onboarding_completed, welcome_tutorial_completed
       FROM users WHERE id = ${userId} LIMIT 1
     `;
-  } catch {
+  } catch (err) {
+    log.warn({ err, userId }, 'Query con columnas opcionales falló — usando fallback');
     rows = await sql`
       SELECT id, email, name, tier, email_verified, created_at
       FROM users WHERE id = ${userId} LIMIT 1
@@ -302,7 +304,13 @@ export async function markWelcomeCompleted(userId: string): Promise<void> {
 
 export async function verifyEmail(token: string): Promise<void> {
   const [user] = await db
-    .select()
+    .select({
+      id: users.id,
+      email: users.email,
+      emailVerified: users.emailVerified,
+      verificationToken: users.verificationToken,
+      verificationTokenExpires: users.verificationTokenExpires,
+    })
     .from(users)
     .where(eq(users.verificationToken, hashToken(token)))
     .limit(1);
@@ -328,7 +336,11 @@ export async function verifyEmail(token: string): Promise<void> {
 
 export async function resendVerificationEmail(userId: string): Promise<void> {
   const [user] = await db
-    .select()
+    .select({
+      id: users.id,
+      email: users.email,
+      emailVerified: users.emailVerified,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
@@ -359,7 +371,10 @@ export async function resendVerificationEmail(userId: string): Promise<void> {
 
 export async function forgotPassword(email: string): Promise<void> {
   const [user] = await db
-    .select()
+    .select({
+      id: users.id,
+      email: users.email,
+    })
     .from(users)
     .where(eq(users.email, email.toLowerCase()))
     .limit(1);
@@ -395,7 +410,10 @@ export async function forgotPassword(email: string): Promise<void> {
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
   const [user] = await db
-    .select()
+    .select({
+      id: users.id,
+      resetTokenExpires: users.resetTokenExpires,
+    })
     .from(users)
     .where(eq(users.resetToken, hashToken(token)))
     .limit(1);

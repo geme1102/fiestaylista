@@ -66,7 +66,14 @@ vi.mock('../db/index.js', () => ({
     }),
     execute: vi.fn().mockResolvedValue(undefined),
   },
-  sql: vi.fn((strings: TemplateStringsArray) => ({ toSQL: () => ({ sql: strings[0] }) })),
+  sql: vi.fn(() => {
+    const rows: any[] = [{
+      id: 'user-1', email: 'test@test.com', password_hash: '$2a$12$dummyhashfortestingpassword', name: 'Test', tier: 'free', email_verified: true, created_at: new Date(),
+      onboarding_completed: false, welcome_tutorial_completed: false,
+      user_id: 'user-1', token_hash: 'hash', expires_at: new Date(), revoked: false,
+    }];
+    return Object.assign(Promise.resolve(rows), rows);
+  }),
   isNull: vi.fn((col: any) => col),
   eq: vi.fn((a: any, b: any) => ({ a, b })),
   and: vi.fn((...args: any[]) => args),
@@ -258,7 +265,7 @@ const mockSubscriptionService = vi.hoisted(() => ({
   getCurrentSubscription: vi.fn(),
   cancelSubscription: vi.fn(),
   createOrUpdateSubscription: vi.fn(),
-  reconcileSubscriptionOnLogin: vi.fn(),
+  reconcileSubscriptionOnLogin: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../services/subscription.js', () => mockSubscriptionService);

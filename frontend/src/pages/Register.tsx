@@ -43,10 +43,11 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
-  const isFormValid = name.length > 0 && email.length > 0 && password.length >= 8
-    && /[A-Z]/.test(password) && /[0-9]/.test(password) && acceptTerms && acceptPrivacy;
-
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const isFormValid = name.length > 0 && email.length > 0 && password.length >= 8
+    && /[A-Z]/.test(password) && /[0-9]/.test(password) && acceptTerms && acceptPrivacy
+    && (!!turnstileToken || !import.meta.env.VITE_TURNSTILE_SITE_KEY);
+
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -82,8 +83,11 @@ export default function Register() {
     if (!token) {
       token = await waitForTurnstile(() => turnstileTokenRef.current);
     }
-    if (!token) {
-      if (import.meta.env.DEV) console.warn('[Register] Turnstile no disponible — continuando sin verificación');
+    if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+      setLoading(false);
+      showToast('Verificación de seguridad pendiente. Intenta de nuevo en un momento.', 'info');
+      resetTurnstile();
+      return;
     }
 
     safetyTimerRef.current = setTimeout(() => {

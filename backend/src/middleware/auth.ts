@@ -62,48 +62,6 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
   }
 }
 
-export function requireAnyAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Token de acceso requerido');
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new UnauthorizedError('Token de acceso requerido');
-    }
-
-    const decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
-
-    if (isSseToken(decoded)) {
-      throw new UnauthorizedError('Token inválido');
-    }
-
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-    };
-
-    next();
-  } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      next(error);
-      return;
-    }
-    if (error instanceof jwt.TokenExpiredError) {
-      next(new UnauthorizedError('Token expirado'));
-      return;
-    }
-    if (error instanceof jwt.NotBeforeError || error instanceof jwt.JsonWebTokenError) {
-      next(new UnauthorizedError('Token inválido'));
-      return;
-    }
-    next(error);
-  }
-}
-
 export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
@@ -154,3 +112,5 @@ export async function requireEmailVerified(req: AuthRequest, _res: Response, nex
     next(error);
   }
 }
+
+export { requireAuth as requireAnyAuth };

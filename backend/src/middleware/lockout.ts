@@ -60,7 +60,14 @@ export function recordFailedAttempt(_userId?: string): void {
   // AuditLogs already records failed attempts — no in-memory state needed
 }
 
-export function resetLockout(_userId: string): void {
-  // Window-based — no explicit reset needed;
-  // successful login naturally moves failures out of window
+export function resetLockout(userId: string): void {
+  try {
+    db.delete(auditLogs)
+      .where(and(
+        eq(auditLogs.userId, userId),
+        eq(auditLogs.action, 'auth.login.failed'),
+      ));
+  } catch {
+    // Non-blocking cleanup; ignore errors (mock/test environments, DB down, etc.)
+  }
 }
