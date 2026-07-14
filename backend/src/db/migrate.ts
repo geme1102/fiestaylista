@@ -165,35 +165,23 @@ export async function runMigrations(): Promise<void> {
 
   // Apply each column migration individually (not in a single transaction)
   // so a single failure doesn't block the rest.
-  // Each migration entry may contain multiple statements separated by ';'.
   for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
     const name = COLUMN_MIGRATION_NAMES[i];
     if (appliedNames.has(name)) continue;
 
     log.info({ migration: name }, 'Aplicando migración');
-    const statements = COLUMN_MIGRATIONS[i].split(';').map(s => s.trim()).filter(Boolean);
-    let migrationFailed = false;
-
-    for (const stmt of statements) {
-      try {
-        await sql.unsafe(stmt);
-      } catch (err) {
-        const isAlreadyExists = err instanceof Error && /already exists|duplicate/i.test(err.message);
-        if (isAlreadyExists) {
-          log.info({ migration: name, stmt: stmt.slice(0, 80) }, 'Ya existe — saltando');
-        } else {
-          log.warn({ migration: name, err, stmt: stmt.slice(0, 80) }, 'Sentencia falló — saltando');
-        }
-        migrationFailed = true;
+    try {
+      await sql.unsafe(COLUMN_MIGRATIONS[i]);
+    } catch (err) {
+      const isAlreadyExists = err instanceof Error && /already exists|duplicate/i.test(err.message);
+      if (!isAlreadyExists) {
+        log.warn({ migration: name, err }, 'Sentencia falló — saltando');
       }
     }
 
     try {
       await sql`INSERT INTO "migration_journal" ("name") VALUES (${name}) ON CONFLICT DO NOTHING`;
     } catch {}
-    if (migrationFailed) {
-      log.warn({ migration: name }, 'Migración parcialmente fallida — marcada como aplicada');
-    }
     log.info({ migration: name }, 'Migración aplicada');
   }
 

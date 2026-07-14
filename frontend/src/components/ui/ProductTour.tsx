@@ -16,9 +16,9 @@ export interface TourStep {
 const PADDING = 12;
 const MOBILE_NAV_SAFE = 72;
 const MIN_CONTENT_HEIGHT = 100;
-const TARGET_POLL_MAX_MS = 8000;
+const TARGET_POLL_MAX_MS = 2000;
 const TARGET_POLL_INTERVAL_MS = 100;
-const SCROLL_SETTLE_MS = 350;
+const SCROLL_SETTLE_MS = 150;
 
 function measureTarget(selector: string): DOMRect | null {
   try {
@@ -37,6 +37,8 @@ function smoothScrollToTarget(selector: string): Promise<void> {
       const el = document.querySelector(selector);
       if (!el) { resolve(); return; }
       const rect = el.getBoundingClientRect();
+      const isVisible = rect.top >= -rect.height && rect.bottom <= window.innerHeight + rect.height;
+      if (isVisible) { resolve(); return; }
       const targetY = window.scrollY + rect.top - window.innerHeight / 2 + rect.height / 2;
       const clampedY = Math.max(0, targetY);
       window.scrollTo({ top: clampedY, behavior: 'smooth' });
@@ -80,7 +82,7 @@ export function ProductTour({
   }, [storageKey, completed]);
 
   useEffect(() => {
-    const timer = setTimeout(start, 800);
+    const timer = setTimeout(start, 300);
     return () => clearTimeout(timer);
   }, [start]);
 
@@ -214,7 +216,11 @@ export function ProductTour({
           finalPlacement = 'bottom';
         }
 
-        const style: React.CSSProperties = { left: rect.left + rect.width / 2 };
+        const TOOLTIP_WIDTH = 280;
+        const halfTooltip = TOOLTIP_WIDTH / 2;
+        const style: React.CSSProperties = {
+          left: Math.max(halfTooltip + PADDING, Math.min(vw - halfTooltip - PADDING, rect.left + rect.width / 2)),
+        };
 
         if (finalPlacement === 'top') {
           style.bottom = vh - rect.top + PADDING;
@@ -248,7 +254,7 @@ export function ProductTour({
   return createPortal(
     <div
       ref={trapRef}
-      className="fixed inset-0 z-[100]"
+      className="fixed inset-0 z-[100] pointer-events-none"
       role="dialog"
       aria-modal="true"
       aria-label={step.title}
@@ -270,7 +276,7 @@ export function ProductTour({
           <motion.div
             key={stepIndex}
             initial={{ opacity: 0 }}
-            animate={{ opacity: transitioning ? 0.3 : 1 }}
+            animate={{ opacity: transitioning ? 0.6 : 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="pointer-events-auto w-[280px] max-w-[calc(100vw-24px)] overflow-y-auto glass-card-premium bg-surface rounded-2xl shadow-2xl p-5 border-2 border-primary/20"

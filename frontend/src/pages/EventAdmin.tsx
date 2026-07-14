@@ -140,7 +140,7 @@ export default function EventAdmin() {
 
   const tourSteps: TourStep[] = useMemo(() => [
     { target: '[data-tour="edit"]', title: 'Personaliza tu evento', body: 'Toca el lápiz para cambiar el nombre, la fecha, el lugar y el mensaje de bienvenida de tus invitados.', cta: 'Entendido', placement: 'bottom' },
-    { target: '[data-tour="share"]', title: 'Comparte tu enlace', body: 'Envía tu lista por WhatsApp o copia el enlace. Tus invitados NO necesitan registrarse — ven la lista y apartan al instante.', cta: 'Genial', placement: 'bottom' },
+    { target: '[data-tour="preview"]', title: 'Comparte tu enlace', body: 'Envía tu lista por WhatsApp o copia el enlace. Tus invitados NO necesitan registrarse — ven la lista y apartan al instante.', cta: 'Genial', placement: 'bottom' },
     { target: '[data-tour="guests"]', title: 'Tus invitados', body: 'Aquí verás quién confirmó asistencia y qué regalos apartaron, en tiempo real.', cta: '¡Listo!', placement: 'bottom' },
   ], []);
 

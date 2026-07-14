@@ -117,13 +117,19 @@ export async function login(
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   try {
-    const rows = await sql`
-      SELECT
-        id, email, password_hash, name, tier, email_verified, created_at
-      FROM users
-      WHERE email = ${email.toLowerCase()}
-      LIMIT 1
-    `;
+    let rows: any[];
+    try {
+      rows = await sql`
+        SELECT id, email, password_hash, name, tier, email_verified, created_at,
+               onboarding_completed, welcome_tutorial_completed
+        FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
+      `;
+    } catch {
+      rows = await sql`
+        SELECT id, email, password_hash, name, tier, email_verified, created_at
+        FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
+      `;
+    }
     const user = rows[0] as
       | {
           id: string;
@@ -133,6 +139,8 @@ export async function login(
           tier: string;
           email_verified: boolean;
           created_at: Date;
+          onboarding_completed?: boolean;
+          welcome_tutorial_completed?: boolean;
         }
       | undefined;
 
@@ -194,8 +202,8 @@ export async function login(
       name: user.name,
       tier: user.tier,
       emailVerified: user.email_verified,
-      onboardingCompleted: false,
-      welcomeTutorialCompleted: false,
+      onboardingCompleted: user.onboarding_completed ?? false,
+      welcomeTutorialCompleted: user.welcome_tutorial_completed ?? false,
       createdAt: user.created_at,
     },
     ...tokens,
@@ -236,13 +244,19 @@ export async function refreshToken(
 }
 
 export async function getUser(userId: string): Promise<UserResponse> {
-  const rows = await sql`
-    SELECT
-      id, email, name, tier, email_verified, created_at
-    FROM users
-    WHERE id = ${userId}
-    LIMIT 1
-  `;
+  let rows: any[];
+  try {
+    rows = await sql`
+      SELECT id, email, name, tier, email_verified, created_at,
+             onboarding_completed, welcome_tutorial_completed
+      FROM users WHERE id = ${userId} LIMIT 1
+    `;
+  } catch {
+    rows = await sql`
+      SELECT id, email, name, tier, email_verified, created_at
+      FROM users WHERE id = ${userId} LIMIT 1
+    `;
+  }
   const user = rows[0] as
     | {
         id: string;
@@ -251,6 +265,8 @@ export async function getUser(userId: string): Promise<UserResponse> {
         tier: string;
         email_verified: boolean;
         created_at: Date;
+        onboarding_completed?: boolean;
+        welcome_tutorial_completed?: boolean;
       }
     | undefined;
 
@@ -264,8 +280,8 @@ export async function getUser(userId: string): Promise<UserResponse> {
     name: user.name,
     tier: user.tier,
     emailVerified: user.email_verified,
-    onboardingCompleted: false,
-    welcomeTutorialCompleted: false,
+    onboardingCompleted: user.onboarding_completed ?? false,
+    welcomeTutorialCompleted: user.welcome_tutorial_completed ?? false,
     createdAt: user.created_at,
   };
 }
