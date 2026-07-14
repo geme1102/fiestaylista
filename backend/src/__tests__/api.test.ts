@@ -45,6 +45,7 @@ function queryBuilder(initialResult: any = []) {
   qb.update = vi.fn(() => qb);
   qb.delete = vi.fn(() => qb);
   qb.onConflictDoNothing = vi.fn(() => qb);
+  qb.onConflictDoUpdate = vi.fn(() => qb);
   qb.for = vi.fn(() => qb);
   return qb;
 }

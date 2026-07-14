@@ -31,7 +31,11 @@ export async function boostEvent(
     const boostedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     await tx.update(events).set({ boostedUntil: sql`${boostedUntil}::timestamptz` }).where(eq(events.id, eventId));
-    await tx.insert(cashFunds).values({ eventId, title: 'Lluvia de sobres', isActive: true }).onConflictDoNothing({ target: cashFunds.eventId });
+    await tx.insert(cashFunds).values({ eventId, title: 'Lluvia de sobres', isActive: true })
+      .onConflictDoUpdate({
+        target: cashFunds.eventId,
+        set: { isActive: true, updatedAt: new Date() },
+      });
 
     await tx.insert(auditLogs).values({
       userId,

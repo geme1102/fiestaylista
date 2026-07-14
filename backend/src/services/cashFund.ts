@@ -10,8 +10,8 @@ interface CashFundData {
   title?: string;
   description?: string;
   targetAmount?: number;
-  bankPhone?: string;
-  bankType?: string;
+  bankPhone?: string | null;
+  bankType?: string | null;
 }
 
 export async function createOrUpdateCashFund(eventId: string, _userId: string, data: CashFundData) {
@@ -66,6 +66,8 @@ export async function getCashFund(eventId: string) {
       targetAmount: cashFunds.targetAmount,
       collectedAmount: cashFunds.collectedAmount,
       isActive: cashFunds.isActive,
+      bankPhone: cashFunds.bankPhone,
+      bankType: cashFunds.bankType,
       createdAt: cashFunds.createdAt,
       updatedAt: cashFunds.updatedAt,
     })

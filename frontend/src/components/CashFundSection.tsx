@@ -37,6 +37,8 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
+  const boostTurnstileTokenRef = useRef(boostTurnstileToken);
+  useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
 
   const canContribute = !isOwner && fund?.isActive;
 
@@ -91,7 +93,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
     try {
       let token: string | null = boostTurnstileToken;
       if (!token) {
-        token = await waitForTurnstile(() => boostTurnstileToken);
+        token = await waitForTurnstile(() => boostTurnstileTokenRef.current);
       }
       await boostEvent(eventId, token ?? undefined);
       showToast('Lluvia de sobres activada 🚀', 'success');
@@ -484,6 +486,11 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
       else showToast('Ingresa un monto válido', 'error');
       return;
     }
+    const numericAmount = Number(amount);
+    if (!Number.isInteger(numericAmount) || numericAmount < 2000) {
+      showToast('El monto debe ser un número entero mayor o igual a $2,000', 'error');
+      return;
+    }
 
     setSubmitting(true);
     let token = turnstileTokenRef.current;
@@ -494,7 +501,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
       await createPromise({
         cashFundId: fundId,
         contributorName: guestName!.trim(),
-        amount: Number(amount),
+        amount: numericAmount,
         message: message.trim() || undefined,
         turnstileToken: token ?? undefined,
       });
