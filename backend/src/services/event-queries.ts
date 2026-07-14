@@ -11,11 +11,13 @@ export async function getUserEvents(userId: string) {
       userId: eventsTable.userId,
       title: eventsTable.title,
       eventType: eventsTable.eventType,
+      hostPhone: eventsTable.hostPhone,
       slug: eventsTable.slug,
       status: eventsTable.status,
       isActive: eventsTable.isActive,
       eventDate: eventsTable.eventDate,
       eventLocation: eventsTable.eventLocation,
+      eventNote: eventsTable.eventNote,
       viewCount: eventsTable.viewCount,
       boostedUntil: eventsTable.boostedUntil,
       frozenAt: eventsTable.frozenAt,
@@ -73,7 +75,24 @@ export async function getUserEvents(userId: string) {
 
 export async function getEvent(eventId: string, userId: string, giftParams: PaginationParams = {}, photoParams: PaginationParams = {}) {
   const [event] = await db
-    .select()
+    .select({
+      id: eventsTable.id,
+      userId: eventsTable.userId,
+      title: eventsTable.title,
+      eventType: eventsTable.eventType,
+      hostPhone: eventsTable.hostPhone,
+      slug: eventsTable.slug,
+      status: eventsTable.status,
+      isActive: eventsTable.isActive,
+      eventDate: eventsTable.eventDate,
+      eventLocation: eventsTable.eventLocation,
+      eventNote: eventsTable.eventNote,
+      viewCount: eventsTable.viewCount,
+      boostedUntil: eventsTable.boostedUntil,
+      frozenAt: eventsTable.frozenAt,
+      createdAt: eventsTable.createdAt,
+      updatedAt: eventsTable.updatedAt,
+    })
     .from(eventsTable)
     .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
     .limit(1);

@@ -93,6 +93,8 @@ export default function EventAdmin() {
   const editDialogRef = useFocusTrap(!!editingDetails);
   const boostDialogRef = useFocusTrap(!!boostModal);
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
+  const boostTurnstileTokenRef = useRef(boostTurnstileToken);
+  useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -402,7 +404,7 @@ export default function EventAdmin() {
     try {
       let token: string | null = boostTurnstileToken;
       if (!token) {
-        token = await waitForTurnstile(() => boostTurnstileToken);
+        token = await waitForTurnstile(() => boostTurnstileTokenRef.current);
       }
       const res = await boostEvent(id!, token ?? undefined);
       if (res.url) {

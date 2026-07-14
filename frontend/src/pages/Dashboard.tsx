@@ -92,29 +92,32 @@ export default function Dashboard() {
 
     const MAX_ATTEMPTS = 30;
     let attempts = 0;
+    let timeout: ReturnType<typeof setTimeout>;
 
-    const interval = setInterval(async () => {
+    const poll = async () => {
       attempts++;
       try {
         await refreshUser();
         if (tierRef.current === 'pro' || tierRef.current === 'pro_plus') {
-          clearInterval(interval);
           setPollingPayment(false);
           showToast(`🎉 ¡Bienvenido a ${tierRef.current === 'pro_plus' ? 'Pro Plus' : 'Pro'}! Ahora tienes acceso a todas las funciones premium.`, 'success');
           queryClient.invalidateQueries({ queryKey: ['events'] });
           return;
         }
         if (attempts >= MAX_ATTEMPTS) {
-          clearInterval(interval);
           setPollingPayment(false);
           setShowPaymentBanner(true);
+          return;
         }
       } catch (err) {
         reportError(err, { source: 'Dashboard' });
       }
-    }, 2000);
+      timeout = setTimeout(poll, 2000);
+    };
 
-    return () => clearInterval(interval);
+    timeout = setTimeout(poll, 2000);
+
+    return () => clearTimeout(timeout);
   }, [location.search, refreshUser, queryClient]);
 
   useEffect(() => {

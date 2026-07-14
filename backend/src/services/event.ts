@@ -51,15 +51,17 @@ export async function createEvent(userId: string, data: CreateEventData) {
     const baseSlug = generateSlug(data.title);
 
     let slug = baseSlug;
+    let slugOk = false;
     for (let attempt = 1; attempt < 100; attempt++) {
       const existing = await tx
         .select({ id: eventsTable.id })
         .from(eventsTable)
         .where(and(eq(eventsTable.slug, slug), isNull(eventsTable.deletedAt)))
         .limit(1);
-      if (!existing.length) break;
+      if (!existing.length) { slugOk = true; break; }
       slug = `${baseSlug}-${attempt}`;
     }
+    if (!slugOk) throw new ValidationError('No se pudo generar un enlace único para este nombre. Intenta con otro título.');
 
     let event: typeof eventsTable.$inferSelect | undefined;
     try {
@@ -239,6 +241,11 @@ export async function reactivateEvent(eventId: string, userId: string) {
 export async function deleteEvent(eventId: string, userId: string) {
   await db.transaction(async (tx) => {
     await tx
+      .update(eventsTable)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)));
+
+    await tx
       .update(gifts)
       .set({ deletedAt: new Date() })
       .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)));
@@ -286,11 +293,6 @@ export async function deleteEvent(eventId: string, userId: string) {
         .delete(giftClaims)
         .where(inArray(giftClaims.giftId, eventGiftIds.map(g => g.id)));
     }
-
-    await tx
-      .update(eventsTable)
-      .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)));
   });
 
   return { success: true };
