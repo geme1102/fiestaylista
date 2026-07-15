@@ -199,7 +199,7 @@ export function startSSEScavenger(): void {
         retryBuffered(client);
         // Detect half-open connections
         const lastActive = clientActivity.get(client);
-        if (lastActive && (now - lastActive) > SSE_HALF_OPEN_TIMEOUT_MS) {
+        if (lastActive === undefined || (now - lastActive) > SSE_HALF_OPEN_TIMEOUT_MS) {
           try {
             client.end();
           } catch (err) {

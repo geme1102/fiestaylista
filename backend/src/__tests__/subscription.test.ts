@@ -116,8 +116,9 @@ describe('cancelSubscription', () => {
       set: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       returning: vi.fn().mockResolvedValue([mockSub]),
-      select: vi.fn(),
-      from: vi.fn(),
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([{ currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }]),
     };
 
     vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(mockTx));

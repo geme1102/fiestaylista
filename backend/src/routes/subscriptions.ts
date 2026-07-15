@@ -103,7 +103,15 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   }
 
   const [payment] = await db
-    .select()
+    .select({
+      id: proPayments.id,
+      userId: proPayments.userId,
+      mpPaymentId: proPayments.mpPaymentId,
+      status: proPayments.status,
+      tier: proPayments.tier,
+      interval: proPayments.interval,
+      createdAt: proPayments.createdAt,
+    })
     .from(proPayments)
     .where(and(
       eq(proPayments.userId, userId),

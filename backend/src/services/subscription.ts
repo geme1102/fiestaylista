@@ -151,7 +151,17 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
 
 export async function getCurrentSubscription(userId: string) {
   const [sub] = await db
-    .select()
+    .select({
+      id: subsTable.id,
+      userId: subsTable.userId,
+      mpSubscriptionId: subsTable.mpSubscriptionId,
+      tier: subsTable.tier,
+      status: subsTable.status,
+      currentPeriodStart: subsTable.currentPeriodStart,
+      currentPeriodEnd: subsTable.currentPeriodEnd,
+      createdAt: subsTable.createdAt,
+      updatedAt: subsTable.updatedAt,
+    })
     .from(subsTable)
     .where(eq(subsTable.userId, userId))
     .limit(1);
@@ -166,13 +176,18 @@ export async function reconcileSubscriptionOnLogin(userId: string): Promise<void
 
     const mpInfo = await fetchPreapprovalInfo(sub.mpSubscriptionId);
     if (mpInfo.status === 'active' || mpInfo.status === 'authorized') {
+      const periodEnd = mpInfo.nextChargeDate ? new Date(mpInfo.nextChargeDate) : null;
+      if (periodEnd && periodEnd <= new Date()) {
+        log.info({ userId, mpSubscriptionId: sub.mpSubscriptionId }, 'Suscripción con periodo vencido en MP — no se reactiva');
+        return;
+      }
       const tier = mpInfo.externalReference.startsWith('pro_plus') ? 'pro_plus' : 'pro';
       await createOrUpdateSubscription(userId, {
         mpSubscriptionId: sub.mpSubscriptionId,
         tier,
         status: 'active',
         currentPeriodStart: mpInfo.dateCreated ? new Date(mpInfo.dateCreated) : new Date(),
-        currentPeriodEnd: mpInfo.nextChargeDate ? new Date(mpInfo.nextChargeDate) : new Date(),
+        currentPeriodEnd: periodEnd || new Date(),
       });
       log.info({ userId }, 'Suscripción reconciliada on-login');
     }
@@ -183,15 +198,21 @@ export async function reconcileSubscriptionOnLogin(userId: string): Promise<void
 
 export async function cancelSubscription(userId: string, immediate = false) {
   const sub = await db.transaction(async (tx) => {
-    const [s] = immediate
+    const [existing] = await tx
+      .select({ currentPeriodEnd: subsTable.currentPeriodEnd })
+      .from(subsTable)
+      .where(eq(subsTable.userId, userId))
+      .limit(1);
+    if (!existing) throw new NotFoundError('Suscripción no encontrada');
+
+    const periodAlreadyExpired = existing.currentPeriodEnd && existing.currentPeriodEnd <= new Date();
+    const effectiveImmediate = immediate || periodAlreadyExpired;
+
+    const [s] = effectiveImmediate
       ? await tx.update(subsTable).set({ status: 'canceled', tier: 'free', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning()
       : await tx.update(subsTable).set({ status: 'canceled', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning();
 
-    if (!s) {
-      throw new NotFoundError('Suscripción no encontrada');
-    }
-
-    if (immediate) {
+    if (effectiveImmediate) {
       await tx
         .update(users)
         .set({ tier: 'free', updatedAt: new Date() })
