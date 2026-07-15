@@ -134,7 +134,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                 <p className="text-xs text-error font-medium">{error}</p>
               )}
 
-              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim()}>
+              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || submitting}>
                 {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
               </Button>
             </div>
