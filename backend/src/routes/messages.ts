@@ -34,13 +34,20 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
   const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200);
 
   const eventMessages = await db
-    .select()
+    .select({
+      id: messages.id,
+      eventId: messages.eventId,
+      authorName: messages.authorName,
+      message: messages.message,
+      createdAt: messages.createdAt,
+    })
     .from(messages)
     .where(eq(messages.eventId, eventId))
     .orderBy(desc(messages.createdAt))
-    .limit(limit);
+    .limit(limit + 1);
 
-  res.json({ messages: eventMessages, hasMore: eventMessages.length === limit });
+  const hasMore = eventMessages.length > limit;
+  res.json({ messages: hasMore ? eventMessages.slice(0, limit) : eventMessages, hasMore });
 }));
 
 router.post('/events/:eventId/messages', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {

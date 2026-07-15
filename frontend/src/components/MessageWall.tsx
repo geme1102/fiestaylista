@@ -115,7 +115,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
                 required
               />
               <div ref={containerRef} />
-              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || !newMessage.trim()}>
+              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || !newMessage.trim() || submitting}>
                 {submitting ? 'Publicando...' : 'Publicar mensaje 💬'}
               </Button>
             </div>
