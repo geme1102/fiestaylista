@@ -36,11 +36,11 @@ router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (re
   if (!event || !event.isActive) {
     throw new NotFoundError('Evento no encontrado');
   }
-  const photos = await photoService.getEventPhotos(eventId, {
+  const result = await photoService.getEventPhotos(eventId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     cursor: req.query.cursor as string | undefined,
   });
-  res.json({ photos, hasMore: photos.length === Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200) });
+  res.json({ photos: result.photos, hasMore: result.hasMore });
 }));
 
 router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
@@ -59,23 +59,6 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
     timestamp: new Date().toISOString(),
   });
 
-  res.status(201).json({ photo });
-}));
-
-router.post('/guest', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
-  const eventId = req.params.eventId as string | undefined;
-  if (!eventId) {
-    throw new ValidationError('ID del evento requerido');
-  }
-  const data = createPhotoSchema.parse(req.body);
-  const photo = await photoService.addPhoto(eventId, data.url, data.caption);
-
-  emitPhotoUploaded({
-    eventId,
-    photoUrl: data.url,
-    uploadedBy: 'El anfitrión',
-    timestamp: new Date().toISOString(),
-  });
   res.status(201).json({ photo });
 }));
 

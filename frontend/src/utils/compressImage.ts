@@ -3,8 +3,8 @@ const JPEG_QUALITY = 0.82;
 
 export function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    // PNG y GIF: devolver original para preservar transparencia
-    if (file.type === 'image/gif' || file.type === 'image/png') {
+    // PNG, GIF y WebP: devolver original para preservar transparencia/calidad
+    if (file.type === 'image/gif' || file.type === 'image/png' || file.type === 'image/webp') {
       resolve(file);
       return;
     }

@@ -27,7 +27,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
       throw new ValidationError('Token de seguridad requerido');
     }
 
-    await verifyToken(token, req.ip);
+    await verifyTurnstileToken(token, req.ip);
     next();
   } catch (error) {
     next(error);
@@ -54,7 +54,7 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     }
 
     try {
-      await verifyToken(token, req.ip);
+      await verifyTurnstileToken(token, req.ip);
     } catch (err) {
       log.warn({ err, ip: req.ip, path: req.path }, 'Verificación Turnstile falló — continuando con rate limiter');
     }
@@ -64,7 +64,9 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
   }
 }
 
-async function verifyToken(token: string, remoteIp?: string): Promise<void> {
+export async function verifyTurnstileToken(token: string, remoteIp?: string): Promise<void> {
+  if (!token) throw new ValidationError('Token de seguridad requerido');
+
   const formData = new URLSearchParams();
   formData.append('secret', config.TURNSTILE_SECRET_KEY);
   formData.append('response', token);

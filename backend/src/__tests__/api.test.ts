@@ -689,7 +689,7 @@ describe('Photo Routes', () => {
   });
 
   it('GET /api/events/:eventId/photos - list photos', async () => {
-    mockPhotoService.getEventPhotos.mockResolvedValue([{ id: 'p-1', url: 'https://cdn.test/photo.jpg' }]);
+    mockPhotoService.getEventPhotos.mockResolvedValue({ photos: [{ id: 'p-1', url: 'https://cdn.test/photo.jpg' }], hasMore: false });
 
     const res = await request(app).get('/api/events/evt-1/photos');
     expect(res.status).toBe(200);

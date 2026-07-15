@@ -10,7 +10,10 @@ import { requireAuth } from '../middleware/auth.js';
 import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
 import { ValidationError } from '../utils/errors.js';
 import { config } from '../config.js';
-import type { AuthRequest } from '../types/index.js';
+import { verifyTurnstileToken } from '../middleware/turnstile.js';
+import { db } from '../db/index.js';
+import { events } from '../db/schema.js';
+import { eq, and, isNull } from 'drizzle-orm';
 
 const router = Router();
 
@@ -176,23 +179,17 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
 
       if (config.TURNSTILE_SECRET_KEY) {
         const token = req.body?.turnstileToken;
-        if (!token) throw new ValidationError('Token de seguridad requerido');
-        const formData = new URLSearchParams();
-        formData.append('secret', config.TURNSTILE_SECRET_KEY);
-        formData.append('response', token);
-        const ac = new AbortController();
-        const turnstileTimer = setTimeout(() => ac.abort(), 10000);
-        try {
-          const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST', body: formData, signal: ac.signal,
-          });
-          const result = await verifyRes.json() as { success: boolean; 'error-codes'?: string[] };
-          if (!result.success) {
-            throw new ValidationError('No se pudo verificar que no eres un robot');
-          }
-        } finally {
-          clearTimeout(turnstileTimer);
-        }
+        await verifyTurnstileToken(token, req.ip);
+      }
+
+      const eventId = req.body?.eventId;
+      if (eventId) {
+        const [evt] = await db
+          .select({ id: events.id })
+          .from(events)
+          .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
+          .limit(1);
+        if (!evt) throw new ValidationError('El evento no está disponible para recibir fotos');
       }
 
       const filePath = req.file.path;
@@ -202,40 +199,6 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
         await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');
       }
-      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
-      await cleanupFile(filePath);
-      res.status(201).json({ url });
-    } catch (error) {
-      if (req.file) cleanupFile(req.file.path);
-      next(error);
-    }
-  });
-});
-
-router.post('/guest', requireAuth, guestUploadLimiter, (req: AuthRequest, res: Response, next: NextFunction) => {
-  upload.single('file')(req, res, async (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new ValidationError('El archivo excede el tamaño máximo de 10MB'));
-        }
-        return next(new ValidationError(err.message));
-      }
-      return next(err);
-    }
-    try {
-      if (!req.file) {
-        throw new ValidationError('No se proporcionó ningún archivo');
-      }
-
-      const filePath = req.file.path;
-      const rawBuffer = await readFileHeader(filePath);
-      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
-      if (!valid) {
-        await cleanupFile(filePath);
-        throw new ValidationError('El archivo no es una imagen válida');
-      }
-
       const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
       await cleanupFile(filePath);
       res.status(201).json({ url });

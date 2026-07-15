@@ -60,6 +60,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       const formData = new FormData();
       formData.append('file', file);
       formData.append('turnstileToken', token ?? '');
+      formData.append('eventId', eventId);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -156,7 +157,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
           />
           <div ref={containerRef} />
 
-          <Button variant="primary" fullWidth loading={uploading} onClick={handleUpload} disabled={!fileInputRef.current?.files?.[0]}>
+          <Button variant="primary" fullWidth loading={uploading} onClick={handleUpload} disabled={!fileInputRef.current?.files?.[0] || uploading}>
             {uploading ? 'Subiendo...' : 'Subir foto 📸'}
           </Button>
         </motion.div>

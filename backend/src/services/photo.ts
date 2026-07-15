@@ -151,11 +151,19 @@ export async function getEventPhotos(eventId: string, params: PaginationParams =
     : and(eq(photosTable.eventId, eventId), isNull(photosTable.deletedAt));
 
   const eventPhotos = await db
-    .select()
+    .select({
+      id: photosTable.id,
+      eventId: photosTable.eventId,
+      url: photosTable.url,
+      caption: photosTable.caption,
+      isFeatured: photosTable.isFeatured,
+      createdAt: photosTable.createdAt,
+    })
     .from(photosTable)
     .where(conditions)
     .orderBy(desc(photosTable.createdAt))
-    .limit(limit);
+    .limit(limit + 1);
 
-  return eventPhotos;
+  const hasMore = eventPhotos.length > limit;
+  return { photos: hasMore ? eventPhotos.slice(0, limit) : eventPhotos, hasMore };
 }

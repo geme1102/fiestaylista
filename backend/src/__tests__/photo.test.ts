@@ -203,7 +203,8 @@ describe('getEventPhotos', () => {
     (db as any).orderBy.mockReturnThis();
     (db as any).limit.mockResolvedValueOnce(mockPhotos);
 
-    const photos = await getEventPhotos('evt-1');
-    expect(photos).toEqual(mockPhotos);
+    const result = await getEventPhotos('evt-1');
+    expect(result.photos).toEqual(mockPhotos);
+    expect(result.hasMore).toBe(false);
   });
 });
