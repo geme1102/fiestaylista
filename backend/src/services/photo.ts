@@ -9,6 +9,7 @@ import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { ensureEventNotFrozen } from './event.js';
 
 const log = createModuleLogger('Photo');
 
@@ -51,12 +52,13 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
 
       const [event] = await tx
-        .select({ userId: events.userId, isActive: events.isActive })
+        .select({ userId: events.userId, isActive: events.isActive, frozenAt: events.frozenAt })
         .from(events)
-        .where(eq(events.id, eventId))
+        .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
         .limit(1);
 
       if (!event) throw new NotFoundError('Evento no encontrado');
+      if (event.frozenAt) throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
       if (!event.isActive) throw new ValidationError('Este evento no está activo');
 
       const [user] = await tx
@@ -101,6 +103,13 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
 }
 
 export async function deletePhoto(photoId: string) {
+  const [photoMeta] = await db
+    .select({ eventId: photosTable.eventId })
+    .from(photosTable)
+    .where(eq(photosTable.id, photoId))
+    .limit(1);
+  if (photoMeta) await ensureEventNotFrozen(photoMeta.eventId);
+
   const [photo] = await db
     .update(photosTable)
     .set({ deletedAt: new Date() })
@@ -130,6 +139,13 @@ export async function deletePhoto(photoId: string) {
 }
 
 export async function toggleFeaturedPhoto(photoId: string) {
+  const [photoMeta] = await db
+    .select({ eventId: photosTable.eventId })
+    .from(photosTable)
+    .where(eq(photosTable.id, photoId))
+    .limit(1);
+  if (photoMeta) await ensureEventNotFrozen(photoMeta.eventId);
+
   const [updated] = await db
     .update(photosTable)
     .set({ isFeatured: sql`NOT ${photosTable.isFeatured}` })

@@ -22,7 +22,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
                 animate: { scale: [1, 1.4, 1], x: ['-20%', '30%', '-20%'], y: ['-10%', '20%', '-10%'] },
                 transition: { duration: 12, repeat: Infinity, ease: 'easeInOut' },
               } : {})}
-              className="absolute top-[0%] left-[0%] w-[80vw] h-[80vw] md:w-[40rem] md:h-[40rem] bg-gradient-to-br from-pink-400 via-[#d23284] to-brand-berry rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              className="absolute top-[0%] left-[0%] w-[80vw] h-[80vw] md:w-[40rem] md:h-[40rem] bg-gradient-to-br from-pink-400 via-[#d23284] to-brand-berry rounded-full blur-[40px] md:blur-[60px] opacity-[0.9]"
               style={{ willChange: prefersReducedMotion ? 'auto' : 'transform' }}
             />
 
@@ -31,7 +31,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
                 animate: { scale: [1.2, 1, 1.2], x: ['20%', '-30%', '20%'], y: ['20%', '-10%', '20%'] },
                 transition: { duration: 15, repeat: Infinity, ease: 'easeInOut' },
               } : {})}
-              className="absolute top-[10%] right-[0%] w-[75vw] h-[75vw] md:w-[35rem] md:h-[35rem] bg-gradient-to-bl from-cyan-300 via-blue-500 to-indigo-500 rounded-full blur-[60px] md:blur-[100px] opacity-[0.85]"
+              className="absolute top-[10%] right-[0%] w-[75vw] h-[75vw] md:w-[35rem] md:h-[35rem] bg-gradient-to-bl from-cyan-300 via-blue-500 to-indigo-500 rounded-full blur-[40px] md:blur-[60px] opacity-[0.85]"
               style={{ willChange: prefersReducedMotion ? 'auto' : 'transform' }}
             />
 
@@ -40,7 +40,7 @@ export function LandingCTA({ onNavigate }: LandingCTAProps) {
                 animate: { scale: [1, 1.5, 1], x: ['-30%', '20%', '-30%'], y: ['20%', '-30%', '20%'] },
                 transition: { duration: 18, repeat: Infinity, ease: 'easeInOut' },
               } : {})}
-              className="absolute bottom-[0%] left-[10%] w-[90vw] h-[90vw] md:w-[45rem] md:h-[45rem] bg-gradient-to-tr from-yellow-300 via-orange-400 to-brand-peach rounded-full blur-[60px] md:blur-[100px] opacity-[0.9]"
+              className="absolute bottom-[0%] left-[10%] w-[90vw] h-[90vw] md:w-[45rem] md:h-[45rem] bg-gradient-to-tr from-yellow-300 via-orange-400 to-brand-peach rounded-full blur-[40px] md:blur-[60px] opacity-[0.9]"
               style={{ willChange: prefersReducedMotion ? 'auto' : 'transform' }}
             />
           </div>

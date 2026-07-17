@@ -55,6 +55,7 @@ function queryMock(selectResults: any[][] = []) {
   const q: any = {};
   q.select = vi.fn(() => q);
   q.from = vi.fn(() => q);
+  q.innerJoin = vi.fn(() => q);
   q.where = vi.fn(() => q);
   q.limit = vi.fn(() => q);
   q.offset = vi.fn(() => q);
@@ -239,7 +240,7 @@ describe('Gift Service', () => {
     it('claims available gift', async () => {
       const { db } = await import('../db/index.js');
       const { claimGift } = await import('../services/gift.js');
-      const tx = queryMock([[{ eventId: 'e1', isClaimed: false }], [{ status: 'active' }]]);
+      const tx = queryMock([[{ eventId: 'e1', isClaimed: false }], [{ status: 'active', isActive: true }]]);
       tx._updateResult = [{ id: 'g1', isClaimed: true, claimedBy: 'Ana' }];
       vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
       const result = await claimGift('g1', 'Ana');
@@ -256,11 +257,12 @@ describe('Gift Service', () => {
     it('releases claimed gift', async () => {
       const { db } = await import('../db/index.js');
       const { releaseGift } = await import('../services/gift.js');
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ eventId: 'evt-1', ownerId: 'user-1' }]]));
       const tx = queryMock([]);
       tx._deleteResult = [];
       tx._updateResult = [{ id: 'g1', isClaimed: false, claimedBy: null }];
       vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
-      const result = await releaseGift('g1');
+      const result = await releaseGift('g1', 'user-1');
       expect(result.isClaimed).toBe(false);
     });
   });

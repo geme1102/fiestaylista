@@ -5,7 +5,7 @@ import { apiClient } from '../services/api';
 interface SSEOptions {
   eventId: string;
   sseTokenEndpoint: string;
-  onGiftClaimed?: (data: { giftId: string; giftName: string; claimedBy: string }) => void;
+  onGiftClaimed?: (data: { giftId: string; giftName: string; claimedBy: string; claims?: Array<{ id: string; claimedBy: string }> }) => void;
   onMessagePosted?: (data: { authorName: string; messagePreview: string }) => void;
   onPhotoUploaded?: (data: { photoUrl: string; uploadedBy: string }) => void;
   onCashContribution?: (data: { contributorName: string; amount: number; contributionType: 'created' | 'cancelled' }) => void;
@@ -46,7 +46,7 @@ export function useSSE({
     function handleMessage(data: Record<string, unknown>) {
       if (data.type === 'connected' || data.type === 'reconnect') return;
       if (data.type === 'gift:claimed' && data.giftId && data.claimedBy) {
-        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string });
+        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string, claims: data.claims as Array<{ id: string; claimedBy: string }> | undefined });
       } else if (data.type === 'cash:contribution') {
         onCashContributionRef.current?.({ contributorName: data.contributorName as string, amount: data.amount as number, contributionType: data.contributionType as 'created' | 'cancelled' });
       } else if (data.type === 'message:posted') {
@@ -54,7 +54,7 @@ export function useSSE({
       } else if (data.type === 'photo:uploaded') {
         onPhotoUploadedRef.current?.({ photoUrl: data.photoUrl as string, uploadedBy: data.uploadedBy as string });
       } else if (data.giftId && data.claimedBy) {
-        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string });
+        onGiftClaimedRef.current?.({ giftId: data.giftId as string, giftName: data.giftName as string, claimedBy: data.claimedBy as string, claims: data.claims as Array<{ id: string; claimedBy: string }> | undefined });
       }
     }
 

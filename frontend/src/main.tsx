@@ -22,24 +22,35 @@ window.onerror = (_message, _source, _lineno, _colno, error) => {
 };
 
 if (import.meta.env.VITE_SENTRY_DSN) {
+  let analyticsConsented = false;
   try {
-    Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
-      environment: import.meta.env.MODE,
-      integrations: [
-        Sentry.replayIntegration({
-          maskAllText: true,
-          maskAllInputs: true,
-          blockAllMedia: true,
-        }),
-        Sentry.browserTracingIntegration(),
-      ],
-      tracesSampleRate: import.meta.env.PROD ? 0.1 : 0,
-      replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 0,
-      replaysOnErrorSampleRate: 1.0,
-    });
-  } catch (e) {
-    console.error('[sentry] Error inicializando Sentry:', e);
+    const stored = localStorage.getItem('cookie_consent_v1');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      analyticsConsented = parsed.analytics === true;
+    }
+  } catch {}
+
+  if (analyticsConsented) {
+    try {
+      Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        environment: import.meta.env.MODE,
+        integrations: [
+          Sentry.replayIntegration({
+            maskAllText: true,
+            maskAllInputs: true,
+            blockAllMedia: true,
+          }),
+          Sentry.browserTracingIntegration(),
+        ],
+        tracesSampleRate: import.meta.env.PROD ? 0.1 : 0,
+        replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 0,
+        replaysOnErrorSampleRate: 1.0,
+      });
+    } catch (e) {
+      console.error('[sentry] Error inicializando Sentry:', e);
+    }
   }
 }
 

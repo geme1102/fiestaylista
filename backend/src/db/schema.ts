@@ -102,6 +102,7 @@ export const subscriptions = pgTable('subscriptions', {
   updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   statusCurrentPeriodEndIdx: index('subscriptions_status_current_period_end_idx').on(table.status, table.currentPeriodEnd),
+  mpSubscriptionIdUnique: uniqueIndex('subscriptions_mp_subscription_id_unique_idx').on(table.mpSubscriptionId),
 }));
 
 export const cashFunds = pgTable('cash_funds', {
@@ -181,7 +182,7 @@ export const messages = pgTable('messages', {
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   eventIdIdx: index('messages_event_id_idx').on(table.eventId),
-  createdAtIdx: index('messages_created_at_idx').on(table.createdAt),
+  eventIdCreatedAtIdx: index('messages_event_id_created_at_idx').on(table.eventId, table.createdAt),
 }));
 
 export const guests = pgTable('guests', {
@@ -198,6 +199,7 @@ export const guests = pgTable('guests', {
 }, (table) => ({
   eventIdIdx: index('guests_event_id_idx').on(table.eventId),
   eventIdConfirmedIdx: index('guests_event_id_confirmed_idx').on(table.eventId, table.isConfirmed),
+  nameEventUnique: uniqueIndex('guests_event_id_name_unique_idx').on(table.eventId, table.name),
 }));
 
 export const emailTracking = pgTable('email_tracking', {

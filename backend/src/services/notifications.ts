@@ -9,6 +9,7 @@ interface GiftClaimedEvent {
   giftId: string;
   giftName: string;
   claimedBy: string;
+  claims?: Array<{ id: string; claimedBy: string }>;
   timestamp: string;
 }
 
@@ -34,11 +35,36 @@ interface PhotoUploadedEvent {
   timestamp: string;
 }
 
-// SSE client management with delivery buffer and half-open detection
+// SSE client management with delivery buffer, half-open detection, and per-IP limits
 const clients = new Map<string, Set<Response>>();
 const clientActivity = new WeakMap<Response, number>();
 const deliveryBuffer = new Map<Response, string[]>();
 const MAX_BUFFER_SIZE = 20;
+
+const ipCount = new Map<string, number>();
+const clientIps = new Map<Response, string>();
+
+export function incrementClientIp(res: Response, ip: string): void {
+  clientIps.set(res, ip);
+  ipCount.set(ip, (ipCount.get(ip) ?? 0) + 1);
+}
+
+export function decrementClientIp(res: Response): void {
+  const ip = clientIps.get(res);
+  if (ip) {
+    const current = ipCount.get(ip) ?? 0;
+    if (current <= 1) {
+      ipCount.delete(ip);
+    } else {
+      ipCount.set(ip, current - 1);
+    }
+    clientIps.delete(res);
+  }
+}
+
+export function getClientIpCount(ip: string): number {
+  return ipCount.get(ip) ?? 0;
+}
 
 function touchClient(res: Response): void {
   clientActivity.set(res, Date.now());
@@ -68,6 +94,7 @@ export function unsubscribeClient(eventId: string, res: Response): void {
       clients.delete(eventId);
     }
   }
+  decrementClientIp(res);
   deliveryBuffer.delete(res);
   clientActivity.delete(res);
 }
@@ -132,13 +159,17 @@ emitter.setMaxListeners(100);
 
 export function emitGiftClaimed(data: GiftClaimedEvent): void {
   try {
-    emitter.emit(`gift:claimed:${data.eventId}`, data);
-    broadcastToClients(data.eventId, {
+    const payload: Record<string, unknown> = {
       giftId: data.giftId,
       giftName: data.giftName,
       claimedBy: data.claimedBy,
       type: 'gift:claimed',
-    });
+    };
+    if (data.claims) {
+      payload.claims = data.claims;
+    }
+    emitter.emit(`gift:claimed:${data.eventId}`, data);
+    broadcastToClients(data.eventId, payload);
   } catch (err) {
     log.error({ err }, 'Error emitiendo evento gift:claimed');
   }
@@ -205,6 +236,7 @@ export function startSSEScavenger(): void {
           } catch (err) {
             log.warn({ err }, 'Error cerrando conexión SSE');
           }
+          decrementClientIp(client);
           eventClients.delete(client);
           deliveryBuffer.delete(client);
           clientActivity.delete(client);
@@ -216,6 +248,7 @@ export function startSSEScavenger(): void {
           touchClient(client);
         } catch (err) {
           log.warn({ err }, 'Error en ping SSE — eliminando cliente');
+          decrementClientIp(client);
           eventClients.delete(client);
           deliveryBuffer.delete(client);
           clientActivity.delete(client);

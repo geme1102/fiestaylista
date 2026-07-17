@@ -151,13 +151,14 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
 }
 
 function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; interval: 'month' | 'year' } | null {
-  // MP puede enviar montos como 59900 en enteros o 599.00 en decimales (pesos).
-  // Normalizar: si el monto es < 10000, asumir que está en unidades (multiplicar por 100).
-  const normalized = amount < 10000 ? Math.round(amount * 100) : Math.round(amount);
-
   const proMonthly = config.PRO_MONTHLY_PRICE_CENTS;
   const proYearly = config.PRO_YEARLY_PRICE_CENTS;
   const proPlusMonthly = config.PRO_PLUS_MONTHLY_PRICE_CENTS;
+
+  const minConfigPrice = Math.min(proMonthly, proYearly, proPlusMonthly);
+  const normalizationThreshold = Math.max(Math.round(minConfigPrice / 2), 1000);
+
+  const normalized = amount < normalizationThreshold ? Math.round(amount * 100) : Math.round(amount);
 
   const diff = (a: number, b: number) => Math.abs(a - b);
   const closeEnough = (a: number, b: number) => diff(a, b) <= 1 || diff(a, b) / Math.max(a, b) < 0.01;

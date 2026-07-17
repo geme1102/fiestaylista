@@ -33,9 +33,13 @@ router.get('/public/events', publicStatsLimiter, cacheControl(3600), asyncHandle
     .select({ slug: events.slug, updatedAt: events.updatedAt })
     .from(events)
     .where(sql`${events.isActive} = true AND ${events.deletedAt} IS NULL AND ${events.status} = 'active'`)
-    .limit(50);
+    .orderBy(events.createdAt)
+    .limit(500);
 
-  res.json(rows.map((r) => r.slug).filter(Boolean));
+  res.json(rows
+    .filter((r) => r.slug)
+    .map((r) => ({ slug: r.slug, updatedAt: r.updatedAt?.toISOString() ?? null })),
+  );
 }));
 
 export default router;

@@ -137,6 +137,13 @@ function TitleUpdater() {
     '/arco-rights': '/derechos-arco',
   };
 
+  const ES_TO_EN: Record<string, string> = {
+    '/terminos-y-condiciones': '/terms-and-conditions',
+    '/politica-de-privacidad': '/privacy-policy',
+    '/politica-de-cookies': '/cookies-policy',
+    '/derechos-arco': '/arco-rights',
+  };
+
   const canonicalPath = EN_TO_ES[path] || path;
 
   return (
@@ -158,6 +165,10 @@ function TitleUpdater() {
       <meta name="robots" content={isUnknown ? 'noindex, nofollow' : 'index, follow'} />
       <link rel="canonical" href={`${window.location.origin}${canonicalPath}`} />
       <link rel="alternate" href={`${window.location.origin}${canonicalPath}`} hrefLang="es-CO" />
+      {ES_TO_EN[canonicalPath] && (
+        <link rel="alternate" href={`${window.location.origin}${ES_TO_EN[canonicalPath]}`} hrefLang="en" />
+      )}
+      <link rel="alternate" href={`${window.location.origin}${canonicalPath}`} hrefLang="x-default" />
     </Helmet>
   );
 }

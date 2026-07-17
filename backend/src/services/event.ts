@@ -1,8 +1,10 @@
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
+import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events as eventsTable, gifts, photos, cashFunds, giftClaims, messages, guests, eventViews, cashContributions } from '../db/schema.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors.js';
 import { generateSlug } from '../utils/slug.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { EventType, Tier } from '../types/index.js';
 
@@ -23,6 +25,17 @@ export interface UpdateEventData {
   eventDate?: string | null;
   eventLocation?: string | null;
   eventNote?: string | null;
+}
+
+export async function ensureEventNotFrozen(eventId: string): Promise<void> {
+  const [event] = await db
+    .select({ frozenAt: eventsTable.frozenAt })
+    .from(eventsTable)
+    .where(and(eq(eventsTable.id, eventId), isNull(eventsTable.deletedAt)))
+    .limit(1);
+  if (event?.frozenAt) {
+    throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
+  }
 }
 
 export async function createEvent(userId: string, data: CreateEventData) {
@@ -149,6 +162,8 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
     });
   }
 
+  await ensureEventNotFrozen(eventId);
+
   const updateData: Record<string, unknown> = {};
   if (data.title !== undefined) updateData.title = data.title;
   if (data.eventType !== undefined) updateData.eventType = data.eventType;
@@ -239,6 +254,11 @@ export async function reactivateEvent(eventId: string, userId: string) {
 }
 
 export async function deleteEvent(eventId: string, userId: string) {
+  const photoUrls = await db
+    .select({ url: photos.url })
+    .from(photos)
+    .where(eq(photos.eventId, eventId));
+
   await db.transaction(async (tx) => {
     await tx
       .update(eventsTable)
@@ -294,6 +314,13 @@ export async function deleteEvent(eventId: string, userId: string) {
         .where(inArray(giftClaims.giftId, eventGiftIds.map(g => g.id)));
     }
   });
+
+  for (const photo of photoUrls) {
+    const publicId = getPublicIdFromUrl(photo.url);
+    if (publicId && isOwnCloudinaryUrl(photo.url)) {
+      cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
+  }
 
   return { success: true };
 }

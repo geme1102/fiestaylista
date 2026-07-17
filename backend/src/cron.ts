@@ -1,6 +1,6 @@
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from './db/index.js';
-import { failedWebhooks, refreshTokens, eventViews, auditLogs, subscriptions } from './db/schema.js';
+import { failedWebhooks, refreshTokens, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
 import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings } from './services/subscription.js';
@@ -17,16 +17,19 @@ let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
 
 export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
+    let acquired = false;
     await db.transaction(async (tx) => {
       const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(1, hashtext(${name})) as acquired`);
       const row = Array.isArray(result) ? result[0] : result;
-      const acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
-      if (!acquired) {
-        log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
-        return;
-      }
-      await fn();
+      acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
     });
+
+    if (!acquired) {
+      log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
+      return;
+    }
+
+    await fn();
   } catch (error) {
     log.error({ error }, `Error en lock para ${name}:`);
   }
@@ -207,11 +210,21 @@ export function startCronJobs(): void {
 
   const cleanupEventViews = async () => {
     try {
-      const result = await db
-        .delete(eventViews)
-        .where(sql`${eventViews.viewedAt} < NOW() - INTERVAL '90 days'`);
-      if (result.length > 0) {
-        log.info(`Viejas vistas de eventos limpiadas: ${result.length}`);
+      const BATCH_SIZE = 1000;
+      const MAX_BATCHES = 50;
+      let totalDeleted = 0;
+
+      for (let i = 0; i < MAX_BATCHES; i++) {
+        const result = await db.execute(
+          sql`DELETE FROM "event_views" WHERE "id" IN (SELECT "id" FROM "event_views" WHERE "viewed_at" < NOW() - INTERVAL '90 days' LIMIT ${sql.raw(String(BATCH_SIZE))})`,
+        );
+        const affected = (result as any).rowCount ?? (result as any).length ?? 0;
+        totalDeleted += affected;
+        if (affected < BATCH_SIZE) break;
+      }
+
+      if (totalDeleted > 0) {
+        log.info(`Viejas vistas de eventos limpiadas: ${totalDeleted} registros`);
       }
     } catch (error) {
       log.error({ error }, 'Error limpiando event_views:');
@@ -219,17 +232,9 @@ export function startCronJobs(): void {
   };
 
   const cleanupAuditLogs = async () => {
-    try {
-      const result = await db
-        .delete(auditLogs)
-        .where(sql`${auditLogs.createdAt} < NOW() - INTERVAL '180 days'`);
-      if (result.length > 0) {
-        log.info(`Audit logs viejos limpiados: ${result.length}`);
-      }
-    } catch (error) {
-      log.error({ error }, 'Error limpiando audit_logs:');
-    }
-  };
+    // Audit logs are now immutable — cleanup is handled by DB-level partitioning/retention
+    log.info('Audit log cleanup skipped — logs are immutable');
+  }
 
   cleanupExpiredRefreshTokens().catch((err) => log.error({ err }, 'cleanupExpiredRefreshTokens falló'));
   cleanupEventViews().catch((err) => log.error({ err }, 'cleanupEventViews falló'));

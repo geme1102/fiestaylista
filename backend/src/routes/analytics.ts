@@ -5,7 +5,7 @@ import { db } from '../db/index.js';
 import { eventViews, events } from '../db/schema.js';
 import { viewLimiter } from '../middleware/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { requireTier, requireActiveSubscription } from '../middleware/subscription.js';
 import type { AuthRequest } from '../types/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -22,7 +22,7 @@ const viewSchema = z.object({
   eventId: z.string().uuid('ID de evento invalido'),
 });
 
-router.post('/analytics/view', viewLimiter, verifyTurnstile, asyncHandler(async (req: Request, res: Response) => {
+router.post('/analytics/view', viewLimiter, verifyTurnstileOptional, asyncHandler(async (req: Request, res: Response) => {
   try {
     const parsed = viewSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -31,18 +31,31 @@ router.post('/analytics/view', viewLimiter, verifyTurnstile, asyncHandler(async 
     }
     const { eventId } = parsed.data;
 
-    await db.transaction(async (tx) => {
-      await tx.insert(eventViews).values({
-        eventId,
-        referrer: sanitizeAndStrip(String(req.headers.referer || req.headers.referrer || 'direct')).slice(0, 200),
-        userAgent: sanitizeAndStrip(String(req.headers['user-agent'] || 'unknown')).slice(0, 200),
-      });
+    const referrer = sanitizeAndStrip(String(req.headers.referer || req.headers.referrer || 'direct')).slice(0, 200);
+    const userAgent = sanitizeAndStrip(String(req.headers['user-agent'] || 'unknown')).slice(0, 200);
 
-      await tx
-        .update(events)
-        .set({ viewCount: sql`${events.viewCount} + 1` })
-        .where(eq(events.id, eventId));
-    });
+    const [dup] = await db
+      .select({ exists: sql`1` })
+      .from(eventViews)
+      .where(
+        sql`${eventViews.eventId} = ${eventId}
+          AND ${eventViews.referrer} = ${referrer}
+          AND ${eventViews.userAgent} = ${userAgent}
+          AND ${eventViews.viewedAt} > NOW() - INTERVAL '5 minutes'`,
+      )
+      .limit(1);
+
+    if (dup) {
+      res.status(200).json({ ok: true, deduped: true });
+      return;
+    }
+
+    await db.insert(eventViews).values({ eventId, referrer, userAgent });
+
+    await db
+      .update(events)
+      .set({ viewCount: sql`${events.viewCount} + 1` })
+      .where(eq(events.id, eventId));
 
     res.status(200).json({ ok: true });
   } catch (err) {

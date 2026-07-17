@@ -38,6 +38,10 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const tilt = use3DTilt(8);
 
+  useEffect(() => {
+    setIsGroupGift(gift.isGroupGift);
+  }, [gift.isGroupGift]);
+
   const onImgError = () => setImgError(true);
 
   const handleGroupClaim = async () => {

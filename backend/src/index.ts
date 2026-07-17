@@ -69,7 +69,6 @@ if (cluster.isPrimary && workerCount > 1) {
     console.log('[startup] Aplicando migraciones antes de iniciar servidor...');
     let migrationsOk = false;
     try {
-      await sql`SELECT pg_advisory_lock(hashtext('migration_lock'))`;
       await runMigrations();
       migrationsOk = true;
       console.log('[startup] Migraciones aplicadas correctamente');
@@ -80,8 +79,6 @@ if (cluster.isPrimary && workerCount > 1) {
         process.exit(1);
       }
       console.log('[startup] Error en migraciones (dev), continuando en modo degradado...');
-    } finally {
-      try { await sql`SELECT pg_advisory_unlock(hashtext('migration_lock'))`; } catch {}
     }
 
     console.log('[startup] Iniciando servidor en puerto', config.PORT);

@@ -190,8 +190,9 @@ export function ProductTour({
   const skip = useCallback(() => {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     try { localStorage.setItem(storageKey, 'done'); } catch {}
+    onComplete?.();
     setActive(false);
-  }, [storageKey]);
+  }, [storageKey, onComplete]);
 
   if (!active) return <>{children}</>;
 

@@ -320,6 +320,7 @@ export async function purgeExpiredData(): Promise<number> {
         AND frozen_at <= ${purgeThreshold.toISOString()}::timestamptz
         AND deleted_at IS NULL
       FOR UPDATE SKIP LOCKED
+      LIMIT 50
     `) as unknown as PurgeRow[];
 
     if (expired.length === 0) return { eventsToPurge: [], photosByEvent: new Map<string, { url: string }[]>(), userIds: [] as string[] };

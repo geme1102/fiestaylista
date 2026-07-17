@@ -7,7 +7,7 @@ const TESTIMONIALS = [
   { name: 'Ana L.', role: 'Cumpleaños', text: 'En 2 minutos tenía la lista lista. Lo compartí por WhatsApp y los abuelos apartaron sin necesidad de registro.', avatar: '/illustrations/avatar-3.png' },
 ];
 
-const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
+const MARQUEE_TESTIMONIALS = [...TESTIMONIALS, ...TESTIMONIALS];
 
 export function LandingTestimonials() {
   return (

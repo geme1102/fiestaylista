@@ -1,11 +1,10 @@
 import { eq, and, inArray } from 'drizzle-orm';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
-import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests } from '../db/schema.js';
+import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
-import { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('ARCO');
@@ -130,16 +129,17 @@ export async function deleteUserAccount(userId: string) {
           ]).finally(() => clearTimeout(timer!));
         }),
       );
-      for (const result of results) {
-        if (result.status === 'rejected') {
-          log.error({ err: result.reason }, 'Error deleting Cloudinary image:');
-        }
+      const failed = results.filter(r => r.status === 'rejected').length;
+      if (failed > 0) {
+        log.error({ failed, total: batch.length, userId }, 'Error deleting Cloudinary images: some assets may be orphaned');
       }
     }
   }
 
-  await revokeAllUserTokens(userId);
-  await db.delete(users).where(eq(users.id, userId));
+  await db.transaction(async (tx) => {
+    await tx.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+    await tx.delete(users).where(eq(users.id, userId));
+  });
 }
 
 export async function createArcoRequest(

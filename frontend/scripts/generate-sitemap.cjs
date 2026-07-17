@@ -27,7 +27,11 @@ async function fetchJSON(url) {
 async function getPublicEventSlugs() {
   try {
     const data = await fetchJSON(`${API_BASE}/api/public/events`);
-    if (Array.isArray(data)) return data.map((e) => e.slug).filter(Boolean);
+    if (Array.isArray(data)) {
+      return data
+        .filter((e) => e && e.slug)
+        .map((e) => ({ slug: e.slug, lastmod: e.updatedAt }));
+    }
     return [];
   } catch {
     return [];
@@ -40,21 +44,24 @@ async function generateSitemap() {
     return;
   }
 
-  const slugs = await getPublicEventSlugs();
-  if (slugs.length === 0) {
+  const events = await getPublicEventSlugs();
+  if (events.length === 0) {
     console.log('[Sitemap] No dynamic events to add');
     return;
   }
 
   let sitemap = fs.readFileSync(SITEMAP_PATH, 'utf-8');
   const closeTag = '</urlset>';
-  const entries = slugs
-    .map((slug) => `  <url>\n    <loc>https://fiestaylista.com/e/${encodeURIComponent(slug)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.5</priority>\n  </url>`)
+  const entries = events
+    .map((e) => {
+      const lastmod = e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : '';
+      return `  <url>\n    <loc>https://fiestaylista.com/e/${encodeURIComponent(e.slug)}</loc>${lastmod}\n    <changefreq>daily</changefreq>\n    <priority>0.5</priority>\n  </url>`;
+    })
     .join('\n');
 
   sitemap = sitemap.replace(closeTag, `${entries}\n${closeTag}`);
   fs.writeFileSync(SITEMAP_PATH, sitemap, 'utf-8');
-  console.log(`[Sitemap] Added ${slugs.length} event pages to sitemap`);
+  console.log(`[Sitemap] Added ${events.length} event pages to sitemap`);
 }
 
 generateSitemap().catch((err) => console.error('[Sitemap] Error:', err));

@@ -49,6 +49,8 @@ const CashFundSection = lazy(() => import('../components/CashFundSection'));
 interface AdminEvent {
   id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
+  viewCount?: number;
+  frozenAt?: string | null;
 }
 
 export default function EventAdmin() {
@@ -108,6 +110,8 @@ export default function EventAdmin() {
     [event]
   );
 
+  const isFrozen = !!event?.frozenAt;
+
   const setupChecklist: SetupChecklist = useMemo(() => ({
     hasGifts: gifts.length > 0,
     hasThreeGifts: gifts.length >= 3,
@@ -134,11 +138,11 @@ export default function EventAdmin() {
       totalMessages: 0,
       photoCount: photos.length,
       maxPhotos: TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent,
-      eventViews: 0,
+      eventViews: event?.viewCount ?? 0,
       isPro: user?.tier !== 'free',
       setupComplete: setupPercent >= 100,
     });
-  }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements]);
+  }, [setupPercent, gifts.length, photos.length, cashFund, user?.tier, evaluateAchievements, event?.viewCount]);
 
   const tourSteps: TourStep[] = useMemo(() => [
     { target: '[data-tour="edit"]', title: 'Personaliza tu evento', body: 'Toca el lápiz para cambiar el nombre, la fecha, el lugar y el mensaje de bienvenida de tus invitados.', cta: 'Entendido', placement: 'bottom' },
@@ -658,6 +662,26 @@ export default function EventAdmin() {
               </button>
             )}
           </div>
+
+          {isFrozen && (
+            <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-300/40 rounded-2xl p-5 mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-start gap-4">
+                <span className="text-2xl leading-none bg-amber-100 text-amber-700 w-11 h-11 flex items-center justify-center rounded-2xl shadow-sm shrink-0">⚠️</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-extrabold text-amber-900">Evento congelado</span>
+                  <span className="text-xs text-amber-800/80 font-medium mt-0.5">
+                    Tu suscripción Pro expiró. Los invitados no pueden ver este evento. Reactiva tu plan para desbloquearlo.
+                  </span>
+                </div>
+              </div>
+              <Link
+                to="/pricing"
+                className="px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold rounded-full shadow-md transition-all shrink-0 text-center"
+              >
+                Reactivar Plan Pro
+              </Link>
+            </div>
+          )}
 
           {/* El Después Banner */}
           {event.status === 'completed' && (

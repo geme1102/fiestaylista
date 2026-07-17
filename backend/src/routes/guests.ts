@@ -18,8 +18,6 @@ const router = Router();
 
 const rsvpSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().max(20).optional().or(z.literal('')),
   companions: z.number().int().min(0).max(10).default(0),
   dietaryRestrictions: z.string().max(500).optional().or(z.literal('')),
   message: z.string().max(500).optional().or(z.literal('')),
@@ -72,12 +70,19 @@ router.post('/events/:eventId/rsvp', rsvpLimiter, verifyTurnstile, validateUuidP
     .values({
       eventId,
       name: sanitizeAndStrip(data.name),
-      email: data.email ? sanitizeAndStrip(data.email) : null,
-      phone: data.phone ? sanitizeAndStrip(data.phone) : null,
       companions: data.companions,
       dietaryRestrictions: data.dietaryRestrictions ? sanitizeAndStrip(data.dietaryRestrictions) : null,
       message: data.message ? sanitizeAndStrip(data.message) : null,
       isConfirmed: true,
+    })
+    .onConflictDoUpdate({
+      target: [guests.eventId, guests.name],
+      set: {
+        companions: data.companions,
+        dietaryRestrictions: data.dietaryRestrictions ? sanitizeAndStrip(data.dietaryRestrictions) : null,
+        message: data.message ? sanitizeAndStrip(data.message) : null,
+        isConfirmed: true,
+      },
     })
     .returning();
 

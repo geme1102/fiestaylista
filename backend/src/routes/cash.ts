@@ -16,6 +16,12 @@ import { requireEventOwnership } from '../middleware/ownership.js';
 import { db } from '../db/index.js';
 import { events, cashFunds } from '../db/schema.js';
 
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length <= 4) return '****';
+  return '****' + digits.slice(-4);
+}
+
 const router = Router();
 
 const createFundSchema = z.object({
@@ -48,18 +54,24 @@ router.put('/events/:eventId/cash-fund', requireAuth, requireEmailVerified, requ
   res.json({ cashFund: fund });
 }));
 
-router.get('/events/:eventId/cash-fund', validateUuidParam('eventId'), asyncHandler(async (req, res) => {
+router.get('/events/:eventId/cash-fund', optionalAuth, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
   const [event] = await db
-    .select({ isActive: events.isActive })
+    .select({ isActive: events.isActive, userId: events.userId })
     .from(events)
     .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
     .limit(1);
   if (!event || !event.isActive) throw new NotFoundError('Evento no encontrado');
 
+  const isOwner = event.userId === req.user?.userId;
   const fund = await cashFundService.getCashFund(eventId);
+
+  if (fund && !isOwner && fund.bankPhone) {
+    fund.bankPhone = maskPhone(fund.bankPhone);
+  }
+
   let promisedTotal = 0;
   if (fund) {
     promisedTotal = await getPromisedAmount(fund.id);
@@ -114,5 +126,22 @@ router.post('/events/:eventId/cash-fund/:cashFundId/contributions/:contributionI
     res.json(result);
   }),
 );
+
+router.post('/events/:eventId/cash-fund/reveal-phone', validateUuidParam('eventId'), verifyTurnstile, asyncHandler(async (req, res) => {
+  const eventId = req.params.eventId as string;
+  if (!eventId) throw new ValidationError('ID del evento requerido');
+
+  const [event] = await db
+    .select({ isActive: events.isActive })
+    .from(events)
+    .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
+    .limit(1);
+  if (!event || !event.isActive) throw new NotFoundError('Evento no encontrado');
+
+  const fund = await cashFundService.getCashFund(eventId);
+  if (!fund) throw new NotFoundError('Fondo no encontrado');
+
+  res.json({ bankPhone: fund.bankPhone, bankType: fund.bankType });
+}));
 
 export default router;

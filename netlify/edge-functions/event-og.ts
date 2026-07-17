@@ -83,7 +83,10 @@ export default async (request: Request, context: Context) => {
     if (event.eventDate) jsonLd.startDate = event.eventDate;
     if (event.eventLocation) jsonLd.location = { "@type": "Place", "name": event.eventLocation };
 
-    const jsonLdStr = JSON.stringify(jsonLd).replace(/<\//g, '<\\/');
+    const hasRequiredEventFields = event.eventDate && event.eventLocation;
+    const jsonLdStr = hasRequiredEventFields
+      ? JSON.stringify(jsonLd).replace(/<\//g, '<\\/')
+      : '';
 
     const html = buildHtml({
       title, description, canonical, ogImage, jsonLd: jsonLdStr, typeLabel,
@@ -129,7 +132,7 @@ function buildHtml(opts: {
 <meta name="twitter:description" content="${escapeHtml(opts.description)}">
 <meta name="twitter:image" content="${escapeHtml(opts.ogImage)}">
 <meta name="robots" content="index, follow">
-<script type="application/ld+json">${opts.jsonLd}</script>
+${opts.jsonLd ? `<script type="application/ld+json">${opts.jsonLd}</script>` : ''}
 </head>
 <body style="margin:0;font-family:system-ui,sans-serif;background:#faf9f8;color:#1a1c1c">
 <div style="max-width:600px;margin:0 auto;padding:40px 20px;text-align:center">

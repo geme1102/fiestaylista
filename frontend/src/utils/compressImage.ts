@@ -1,10 +1,11 @@
 const MAX_DIMENSION = 1200;
 const JPEG_QUALITY = 0.82;
 
+const RAW_TYPES = new Set(['image/gif', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+
 export function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    // PNG, GIF y WebP: devolver original para preservar transparencia/calidad
-    if (file.type === 'image/gif' || file.type === 'image/png' || file.type === 'image/webp') {
+    if (RAW_TYPES.has(file.type)) {
       resolve(file);
       return;
     }

@@ -84,6 +84,44 @@ const COLUMN_MIGRATIONS: string[] = [
     "occurred_at" timestamptz DEFAULT now() NOT NULL
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "email_suppressions_email_unique_idx" ON "email_suppressions"("email")`,
+
+  `CREATE INDEX IF NOT EXISTS "event_views_viewed_at_idx" ON "event_views"("viewed_at")`,
+
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_max_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_max_check" CHECK (amount <= 500000); END IF; END $$`,
+
+  `CREATE INDEX IF NOT EXISTS "messages_event_id_created_at_idx" ON "messages"("event_id", "created_at")`,
+
+  `CREATE UNIQUE INDEX IF NOT EXISTS "guests_event_id_name_unique_idx" ON "guests"("event_id", "name")`,
+
+  `CREATE UNIQUE INDEX IF NOT EXISTS "subscriptions_mp_subscription_id_unique_idx" ON "subscriptions"("mp_subscription_id")`,
+
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'consent_records_immutable_trigger') THEN
+      CREATE OR REPLACE FUNCTION prevent_consent_mutation()
+      RETURNS TRIGGER AS $f$
+      BEGIN
+        RAISE EXCEPTION 'consent_records are immutable and cannot be modified or deleted';
+      END;
+      $f$ LANGUAGE plpgsql;
+      CREATE TRIGGER consent_records_immutable_trigger
+        BEFORE UPDATE OR DELETE ON "consent_records"
+        FOR EACH ROW EXECUTE FUNCTION prevent_consent_mutation();
+    END IF;
+  END $$`,
+
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_logs_immutable_trigger') THEN
+      CREATE OR REPLACE FUNCTION prevent_audit_mutation()
+      RETURNS TRIGGER AS $f$
+      BEGIN
+        RAISE EXCEPTION 'audit_logs are immutable and cannot be modified or deleted';
+      END;
+      $f$ LANGUAGE plpgsql;
+      CREATE TRIGGER audit_logs_immutable_trigger
+        BEFORE UPDATE OR DELETE ON "audit_logs"
+        FOR EACH ROW EXECUTE FUNCTION prevent_audit_mutation();
+    END IF;
+  END $$`,
 ];
 
 // Stable names matching COLUMN_MIGRATIONS order — new migrations must append here + to COLUMN_MIGRATIONS.
@@ -103,6 +141,13 @@ const COLUMN_MIGRATION_NAMES = [
   'onboarding_completed',
   'welcome_tutorial_completed',
   'email_suppressions',
+  'event_views_viewed_at_idx',
+  'cash_contributions_amount_max_check',
+  'messages_event_id_created_at_idx',
+  'guests_event_id_name_unique_idx',
+  'subscriptions_mp_subscription_id_unique_idx',
+  'consent_records_immutable_trigger',
+  'audit_logs_immutable_trigger',
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
@@ -151,6 +196,16 @@ const TIMESTAMPTZ_ALTERS: string[] = [
 const TIMESTAMPTZ_MIGRATION_NAME = 'timestamptz_conversion';
 
 export async function runMigrations(): Promise<void> {
+  // Acquire migration lock via DB table (works with any pool config, unlike advisory locks)
+  await sql.unsafe(`CREATE TABLE IF NOT EXISTS "migration_lock" ("id" integer PRIMARY KEY, "locked_at" timestamptz NOT NULL DEFAULT now())`);
+  await sql.unsafe(`DELETE FROM "migration_lock" WHERE "locked_at" < now() - interval '5 minutes'`);
+  const lockResult = await sql`INSERT INTO "migration_lock" ("id", "locked_at") VALUES (1, now()) ON CONFLICT ("id") DO NOTHING RETURNING "locked_at"`;
+  if (lockResult.length === 0) {
+    log.info('Otra instancia está ejecutando migraciones — omitiendo');
+    return;
+  }
+
+  try {
   // Ensure migration_journal table exists
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS "migration_journal" (
@@ -220,6 +275,10 @@ export async function runMigrations(): Promise<void> {
     } else {
       log.warn('Algunas conversiones timestamptz fallaron — no se marca como aplicada');
     }
+  }
+
+  } finally {
+    await sql`DELETE FROM "migration_lock" WHERE "id" = 1`.catch(() => {});
   }
 
   log.info('Migraciones ejecutadas');

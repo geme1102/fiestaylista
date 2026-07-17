@@ -20,15 +20,23 @@ interface ResendWebhookEvent {
   };
 }
 
-function verifySvixSignature(req: Request, rawBody: string): boolean {
+function verifySvixSignature(req: Request, rawBody: string): { valid: boolean; error?: string } {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
-  if (!secret) return false;
+  if (!secret) return { valid: false, error: 'Webhook secret not configured' };
 
   const svixId = req.headers['svix-id'] as string | undefined;
   const svixTimestamp = req.headers['svix-timestamp'] as string | undefined;
   const svixSignature = req.headers['svix-signature'] as string | undefined;
 
-  if (!svixId || !svixTimestamp || !svixSignature) return false;
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return { valid: false, error: 'Missing Svix headers' };
+  }
+
+  const ts = Number(svixTimestamp);
+  if (isNaN(ts) || Math.abs(Date.now() - ts * 1000) > 5 * 60 * 1000) {
+    log.warn({ ts, now: Date.now() }, 'Timestamp Svix fuera de tolerancia (±5 min) — webhook rechazado');
+    return { valid: false, error: 'Timestamp outside tolerance' };
+  }
 
   const signedContent = `${svixId}.${svixTimestamp}.${rawBody}`;
   const expectedSig = createHmac('sha256', Buffer.from(secret.split('_')[1] || secret, 'base64'))
@@ -40,22 +48,23 @@ function verifySvixSignature(req: Request, rawBody: string): boolean {
     if (part.startsWith('v1=')) {
       const sig = part.slice(3);
       try {
-        return timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig));
+        const match = timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig));
+        return { valid: match, error: match ? undefined : 'Signature mismatch' };
       } catch {
-        return false;
+        return { valid: false, error: 'Signature comparison failed' };
       }
     }
   }
-  return false;
+  return { valid: false, error: 'No v1 signature found' };
 }
 
 router.post('/resend', express.raw({ type: '*/*', limit: '1mb' }), async (req: Request, res: Response) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf-8') : '';
-    const secret = process.env.RESEND_WEBHOOK_SECRET;
 
-    if (secret && !verifySvixSignature(req, rawBody)) {
-      log.warn('Firma Svix inválida en webhook de Resend — rechazado');
+    const { valid, error: sigError } = verifySvixSignature(req, rawBody);
+    if (!valid) {
+      log.warn({ error: sigError }, 'Webhook de Resend rechazado');
       res.status(403).json({ received: false, error: 'Firma inválida' });
       return;
     }

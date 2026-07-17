@@ -43,7 +43,7 @@ export async function requireEventOwnership(
       const [gift] = await db
         .select({ eventId: gifts.eventId })
         .from(gifts)
-        .where(eq(gifts.id, rawParams.giftId))
+        .where(and(eq(gifts.id, rawParams.giftId), isNull(gifts.deletedAt)))
         .limit(1);
       if (!gift || gift.eventId !== rawId) {
         next(new ForbiddenError('El regalo no pertenece a este evento'));
@@ -55,7 +55,7 @@ export async function requireEventOwnership(
       const [photo] = await db
         .select({ eventId: photos.eventId })
         .from(photos)
-        .where(eq(photos.id, rawParams.photoId))
+        .where(and(eq(photos.id, rawParams.photoId), isNull(photos.deletedAt)))
         .limit(1);
       if (!photo || photo.eventId !== rawId) {
         next(new ForbiddenError('La foto no pertenece a este evento'));

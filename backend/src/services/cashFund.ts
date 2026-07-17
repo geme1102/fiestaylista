@@ -5,6 +5,7 @@ import { cashFunds, cashContributions, events } from '../db/schema.js';
 import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
 import { NotFoundError, ValidationError, ConflictError } from '../utils/errors.js';
 import { emitCashContribution } from './notifications.js';
+import { ensureEventNotFrozen } from './event.js';
 
 interface CashFundData {
   title?: string;
@@ -15,6 +16,8 @@ interface CashFundData {
 }
 
 export async function createOrUpdateCashFund(eventId: string, _userId: string, data: CashFundData) {
+  await ensureEventNotFrozen(eventId);
+
   return await db.transaction(async (tx) => {
     const existing = await tx
       .select({ id: cashFunds.id })
@@ -94,20 +97,27 @@ export async function reconcileCashFunds(): Promise<{ fixed: number; checked: nu
 
   const funds: { id: string; collectedAmount: number }[] = [];
   const pageSize = 500;
-  let offset = 0;
-  // eslint-disable-next-line no-constant-condition
+  let cursor: Date | null = null;
+
   while (true) {
-    const page = await db
-      .select({
-        id: cashFunds.id,
-        collectedAmount: cashFunds.collectedAmount,
-      })
-      .from(cashFunds)
-      .limit(pageSize)
-      .offset(offset);
+    const page: { id: string; collectedAmount: number; createdAt: Date }[] = cursor
+      ? await db
+          .select({ id: cashFunds.id, collectedAmount: cashFunds.collectedAmount, createdAt: cashFunds.createdAt })
+          .from(cashFunds)
+          .where(sql`${cashFunds.createdAt} > ${cursor.toISOString()}::timestamptz`)
+          .orderBy(cashFunds.createdAt)
+          .limit(pageSize)
+      : await db
+          .select({ id: cashFunds.id, collectedAmount: cashFunds.collectedAmount, createdAt: cashFunds.createdAt })
+          .from(cashFunds)
+          .orderBy(cashFunds.createdAt)
+          .limit(pageSize);
+
     if (page.length === 0) break;
     funds.push(...page);
-    offset += pageSize;
+    cursor = page[page.length - 1].createdAt;
+
+    if (page.length < pageSize) break;
   }
 
   for (const fund of funds) {
@@ -230,6 +240,13 @@ export async function cancelContribution(
   contributionId: string,
   cashFundId: string,
 ): Promise<{ contribution: typeof cashContributions.$inferSelect; cashFund: typeof cashFunds.$inferSelect }> {
+  const [fundMeta] = await db
+    .select({ eventId: cashFunds.eventId })
+    .from(cashFunds)
+    .where(eq(cashFunds.id, cashFundId))
+    .limit(1);
+  if (fundMeta) await ensureEventNotFrozen(fundMeta.eventId);
+
   const result = await db.transaction(async (tx) => {
     const [contribution] = await tx
       .select()

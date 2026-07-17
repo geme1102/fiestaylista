@@ -159,9 +159,20 @@ describe('deletePhoto', () => {
     (db.update as any).mockReturnThis();
     (db as any).set.mockReturnThis();
     (db as any).where.mockReturnThis();
+    const selectMock = {
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([{ eventId: 'evt-1' }]),
+    };
+    (db.select as any).mockReturnValue(selectMock);
   });
 
   it('throws NotFoundError when photo not found', async () => {
+    (db.select as any).mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
+    });
     (db as any).returning.mockResolvedValueOnce([]);
 
     await expect(deletePhoto('photo-1')).rejects.toThrow('Foto no encontrada');

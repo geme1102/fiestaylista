@@ -75,7 +75,7 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
                     <div className="w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-[30deg] blur-[2px]"></div>
                   </motion.div>
                   <span className="relative z-10">Comenzar mi Lista</span>
-                  <span className="text-sm text-primary-fixed relative z-10">(Gratis y en 2 minutos)</span>
+                  <span className="text-sm text-white/90 relative z-10">(Gratis y en 2 minutos)</span>
                   <motion.span
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}

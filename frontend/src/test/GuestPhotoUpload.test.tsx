@@ -16,6 +16,10 @@ vi.mock('../hooks/useToast', () => ({
 
 vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: 'tok-1', reset: vi.fn() }), waitForTurnstile: vi.fn(() => 'tok-1') }));
 
+vi.mock('../utils/compressImage', () => ({
+  compressImage: vi.fn((file: File) => Promise.resolve(file)),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();

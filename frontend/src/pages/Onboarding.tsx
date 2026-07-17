@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,16 @@ import { reportError } from '../lib/reportError';
 import { createEvent } from '../services/events';
 import { type EventType } from '../types';
 import { showToast } from '../hooks/useToast';
+
+const STORAGE_KEY = 'fy_onboarding_wizard';
+
+function loadSavedState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return null;
+}
 
 const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'WEDDING', icon: '💍', label: 'Boda' },
@@ -20,14 +30,21 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
 export default function Onboarding() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [eventType, setEventType] = useState<EventType>('WEDDING');
-  const [title, setTitle] = useState('');
-  const [eventNote, setEventNote] = useState('');
+  const saved = loadSavedState();
+  const [step, setStep] = useState(saved?.step ?? 1);
+  const [eventType, setEventType] = useState<EventType>(saved?.eventType ?? 'WEDDING');
+  const [title, setTitle] = useState(saved?.title ?? '');
+  const [eventNote, setEventNote] = useState(saved?.eventNote ?? '');
   const [creating, setCreating] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState('💍');
   const [selectedLabel, setSelectedLabel] = useState('Boda');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, eventType, title, eventNote }));
+    } catch {}
+  }, [step, eventType, title, eventNote]);
 
   const handleFinish = async () => {
     if (!title.trim()) {
@@ -37,6 +54,7 @@ export default function Onboarding() {
     setCreating(true);
     try {
       await createEvent({ title: title.trim(), eventType, eventNote: eventNote.trim() || undefined });
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
       navigate('/dashboard');
     } catch (err) {
       reportError(err, { source: 'Onboarding' });
@@ -45,7 +63,10 @@ export default function Onboarding() {
     }
   };
 
-  const skip = () => navigate('/dashboard');
+  const skip = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    navigate('/dashboard');
+  };
 
   const nextStep = (s: number) => {
     if (s === 3) {

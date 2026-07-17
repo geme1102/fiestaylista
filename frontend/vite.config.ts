@@ -15,7 +15,7 @@ export default defineConfig({
         name: 'Fiesta y Lista',
         short_name: 'FiestaL',
         description: 'Crea y comparte listas de regalos para tus eventos especiales',
-        theme_color: '#b10e6b',
+        theme_color: '#ec4899',
         background_color: '#fdf2f8',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -36,7 +36,7 @@ export default defineConfig({
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
-        navigateFallback: '/index.html',
+        navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {

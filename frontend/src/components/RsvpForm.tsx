@@ -12,10 +12,13 @@ interface RsvpFormProps {
 }
 
 export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
+  const storageKey = `rsvp_confirmed:${eventId}`;
   const [companions, setCompanions] = useState(0);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(() => {
+    try { return localStorage.getItem(storageKey) === 'true'; } catch { return false; }
+  });
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
       setConfirmed(true);
       setShowForm(false);
       resetTurnstile();
+      try { localStorage.setItem(storageKey, 'true'); } catch {}
     } catch (err) {
       reportError(err, { source: 'RsvpForm' });
       setError(err instanceof Error ? err.message : 'Error al confirmar asistencia');

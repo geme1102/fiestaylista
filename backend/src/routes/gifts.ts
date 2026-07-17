@@ -15,7 +15,7 @@ import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
-import { emitGiftClaimed, subscribeClient, unsubscribeClient, getClientCount, startSSEScavenger } from '../services/notifications.js';
+import { emitGiftClaimed, subscribeClient, unsubscribeClient, getClientCount, incrementClientIp, getClientIpCount, startSSEScavenger } from '../services/notifications.js';
 
 startSSEScavenger();
 
@@ -99,7 +99,7 @@ router.put('/:giftId/free', requireAuth, requireEventOwnership, validateUuidPara
   if (!giftId) {
     throw new ValidationError('ID del regalo requerido');
   }
-  const gift = await giftService.releaseGift(giftId);
+  const gift = await giftService.releaseGift(giftId, req.user!.userId);
   res.json({ gift });
 }));
 
@@ -118,11 +118,24 @@ const groupClaimSchema = z.object({
 });
 
 router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstile, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req, res) => {
+  const eventId = req.params.eventId as string;
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
   const data = groupClaimSchema.parse(req.body);
   const result = await giftService.addGroupClaim(giftId, data.claimedBy, data.message);
+
+  const claims = await giftService.getGiftClaims(giftId);
+
+  emitGiftClaimed({
+    eventId,
+    giftId,
+    giftName: '',
+    claimedBy: data.claimedBy,
+    claims: claims.map((c) => ({ id: c.id, claimedBy: c.claimedBy })),
+    timestamp: new Date().toISOString(),
+  });
+
   res.status(201).json(result);
 }));
 
@@ -199,7 +212,6 @@ const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
 const SSE_MAX_PER_IP = 3;
 const SSE_CONNECTION_TIMEOUT_MS = 4 * 60 * 1000;
 const SSE_KEEPALIVE_MS = 15000;
-const sseIpCount = new Map<string, number>();
 
 router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
@@ -226,8 +238,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
   }
 
   const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
-  const ipConnections = sseIpCount.get(clientIp) ?? 0;
-  if (ipConnections >= SSE_MAX_PER_IP) {
+  if (getClientIpCount(clientIp) >= SSE_MAX_PER_IP) {
     sendError(res, 429, 'Demasiadas conexiones SSE desde esta IP');
     return;
   }
@@ -248,7 +259,7 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
   subscribeClient(eventId, res);
-  sseIpCount.set(clientIp, ipConnections + 1);
+  incrementClientIp(res, clientIp);
 
   const keepAlive = setInterval(() => {
     try { res.write(':keepalive\n\n'); } catch { /* cliente desconectado */ }
@@ -268,12 +279,6 @@ router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Resp
     clearInterval(keepAlive);
     clearTimeout(connectionTimeout);
     unsubscribeClient(eventId, res);
-    const current = sseIpCount.get(clientIp) ?? 0;
-    if (current <= 1) {
-      sseIpCount.delete(clientIp);
-    } else {
-      sseIpCount.set(clientIp, current - 1);
-    }
   };
 
   req.on('close', cleanup);

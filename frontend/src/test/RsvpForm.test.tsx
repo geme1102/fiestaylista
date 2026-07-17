@@ -12,6 +12,7 @@ vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   mockPost.mockResolvedValue({});
 });
 

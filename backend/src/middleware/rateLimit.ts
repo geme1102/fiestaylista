@@ -94,6 +94,15 @@ export const arcoLimiter = rateLimit({
   message: msg('Demasiadas solicitudes ARCO. Intenta de nuevo en un minuto.'),
 });
 
+export const messageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: msg('Demasiados mensajes. Intenta de nuevo en un minuto.'),
+});
+
 export const paymentLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: config.PAYMENT_RATE_LIMIT,

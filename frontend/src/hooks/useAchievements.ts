@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { showToast } from './useToast';
 
 export interface Achievement {
@@ -35,40 +35,45 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 const STORAGE_KEY = 'fy_achievements_unlocked';
 
-function getUnlocked(): Set<string> {
+function readUnlocked(): string[] {
   try {
     let stored: string | null = null;
     try { stored = localStorage.getItem(STORAGE_KEY); } catch {}
-    return new Set(stored ? JSON.parse(stored) : []);
+    return stored ? JSON.parse(stored) : [];
   } catch {
-    return new Set();
+    return [];
   }
 }
 
 export function useAchievements() {
+  const [unlockedIds, setUnlockedIds] = useState<string[]>(readUnlocked);
+
   const evaluate = useCallback((ctx: AchievementContext) => {
-    const previouslyUnlocked = getUnlocked();
     const newlyUnlocked: Achievement[] = [];
-
     for (const ach of ACHIEVEMENTS) {
-      if (ach.check(ctx) && !previouslyUnlocked.has(ach.id)) {
-        newlyUnlocked.push(ach);
-      }
+      if (ach.check(ctx)) newlyUnlocked.push(ach);
     }
+    if (newlyUnlocked.length === 0) return;
 
-    if (newlyUnlocked.length > 0) {
-      const all = new Set([...previouslyUnlocked, ...newlyUnlocked.map((a) => a.id)]);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...all])); } catch {}
+    setUnlockedIds((prev) => {
+      const added = newlyUnlocked.filter((a) => !prev.includes(a.id));
+      if (added.length === 0) return prev;
 
-      for (const ach of newlyUnlocked) {
-        showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');
-      }
-    }
+      const next = [...prev, ...added.map((a) => a.id)];
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
 
-    return { newlyUnlocked, allUnlocked: getUnlocked() };
+      queueMicrotask(() => {
+        for (const ach of added) {
+          showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');
+        }
+      });
+      return next;
+    });
   }, []);
 
-  const getEarned = useCallback((): Set<string> => getUnlocked(), []);
+  const earnedSet = useMemo(() => new Set(unlockedIds), [unlockedIds]);
+
+  const getEarned = useCallback((): Set<string> => earnedSet, [earnedSet]);
 
   return { evaluate, getEarned, allAchievements: ACHIEVEMENTS };
 }

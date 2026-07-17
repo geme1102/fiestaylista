@@ -9,19 +9,19 @@ export function FloatingOrbs() {
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.06]"
           style={{
             background: 'radial-gradient(circle, #b10e6b 0%, #d23284 50%, transparent 70%)',
-            filter: 'blur(80px)',
+            filter: 'blur(40px)',
           }}
         />
         <div className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
           style={{
             background: 'radial-gradient(circle, #d23284 0%, #b10e6b 50%, transparent 70%)',
-            filter: 'blur(80px)',
+            filter: 'blur(40px)',
           }}
         />
         <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full opacity-[0.04]"
           style={{
             background: 'radial-gradient(circle, #d97706 0%, #f59e0b 50%, transparent 70%)',
-            filter: 'blur(80px)',
+            filter: 'blur(40px)',
           }}
         />
       </div>
@@ -40,7 +40,7 @@ export function FloatingOrbs() {
         className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.06]"
         style={{
           background: 'radial-gradient(circle, #b10e6b 0%, #d23284 50%, transparent 70%)',
-          filter: 'blur(80px)',
+          filter: 'blur(40px)',
           willChange: 'transform',
         }}
       />
@@ -54,7 +54,7 @@ export function FloatingOrbs() {
         className="absolute -bottom-40 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
         style={{
           background: 'radial-gradient(circle, #d23284 0%, #b10e6b 50%, transparent 70%)',
-          filter: 'blur(80px)',
+          filter: 'blur(40px)',
           willChange: 'transform',
         }}
       />
@@ -68,7 +68,7 @@ export function FloatingOrbs() {
         className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full opacity-[0.04]"
         style={{
           background: 'radial-gradient(circle, #d97706 0%, #f59e0b 50%, transparent 70%)',
-          filter: 'blur(80px)',
+          filter: 'blur(40px)',
           willChange: 'transform',
         }}
       />

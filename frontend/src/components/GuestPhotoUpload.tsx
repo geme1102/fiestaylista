@@ -5,6 +5,7 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { Button } from '../components/ui/Button';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
+import { compressImage } from '../utils/compressImage';
 
 interface GuestPhotoUploadProps {
   eventId: string;
@@ -57,15 +58,19 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
     setUploading(true);
     try {
+      const compressed = await compressImage(file);
+
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('turnstileToken', token ?? '');
+      formData.append('file', compressed, file.name);
       formData.append('eventId', eventId);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/guest-upload`, {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const uploadUrl = `${apiBase}/api/upload/guest-upload?turnstileToken=${encodeURIComponent(token ?? '')}`;
+
+      const res = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
         signal: controller.signal,

@@ -32,7 +32,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.01 }}
           transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
-          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
+          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group"
         >
           <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-bl from-brand-peach/30 via-brand-pink/10 to-transparent opacity-60 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
           <div className="relative z-10 flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-[1.2rem] md:rounded-3xl bg-gradient-to-br from-brand-pink to-brand-peach p-1 shadow-[0_10px_25px_-5px_rgba(210,50,132,0.4)] group-hover:shadow-[0_15px_35px_-5px_rgba(210,50,132,0.5)] transition-shadow">
@@ -54,7 +54,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.02 }}
           transition={{ duration: 0.5, delay: 0.1, type: 'spring', bounce: 0.3 }}
-          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
+          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col items-center justify-center text-center group"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-brand-pink/5 to-brand-peach/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
@@ -87,7 +87,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.02 }}
           transition={{ duration: 0.5, delay: 0.2, type: 'spring', bounce: 0.3 }}
-          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-brand-berry text-white shadow-[0_15px_40px_-15px_rgba(140,0,83,0.5)] overflow-hidden flex flex-col items-center justify-center text-center group cursor-pointer"
+          className="relative p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] bg-brand-berry text-white shadow-[0_15px_40px_-15px_rgba(140,0,83,0.5)] overflow-hidden flex flex-col items-center justify-center text-center group"
         >
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
@@ -112,7 +112,7 @@ export function LandingFeatures() {
           viewport={{ once: true }}
           whileHover={{ y: -5, scale: 1.01 }}
           transition={{ duration: 0.5, delay: 0.3, type: 'spring', bounce: 0.3 }}
-          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group cursor-pointer"
+          className="md:col-span-2 relative p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] bg-surface/70 backdrop-blur-3xl border-2 border-white shadow-[0_15px_40px_-15px_rgba(0,0,0,0.08),inset_0_4px_20px_rgba(255,255,255,1)] overflow-hidden flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-6 md:gap-10 group"
         >
           <div className="absolute bottom-0 right-0 left-0 h-32 md:h-40 bg-gradient-to-t from-brand-pink/20 to-transparent opacity-60 pointer-events-none group-hover:h-40 md:group-hover:h-48 transition-all duration-700"></div>
 

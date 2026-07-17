@@ -286,34 +286,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               Envía tu aporte directo a la cuenta del anfitrión y luego regístralo aquí para que aparezca en la lista.
             </p>
             {fund.bankPhone && (
-              <div className="bg-white/60 rounded-2xl p-4 border border-secondary/10 mb-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-secondary">account_balance</span>
-                  <div>
-                    <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
-                    <p className="font-bold text-on-surface">
-                      {fund.bankType === 'nequi' && 'Nequi'}
-                      {fund.bankType === 'daviplata' && 'Daviplata'}
-                      {fund.bankType === 'bancolombia' && 'Bancolombia'}
-                      {!['nequi', 'daviplata', 'bancolombia'].includes(fund.bankType || '') && (fund.bankType || 'Cuenta bancaria')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-secondary">smartphone</span>
-                  <div>
-                    <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
-                    <p className="font-bold text-on-surface text-lg tracking-wider">{fund.bankPhone}</p>
-                  </div>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(fund.bankPhone || ''); showToast('Número copiado 📋', 'success'); }}
-                    className="ml-auto p-2 min-h-[44px] min-w-[44px] rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all flex items-center justify-center"
-                    aria-label="Copiar número"
-                  >
-                    <span className="material-symbols-outlined text-base">content_copy</span>
-                  </button>
-                </div>
-              </div>
+              <BankContact phone={fund.bankPhone} bankType={fund.bankType ?? null} eventId={eventId} />
             )}
             <PromiseForm fundId={fund.id} loadFund={loadFund} guestName={guestName} />
           </div>
@@ -578,6 +551,94 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
         )}
       </button>
     </form>
+  );
+}
+
+function BankContact({ phone, bankType, eventId }: { phone: string; bankType: string | null; eventId: string }) {
+  const isMasked = phone.startsWith('****');
+  const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
+  const [revealLoading, setRevealLoading] = useState(false);
+  const { containerRef, token: revealToken, reset: resetReveal } = useTurnstile();
+  const revealTokenRef = useRef(revealToken);
+  useEffect(() => { revealTokenRef.current = revealToken; }, [revealToken]);
+
+  const displayPhone = revealedPhone || phone;
+
+  const handleReveal = async () => {
+    setRevealLoading(true);
+    let token = revealTokenRef.current;
+    if (!token) {
+      token = await waitForTurnstile(() => revealTokenRef.current);
+    }
+    try {
+      const { apiClient } = await import('../services/api');
+      const res = await apiClient.post<{ bankPhone: string }>(
+        `/api/events/${eventId}/cash-fund/reveal-phone`,
+        { turnstileToken: token ?? undefined },
+      );
+      setRevealedPhone(res.bankPhone);
+      resetReveal();
+    } catch (err) {
+      reportError(err, { source: 'BankContact' });
+      showToast(err instanceof Error ? err.message : 'Error al revelar el número', 'error');
+    } finally {
+      setRevealLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    const num = revealedPhone || phone;
+    if (isMasked && !revealedPhone) return;
+    navigator.clipboard.writeText(num).then(() => showToast('Número copiado 📋', 'success'));
+  };
+
+  return (
+    <div className="bg-white/60 rounded-2xl p-4 border border-secondary/10 mb-4 space-y-3">
+      <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-secondary">account_balance</span>
+        <div>
+          <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
+          <p className="font-bold text-on-surface">
+            {bankType === 'nequi' && 'Nequi'}
+            {bankType === 'daviplata' && 'Daviplata'}
+            {bankType === 'bancolombia' && 'Bancolombia'}
+            {!['nequi', 'daviplata', 'bancolombia'].includes(bankType || '') && (bankType || 'Cuenta bancaria')}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-secondary">smartphone</span>
+        <div>
+          <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
+          <p className="font-bold text-on-surface text-lg tracking-wider">{displayPhone}</p>
+        </div>
+        {isMasked && !revealedPhone ? (
+          <div className="ml-auto">
+            <div ref={containerRef} />
+            <button
+              onClick={handleReveal}
+              disabled={revealLoading}
+              className="p-2 min-h-[44px] min-w-[44px] rounded-xl bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all flex items-center justify-center"
+              aria-label="Revelar número"
+            >
+              {revealLoading ? (
+                <span className="block w-4 h-4 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+              ) : (
+                <span className="material-symbols-outlined text-base">visibility</span>
+              )}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleCopy}
+            className="ml-auto p-2 min-h-[44px] min-w-[44px] rounded-xl bg-primary-fixed/30 text-primary hover:bg-primary-fixed/50 transition-all flex items-center justify-center"
+            aria-label="Copiar número"
+          >
+            <span className="material-symbols-outlined text-base">content_copy</span>
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { ACHIEVEMENTS, type AchievementContext } from '../hooks/useAchievements';
 
 vi.mock('sonner', () => ({
@@ -74,48 +74,50 @@ describe('ACHIEVEMENTS checks', () => {
 });
 
 describe('useAchievements evaluate', () => {
+  const emptyCtx: AchievementContext = { eventCount: 0, totalGifts: 0, maxGiftsInEvent: 0, cashFundActive: false, totalMessages: 0, photoCount: 0, maxPhotos: 0, eventViews: 0, isPro: false, setupComplete: false };
+
   it('unlocks first_event when eventCount >= 1', async () => {
     const { useAchievements } = await import('../hooks/useAchievements');
     const { result } = renderHook(() => useAchievements());
-    const ctx: AchievementContext = { eventCount: 1, totalGifts: 0, maxGiftsInEvent: 0, cashFundActive: false, totalMessages: 0, photoCount: 0, maxPhotos: 0, eventViews: 0, isPro: false, setupComplete: false };
+    const ctx: AchievementContext = { ...emptyCtx, eventCount: 1 };
 
-    const { newlyUnlocked, allUnlocked } = result.current.evaluate(ctx);
+    act(() => { result.current.evaluate(ctx); });
 
-    expect(newlyUnlocked).toHaveLength(1);
-    expect(newlyUnlocked[0].id).toBe('first_event');
-    expect(allUnlocked.has('first_event')).toBe(true);
+    const earned = result.current.getEarned();
+    expect(earned.has('first_event')).toBe(true);
   });
 
   it('does not re-unlock already stored achievements', async () => {
     localStorage.setItem('fy_achievements_unlocked', JSON.stringify(['first_event']));
     const { useAchievements } = await import('../hooks/useAchievements');
     const { result } = renderHook(() => useAchievements());
-    const ctx: AchievementContext = { eventCount: 1, totalGifts: 0, maxGiftsInEvent: 0, cashFundActive: false, totalMessages: 0, photoCount: 0, maxPhotos: 0, eventViews: 0, isPro: false, setupComplete: false };
+    const ctx: AchievementContext = { ...emptyCtx, eventCount: 1 };
 
-    const { newlyUnlocked } = result.current.evaluate(ctx);
+    act(() => { result.current.evaluate(ctx); });
 
-    expect(newlyUnlocked).toHaveLength(0);
+    const stored = JSON.parse(localStorage.getItem('fy_achievements_unlocked') || '[]');
+    expect(stored).toEqual(['first_event']);
   });
 
   it('unlocks multiple achievements from a single evaluate', async () => {
     const { useAchievements } = await import('../hooks/useAchievements');
     const { result } = renderHook(() => useAchievements());
-    const ctx: AchievementContext = { eventCount: 1, totalGifts: 0, maxGiftsInEvent: 0, cashFundActive: true, totalMessages: 5, photoCount: 0, maxPhotos: 0, eventViews: 0, isPro: false, setupComplete: false };
+    const ctx: AchievementContext = { ...emptyCtx, eventCount: 1, cashFundActive: true, totalMessages: 5 };
 
-    const { newlyUnlocked } = result.current.evaluate(ctx);
+    act(() => { result.current.evaluate(ctx); });
 
-    const ids = newlyUnlocked.map(a => a.id);
-    expect(ids).toContain('first_event');
-    expect(ids).toContain('cash_rain');
-    expect(ids).toContain('social_host');
+    const earned = result.current.getEarned();
+    expect(earned.has('first_event')).toBe(true);
+    expect(earned.has('cash_rain')).toBe(true);
+    expect(earned.has('social_host')).toBe(true);
   });
 
   it('persists unlocked achievements to localStorage', async () => {
     const { useAchievements } = await import('../hooks/useAchievements');
     const { result } = renderHook(() => useAchievements());
-    const ctx: AchievementContext = { eventCount: 1, totalGifts: 0, maxGiftsInEvent: 0, cashFundActive: false, totalMessages: 0, photoCount: 0, maxPhotos: 0, eventViews: 0, isPro: false, setupComplete: false };
+    const ctx: AchievementContext = { ...emptyCtx, eventCount: 1 };
 
-    result.current.evaluate(ctx);
+    act(() => { result.current.evaluate(ctx); });
 
     const stored = JSON.parse(localStorage.getItem('fy_achievements_unlocked') || '[]');
     expect(stored).toContain('first_event');

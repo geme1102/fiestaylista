@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../../services/api';
 import { reportError } from '../../lib/reportError';
+import { showToast } from '../../hooks/useToast';
 
 
 interface Message {
@@ -19,6 +20,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
@@ -37,6 +39,20 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
   useEffect(() => {
     loadMessages();
   }, [loadMessages, refreshKey]);
+
+  const handleDelete = async (messageId: string) => {
+    setDeletingId(messageId);
+    try {
+      await apiClient.del(`/api/events/${eventId}/messages/${messageId}`);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      showToast('Mensaje eliminado', 'success');
+    } catch (err) {
+      reportError(err, { source: 'MessagesPanel' });
+      showToast(err instanceof Error ? err.message : 'Error al eliminar mensaje', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -95,9 +111,22 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
                   <span className="text-[10px] font-bold text-primary">{msg.authorName.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="text-xs font-bold text-on-surface">{msg.authorName}</span>
-                <span className="text-[10px] text-on-surface-variant/50 ml-auto">
+                <span className="text-[10px] text-on-surface-variant/50 ml-auto mr-2">
                   {new Date(msg.createdAt).toLocaleDateString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
+                <button
+                  onClick={() => handleDelete(msg.id)}
+                  disabled={deletingId === msg.id}
+                  className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-full text-on-surface-variant/40 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
+                  title="Eliminar mensaje"
+                  aria-label="Eliminar mensaje"
+                >
+                  {deletingId === msg.id ? (
+                    <span className="block w-3 h-3 rounded-full border-2 border-red-300 border-t-transparent animate-spin" />
+                  ) : (
+                    <span className="material-symbols-outlined text-base">delete</span>
+                  )}
+                </button>
               </div>
               <p className="text-sm text-on-surface-variant leading-relaxed">{msg.message}</p>
             </div>

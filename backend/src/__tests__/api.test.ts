@@ -148,6 +148,7 @@ vi.mock('../middleware/rateLimit.js', () => {
     giftLimiter: noop,
     rsvpLimiter: noop,
     createEventLimiter: noop,
+    messageLimiter: noop,
   };
 });
 

@@ -9,7 +9,7 @@ import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from
 import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
 export { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
-import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining } from '../middleware/lockout.js';
+import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining, isIpThrottled } from '../middleware/lockout.js';
 
 const log = createModuleLogger('Auth');
 
@@ -117,6 +117,11 @@ export async function login(
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   try {
+    const ip = meta?.ipAddress;
+    if (ip && await isIpThrottled(ip)) {
+      throw new UnauthorizedError('Demasiados intentos desde esta dirección. Intenta de nuevo más tarde.');
+    }
+
     let rows: any[];
     try {
       rows = await sql`
@@ -396,16 +401,9 @@ export async function forgotPassword(email: string): Promise<void> {
     .set({ resetToken: hashToken(resetToken), resetTokenExpires, updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  try {
-    await sendPasswordResetEmail(user.email, resetToken);
-  } catch (err) {
-    await db
-      .update(users)
-      .set({ resetToken: null, resetTokenExpires: null, updatedAt: new Date() })
-      .where(eq(users.id, user.id));
-    log.error({ err }, 'Error al enviar email de restablecimiento:');
-    throw new ValidationError('No se pudo enviar el correo de restablecimiento. Intenta de nuevo más tarde.');
-  }
+  sendPasswordResetEmail(user.email, resetToken).catch((err: unknown) =>
+    log.error({ err }, 'Error al enviar email de restablecimiento:'),
+  );
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {

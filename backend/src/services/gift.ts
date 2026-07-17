@@ -3,9 +3,12 @@ import { type PaginationParams, buildPaginationConditions } from '../utils/pagin
 import { db } from '../db/index.js';
 import { users, events, gifts as giftsTable, giftClaims } from '../db/schema.js';
 import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
-import { NotFoundError, ValidationError, ConflictError } from '../utils/errors.js';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../utils/errors.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { Tier } from '../types/index.js';
+import { ensureEventNotFrozen } from './event.js';
+
+const MAX_GROUP_PARTICIPANTS = 50;
 
 export async function addGift(eventId: string, name: string) {
   const cleaned = sanitize(name);
@@ -17,12 +20,13 @@ export async function addGift(eventId: string, name: string) {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId})::bigint)`);
 
     const [event] = await tx
-      .select({ userId: events.userId, isActive: events.isActive })
+      .select({ userId: events.userId, isActive: events.isActive, frozenAt: events.frozenAt })
       .from(events)
       .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
       .limit(1);
 
     if (!event) throw new NotFoundError('Evento no encontrado');
+    if (event.frozenAt) throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
     if (!event.isActive) throw new ValidationError('Este evento no está activo');
 
     const [user] = await tx
@@ -64,6 +68,13 @@ export async function updateGift(
   giftId: string,
   data: { isClaimed?: boolean; claimedBy?: string | null },
 ) {
+  const [giftMeta] = await db
+    .select({ eventId: giftsTable.eventId })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+  if (giftMeta) await ensureEventNotFrozen(giftMeta.eventId);
+
   const updateData: Record<string, unknown> = {};
 
   if (data.isClaimed !== undefined) {
@@ -130,12 +141,15 @@ export async function claimGift(giftId: string, claimedBy: string) {
     }
 
     const [event] = await tx
-      .select({ status: events.status })
+      .select({ status: events.status, isActive: events.isActive })
       .from(events)
-      .where(eq(events.id, giftWithEvent.eventId))
+      .where(and(eq(events.id, giftWithEvent.eventId), isNull(events.deletedAt)))
       .limit(1);
 
-    if (event && event.status === 'completed') {
+    if (!event || !event.isActive) {
+      throw new ValidationError('El evento no está activo');
+    }
+    if (event.status === 'completed') {
       throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
     }
 
@@ -155,7 +169,17 @@ export async function claimGift(giftId: string, claimedBy: string) {
   });
 }
 
-export async function releaseGift(giftId: string) {
+export async function releaseGift(giftId: string, userId: string) {
+  const [giftMeta] = await db
+    .select({ eventId: giftsTable.eventId, ownerId: events.userId })
+    .from(giftsTable)
+    .innerJoin(events, eq(giftsTable.eventId, events.id))
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+  if (!giftMeta) throw new NotFoundError('Regalo no encontrado');
+  if (giftMeta.ownerId !== userId) throw new ForbiddenError('No tienes permiso para liberar este regalo');
+  await ensureEventNotFrozen(giftMeta.eventId);
+
   return await db.transaction(async (tx) => {
     await tx.delete(giftClaims).where(eq(giftClaims.giftId, giftId));
 
@@ -174,6 +198,13 @@ export async function releaseGift(giftId: string) {
 }
 
 export async function deleteGift(giftId: string) {
+  const [giftMeta] = await db
+    .select({ eventId: giftsTable.eventId })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+  if (giftMeta) await ensureEventNotFrozen(giftMeta.eventId);
+
   const [gift] = await db
     .update(giftsTable)
     .set({ deletedAt: new Date() })
@@ -223,13 +254,24 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
     if (!gift.isGroupGift) throw new ValidationError('Este regalo no es grupal');
     if (gift.isClaimed) throw new ValidationError('Este regalo ya ha sido reservado por un grupo completo');
 
+    const [countResult] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(giftClaims)
+      .where(eq(giftClaims.giftId, giftId));
+    if (Number(countResult?.count ?? 0) >= MAX_GROUP_PARTICIPANTS) {
+      throw new ValidationError(`Este regalo grupal ya tiene el máximo de ${MAX_GROUP_PARTICIPANTS} participantes`);
+    }
+
     const [event] = await tx
-      .select({ status: events.status })
+      .select({ status: events.status, isActive: events.isActive })
       .from(events)
-      .where(eq(events.id, gift.eventId))
+      .where(and(eq(events.id, gift.eventId), isNull(events.deletedAt)))
       .limit(1);
 
-    if (event && event.status === 'completed') {
+    if (!event || !event.isActive) {
+      throw new ValidationError('El evento no está activo');
+    }
+    if (event.status === 'completed') {
       throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
     }
 
@@ -244,9 +286,16 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
 
 export async function getGiftClaims(giftId: string) {
   const claims = await db
-    .select()
+    .select({
+      id: giftClaims.id,
+      giftId: giftClaims.giftId,
+      claimedBy: giftClaims.claimedBy,
+      message: giftClaims.message,
+      createdAt: giftClaims.createdAt,
+    })
     .from(giftClaims)
-    .where(eq(giftClaims.giftId, giftId))
+    .innerJoin(giftsTable, eq(giftClaims.giftId, giftsTable.id))
+    .where(and(eq(giftClaims.giftId, giftId), isNull(giftsTable.deletedAt)))
     .orderBy(desc(giftClaims.createdAt))
     .limit(100);
 
@@ -254,6 +303,13 @@ export async function getGiftClaims(giftId: string) {
 }
 
 export async function toggleGroupGift(giftId: string, isGroupGift: boolean) {
+  const [giftMeta] = await db
+    .select({ eventId: giftsTable.eventId })
+    .from(giftsTable)
+    .where(eq(giftsTable.id, giftId))
+    .limit(1);
+  if (giftMeta) await ensureEventNotFrozen(giftMeta.eventId);
+
   return await db.transaction(async (tx) => {
     const [gift] = await tx
       .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed, claimedBy: giftsTable.claimedBy, isGroupGift: giftsTable.isGroupGift, deletedAt: giftsTable.deletedAt })

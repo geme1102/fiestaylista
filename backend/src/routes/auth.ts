@@ -10,6 +10,7 @@ import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstil
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
 import { reconcileSubscriptionOnLogin } from '../services/subscription.js';
+import { recordConsent } from '../services/consent.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
@@ -79,6 +80,10 @@ router.post('/register', authLimiter, verifyTurnstileOptional, asyncHandlerWithV
   setRefreshCookie(res, result.refreshToken);
   const { refreshToken: _, ...safeResult } = result;
   res.status(201).json(safeResult);
+
+  recordConsent({ userId: safeResult.user.id, type: 'privacy', req }).catch((err: unknown) =>
+    log.error({ err }, 'Error registrando consentimiento:'),
+  );
 }));
 
 router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {

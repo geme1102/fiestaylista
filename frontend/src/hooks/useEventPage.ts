@@ -160,9 +160,14 @@ export function useEventPage() {
       sseConnectedRef.current = false;
     },
     onGiftClaimed: (data) => {
-      setGifts((prev) => prev.map((g) =>
-        g.id === data.giftId ? { ...g, isClaimed: true, claimedBy: data.claimedBy } : g,
-      ));
+      setGifts((prev) => prev.map((g) => {
+        if (g.id !== data.giftId) return g;
+        const updated = { ...g, isClaimed: true, claimedBy: data.claimedBy };
+        if (data.claims) {
+          (updated as any).claims = data.claims;
+        }
+        return updated;
+      }));
     },
     onCashContribution: () => {
       loadEvent();

@@ -9,6 +9,7 @@ export default function InstallPwaBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     const isStandaloneMatch = window.matchMedia('(display-mode: standalone)').matches
@@ -16,6 +17,9 @@ export default function InstallPwaBanner() {
       || window.matchMedia('(display-mode: minimal-ui)').matches
       || (window.navigator as { standalone?: boolean }).standalone === true;
     setIsStandalone(isStandaloneMatch);
+
+    const ua = navigator.userAgent;
+    setIsIOS(/iPhone|iPad|iPod/.test(ua) && !/Windows Phone/.test(ua));
   }, []);
 
   useEffect(() => {
@@ -33,7 +37,28 @@ export default function InstallPwaBanner() {
     return () => window.removeEventListener('appinstalled', handler);
   }, []);
 
-  if (isStandalone || !deferredPrompt || dismissed) return null;
+  if (isStandalone) return null;
+
+  if (isIOS && !dismissed) {
+    return (
+      <div className="fixed bottom-20 left-4 right-4 z-50 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-primary-container/20 border border-primary/20 flex items-start gap-3 shadow-xl backdrop-blur-xl">
+        <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>ios_share</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-primary">Instala Fiesta y Lista</p>
+          <p className="text-xs text-on-surface-variant/70 mt-0.5">Toca el botón Compartir <span className="font-semibold">📤</span> y luego <span className="font-semibold">Añadir a pantalla de inicio ➕</span></p>
+        </div>
+        <button
+          onClick={() => setDismissed(true)}
+          className="shrink-0 p-2 rounded-lg text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-black/5 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Cerrar"
+        >
+          <span className="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (!deferredPrompt || dismissed) return null;
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;

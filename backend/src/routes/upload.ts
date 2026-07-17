@@ -17,7 +17,7 @@ import { eq, and, isNull } from 'drizzle-orm';
 
 const router = Router();
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
 const MAX_SIZE = 10 * 1024 * 1024;
 
 const MAGIC_BYTES: { sig: Uint8Array; mime: string }[] = [
@@ -40,7 +40,11 @@ async function readFileHeader(filePath: string): Promise<Buffer> {
   }
 }
 
-function validateMagicBytes(buffer: Buffer): { valid: boolean; detectedMime: string | null } {
+function validateMagicBytes(buffer: Buffer, mimeType: string): { valid: boolean; detectedMime: string | null } {
+  if (mimeType === 'image/heic' || mimeType === 'image/heif') {
+    return { valid: true, detectedMime: mimeType };
+  }
+
   for (const entry of MAGIC_BYTES) {
     if (entry.sig.length <= buffer.length && entry.sig.every((byte, i) => buffer[i] === byte)) {
       if (entry.mime === 'image/webp') {
@@ -145,7 +149,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
 
       const filePath = req.file.path;
       const rawBuffer = await readFileHeader(filePath);
-      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
+      const { valid, detectedMime } = validateMagicBytes(rawBuffer, req.file.mimetype);
       if (!valid) {
         await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');
@@ -161,7 +165,17 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
   });
 });
 
-router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, next: NextFunction) => {
+router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (config.TURNSTILE_SECRET_KEY) {
+      const token = typeof req.query.turnstileToken === 'string' ? req.query.turnstileToken : undefined;
+      if (!token) throw new ValidationError('Token de seguridad requerido');
+      await verifyTurnstileToken(token, req.ip);
+    }
+  } catch (err) {
+    return next(err);
+  }
+
   upload.single('file')(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {
@@ -177,11 +191,6 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
         throw new ValidationError('No se proporcionó ningún archivo');
       }
 
-      if (config.TURNSTILE_SECRET_KEY) {
-        const token = req.body?.turnstileToken;
-        await verifyTurnstileToken(token, req.ip);
-      }
-
       const eventId = req.body?.eventId;
       if (eventId) {
         const [evt] = await db
@@ -194,7 +203,7 @@ router.post('/guest-upload', guestUploadLimiter, (req: Request, res: Response, n
 
       const filePath = req.file.path;
       const rawBuffer = await readFileHeader(filePath);
-      const { valid, detectedMime } = validateMagicBytes(rawBuffer);
+      const { valid, detectedMime } = validateMagicBytes(rawBuffer, req.file.mimetype);
       if (!valid) {
         await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');

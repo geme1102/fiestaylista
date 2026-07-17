@@ -7,11 +7,16 @@ COPY shared/ ./shared/
 WORKDIR /app/backend
 RUN npm run build
 
+FROM node:22-alpine AS prod-deps
+WORKDIR /app
+COPY backend/package*.json ./backend/
+RUN cd backend && npm ci --omit=dev
+
 FROM node:22-alpine
 ENV NODE_ENV=production
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=prod-deps /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/package*.json ./
 COPY --from=builder /app/backend/drizzle.config.js ./

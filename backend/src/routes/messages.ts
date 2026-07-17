@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { eq, and, isNull, desc } from 'drizzle-orm';
+import { eq, and, isNull, desc, lt, type SQL } from 'drizzle-orm';
 
 import { sanitize, sanitizeAndStrip } from '../utils/sanitize.js';
-import { apiLimiter } from '../middleware/rateLimit.js';
+import { messageLimiter } from '../middleware/rateLimit.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requireEventOwnership } from '../middleware/ownership.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 import { db } from '../db/index.js';
@@ -11,6 +13,7 @@ import { events, messages } from '../db/schema.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { emitMessagePosted } from '../services/notifications.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
+import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
@@ -26,12 +29,23 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
   const [event] = await db
     .select({ id: events.id })
     .from(events)
-    .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
+    .where(and(
+      eq(events.id, eventId),
+      eq(events.isActive, true),
+      eq(events.status, 'active'),
+      isNull(events.deletedAt),
+    ))
     .limit(1);
 
   if (!event) throw new NotFoundError('Evento no encontrado o inactivo');
 
   const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200);
+  const cursor = typeof req.query.cursor === 'string' ? new Date(req.query.cursor) : null;
+
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof lt> | SQL)[] = [eq(messages.eventId, eventId)];
+  if (cursor) {
+    conditions.push(lt(messages.createdAt, cursor));
+  }
 
   const eventMessages = await db
     .select({
@@ -42,15 +56,18 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
       createdAt: messages.createdAt,
     })
     .from(messages)
-    .where(eq(messages.eventId, eventId))
+    .where(and(...conditions))
     .orderBy(desc(messages.createdAt))
     .limit(limit + 1);
 
   const hasMore = eventMessages.length > limit;
-  res.json({ messages: hasMore ? eventMessages.slice(0, limit) : eventMessages, hasMore });
+  const result = hasMore ? eventMessages.slice(0, limit) : eventMessages;
+  const nextCursor = hasMore && result.length > 0 ? result[result.length - 1].createdAt.toISOString() : null;
+
+  res.json({ messages: result, hasMore, nextCursor });
 }));
 
-router.post('/events/:eventId/messages', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/events/:eventId/messages', messageLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -76,6 +93,22 @@ router.post('/events/:eventId/messages', apiLimiter, verifyTurnstile, validateUu
   });
 
   res.status(201).json({ message: msg });
+}));
+
+router.delete('/events/:eventId/messages/:messageId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('messageId'), asyncHandler(async (req: AuthRequest, res) => {
+  const messageId = req.params.messageId as string;
+  if (!messageId) throw new ValidationError('ID del mensaje requerido');
+
+  const [msg] = await db
+    .select({ id: messages.id })
+    .from(messages)
+    .where(eq(messages.id, messageId))
+    .limit(1);
+
+  if (!msg) throw new NotFoundError('Mensaje no encontrado');
+
+  await db.delete(messages).where(eq(messages.id, messageId));
+  res.json({ success: true });
 }));
 
 export default router;
