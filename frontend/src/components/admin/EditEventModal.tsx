@@ -64,7 +64,7 @@ export default function EditEventModal({
                 onClick={onClose}
                 aria-label="Cerrar"
                 data-testid="close-edit-modal"
-                className="p-2.5 text-on-surface-variant hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
+                className="p-2.5 min-h-[44px] min-w-[44px] text-on-surface-variant hover:text-gray-800 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

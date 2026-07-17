@@ -71,12 +71,11 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
               className="relative snap-center shrink-0 w-[80vw] sm:w-[260px] md:w-[320px] flex flex-col items-center p-8 md:p-10
                          bg-surface/70 backdrop-blur-2xl rounded-[2.5rem] md:rounded-[3rem]
                          shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06),0_4px_10px_-5px_rgba(0,0,0,0.02),inset_0_0_0_1px_rgba(255,255,255,0.7),inset_0_4px_15px_rgba(255,255,255,0.9)]
-                         hover:shadow-[0_40px_60px_-15px_rgba(140,0,83,0.25),0_15px_25px_-10px_rgba(210,50,132,0.15),inset_0_0_0_2px_rgba(255,255,255,1),inset_0_4px_25px_rgba(255,255,255,1)]
-                         active:shadow-[0_15px_25px_-5px_rgba(140,0,83,0.2),inset_0_0_0_2px_rgba(255,255,255,0.9),inset_0_4px_20px_rgba(255,255,255,0.8)]
-                         transition-shadow duration-500 overflow-visible group"
+                         overflow-visible group"
             >
               <div className={`absolute -inset-1 rounded-[2.5rem] md:rounded-[3rem] bg-gradient-to-br ${event.color} blur-[12px] opacity-30 group-hover:opacity-70 transition-opacity duration-500 -z-10 pointer-events-none`}></div>
               <div className={`absolute inset-0 bg-gradient-to-t ${event.color} opacity-0 group-hover:opacity-15 rounded-[2.5rem] md:rounded-[3rem] transition-opacity duration-500 pointer-events-none`}></div>
+              <div className={`absolute inset-0 rounded-[2.5rem] md:rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none shadow-[0_40px_60px_-15px_rgba(140,0,83,0.25),0_15px_25px_-10px_rgba(210,50,132,0.15),inset_0_0_0_2px_rgba(255,255,255,1),inset_0_4px_25px_rgba(255,255,255,1)]`}></div>
 
               <motion.div
                 animate={{ y: [0, -6, 0] }}
@@ -91,7 +90,7 @@ export function LandingCategoryCarousel({ onNavigate }: LandingCategoryCarouselP
                 {event.title}
               </h3>
 
-              <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-low border border-outline-variant/20 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-all duration-300">
+              <div className="relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-low border border-outline-variant/20 shadow-inner group-hover:bg-brand-pink group-hover:text-white group-hover:border-brand-pink transition-colors duration-300">
                 <span className="text-xs md:text-sm font-semibold tracking-wide transition-colors text-brand-berry group-hover:text-white">Crear lista</span>
                 <ArrowRight strokeWidth={2.5} className="w-4 h-4 text-brand-berry group-hover:text-white group-hover:translate-x-1 transition-transform" />
               </div>

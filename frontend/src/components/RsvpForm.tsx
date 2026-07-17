@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import { Button } from '../components/ui/Button';
@@ -90,15 +90,10 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
         <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${showForm ? 'rotate-180' : ''}`}>expand_more</span>
       </button>
 
-      <AnimatePresence>
-        {showForm && (
-          <motion.form
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden">
+          <form
             onSubmit={handleSubmit}
-            className="overflow-hidden"
           >
             <div className="p-5 mt-2 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4">
               <div>
@@ -126,7 +121,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   id="rsvp-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                  className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"
                   placeholder="¡Felicidades! Nos vemos allí 🎉"
                   rows={2}
                 />
@@ -142,9 +137,9 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                 {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
               </Button>
             </div>
-          </motion.form>
-        )}
-      </AnimatePresence>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

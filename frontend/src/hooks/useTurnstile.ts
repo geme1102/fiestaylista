@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useInAppBrowser } from './useInAppBrowser';
 
 declare global {
   interface Window {
@@ -42,6 +43,19 @@ export function useTurnstile() {
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isWebview, isIOS } = useInAppBrowser();
+
+  const webviewRef = useRef({ isWebview, isIOS });
+  webviewRef.current = { isWebview, isIOS };
+
+  const buildErrorMessage = useCallback((baseMsg: string) => {
+    const { isWebview: wv, isIOS: ios } = webviewRef.current;
+    if (wv) {
+      const browser = ios ? 'Safari' : 'Chrome';
+      return `${baseMsg} Si estás en un navegador interno (WhatsApp, Instagram, Facebook), abre esta página en ${browser} para continuar.`;
+    }
+    return baseMsg;
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -69,7 +83,7 @@ export function useTurnstile() {
             setToken(null);
             errorCountRef.current += 1;
             if (errorCountRef.current >= MAX_ERROR_TOTAL) {
-              setError('La verificación de seguridad no está disponible después de varios intentos. Desactiva tu bloqueador de anuncios o intenta con otro navegador.');
+              setError(buildErrorMessage('La verificación de seguridad no está disponible después de varios intentos. Desactiva tu bloqueador de anuncios o intenta con otro navegador.'));
               return;
             }
             if (errorCountRef.current >= 2 && widgetId.current && window.turnstile) {
@@ -93,7 +107,7 @@ export function useTurnstile() {
       }
       if (++attempts > 50) {
         clearInterval(interval);
-        setError('No se pudo cargar la verificación de seguridad. Desactiva tu bloqueador de anuncios o intenta con otro navegador.');
+        setError(buildErrorMessage('No se pudo cargar la verificación de seguridad. Desactiva tu bloqueador de anuncios o intenta con otro navegador.'));
         setReady(true);
       }
     }, 200);
@@ -103,7 +117,7 @@ export function useTurnstile() {
         window.turnstile.remove(widgetId.current);
       }
     };
-  }, []);
+  }, [buildErrorMessage]);
 
   const reset = useCallback(() => {
     setToken(null);

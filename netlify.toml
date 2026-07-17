@@ -62,6 +62,12 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Manifest — sin cache para propagar cambios de installability
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
 # SPA fallback: todas las rutas al index.html
 [[redirects]]
   from = "/*"

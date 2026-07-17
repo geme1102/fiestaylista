@@ -667,7 +667,10 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
               type="text"
               value={formData.eventLocation}
               onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
-              className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              autoComplete="street-address"
+              inputMode="text"
+              enterKeyHint="next"
+              className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow]"
               placeholder="Ej: Salón de eventos, Ciudad"
             />
           </div>
@@ -719,7 +722,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 pb-safe-lg shadow-2xl max-h-[90dvh] overflow-y-auto"
       >
         <div className="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto mb-6 sm:hidden" />
         <div className="flex justify-between items-start mb-6">

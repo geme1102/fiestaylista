@@ -9,6 +9,7 @@ import Logo from './components/Logo';
 import ErrorBoundary from './components/ErrorBoundary';
 import { reportError } from './lib/reportError';
 import { QueryProvider } from './components/QueryProvider';
+import WebviewBanner from './components/WebviewBanner';
 import { PAGE_META } from './data/pageMeta';
 
 function PageBoundary({ children }: { children: ReactNode }) {
@@ -199,6 +200,7 @@ export default function App() {
   return (
     <QueryProvider>
       <PwaUpdater />
+      <WebviewBanner />
       <ScrollToTop />
     <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant/70 font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />

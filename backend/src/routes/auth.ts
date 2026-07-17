@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { hashToken } from '../services/auth-tokens.js';
@@ -22,19 +22,35 @@ const log = createModuleLogger('AuthRoutes');
 
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-function setRefreshCookie(res: Response, refreshToken: string): void {
+/* FASE 2: Detecta si el request es same-site (vía proxy Netlify) o cross-origin
+   (API directa en Railway). Same-site usa SameSite=Lax (no bloqueado por ITP/webviews);
+   cross-origin usa SameSite=None (requerido para cookies cross-site con credenciales). */
+function resolveSameSite(req: Request): 'lax' | 'none' {
+  if (process.env.NODE_ENV !== 'production') return 'lax';
+  const origin = req.headers.origin;
+  if (!origin) return 'lax';
+  try {
+    const isSameSite = origin.replace(/\/+$/, '') === config.FRONTEND_URL.replace(/\/+$/, '');
+    return isSameSite ? 'lax' : 'none';
+  } catch {
+    return 'lax';
+  }
+}
+
+function setRefreshCookie(req: Request, res: Response, refreshToken: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
+  const sameSite = resolveSameSite(req);
   res.cookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite,
     path: '/api/auth/refresh',
     maxAge: REFRESH_MAX_AGE,
   });
   res.cookie('hasRefresh', '1', {
     httpOnly: false,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite,
     path: '/',
     maxAge: REFRESH_MAX_AGE,
   });
@@ -77,7 +93,7 @@ const resetPasswordSchema = z.object({
 router.post('/register', authLimiter, verifyTurnstileOptional, asyncHandlerWithValidation(async (req, res) => {
   const { email, password, name } = registerSchema.parse(req.body);
   const result = await authService.register(email, password, name);
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(req, res, result.refreshToken);
   const { refreshToken: _, ...safeResult } = result;
   res.status(201).json(safeResult);
 
@@ -92,7 +108,7 @@ router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithVali
     userAgent: req.headers['user-agent'],
     ipAddress: req.ip,
   });
-  setRefreshCookie(res, result.refreshToken);
+  setRefreshCookie(req, res, result.refreshToken);
   reconcileSubscriptionOnLogin(result.user.id).catch((err: unknown) =>
     log.error({ err, userId: result.user.id }, 'Error reconciliando suscripción on-login'),
   );
@@ -116,7 +132,7 @@ router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
     });
-    setRefreshCookie(res, result.refreshToken);
+    setRefreshCookie(req, res, result.refreshToken);
     const { refreshToken: _, ...safeResult } = result;
     res.json(safeResult);
   } catch (error) {
@@ -178,15 +194,16 @@ router.patch('/welcome', requireAuth, apiLimiter, asyncHandler(async (req: AuthR
 
 router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
   const isProduction = process.env.NODE_ENV === 'production';
+  const sameSite = resolveSameSite(req);
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', {
     path: '/api/auth/refresh',
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite,
   });
   res.clearCookie('hasRefresh', {
     path: '/',
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite,
   });
 
   let userId: string | undefined = req.user?.userId;

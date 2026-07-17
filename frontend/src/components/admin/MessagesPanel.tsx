@@ -117,7 +117,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
                 <button
                   onClick={() => handleDelete(msg.id)}
                   disabled={deletingId === msg.id}
-                  className="p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-full text-on-surface-variant/40 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-on-surface-variant/40 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30"
                   title="Eliminar mensaje"
                   aria-label="Eliminar mensaje"
                 >

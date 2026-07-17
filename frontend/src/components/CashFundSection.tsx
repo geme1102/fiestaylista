@@ -216,9 +216,10 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
                 <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(progressPercent, 100)}%` }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: Math.min(progressPercent, 100) / 100 }}
                   transition={{ duration: 1.2, ease: 'easeOut' }}
+                  style={{ transformOrigin: 'left', width: '100%' }}
                   className="h-full bg-gradient-to-r from-secondary-container to-secondary shimmer-bg rounded-full"
                 />
               </div>
@@ -422,7 +423,10 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Número de teléfono"
-                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                autoComplete="tel"
+                inputMode="tel"
+                enterKeyHint="next"
+                className="rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
               />
             </div>
           </div>
@@ -523,7 +527,9 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Monto"
-            className="w-full pl-7 rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+            className="w-full pl-7 rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
+            inputMode="numeric"
+            enterKeyHint="next"
             min="2000"
             required
           />
@@ -536,7 +542,9 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Mensaje (opcional)"
-        className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+        autoCapitalize="sentences"
+        enterKeyHint="go"
+        className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
       />
       <div ref={containerRef} />
       <button
@@ -651,7 +659,7 @@ function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; on
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-        className="w-full sm:max-w-md bg-surface p-6 rounded-t-2xl sm:rounded-2xl shadow-xl"
+        className="w-full sm:max-w-md bg-surface p-6 pb-safe-lg rounded-t-2xl sm:rounded-2xl shadow-xl"
       >
         <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
         <p className="text-sm text-on-surface-variant mb-4">

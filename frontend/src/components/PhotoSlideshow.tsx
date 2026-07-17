@@ -85,7 +85,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
               src={photo.url}
               alt={photo.caption || `Foto ${current + 1}`}
               loading="lazy"
-              className="max-w-full max-h-[75vh] object-contain rounded-xl"
+              className="max-w-full max-h-[75dvh] object-contain rounded-xl"
             />
             {photo.caption && (
               <p className="text-white/70 text-sm mt-4 text-center max-w-md">{photo.caption}</p>

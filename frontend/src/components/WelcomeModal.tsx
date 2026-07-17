@@ -123,7 +123,7 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative w-full max-w-lg bg-surface rounded-t-[32px] sm:rounded-3xl p-8 sm:p-10 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-lg bg-surface rounded-t-[32px] sm:rounded-3xl p-8 pb-safe-lg sm:p-10 shadow-2xl max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag handle (mobile) */}

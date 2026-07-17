@@ -254,7 +254,11 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 value={claimName}
                 onChange={(e) => setClaimName(e.target.value)}
                 placeholder="Tu nombre"
-                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                autoComplete="name"
+                inputMode="text"
+                autoCapitalize="words"
+                enterKeyHint="next"
+                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
                 autoFocus
               />
               <label htmlFor="claim-message" className="sr-only">Mensaje (opcional)</label>
@@ -264,7 +268,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 value={claimMessage}
                 onChange={(e) => setClaimMessage(e.target.value)}
                 placeholder="Mensaje (opcional)"
-                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
+                autoCapitalize="sentences"
+                enterKeyHint="go"
+                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-2.5 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
               />
               <div ref={containerRef} />
               <div className="flex gap-2">

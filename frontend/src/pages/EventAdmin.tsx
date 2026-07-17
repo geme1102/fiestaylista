@@ -521,13 +521,13 @@ export default function EventAdmin() {
       <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[160px] pointer-events-none -z-10" />
 
       {/* Glossy Navigation Bar */}
-      <nav className="sticky top-0 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 flex items-center justify-between" style={{ zIndex: Z_LAYERS.sticky }}>
+      <nav className="sticky top-0 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 pt-safe flex items-center justify-between" style={{ zIndex: Z_LAYERS.sticky }}>
         <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => navigate('/dashboard')}
-            className="p-2.5 hover:bg-primary/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-all cursor-pointer text-primary flex items-center justify-center bg-surface shadow-sm"
+            className="p-2.5 min-h-[44px] min-w-[44px] hover:bg-primary/5 border border-rose-100/30 hover:border-pink-300/30 rounded-2xl transition-colors cursor-pointer text-primary flex items-center justify-center bg-surface shadow-sm"
             aria-label="Regresar"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />

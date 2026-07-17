@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
@@ -96,21 +96,17 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
         <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${showForm ? 'rotate-180' : ''}`}>expand_more</span>
       </button>
 
-      <AnimatePresence>
-        {showForm && (
-          <motion.form
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden">
+          <form
             onSubmit={handleSubmit}
-            className="overflow-hidden"
           >
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Escribe tu mensaje..."
-                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"
                 rows={3}
                 required
               />
@@ -119,9 +115,9 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
                 {submitting ? 'Publicando...' : 'Publicar mensaje 💬'}
               </Button>
             </div>
-          </motion.form>
-        )}
-      </AnimatePresence>
+          </form>
+        </div>
+      </div>
 
       {loading ? (
         <div className="space-y-3">

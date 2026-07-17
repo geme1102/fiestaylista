@@ -90,7 +90,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-surface font-body-md text-on-surface overflow-hidden"
     >
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 flex items-center justify-between px-gutter py-4 bg-transparent">
+      <header className="fixed top-0 w-full z-50 flex items-center justify-between px-gutter py-4 pt-safe bg-transparent">
         <div className="flex items-center gap-2">
           <h1 className="font-display-lg text-display-lg text-primary">Fiesta y Lista</h1>
         </div>
@@ -177,6 +177,9 @@ export default function Onboarding() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={`${selectedLabel} de ${user?.name || 'María'}`}
+              autoComplete="off"
+              autoCapitalize="words"
+              enterKeyHint="done"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleFinish()}
               className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors outline-none mb-8"
@@ -248,7 +251,7 @@ export default function Onboarding() {
       </main>
 
       {/* Dots Indicator */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-center gap-4 items-center pb-8 pt-4 bg-surface/10 backdrop-blur-xl border-t border-white/20 shadow-rose-500/20 shadow-lg rounded-t-xl">
+      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-center gap-4 items-center pb-safe-lg pt-4 bg-surface/10 backdrop-blur-xl border-t border-white/20 shadow-rose-500/20 shadow-lg rounded-t-xl">
         {[1, 2].map((s) => (
           <div
             key={s}
@@ -268,8 +271,8 @@ export default function Onboarding() {
             <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¿Salir del asistente?</h2>
             <p className="text-on-surface-variant mb-6">Puedes crear tu primer evento desde el panel principal cuando quieras.</p>
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowExitModal(false)} className="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container-high">Cancelar</button>
-              <button onClick={skip} className="px-4 py-2 rounded-full bg-primary text-white font-medium">Salir</button>
+              <button onClick={() => setShowExitModal(false)} className="px-4 py-2 min-h-[44px] rounded-full text-on-surface-variant hover:bg-surface-container-high">Cancelar</button>
+              <button onClick={skip} className="px-4 py-2 min-h-[44px] rounded-full bg-primary text-white font-medium">Salir</button>
             </div>
           </div>
         </div>

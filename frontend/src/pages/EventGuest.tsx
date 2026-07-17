@@ -226,7 +226,7 @@ export default function EventGuest() {
           />
         )}
 
-        <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16">
+        <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16 pt-safe">
           <div className="flex items-center gap-3">
             <Link to="/" className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</Link>
           </div>

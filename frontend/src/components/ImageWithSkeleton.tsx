@@ -51,9 +51,9 @@ const ImageWithSkeleton = memo(function ImageWithSkeleton({ src, alt, className,
             srcSet={srcSet}
             sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
             className={cn(
-              'w-full h-full object-cover transition-all duration-500',
+              'w-full h-full object-cover transition-[opacity,transform] duration-500',
               loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105',
-              'group-hover:scale-105 group-hover:shadow-lg',
+              'group-hover:scale-105',
               className,
             )}
             onLoad={() => setLoaded(true)}

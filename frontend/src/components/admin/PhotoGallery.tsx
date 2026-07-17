@@ -150,7 +150,7 @@ export const PhotoGallery = memo(function PhotoGallery({
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
             role="button"
             tabIndex={0}
-            className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:scale-[1.002] active:scale-98 shadow-inner"
+            className="border-dashed border-2 border-rose-300/50 bg-gradient-to-b from-[#fff7f8] to-[#fff3f5]/50 hover:from-[#fffcfd] hover:to-[#fff5f6] rounded-[28px] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-[background-color,transform] hover:scale-[1.002] active:scale-[0.98] shadow-inner"
           >
             <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(162,27,83,0.06)] border border-rose-100/40 flex items-center justify-center mb-3 text-[#a21b53]">
               <Upload className="w-[22px] h-[22px] stroke-[2.5]" />

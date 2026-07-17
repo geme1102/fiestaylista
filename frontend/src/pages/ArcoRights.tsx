@@ -4,6 +4,8 @@ import { reportError } from '../lib/reportError';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 
 type Lang = 'es' | 'en';
 
@@ -140,6 +142,8 @@ export default function ArcoRights() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
+  const deleteDialogRef = useFocusTrap(showDeleteModal);
+  useLockedBody(showDeleteModal);
 
   const handleDeleteAccount = async () => {
     setLoading(true);
@@ -363,7 +367,7 @@ export default function ArcoRights() {
           onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteModal(false); setDeletePassword(''); } }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteModal(false); setDeletePassword(''); } }}
         >
-          <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div ref={deleteDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">{content.cancel.title}</h3>
             <p className="text-sm text-on-surface-variant">{content.cancel.confirm}</p>
             <input
@@ -372,6 +376,9 @@ export default function ArcoRights() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Tu contraseña"
+              autoComplete="current-password"
+              enterKeyHint="go"
+              aria-label="Contraseña para confirmar eliminación"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
             />
             <div className="flex gap-3">

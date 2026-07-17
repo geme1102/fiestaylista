@@ -9,7 +9,7 @@ interface LandingNavbarProps {
 
 export function LandingNavbar({ scrolled, isAuthenticated }: LandingNavbarProps) {
   return (
-    <nav className={`sticky top-0 z-50 crystal-nav border-b border-white/20 transition-all duration-300 ${scrolled ? 'shadow-primary/5' : ''}`}>
+    <nav className={`sticky top-0 z-50 crystal-nav border-b border-white/20 transition-all duration-300 pt-safe ${scrolled ? 'shadow-primary/5' : ''}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" aria-label="Ir al inicio" className="flex items-center gap-2.5 group shrink-0">

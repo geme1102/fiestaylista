@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* === FASE 2: Mobile native-feel foundation ===
+   Sticky-hover fix: las utilidades hover: de Tailwind solo aplican en
+   dispositivos que realmente soportan hover (mouse/trackpad). En pantallas
+   táctiles (hover: none) las clases hover: no se generan, eliminando el bug
+   de hover pegajoso en iOS Safari y Android Chrome. */
+@custom-variant hover (&:hover, @media (hover: hover));
+
 @theme {
   --font-outfit: 'Outfit', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
@@ -149,8 +156,8 @@
 }
 
 @keyframes confetti-fall {
-  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  0% { transform: translateY(-10dvh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100dvh) rotate(720deg); opacity: 0; }
 }
 
 @keyframes aurora-drift {
@@ -299,7 +306,9 @@
 .animate-card-shine { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); background-size: 200% 100%; animation: card-shine 3s ease-in-out infinite; }
 .animate-typewriter-cursor { animation: typewriter-cursor 1s step-end infinite; }
 .animate-marquee-scroll { animation: marquee-scroll 30s linear infinite; }
-.animate-marquee-scroll:hover { animation-play-state: paused; }
+@media (hover: hover) {
+  .animate-marquee-scroll:hover { animation-play-state: paused; }
+}
 .animate-avatar-pulse-ring { animation: avatar-pulse-ring 2.5s ease-in-out infinite; }
 .animate-gold-particle { animation: gold-particle 0.8s ease-out forwards; }
 
@@ -364,12 +373,12 @@
 }
 
 .premium-card-hover {
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.premium-card-hover:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 25px 50px rgba(184, 137, 73, 0.12);
-  border-color: rgba(184, 137, 73, 0.3);
+@media (hover: hover) {
+  .premium-card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+  }
 }
 
 .bg-glowing-blob {
@@ -505,9 +514,11 @@
   mask-composite: exclude;
   pointer-events: none;
 }
-.glass-ghost:hover {
-  background: rgba(250, 249, 248, 0.7);
-  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);
+@media (hover: hover) {
+  .glass-ghost:hover {
+    background: rgba(250, 249, 248, 0.7);
+    box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);
+  }
 }
 
 .text-gradient-premium {
@@ -659,14 +670,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .luxury-card {
-  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.luxury-card:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 24px 50px -12px rgba(162, 27, 83, 0.12),
-    inset 0 1px 2px rgba(250, 249, 248, 0.9);
-  border-color: rgba(217, 124, 155, 0.35);
+@media (hover: hover) {
+  .luxury-card:hover {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes shine {
@@ -687,14 +696,11 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(-75%) skewX(-25deg);
   background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%);
 }
-.shine-effect:hover::after {
-  animation: shine 850ms ease;
+@media (hover: hover) {
+  .shine-effect:hover::after { animation: shine 850ms ease; }
 }
 
-.pb-safe {
-  padding-bottom: calc(1rem + constant(safe-area-inset-bottom, 0px));
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-}
+/* .pb-safe y .pt-safe ahora se definen en la sección FASE 2 al final del archivo */
 
 @media print {
   nav, .fixed, .sticky, [class*="z-"] { display: none !important; }
@@ -811,12 +817,30 @@ button:not(:disabled):active,
     min-width: 44px;
   }
 
-  /* Reset universal de hover states en dispositivos táctiles */
-  /* Sin !important para no anular transforms inline de Framer Motion */
+  /* Reset universal de hover states en dispositivos táctiles.
+     La segunda capa (@media hover: none) cubre iOS Safari y la mayoría de
+     Android. Usamos selectores específicos con !important para anular las
+     utilidades hover: de Tailwind que ya pasaron el @custom-variant (dispositivos
+     que reportan hover: hover + pointer: coarse, ej. algunos Android con stylus).
+     Solo se resetean propiedades VISUALES de hover — nunca focus/active/disabled. */
   @media (hover: none) {
     *:hover {
       transform: none;
     }
+  }
+
+  /* Segunda capa: dispositivos que reportan (hover: hover) pero son táctiles.
+     Anula los efectos visuales más comunes del sticky-hover bug.
+     !important es necesario para superar la especificidad de utilidades Tailwind. */
+  .sticky-hover-reset:hover,
+  .sticky-hover-reset:hover::before,
+  .sticky-hover-reset:hover::after {
+    background-color: inherit !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    border-color: inherit !important;
+    transform: none !important;
   }
 }
 
@@ -837,4 +861,141 @@ input[type="datetime-local"], select, textarea {
 .gift-bounce {
   animation: gift-bounce 0.8s ease-in-out infinite;
   animation-delay: 0.15s;
+}
+
+/* === FASE 2: Mobile native-feel enhancements === */
+
+/* GPU acceleration utilities — promueve el elemento a su propia capa compuesta.
+   .gpu-layer: promoción permanente (para elementos siempre animados, ej. orbes).
+   .gpu: hint temporal para elementos con transición corta. */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.gpu {
+  will-change: transform;
+}
+
+/* Safe-area utilities expandidas para landscape y barras de gestos laterales.
+   Mantiene compatibilidad con iOS < 11.2 (constant) y modernos (env). */
+.pb-safe {
+  padding-bottom: calc(0.5rem + constant(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.pt-safe {
+  padding-top: calc(0px + constant(safe-area-inset-top, 0px));
+  padding-top: calc(0px + env(safe-area-inset-top, 0px));
+}
+
+.pl-safe {
+  padding-left: calc(0px + constant(safe-area-inset-left, 0px));
+  padding-left: calc(0px + env(safe-area-inset-left, 0px));
+}
+
+.pr-safe {
+  padding-right: calc(0px + constant(safe-area-inset-right, 0px));
+  padding-right: calc(0px + env(safe-area-inset-right, 0px));
+}
+
+/* Padding generoso para bottom-sheets y modales inferior (botón sobre gesture bar) */
+.pb-safe-lg {
+  padding-bottom: calc(1.5rem + constant(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Margen seguro para FABs y banners fijos sobre la barra de gestos */
+.mb-safe {
+  margin-bottom: constant(safe-area-inset-bottom, 0px);
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* .btn-gpu corregido: ahora SI solo anima propiedades GPU-friendly.
+   Antes incluía box-shadow y background-color que causan repaint. */
+.btn-gpu {
+  transition-property: transform, opacity;
+  transition-duration: var(--btn-duration);
+  transition-timing-function: var(--btn-ease);
+}
+
+.btn-gpu-fast {
+  transition-property: transform, opacity;
+  transition-duration: 75ms;
+  transition-timing-function: var(--btn-ease);
+}
+
+/* Keyframes optimizados: box-shadow → pseudo-elemento con opacity.
+   Estos reemplazan las versiones anteriores que animaban box-shadow
+   directamente sobre el elemento, forzando repaint en cada frame. */
+@keyframes pulse-ring-gpu {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.animate-pulse-ring-gpu {
+  position: relative;
+}
+.animate-pulse-ring-gpu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: pulse-ring-gpu 2s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Glow que antes usaba box-shadow: ahora capa ::before con opacity + filter blur */
+@keyframes glow-gpu {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.animate-glow-gpu {
+  position: relative;
+}
+.animate-glow-gpu::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(circle, currentColor 0%, transparent 70%);
+  filter: blur(8px);
+  opacity: 0.3;
+  animation: glow-gpu 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Shimmer con transform en lugar de background-position (más fluido en GPU).
+   El gradiente se desplaza vía transform de un ::after overlay. */
+@keyframes shimmer-gpu {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer-gpu {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer-gpu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: translateX(-100%);
+  animation: shimmer-gpu 1.5s infinite;
+  pointer-events: none;
+}
+
+/* Reduce el impacto del backdrop-filter en pantallas grandes: el browser sigue
+   haciendo rasterización pero solo en el viewport visible. Sin cambios para móvil. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Asegura que los elementos promocionados a capa GPU se rastericen solo
+     cuando son visibles. El browser lo hace automáticamente; esto es refuerzo. */
+  .gpu-layer, .gpu {
+    contain: layout paint;
+  }
 }

@@ -6,6 +6,8 @@ import { apiClient } from '../services/api';
 import { TIER_LIMITS, type Subscription, type ProPayment } from '../types';
 import { reportError } from '../lib/reportError';
 import { showToast } from '../hooks/useToast';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLockedBody } from '../hooks/useLockedBody';
 import { formatDate, formatCOP, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { AchievementsStrip } from '../components/AchievementsStrip';
@@ -42,6 +44,9 @@ export default function Account() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [retryingPayment, setRetryingPayment] = useState(false);
   const [payments, setPayments] = useState<ProPayment[]>([]);
+  const cancelDialogRef = useFocusTrap(showCancelConfirm);
+  const deleteDialogRef = useFocusTrap(showDeleteConfirm);
+  useLockedBody(showCancelConfirm || showDeleteConfirm);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -516,7 +521,7 @@ export default function Account() {
           onKeyDown={(e) => { if (e.key === 'Escape') { setShowCancelConfirm(false); setCancelPassword(''); } }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowCancelConfirm(false); setCancelPassword(''); } }}
         >
-          <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div ref={cancelDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-on-surface">Cancelar Suscripción</h3>
             <p className="text-sm text-on-surface-variant">Ingresa tu contraseña para confirmar la cancelación. Perderás acceso a funciones Pro al final del período actual.</p>
             <input
@@ -525,6 +530,8 @@ export default function Account() {
               value={cancelPassword}
               onChange={(e) => setCancelPassword(e.target.value)}
               placeholder="Tu contraseña"
+              autoComplete="current-password"
+              enterKeyHint="go"
               aria-label="Contraseña para cancelar suscripción"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50"
             />
@@ -550,7 +557,7 @@ export default function Account() {
           onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
         >
-          <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div ref={deleteDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
             <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
             <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer.</p>
             <div>
@@ -573,6 +580,8 @@ export default function Account() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Tu contraseña"
+              autoComplete="current-password"
+              enterKeyHint="go"
               aria-label="Contraseña para eliminar cuenta"
               className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
             />

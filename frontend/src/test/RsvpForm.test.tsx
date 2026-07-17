@@ -20,7 +20,10 @@ describe('RsvpForm', () => {
   it('renders collapsed form initially', () => {
     render(<RsvpForm eventId="event-1" eventTitle="Mi Fiesta" guestName="" />);
     expect(screen.getByText(/¿Vienes\?/)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Acompañantes/)).not.toBeInTheDocument();
+    // El grid wrapper tiene grid-rows-[0fr] + opacity-0 cuando colapsado
+    const gridWrapper = screen.getByText(/Acompañantes/).closest('[class*="grid"]');
+    expect(gridWrapper).toHaveClass('grid-rows-[0fr]');
+    expect(gridWrapper).toHaveClass('opacity-0');
   });
 
   it('opens form on toggle click', () => {
