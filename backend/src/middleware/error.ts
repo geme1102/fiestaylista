@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthRequest } from '../types/index.js';
 import { AppError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config.js';
 
 function logError(err: unknown, errorId: string, req?: Request): void {
   const errMessage = err instanceof Error ? err.message : 'Error interno';
@@ -47,5 +48,10 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
   logError(err, errorId, req);
 
   const errMsg = err instanceof Error ? err.message : 'Error desconocido';
-  res.status(500).json({ error: 'Error interno del servidor', errorId, detail: errMsg.slice(0, 300) });
+  const isProd = config.NODE_ENV === 'production';
+  res.status(500).json({
+    error: 'Error interno del servidor',
+    errorId,
+    ...(isProd ? {} : { detail: errMsg.slice(0, 300) }),
+  });
 }

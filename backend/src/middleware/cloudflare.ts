@@ -18,7 +18,7 @@ const CLOUDFLARE_V6: string[] = [
 
 const cfRanges = [...CLOUDFLARE_V4, ...CLOUDFLARE_V6].map(c => ipaddr.parseCIDR(c));
 
-function isCloudflareIP(ip: string): boolean {
+export function isCloudflareIP(ip: string): boolean {
   try {
     const addr = ipaddr.parse(ip);
     return cfRanges.some(([range, bits]) => addr.match(range, bits));
@@ -27,7 +27,7 @@ function isCloudflareIP(ip: string): boolean {
   }
 }
 
-function isPrivateOrLocal(ip: string): boolean {
+export function isPrivateOrLocal(ip: string): boolean {
   try {
     const addr = ipaddr.parse(ip);
     const range = addr.range();
@@ -52,17 +52,7 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
     return;
   }
 
-  // Prioridad 2: Netlify proxy — x-nf-client-ip es la IP real del cliente.
-  // Con trust proxy=1, Express ya resuelve req.ip desde X-Forwarded-For.
-  // x-nf-client-ip de Netlify es más confiable que el leftmost XFF.
-  const netlifyClientIP = req.headers['x-nf-client-ip'];
-  if (netlifyClientIP && typeof netlifyClientIP === 'string' && !isPrivateOrLocal(netlifyClientIP) && netlifyClientIP !== expressIP) {
-    try { Object.defineProperty(req, 'ip', { value: netlifyClientIP, configurable: true, writable: true, enumerable: true }); } catch {}
-    next();
-    return;
-  }
-
-  // Express ya resolvió req.ip via trust proxy=1.
+  // Fallback: Express ya resolvió req.ip via trust proxy function (ver app.ts)
   // Si la IP resolvida es privada/local, el proxy está mal configurado.
   if (expressIP && isPrivateOrLocal(expressIP)) {
     const now = Date.now();
@@ -72,7 +62,6 @@ export function cloudflareIP(req: Request, _res: Response, next: NextFunction): 
         resolvedIP: expressIP,
         socketRemoteAddress: socketIP,
         xForwardedFor: req.headers['x-forwarded-for'] ?? null,
-        xNfClientIp: req.headers['x-nf-client-ip'] ?? null,
       }, 'req.ip es una IP privada/interna — trust proxy puede estar mal configurado. Rate-limiting y SSE por IP pueden colapsar.');
     }
   }

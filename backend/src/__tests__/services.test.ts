@@ -20,15 +20,47 @@ vi.mock('jsonwebtoken', () => ({
   TokenExpiredError: class extends Error { constructor() { super('Token expired'); this.name = 'TokenExpiredError'; } },
 }));
 
-vi.mock('../db/index.js', () => ({
-  db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), transaction: vi.fn(), execute: vi.fn() },
-  sql: vi.fn(() => Promise.resolve([] as any)),
-  eq: vi.fn((a: any, b: any) => ({ a, b })),
-  and: vi.fn((...a: any[]) => a),
-  or: vi.fn((...a: any[]) => a),
-  isNull: vi.fn((c: any) => c),
-  desc: vi.fn((c: any) => c),
-}));
+vi.mock('../db/index.js', () => {
+  const createChain = () => {
+    const chain: any = {
+      select: vi.fn(() => chain),
+      from: vi.fn(() => chain),
+      innerJoin: vi.fn(() => chain),
+      leftJoin: vi.fn(() => chain),
+      where: vi.fn(() => chain),
+      limit: vi.fn(() => chain),
+      offset: vi.fn(() => chain),
+      orderBy: vi.fn(() => chain),
+      groupBy: vi.fn(() => chain),
+      set: vi.fn(() => chain),
+      values: vi.fn(() => chain),
+      returning: vi.fn(() => chain),
+      execute: vi.fn().mockResolvedValue([]),
+      onConflictDoNothing: vi.fn(() => chain),
+      onConflictDoUpdate: vi.fn(() => chain),
+    };
+    return chain;
+  };
+
+  const createInsertChain = () => {
+    const chain = createChain();
+    chain.values = vi.fn(() => chain);
+    chain.returning = vi.fn(() => chain);
+    return chain;
+  };
+
+  const db = {
+    select: vi.fn(() => createChain()),
+    insert: vi.fn(() => createInsertChain()),
+    update: vi.fn(() => createChain()),
+    delete: vi.fn(() => createChain()),
+    transaction: vi.fn(async (cb: any) => cb(db)),
+    execute: vi.fn().mockResolvedValue([]),
+    $client: { connect: vi.fn(), end: vi.fn() },
+  };
+
+  return { db, sql: vi.fn(() => Promise.resolve([])), eq: vi.fn((a: any, b: any) => ({ a, b })), and: vi.fn((...a: any[]) => a), or: vi.fn((...a: any[]) => a), isNull: vi.fn((c: any) => c), desc: vi.fn((c: any) => c) };
+});
 
 vi.mock('../db/schema.js', () => ({ users: {}, refreshTokens: {}, events: {}, gifts: {}, giftClaims: {}, photos: {}, subscriptions: {}, cashFunds: {}, cashContributions: {}, messages: {}, guests: {}, auditLogs: {} }));
 
@@ -102,7 +134,8 @@ describe('Auth Service', () => {
       const result = await register('test@test.com', 'password123', 'Test');
       expect(result.user.email).toBe('test@test.com');
       expect(result.accessToken).toBe('mock-token');
-      expect(result.refreshToken).toBe('mock-token');
+      expect(result.refreshToken).toBeTruthy();
+      expect(typeof result.refreshToken).toBe('string');
     });
 
     it('throws for guest domain', async () => {

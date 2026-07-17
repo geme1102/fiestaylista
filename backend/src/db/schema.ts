@@ -20,11 +20,13 @@ export const users = pgTable('users', {
   verificationTokenExpires: timestamp('verification_token_expires', { mode: 'date', withTimezone: true }),
   resetToken: text('reset_token'),
   resetTokenExpires: timestamp('reset_token_expires', { mode: 'date', withTimezone: true }),
+  tokenVersion: integer('token_version').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   verificationTokenIdx: index('users_verification_token_idx').on(table.verificationToken),
   resetTokenIdx: index('users_reset_token_idx').on(table.resetToken),
+  tokenVersionIdx: index('users_token_version_idx').on(table.tokenVersion),
 }));
 
 export const events = pgTable('events', {
@@ -233,17 +235,24 @@ export const eventViews = pgTable('event_views', {
   eventIdViewedAtIdx: index('event_views_event_id_viewed_at_idx').on(table.eventId, table.viewedAt),
 }));
 
-export const refreshTokens = pgTable('refresh_tokens', {
+// Define the table first without self-references
+const refreshTokens = pgTable('refresh_tokens', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   tokenHash: text('token_hash').notNull(),
   expiresAt: timestamp('expires_at', { mode: 'date', withTimezone: true }).notNull(),
   revoked: boolean('revoked').notNull().default(false),
+  familyId: uuid('family_id'),
+  rotatedFrom: uuid('rotated_from'),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   tokenHashIdx: index('refresh_tokens_token_hash_idx').on(table.tokenHash),
   userIdIdx: index('refresh_tokens_user_id_idx').on(table.userId),
+  familyIdIdx: index('refresh_tokens_family_id_idx').on(table.familyId),
+  rotatedFromIdx: index('refresh_tokens_rotated_from_idx').on(table.rotatedFrom),
 }));
+
+export { refreshTokens };
 
 export const consentRecords = pgTable('consent_records', {
   id: uuid('id').defaultRandom().primaryKey(),

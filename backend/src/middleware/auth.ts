@@ -19,7 +19,7 @@ function isSseToken(decoded: unknown): boolean {
   );
 }
 
-export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+export async function requireAuth(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
 
@@ -37,6 +37,21 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
 
     if (isSseToken(decoded)) {
       throw new UnauthorizedError('Token inválido');
+    }
+
+    // Verify tokenVersion matches current user tokenVersion (instant revocation)
+    const [user] = await db
+      .select({ tokenVersion: users.tokenVersion })
+      .from(users)
+      .where(eq(users.id, decoded.userId))
+      .limit(1);
+
+    if (!user) {
+      throw new UnauthorizedError('Usuario no encontrado');
+    }
+
+    if ((decoded.tokenVersion ?? 0) !== user.tokenVersion) {
+      throw new UnauthorizedError('Token revocado. Por favor, inicia sesión de nuevo.');
     }
 
     req.user = {
@@ -62,7 +77,7 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
   }
 }
 
-export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+export async function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
 
@@ -84,10 +99,18 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
       return;
     }
 
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-    };
+    const [user] = await db
+      .select({ tokenVersion: users.tokenVersion })
+      .from(users)
+      .where(eq(users.id, decoded.userId))
+      .limit(1);
+
+    if (user && (decoded.tokenVersion ?? 0) === user.tokenVersion) {
+      req.user = {
+        userId: decoded.userId,
+        email: decoded.email,
+      };
+    }
 
     next();
   } catch {

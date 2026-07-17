@@ -6,10 +6,11 @@ import { db, sql } from '../db/index.js';
 import { users, auditLogs } from '../db/schema.js';
 import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
-import { consumeRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
+import { rotateRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
 export { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
-import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining, isIpThrottled } from '../middleware/lockout.js';
+import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining, isIpThrottled, recordEmailFailedAttempt, isEmailLocked, getEmailLockoutRemaining, resetEmailLockout } from '../middleware/lockout.js';
+import { config } from '../config.js';
 
 const log = createModuleLogger('Auth');
 
@@ -83,7 +84,7 @@ export async function register(
       .returning();
 
     user = newUser;
-    tokens = await issueTokenPair(user.id, user.email, tx);
+    tokens = await issueTokenPair(user.id, user.email, 0);
   });
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
@@ -117,6 +118,7 @@ export async function login(
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> {
   try {
+    const emailLower = email.toLowerCase();
     const ip = meta?.ipAddress;
     if (ip && await isIpThrottled(ip)) {
       throw new UnauthorizedError('Demasiados intentos desde esta dirección. Intenta de nuevo más tarde.');
@@ -127,13 +129,13 @@ export async function login(
       rows = await sql`
         SELECT id, email, password_hash, name, tier, email_verified, created_at,
                onboarding_completed, welcome_tutorial_completed
-        FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
+        FROM users WHERE email = ${emailLower} LIMIT 1
       `;
     } catch (err) {
       log.warn({ err }, 'Query con columnas opcionales falló — usando fallback');
       rows = await sql`
         SELECT id, email, password_hash, name, tier, email_verified, created_at
-        FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
+        FROM users WHERE email = ${emailLower} LIMIT 1
       `;
     }
     const user = rows[0] as
@@ -152,30 +154,46 @@ export async function login(
 
   if (!user) {
     await bcrypt.compare(password, DUMMY_HASH);
+    if (meta?.ipAddress) {
+      await recordEmailFailedAttempt(emailLower, meta.ipAddress);
+    }
     db.insert(auditLogs).values({
       action: 'auth.login.failed',
       resource: 'user',
-      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'not_found' }),
+      metadata: JSON.stringify({ emailHash: hashToken(emailLower), reason: 'not_found' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
     }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
+    // Always run dummy bcrypt to equalize timing even for non-existent users
+    await bcrypt.compare(password, DUMMY_HASH);
     throw new UnauthorizedError('Credenciales inválidas');
+  }
+
+  // Check email-based lockout first (also catches non-existent users)
+  if (meta?.ipAddress && await isEmailLocked(emailLower)) {
+    const remaining = await getEmailLockoutRemaining(emailLower);
+    // Run dummy bcrypt to equalize timing
+    await bcrypt.compare(password, DUMMY_HASH);
+    throw new UnauthorizedError(`Demasiados intentos para este correo. Intenta de nuevo en ${remaining} segundos.`);
   }
 
   if (await isLocked(user.id)) {
     const remaining = await getLockoutRemaining(user.id);
+    // Run real bcrypt to equalize timing
+    await bcrypt.compare(password, user.password_hash);
     throw new UnauthorizedError(`Cuenta bloqueada temporalmente por muchos intentos fallidos. Intenta de nuevo en ${remaining} segundos.`);
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
     await bcrypt.compare(password, DUMMY_HASH);
     recordFailedAttempt(user.id);
+    await recordEmailFailedAttempt(emailLower, meta?.ipAddress ?? '');
     db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
       resource: 'user',
       resourceId: user.id,
-      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'guest_login_attempt' }),
+      metadata: JSON.stringify({ emailHash: hashToken(emailLower), reason: 'guest_login_attempt' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
     }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
@@ -186,12 +204,13 @@ export async function login(
 
   if (!isValid) {
     recordFailedAttempt(user.id);
+    await recordEmailFailedAttempt(emailLower, meta?.ipAddress ?? '');
     db.insert(auditLogs).values({
       userId: user.id,
       action: 'auth.login.failed',
       resource: 'user',
       resourceId: user.id,
-      metadata: JSON.stringify({ email: email.toLowerCase(), reason: 'wrong_password' }),
+      metadata: JSON.stringify({ emailHash: hashToken(emailLower), reason: 'wrong_password' }),
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
     }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
@@ -199,7 +218,15 @@ export async function login(
   }
 
   resetLockout(user.id);
-  const tokens = await issueTokenPair(user.id, user.email);
+  // Reset email lockout on successful login
+  await resetEmailLockout(emailLower);
+  // Get current tokenVersion before issuing new tokens
+  const [currentUser] = await db
+    .select({ tokenVersion: users.tokenVersion })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+  const tokens = await issueTokenPair(user.id, user.email, currentUser?.tokenVersion ?? 0);
 
   return {
     user: {
@@ -221,23 +248,28 @@ export async function login(
 }
 
 export async function refreshToken(
-  token: string,
-  meta?: { userAgent?: string; ipAddress?: string },
+  token: string
 ): Promise<{ accessToken: string; refreshToken: string }> {
   try {
-    const decoded = await consumeRefreshToken(token, meta);
+    const tokens = await rotateRefreshToken(token);
 
     const [user] = await db
-      .select({ id: users.id, email: users.email })
+      .select({ id: users.id, email: users.email, tokenVersion: users.tokenVersion })
       .from(users)
-      .where(eq(users.id, decoded.userId))
+      .where(eq(users.id, tokens.userId))
       .limit(1);
 
     if (!user) {
       throw new UnauthorizedError('Usuario no encontrado');
     }
 
-    return await issueTokenPair(user.id, user.email);
+    const accessToken = jwt.sign(
+      { userId: user.id, email: user.email, type: 'access', tokenVersion: user.tokenVersion },
+      config.JWT_SECRET,
+      { expiresIn: config.ACCESS_TOKEN_EXPIRY as jwt.SignOptions['expiresIn'] }
+    );
+
+    return { accessToken, refreshToken: tokens.refreshToken };
   } catch (error) {
     if (error instanceof UnauthorizedError) throw error;
 

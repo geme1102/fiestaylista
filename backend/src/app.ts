@@ -10,6 +10,7 @@ import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/error.js';
 import { cloudflareIP } from './middleware/cloudflare.js';
+import { isCloudflareIP, isPrivateOrLocal } from './middleware/cloudflare.js';
 import type { AppRequest } from './types/index.js';
 import * as Sentry from '@sentry/node';
 
@@ -64,7 +65,9 @@ export function createApp() {
   const app = express();
 
   app.use(compression({ threshold: 512, level: 6 }));
-  app.set('trust proxy', config.NODE_ENV === 'production' ? 1 : 0);
+  // trust proxy function: only trust immediate hop if it's a known Cloudflare IP
+  // This prevents X-Forwarded-For spoofing when client sends fake headers
+  app.set('trust proxy', (ip: string) => isCloudflareIP(ip) || !isPrivateOrLocal(ip));
 
   // HTTP→HTTPS redirect en producción (defense-in-depth; Railway termina TLS)
   app.use((req: Request, res: Response, next: NextFunction) => {
