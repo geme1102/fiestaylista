@@ -727,17 +727,7 @@ h1, h2, h3, h4, h5, h6 {
   75% { transform: rotate(5deg); }
 }
 
-.btn-gpu {
-  transition-property: transform, box-shadow, opacity, background-color;
-  transition-duration: var(--btn-duration);
-  transition-timing-function: var(--btn-ease);
-}
-
-.btn-gpu-fast {
-  transition-property: transform, box-shadow, opacity, background-color;
-  transition-duration: 75ms;
-  transition-timing-function: var(--btn-ease);
-}
+/* .btn-gpu y .btn-gpu-fast se definen corregidos en la sección FASE 2 al final */
 
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;

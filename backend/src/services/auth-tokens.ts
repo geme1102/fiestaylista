@@ -55,7 +55,8 @@ export async function persistRefreshToken(
 
 /**
  * Atomically consume a refresh token and issue a new token pair.
- * Uses a database transaction with UPDATE to serialize concurrent rotations.
+ * Uses atomic UPDATE...WHERE revoked=false RETURNING to serialize concurrent
+ * rotations — only one request can claim the token, eliminating the race window.
  * Implements proper Refresh Token Rotation with family tracking.
  */
 export async function rotateRefreshToken(
@@ -64,95 +65,97 @@ export async function rotateRefreshToken(
   const tokenHash = hashToken(token);
 
   return await db.transaction(async (tx) => {
-    // Lock the row via UPDATE to serialize concurrent rotations
-    const [locked] = await tx
-      .select({
+    // Atomic claim: UPDATE...RETURNING serializes concurrent requests.
+    // Only ONE request gets the row back; others get nothing.
+    const [claimed] = await tx
+      .update(refreshTokens)
+      .set({ revoked: true })
+      .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.revoked, false)))
+      .returning({
         id: refreshTokens.id,
         userId: refreshTokens.userId,
         expiresAt: refreshTokens.expiresAt,
-        revoked: refreshTokens.revoked,
         familyId: refreshTokens.familyId,
-      })
+      });
+
+    if (claimed) {
+      // Success path — token was valid and not yet consumed
+      if (claimed.expiresAt < new Date()) {
+        throw new UnauthorizedError('Token de refresco expirado');
+      }
+
+      // Create new token in the SAME family
+      const newFamilyId = claimed.familyId ?? randomBytes(16).toString('hex');
+      const newToken = generateOpaqueToken();
+      const newTokenHash = hashToken(newToken);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      await tx.insert(refreshTokens).values({
+        userId: claimed.userId,
+        tokenHash: newTokenHash,
+        expiresAt,
+        familyId: newFamilyId,
+        rotatedFrom: claimed.id,
+      });
+
+      // Increment tokenVersion for instant access-token revocation
+      await tx
+        .update(users)
+        .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+        .where(eq(users.id, claimed.userId));
+
+      // Cleanup old tokens
+      await tx
+        .delete(refreshTokens)
+        .where(and(
+          eq(refreshTokens.userId, claimed.userId),
+          or(
+            sql`${refreshTokens.revoked} = true AND ${refreshTokens.expiresAt} < NOW() - INTERVAL '30 days'`,
+            sql`${refreshTokens.revoked} = false AND ${refreshTokens.expiresAt} < NOW()`,
+          ),
+        ));
+
+      return { accessToken: '', refreshToken: newToken, userId: claimed.userId };
+    }
+
+    // Token was NOT claimed — either doesn't exist or already revoked.
+    // Fallback SELECT to determine which.
+    const [existing] = await tx
+      .select({ userId: refreshTokens.userId, familyId: refreshTokens.familyId, revoked: refreshTokens.revoked })
       .from(refreshTokens)
       .where(eq(refreshTokens.tokenHash, tokenHash))
       .limit(1);
 
-    if (!locked) {
+    if (!existing) {
       throw new UnauthorizedError('Token de refresco inválido');
     }
 
-    if (locked.revoked) {
-      // Token already used - potential reuse attack, revoke entire family
-      const familyId = locked.familyId;
-      log.warn({ userId: locked.userId, familyId }, 'Intento de reuso de refresh token detectado. Revocando toda la familia.');
-      
-      await tx.insert(auditLogs).values({
-        userId: locked.userId,
-        action: 'TOKEN_REUSE',
-        resource: 'auth',
-        resourceId: locked.userId,
-        metadata: JSON.stringify({ detail: 'Refresh token reuse detected — entire family revoked', familyId: locked.familyId ?? 'legacy' }),
-      }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
+    // Token exists but was already revoked → REUSE DETECTED
+    const familyId = existing.familyId;
+    log.warn({ userId: existing.userId, familyId }, 'Intento de reuso de refresh token detectado. Revocando toda la familia.');
 
-      if (familyId) {
-        await tx
-          .update(refreshTokens)
-          .set({ revoked: true })
-          .where(eq(refreshTokens.familyId, familyId));
-      } else {
-        // Legacy token without family - revoke all user's tokens
-        await tx
-          .update(refreshTokens)
-          .set({ revoked: true })
-          .where(eq(refreshTokens.userId, locked.userId));
-      }
+    await tx.insert(auditLogs).values({
+      userId: existing.userId,
+      action: 'TOKEN_REUSE',
+      resource: 'auth',
+      resourceId: existing.userId,
+      metadata: JSON.stringify({ detail: 'Refresh token reuse detected — entire family revoked', familyId: familyId ?? 'legacy' }),
+    }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
 
-      throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
+    if (familyId) {
+      await tx
+        .update(refreshTokens)
+        .set({ revoked: true })
+        .where(eq(refreshTokens.familyId, familyId));
+    } else {
+      // Legacy token without family — revoke all user's tokens
+      await tx
+        .update(refreshTokens)
+        .set({ revoked: true })
+        .where(eq(refreshTokens.userId, existing.userId));
     }
 
-    if (locked.expiresAt < new Date()) {
-      throw new UnauthorizedError('Token de refresco expirado');
-    }
-
-    // Mark current token as revoked
-    await tx
-      .update(refreshTokens)
-      .set({ revoked: true })
-      .where(eq(refreshTokens.id, locked.id));
-
-    // Create new token in the SAME family, linking to the consumed token
-    const newFamilyId = locked.familyId ?? randomBytes(16).toString('hex');
-    const newToken = generateOpaqueToken();
-    const newTokenHash = hashToken(newToken);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    await tx.insert(refreshTokens).values({
-      userId: locked.userId,
-      tokenHash: newTokenHash,
-      expiresAt,
-      familyId: newFamilyId,
-      rotatedFrom: locked.id,
-    });
-
-    // Increment user's tokenVersion to instantly revoke all access tokens
-    await tx
-      .update(users)
-      .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
-      .where(eq(users.id, locked.userId));
-
-    // Cleanup old revoked tokens (optional, keeps table tidy)
-    await tx
-      .delete(refreshTokens)
-      .where(and(
-        eq(refreshTokens.userId, locked.userId),
-        or(
-          sql`${refreshTokens.revoked} = true AND ${refreshTokens.expiresAt} < NOW() - INTERVAL '30 days'`,
-          sql`${refreshTokens.revoked} = false AND ${refreshTokens.expiresAt} < NOW()`,
-        ),
-      ));
-
-    // Return the new opaque refresh token and userId; access token created by caller
-    return { accessToken: '', refreshToken: newToken, userId: locked.userId };
+    throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
   });
 }
 

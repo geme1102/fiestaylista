@@ -9,7 +9,7 @@ import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from
 import { rotateRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
 export { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
-import { isLocked, recordFailedAttempt, resetLockout, getLockoutRemaining, isIpThrottled, recordEmailFailedAttempt, isEmailLocked, getEmailLockoutRemaining, resetEmailLockout } from '../middleware/lockout.js';
+import { isLocked, recordFailedAttempt, resetLockout, isIpThrottled, recordEmailFailedAttempt, isEmailLocked, resetEmailLockout } from '../middleware/lockout.js';
 import { config } from '../config.js';
 
 const log = createModuleLogger('Auth');
@@ -152,6 +152,12 @@ export async function login(
         }
       | undefined;
 
+    // Check email-based lockout BEFORE user lookup — catches non-existent emails too
+    if (await isEmailLocked(emailLower)) {
+      await bcrypt.compare(password, DUMMY_HASH);
+      throw new UnauthorizedError('Demasiados intentos fallidos. Intenta de nuevo más tarde.');
+    }
+
   if (!user) {
     await bcrypt.compare(password, DUMMY_HASH);
     if (meta?.ipAddress) {
@@ -164,24 +170,13 @@ export async function login(
       ipAddress: meta?.ipAddress ?? null,
       userAgent: meta?.userAgent ?? null,
     }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log:'));
-    // Always run dummy bcrypt to equalize timing even for non-existent users
-    await bcrypt.compare(password, DUMMY_HASH);
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
-  // Check email-based lockout first (also catches non-existent users)
-  if (meta?.ipAddress && await isEmailLocked(emailLower)) {
-    const remaining = await getEmailLockoutRemaining(emailLower);
-    // Run dummy bcrypt to equalize timing
-    await bcrypt.compare(password, DUMMY_HASH);
-    throw new UnauthorizedError(`Demasiados intentos para este correo. Intenta de nuevo en ${remaining} segundos.`);
-  }
-
   if (await isLocked(user.id)) {
-    const remaining = await getLockoutRemaining(user.id);
-    // Run real bcrypt to equalize timing
+    // Run real bcrypt to equalize timing with the non-locked path
     await bcrypt.compare(password, user.password_hash);
-    throw new UnauthorizedError(`Cuenta bloqueada temporalmente por muchos intentos fallidos. Intenta de nuevo en ${remaining} segundos.`);
+    throw new UnauthorizedError('Demasiados intentos fallidos. Intenta de nuevo más tarde.');
   }
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
