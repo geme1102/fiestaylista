@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { reportError } from '../lib/reportError';
 import { createEvent } from '../services/events';
@@ -27,24 +27,40 @@ const EVENT_TYPES: { value: EventType; icon: string; label: string }[] = [
   { value: 'HOUSE_WARMING', icon: '🏠', label: 'Casa Shower' },
 ];
 
+function getEventTypeInfo(eventType: EventType) {
+  return EVENT_TYPES.find(t => t.value === eventType) ?? EVENT_TYPES[0];
+}
+
 export default function Onboarding() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const saved = loadSavedState();
+  const shouldReduceMotion = useReducedMotion();
   const [step, setStep] = useState(saved?.step ?? 1);
   const [eventType, setEventType] = useState<EventType>(saved?.eventType ?? 'WEDDING');
   const [title, setTitle] = useState(saved?.title ?? '');
   const [eventNote, setEventNote] = useState(saved?.eventNote ?? '');
   const [creating, setCreating] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState('💍');
-  const [selectedLabel, setSelectedLabel] = useState('Boda');
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Derivar icon/label desde eventType (H-8: sync persistido)
+  const eventTypeInfo = getEventTypeInfo(eventType);
+  const selectedIcon = eventTypeInfo.icon;
+  const selectedLabel = eventTypeInfo.label;
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, eventType, title, eventNote }));
     } catch {}
   }, [step, eventType, title, eventNote]);
+
+  // H-6: autoFocus solo en step 2 usando ref + focus() al cambiar de step
+  useEffect(() => {
+    if (step === 2 && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [step]);
 
   const handleFinish = async () => {
     if (!title.trim()) {
@@ -82,8 +98,6 @@ export default function Onboarding() {
 
   const selectEventType = (t: typeof EVENT_TYPES[0]) => {
     setEventType(t.value);
-    setSelectedIcon(t.icon);
-    setSelectedLabel(t.label);
   };
 
   return (
@@ -107,10 +121,12 @@ export default function Onboarding() {
       <main className="relative w-full min-h-[100dvh] overflow-y-auto" id="wizard-container">
         {/* Step 1: Event Type */}
         <motion.section
+          aria-hidden={step !== 1}
+          tabIndex={step === 1 ? 0 : -1}
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
           initial={false}
-          animate={{ x: step === 1 ? '0%' : '-100%' }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          animate={shouldReduceMotion ? { opacity: step === 1 ? 1 : 0 } : { x: step === 1 ? '0%' : '-100%' }}
+          transition={{ duration: shouldReduceMotion ? 0.15 : 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
@@ -159,10 +175,12 @@ export default function Onboarding() {
 
         {/* Step 2: Event Name + Create (merged with old step 3) */}
         <motion.section
+          aria-hidden={step !== 2}
+          tabIndex={step === 2 ? 0 : -1}
           className="absolute inset-0 flex flex-col items-center justify-center px-container-margin pt-20 pb-32"
           initial={false}
-          animate={{ x: step === 2 ? '0%' : step < 2 ? '100%' : '-100%' }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          animate={shouldReduceMotion ? { opacity: step === 2 ? 1 : 0 } : { x: step === 2 ? '0%' : step < 2 ? '100%' : '-100%' }}
+          transition={{ duration: shouldReduceMotion ? 0.15 : 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
@@ -172,6 +190,7 @@ export default function Onboarding() {
             </div>
 
             <input
+              ref={titleInputRef}
               id="event-title"
               type="text"
               value={title}
@@ -180,7 +199,6 @@ export default function Onboarding() {
               autoComplete="off"
               autoCapitalize="words"
               enterKeyHint="done"
-              autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleFinish()}
               className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors outline-none mb-8"
             />
@@ -266,9 +284,18 @@ export default function Onboarding() {
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowExitModal(false)}>
-          <div className="glass-card-premium rounded-2xl p-6 max-w-sm mx-4" onClick={e => e.stopPropagation()}>
-            <h2 className="font-headline-md text-headline-md text-on-surface mb-2">¿Salir del asistente?</h2>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowExitModal(false)}
+        >
+          <div
+            className="glass-card-premium rounded-2xl p-6 max-w-sm mx-4"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-modal-title"
+          >
+            <h2 id="exit-modal-title" className="font-headline-md text-headline-md text-on-surface mb-2">¿Salir del asistente?</h2>
             <p className="text-on-surface-variant mb-6">Puedes crear tu primer evento desde el panel principal cuando quieras.</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setShowExitModal(false)} className="px-4 py-2 min-h-[44px] rounded-full text-on-surface-variant hover:bg-surface-container-high">Cancelar</button>

@@ -140,7 +140,7 @@ export default function Login() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
+            <form onSubmit={handleSubmit} className="relative backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Correo electrónico

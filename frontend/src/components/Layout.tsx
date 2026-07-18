@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '../utils/cn';
 import { TIER_LIMITS } from '../types';
 import Logo from './Logo';
@@ -32,9 +32,8 @@ const Layout = memo(function Layout() {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const NAV_ITEMS = useNavItems(user?.tier);
-  const queryClient = useQueryClient();
-  const eventsCache = queryClient.getQueryData<{ events: unknown[] }>(['events']);
-  const eventCount = eventsCache?.events?.length ?? 0;
+  const { data: eventsData } = useQuery({ queryKey: ['events'], select: (d: { events: unknown[] }) => d.events });
+  const eventCount = eventsData?.length ?? 0;
   const limits = TIER_LIMITS[user?.tier ?? 'free'];
   const atLimit = eventCount >= limits.maxEvents;
 

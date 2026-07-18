@@ -42,6 +42,10 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
     setIsGroupGift(gift.isGroupGift);
   }, [gift.isGroupGift]);
 
+  useEffect(() => {
+    setClaims(gift.claims || []);
+  }, [gift.claims]);
+
   const onImgError = () => setImgError(true);
 
   const handleGroupClaim = async () => {
@@ -87,7 +91,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             <span className="text-sm">🕊️</span>
           </div>
           <div className="bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-300 text-amber-900 px-4 py-2.5 rounded-xl font-bold flex flex-col items-center justify-center gap-0.5 shadow-sm text-xs uppercase tracking-wider mb-3">
-            <span className="text-[8px] text-amber-700 font-extrabold tracking-widest flex items-center gap-1">
+            <span className="text-xs text-amber-700 font-extrabold tracking-widest flex items-center gap-1">
               <span className="material-symbols-outlined text-sm text-amber-600">favorite</span>
               {isAdmin ? 'APARTADO CON CARIÑO POR' : 'YA APARTADO'}
             </span>
@@ -136,7 +140,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           REGALO
         </Badge>
         {isAdmin && (
-          <span className="bg-[#2a292e] text-white text-[8px] font-bold px-2 py-0.5 rounded tracking-wider uppercase leading-none">
+          <span className="bg-[#2a292e] text-white text-xs font-bold px-2 py-0.5 rounded tracking-wider uppercase leading-none">
             ADMIN VIEW
           </span>
         )}

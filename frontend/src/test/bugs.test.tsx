@@ -14,15 +14,15 @@ vi.mock('sonner', () => ({ toast: mockToast }));
 beforeEach(() => { vi.useFakeTimers(); });
 afterEach(() => { vi.useRealTimers(); });
 
-// BUG-16: Toasts should replace instead of stacking (real import)
-describe('BUG-16: useToast reemplaza en lugar de apilar', () => {
-  it('debería llamar dismiss antes de mostrar nuevo toast', async () => {
+// BUG-16: Toasts should NOT replace - they should stack (real import)
+describe('BUG-16: useToast apila en lugar de reemplazar (nuevo comportamiento)', () => {
+  it('NO debe llamar dismiss al mostrar un nuevo toast', async () => {
     const { showToast } = await import('../hooks/useToast');
 
     showToast('Primer mensaje', 'info');
     showToast('Segundo mensaje', 'info');
 
-    expect(mockToast.dismiss).toHaveBeenCalledTimes(1);
+    expect(mockToast.dismiss).not.toHaveBeenCalled();
   });
 });
 

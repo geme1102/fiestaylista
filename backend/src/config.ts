@@ -104,7 +104,7 @@ function validateConfig(): void {
     const present = cloudKeys.filter(k => process.env[k]);
     if (present.length > 0 && present.length < cloudKeys.length) {
       const missing = cloudKeys.filter(k => !process.env[k]);
-      console.error(`[config] Cloudinary configurado parcialmente. Faltan: ${missing.join(', ')}`);
+      failConfig(`Cloudinary configurado parcialmente. Faltan: ${missing.join(', ')}`);
     }
 
     warnConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);
@@ -122,7 +122,13 @@ export const config = {
   MERCADO_PAGO_ACCESS_TOKEN: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
   MERCADO_PAGO_WEBHOOK_SECRET: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
   BACKEND_URL: (process.env.BACKEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : `http://localhost:${process.env.PORT || '3001'}`)).replace(/\/+$/, '').trim(),
-  FRONTEND_URL: (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://fiestaylista.com` : 'http://localhost:5173')).trim(),
+  FRONTEND_URL: (() => {
+    const raw = (process.env.FRONTEND_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://fiestaylista.com` : 'http://localhost:5173')).trim();
+    if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
+      failConfig(`FRONTEND_URL="${raw}" debe comenzar con http:// o https://`);
+    }
+    return raw;
+  })(),
   PORT: (() => { const p = parseInt(process.env.PORT || '3001', 10); return Number.isNaN(p) ? 3001 : p; })(),
   NODE_ENV: process.env.NODE_ENV as string,
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',

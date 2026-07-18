@@ -297,15 +297,24 @@ describe('uploadWithProgress (XHR)', () => {
     expect(result).toEqual({ url: 'https://cdn.test/photo.jpg' });
   });
 
-  it('rejects on XHR error', async () => {
+  it('rejects on XHR error after retrying', async () => {
+    vi.useFakeTimers();
     const xhr = mockXhr();
     xhr.status = 0;
     xhr.responseText = '';
     const promise = apiClient.uploadWithProgress('/api/upload', new FormData(), vi.fn());
 
+    // First attempt fails → triggers async retry
+    xhr.onerror!();
+
+    // Advance past the retry delay so doUpload(token, 0) runs
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // Second attempt (retriesLeft=0) also fails → rejects
     xhr.onerror!();
 
     await expect(promise).rejects.toThrow('Error de conexión');
+    vi.useRealTimers();
   });
 
   it('calls onprogress callback', async () => {

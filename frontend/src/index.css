@@ -150,6 +150,11 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -306,6 +311,12 @@
 .animate-card-shine { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); background-size: 200% 100%; animation: card-shine 3s ease-in-out infinite; }
 .animate-typewriter-cursor { animation: typewriter-cursor 1s step-end infinite; }
 .animate-marquee-scroll { animation: marquee-scroll 30s linear infinite; }
+.animate-banner-slide-down { animation: banner-slide-down 0.3s var(--apple-ease) forwards; }
+
+@keyframes banner-slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 @media (hover: hover) {
   .animate-marquee-scroll:hover { animation-play-state: paused; }
 }

@@ -87,10 +87,10 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       try {
         res = await fetch(url.toString(), fetchOptions);
       } catch (error) {
-        reportError(error, { source: 'api' });
         if (error instanceof DOMException && error.name === 'AbortError') {
           throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
         }
+        reportError(error, { source: 'api' });
         if (attempt < MAX_RETRIES) {
           lastError = new Error('Error de conexión. Reintentando...');
           continue;
@@ -126,10 +126,10 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           try {
             res = await fetch(url.toString(), retryInit);
           } catch (error) {
-            reportError(error, { source: 'api' });
             if (error instanceof DOMException && error.name === 'AbortError') {
               throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
             }
+            reportError(error, { source: 'api' });
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
           }
         } else {
@@ -228,12 +228,11 @@ export const apiClient = {
   },
   async uploadWithProgress<T>(path: string, formData: FormData, onProgress: (pct: number) => void): Promise<T> {
     const url = `${BASE_URL}${path}`;
+    let refreshedOnce = false;
 
-    const doUpload = (token: string | null): Promise<T> => {
+    const doUpload = (token: string | null, retriesLeft: number): Promise<T> => {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-
-        let refreshedOnce = false;
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -258,10 +257,17 @@ export const apiClient = {
             refreshedOnce = true;
             const refreshed = await tryRefreshToken();
             if (refreshed) {
-              resolve(doUpload(accessToken));
+              resolve(doUpload(accessToken, retriesLeft));
               return;
             }
             reject(new Error('Sesión expirada. Serás redirigido al inicio de sesión.'));
+            return;
+          }
+
+          // Server error: retry with exponential backoff
+          if (retriesLeft > 0) {
+            await delay(Math.min(1000 * Math.pow(2, MAX_RETRIES - retriesLeft), 4000));
+            resolve(doUpload(token, retriesLeft - 1));
             return;
           }
 
@@ -270,7 +276,15 @@ export const apiClient = {
           reject(new Error(msg));
         };
 
-        xhr.onerror = () => reject(new Error('Error de conexión. Verifica tu internet e intenta de nuevo.'));
+        xhr.onerror = async () => {
+          if (retriesLeft > 0) {
+            await delay(Math.min(1000 * Math.pow(2, MAX_RETRIES - retriesLeft), 4000));
+            resolve(doUpload(token, retriesLeft - 1));
+            return;
+          }
+          reject(new Error('Error de conexión. Verifica tu internet e intenta de nuevo.'));
+        };
+
         xhr.onabort = () => reject(new Error('La solicitud tardó demasiado. Intenta de nuevo.'));
 
         xhr.open('POST', url);
@@ -280,6 +294,6 @@ export const apiClient = {
       });
     };
 
-    return doUpload(accessToken);
+    return doUpload(accessToken, MAX_RETRIES);
   },
 };

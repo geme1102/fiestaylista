@@ -50,6 +50,7 @@ export function useEventPage() {
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const cancelPollRef = useRef<(() => void) | null>(null);
+  const rollbackRef = useRef<Gift[]>([]);
   const { containerRef: turnstileRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
@@ -202,6 +203,17 @@ export function useEventPage() {
         showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
       }
     }, 15000);
+
+    // Optimistic update
+    setGifts((prev) => {
+      rollbackRef.current = prev;
+      return prev.map((g) =>
+        g.id === giftId
+          ? { ...g, isClaimed: true, claimedBy: guestName.trim() }
+          : g
+      );
+    });
+
     try {
       const res = await apiClient.put<{ gift: Gift }>(`/api/events/${event.id}/gifts/${giftId}/claim`, {
         claimedBy: guestName.trim(),
@@ -219,6 +231,11 @@ export function useEventPage() {
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
       clearTimeout(safetyTimerRef.current);
+      // Rollback optimistic update
+      if (rollbackRef.current.length > 0) {
+        setGifts(rollbackRef.current);
+        rollbackRef.current = [];
+      }
       reportError(err, { source: 'useEventPage' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('ya ha sido reservado') || msg.toLowerCase().includes('already claimed')) {

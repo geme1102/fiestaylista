@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast } from './useToast';
 
 export interface Achievement {
@@ -47,6 +47,19 @@ function readUnlocked(): string[] {
 
 export function useAchievements() {
   const [unlockedIds, setUnlockedIds] = useState<string[]>(readUnlocked);
+  const prevUnlockedRef = useRef(unlockedIds);
+
+  useEffect(() => {
+    const prev = prevUnlockedRef.current;
+    prevUnlockedRef.current = unlockedIds;
+    const added = unlockedIds.filter(id => !prev.includes(id));
+    for (const id of added) {
+      const ach = ACHIEVEMENTS.find(a => a.id === id);
+      if (ach) {
+        showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');
+      }
+    }
+  }, [unlockedIds]);
 
   const evaluate = useCallback((ctx: AchievementContext) => {
     const newlyUnlocked: Achievement[] = [];
@@ -61,12 +74,6 @@ export function useAchievements() {
 
       const next = [...prev, ...added.map((a) => a.id)];
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
-
-      queueMicrotask(() => {
-        for (const ach of added) {
-          showToast(`🏆 Logro desbloqueado: ${ach.label}`, 'success');
-        }
-      });
       return next;
     });
   }, []);

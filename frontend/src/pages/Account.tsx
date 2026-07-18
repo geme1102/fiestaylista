@@ -10,6 +10,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
 import { formatDate, formatCOP, validateRedirectUrl } from '../utils/format';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Skeleton } from '../components/ui/Skeleton';
 import { AchievementsStrip } from '../components/AchievementsStrip';
 import { useAchievements } from '../hooks/useAchievements';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
@@ -327,7 +328,7 @@ export default function Account() {
                             const successUrl = `${window.location.origin}/dashboard?pro=activated`;
                             const cancelUrl = `${window.location.origin}/account`;
                             const res = await apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
-                              tier: user?.tier ?? 'pro',
+                              tier: subscription?.tier ?? user?.tier ?? 'pro',
                               successUrl,
                               cancelUrl,
                               turnstileToken: token ?? undefined,
@@ -447,12 +448,12 @@ export default function Account() {
           <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl animate-pulse">
+              <div key={i} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
                 <div className="space-y-2">
-                  <div className="h-4 w-24 bg-surface-dim rounded" />
-                  <div className="h-3 w-32 bg-surface-dim rounded" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
                 </div>
-                <div className="h-6 w-16 bg-surface-dim rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
               </div>
             ))}
           </div>
@@ -462,7 +463,7 @@ export default function Account() {
           <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
           <p className="text-sm text-on-surface-variant">No pudimos cargar tu historial. Intenta de nuevo más tarde.</p>
         </div>
-      ) : payments.length > 0 && (
+      ) : payments.length > 0 ? (
         <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
           <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
           <div className="space-y-3">
@@ -477,6 +478,15 @@ export default function Account() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
+          <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
+          <div className="text-center py-8 text-on-surface-variant/60">
+            <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+            <p className="font-medium text-sm">No hay pagos registrados aún</p>
+            <p className="text-xs mt-1">Cuando realices tu primera compra, aparecerá aquí.</p>
           </div>
         </div>
       )}

@@ -149,7 +149,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
           {preview && (
             <div className="relative rounded-xl overflow-hidden">
-              <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-xl" />
+              <img src={preview} alt="Preview" loading="lazy" className="w-full h-48 object-cover rounded-xl" />
             </div>
           )}
 

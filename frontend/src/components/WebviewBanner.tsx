@@ -54,7 +54,7 @@ export default function WebviewBanner() {
   return (
     <div
       role="alert"
-      className="fixed inset-x-0 top-0 z-[9999] bg-gradient-to-r from-primary to-brand-pink text-white shadow-lg safe-top"
+      className="fixed inset-x-0 top-0 z-[9999] bg-gradient-to-r from-primary to-brand-pink text-white shadow-lg pt-safe"
     >
       <div className="mx-auto max-w-2xl px-4 pt-safe pb-3">
         <div className="flex items-start gap-3 pt-2">
@@ -71,13 +71,13 @@ export default function WebviewBanner() {
             <div className="flex gap-2 mt-2">
               <button
                 onClick={handleOpen}
-                className="bg-white text-primary font-bold text-xs px-4 min-h-[36px] min-w-[100px] rounded-full active:scale-95 transition-transform"
+                className="bg-white text-primary font-bold text-xs px-4 min-h-[44px] min-w-[100px] rounded-full active:scale-95 transition-transform"
               >
                 {hint.label}
               </button>
               <button
                 onClick={handleDismiss}
-                className="text-white/80 hover:text-white text-xs px-3 min-h-[36px] rounded-full transition-colors"
+                className="text-white/80 hover:text-white text-xs px-3 min-h-[44px] rounded-full transition-colors"
               >
                 Seguir aquí
               </button>

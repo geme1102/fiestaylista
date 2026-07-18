@@ -13,14 +13,14 @@ import AuthBottomNav from '../components/AuthBottomNav';
 import { getPasswordStrength } from '../utils/passwordStrength';
 
 function PasswordStrengthBar({ password }: { password: string }) {
-  const { score, label, color } = getPasswordStrength(password);
+  const { score, label, color, textColor } = getPasswordStrength(password);
   const pct = (score / 5) * 100;
   return (
     <div className="flex items-center gap-3" aria-label={`Fortaleza de contraseña: ${label}`}>
       <div className="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-300 ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className={`text-xs font-medium whitespace-nowrap ${color.replace('bg-', 'text-')}`}>{label}</span>
+      <span className={`text-xs font-medium whitespace-nowrap ${textColor}`}>{label}</span>
     </div>
   );
 }
@@ -149,7 +149,7 @@ export default function Register() {
               <p className="text-xs text-on-surface-variant/60 mt-2">Sin tarjeta de crédito. En 2 minutos tendrás tu lista lista.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
+            <form onSubmit={handleSubmit} className="relative backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-on-surface-variant mb-1.5">
                   Nombre

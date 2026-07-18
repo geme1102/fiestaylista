@@ -18,7 +18,11 @@ vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
 vi.mock('../components/ui/ProductTour', () => ({ ProductTour: () => null }));
 vi.mock('../components/GiftCard', () => ({ default: () => <div /> }));
 vi.mock('../components/EventReadyBar', () => ({ EventReadyBar: () => null }));
-vi.mock('../components/ui/Skeleton', () => ({ default: () => <div data-testid="skeleton" /> }));
+vi.mock('../components/ui/Skeleton', () => ({
+  Skeleton: ({ className }: { className?: string }) => <div data-testid="skeleton" className={className} />,
+  SkeletonText: () => <div data-testid="skeleton-text" />,
+  SkeletonCard: () => <div data-testid="skeleton-card" />,
+}));
 vi.mock('../components/admin/GiftManagement', () => ({ default: () => <div data-testid="gift-management" /> }));
 vi.mock('../components/admin/PhotoGallery', () => ({ PhotoGallery: () => <div data-testid="photo-gallery" /> }));
 vi.mock('../components/admin/GuestsPanel', () => ({ default: () => <div data-testid="guests-panel" /> }));

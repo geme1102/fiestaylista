@@ -3,7 +3,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -20,7 +20,6 @@ import { completeWelcome } from '../services/onboarding';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { WelcomeModal } from '../components/WelcomeModal';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
-import InstallPwaBanner from '../components/InstallPwaBanner';
 import SubscriptionBanners from '../components/dashboard/SubscriptionBanners';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
@@ -58,6 +57,7 @@ export default function Dashboard() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (user && !user.welcomeTutorialCompleted) {
@@ -327,8 +327,6 @@ export default function Dashboard() {
         onPaymentSync={handlePaymentSync}
       />
 
-      <InstallPwaBanner />
-
       {events.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             {[
@@ -478,18 +476,21 @@ export default function Dashboard() {
             </SectionErrorBoundary>
       )}
 
-      {deleteConfirm && (
-        <ConfirmModal
-          message="¿Eliminar este evento? Los regalos y fotos también se eliminarán. Esta acción no se puede deshacer."
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onClose={() => setDeleteConfirm(null)}
-          loading={deleting === deleteConfirm}
-        />
-      )}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <ConfirmModal
+            key="delete"
+            message="¿Eliminar este evento? Los regalos y fotos también se eliminarán. Esta acción no se puede deshacer."
+            onConfirm={() => handleDelete(deleteConfirm)}
+            onClose={() => setDeleteConfirm(null)}
+            loading={deleting === deleteConfirm}
+          />
+        )}
+      </AnimatePresence>
 
       {showCreateModal && (
         <AnimatePresence>
-          <Modal onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}>
+          <Modal onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }} reduceMotion={shouldReduceMotion ?? false}>
             <CreateForm
               formData={formData}
               setFormData={setFormData}
@@ -503,10 +504,10 @@ export default function Dashboard() {
       <AnimatePresence>
         {showFab && eventCount < limits.maxEvents && (
           <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 20, stiffness: 300 }}
             onClick={() => setShowCreateModal(true)}
             disabled={showCreateModal}
             aria-label="Crear nuevo evento"
@@ -517,13 +518,16 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {showWelcome && (
-        <WelcomeModal
-          hasEvents={events.length > 0}
-          onCreateEvent={handleCreateFromWelcome}
-          onComplete={handleCompleteWelcome}
-        />
-      )}
+      <AnimatePresence>
+        {showWelcome && (
+          <WelcomeModal
+            key="welcome"
+            hasEvents={events.length > 0}
+            onCreateEvent={handleCreateFromWelcome}
+            onComplete={handleCompleteWelcome}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -693,7 +697,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
   );
 }
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Modal({ children, onClose, reduceMotion }: { children: React.ReactNode; onClose: () => void; reduceMotion: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dialogRef = useFocusTrap(true);
 
@@ -718,10 +722,10 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
     >
       <motion.div
         ref={scrollRef}
-        initial={{ y: '100%', opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: '100%', opacity: 0 }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        initial={reduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+        animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+        exit={reduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
+        transition={reduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 30, stiffness: 300 }}
         className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 pb-safe-lg shadow-2xl max-h-[90dvh] overflow-y-auto"
       >
         <div className="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto mb-6 sm:hidden" />

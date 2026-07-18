@@ -11,7 +11,21 @@ import App from './App';
 import './index.css';
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.warn('[global] Unhandled rejection:', event.reason);
+  const reason = event.reason;
+  if (!reason) return;
+
+  // Filter out third-party errors (extensions, Turnstile, CDN scripts, etc.)
+  if (reason instanceof Error && reason.stack) {
+    const isThirdParty =
+      reason.stack.includes('chrome-extension://') ||
+      reason.stack.includes('moz-extension://') ||
+      reason.stack.includes('extensions') ||
+      reason.stack.includes('turnstile') ||
+      reason.stack.includes('challenges.cloudflare.com');
+    if (isThirdParty) return;
+  }
+
+  console.warn('[global] Unhandled rejection:', reason);
   toast.error('Ocurrió un error inesperado. Recarga la página si el problema persiste.');
 });
 
@@ -67,7 +81,7 @@ createRoot(document.getElementById('root')!).render(
                 closeButton
                 position="bottom-center"
                 toastOptions={{
-                  style: { fontFamily: 'Quicksand, sans-serif' },
+                  style: { fontFamily: 'Plus Jakarta Sans, sans-serif' },
                 }}
                 data-testid="toaster"
               />

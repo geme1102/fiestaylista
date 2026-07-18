@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { getCashFund, getContributions, boostEvent, createPromise } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
@@ -7,6 +7,7 @@ import { formatCOP } from '../utils/format';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
+import { Skeleton } from './ui/Skeleton';
 import type { CashFund, CashContribution } from '../types';
 
 const MAX_RECENT_CONTRIBUTIONS = 5;
@@ -34,6 +35,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [boostLoading, setBoostLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
@@ -114,7 +116,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
 
   if (loading) {
     return (
-      <div className={`mb-12 rounded-2xl bg-surface-container-high animate-pulse ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
+      <Skeleton className={`mb-12 rounded-2xl ${easyRead ? 'p-8 h-56' : 'p-6 h-48'}`} />
     );
   }
 
@@ -171,7 +173,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   return (
     <div className="mb-12 relative">
       <AnimatePresence>
-        {showConfetti && <ConfettiOverlay />}
+        {showConfetti && <ConfettiOverlay reduceMotion={shouldReduceMotion ?? false} />}
       </AnimatePresence>
 
       {/* SECTION 1: ESTADO ACTIVO (Vista Invitado) */}
@@ -184,9 +186,9 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
           </span>
         </div>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: shouldReduceMotion ? 0.15 : 0.5, ease: [0.23, 1, 0.32, 1] }}
           className="relative rounded-3xl p-6 overflow-hidden shadow-xl shadow-secondary/10 transition-all duration-300"
           style={{
             background: 'rgba(255, 248, 230, 0.6)',
@@ -216,10 +218,10 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
                 <motion.div
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: Math.min(progressPercent, 100) / 100 }}
-                  transition={{ duration: 1.2, ease: 'easeOut' }}
-                  style={{ transformOrigin: 'left', width: '100%' }}
+                  initial={shouldReduceMotion ? { width: 0 } : { scaleX: 0 }}
+                  animate={shouldReduceMotion ? { width: `${Math.min(progressPercent, 100)}%` } : { scaleX: Math.min(progressPercent, 100) / 100 }}
+                  transition={shouldReduceMotion ? { duration: 0.3 } : { duration: 1.2, ease: 'easeOut' }}
+                  style={shouldReduceMotion ? { height: '100%' } : { transformOrigin: 'left', width: '100%' }}
                   className="h-full bg-gradient-to-r from-secondary-container to-secondary shimmer-bg rounded-full"
                 />
               </div>
@@ -331,7 +333,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   );
 });
 
-function ConfettiOverlay() {
+function ConfettiOverlay({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -340,14 +342,14 @@ function ConfettiOverlay() {
       className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
     >
       <motion.div
-        initial={{ scale: 0, rotate: -20 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        initial={reduceMotion ? { opacity: 0 } : { scale: 0, rotate: -20 }}
+        animate={reduceMotion ? { opacity: 1 } : { scale: 1, rotate: 0 }}
+        transition={reduceMotion ? { duration: 0.15 } : { type: 'spring', stiffness: 200, damping: 15 }}
         className="text-7xl"
       >
         💛
       </motion.div>
-      {Array.from({ length: 20 }).map((_, i) => (
+      {!reduceMotion && Array.from({ length: 20 }).map((_, i) => (
         <div
           key={i}
           className="absolute animate-confetti"

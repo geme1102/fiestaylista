@@ -46,6 +46,14 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                   >
                     Cerrar Sesión
                   </button>
+                  <button
+                    type="button"
+                    data-testid="logout-button-mobile"
+                    onClick={logout}
+                    className="sm:hidden inline-flex items-center min-h-[44px] text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-3 py-2 border border-outline/30 rounded-full"
+                  >
+                    <span className="material-symbols-outlined text-lg">logout</span>
+                  </button>
                   <Link
                     to="/dashboard"
                     data-testid="dashboard-link"
@@ -63,8 +71,21 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     Entrar
                   </Link>
                   <Link
+                    to="/login"
+                    className="sm:hidden inline-block text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
                     to="/register"
-                    className="relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                    className="hidden sm:inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                  >
+                    <span className="relative z-10">Crear Lista Gratis</span>
+                    <div className="absolute inset-0 animate-shimmer" />
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="sm:hidden inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
                     <div className="absolute inset-0 animate-shimmer" />

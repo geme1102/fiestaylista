@@ -9,6 +9,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorId: string | null;
 }
 
 function generateErrorId(): string {
@@ -18,13 +19,13 @@ function generateErrorId(): string {
 export default class ErrorBoundary extends Component<Props, State> {
   private panelRef = createRef<HTMLDivElement>();
 
-  constructor(props: Props) {
+constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorId: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorId: generateErrorId() };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -67,12 +68,12 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorId: null });
   };
 
   render() {
     if (this.state.hasError) {
-      const errorId = generateErrorId();
+      const errorId = this.state.errorId;
       return (
         <main
           className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden bg-surface"

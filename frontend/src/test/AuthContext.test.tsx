@@ -101,18 +101,30 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user').textContent).toBe('null');
   });
 
-  it('shows toast when getMe fails', async () => {
+  it('shows toast only for connection errors when getMe fails', async () => {
     mockGetAccessToken.mockReturnValue('bad-token');
-    mockGetMe.mockRejectedValue(new Error('Network error'));
+    mockGetMe.mockRejectedValue(new Error('Error de conexión. Verifica tu internet.'));
 
     renderAuthProvider();
 
     await waitFor(() => {
       expect(mockShowToast).toHaveBeenCalledWith(
-        'Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.',
-        'error'
+        'Error de conexión. Reintentando...',
+        'info'
       );
     });
+  });
+
+  it('does not show toast for 5xx errors during session restore', async () => {
+    mockGetAccessToken.mockReturnValue('bad-token');
+    mockGetMe.mockRejectedValue(new Error('Error del servidor'));
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('isLoading').textContent).toBe('false');
+    });
+    expect(mockShowToast).not.toHaveBeenCalled();
   });
 
   it('tries refresh when no access token', async () => {

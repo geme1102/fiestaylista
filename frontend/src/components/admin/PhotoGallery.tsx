@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Upload, Trash2, X, Star } from 'lucide-react';
 import ImageWithSkeleton from '../ImageWithSkeleton';
 import { ConfirmModal } from '../ConfirmModal';
@@ -36,6 +36,7 @@ export const PhotoGallery = memo(function PhotoGallery({
 }: PhotoGalleryProps) {
   const previewRef = useFocusTrap(!!selectedPhotoForPreview);
   useLockedBody(!!selectedPhotoForPreview);
+  const shouldReduceMotion = useReducedMotion();
   return (
     <>
       <section className="mb-10">
@@ -180,6 +181,7 @@ export const PhotoGallery = memo(function PhotoGallery({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.1 } : undefined}
             onClick={() => onSelectPreview(null)}
             onKeyDown={(e) => { if (e.key === 'Escape') onSelectPreview(null); }}
             role="dialog"
@@ -198,11 +200,12 @@ export const PhotoGallery = memo(function PhotoGallery({
             </div>
 
             <motion.img
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.95 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.95 }}
               src={selectedPhotoForPreview.url}
               alt={selectedPhotoForPreview.caption || 'Foto del evento'}
+              loading="lazy"
               className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
             />
 
@@ -213,14 +216,17 @@ export const PhotoGallery = memo(function PhotoGallery({
         )}
       </AnimatePresence>
 
-      {deletePhotoConfirm && (
-        <ConfirmModal
-          message="¿Eliminar esta foto? Esta acción no se puede deshacer."
-          onConfirm={() => onDelete(deletePhotoConfirm)}
-          onClose={onDeleteConfirmClose}
-          loading={deletingPhoto}
-        />
-      )}
+      <AnimatePresence>
+        {deletePhotoConfirm && (
+          <ConfirmModal
+            key="delete-photo"
+            message="¿Eliminar esta foto? Esta acción no se puede deshacer."
+            onConfirm={() => onDelete(deletePhotoConfirm)}
+            onClose={onDeleteConfirmClose}
+            loading={deletingPhoto}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 });

@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { reportError } from './lib/reportError';
 import { QueryProvider } from './components/QueryProvider';
 import WebviewBanner from './components/WebviewBanner';
+import OfflineBanner from './components/OfflineBanner';
 import { PAGE_META } from './data/pageMeta';
 
 function PageBoundary({ children }: { children: ReactNode }) {
@@ -201,6 +202,7 @@ export default function App() {
     <QueryProvider>
       <PwaUpdater />
       <WebviewBanner />
+      <OfflineBanner />
       <ScrollToTop />
     <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant/70 font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />
@@ -219,15 +221,15 @@ export default function App() {
           <Route path="/cumpleanos" element={<PageTransition><PageBoundary><SeoEventPage eventKey="cumpleanos" /></PageBoundary></PageTransition>} />
           <Route path="/bautizo" element={<PageTransition><PageBoundary><SeoEventPage eventKey="bautizo" /></PageBoundary></PageTransition>} />
           <Route path="/comunion" element={<PageTransition><PageBoundary><SeoEventPage eventKey="comunion" /></PageBoundary></PageTransition>} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<PageTransition><PageBoundary><Dashboard /></PageBoundary></PageTransition>} />
+<Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<PageTransition><PageBoundary><Dashboard /></PageBoundary></PageTransition>} />
+                <Route path="/account" element={<PageTransition><PageBoundary><Account /></PageBoundary></PageTransition>} />
+                <Route path="/statistics" element={<PageTransition><PageBoundary><Statistics /></PageBoundary></PageTransition>} />
+              </Route>
               <Route path="/event/:id" element={<PageTransition><PageBoundary><EventAdmin /></PageBoundary></PageTransition>} />
-              <Route path="/account" element={<PageTransition><PageBoundary><Account /></PageBoundary></PageTransition>} />
-              <Route path="/statistics" element={<PageTransition><PageBoundary><Statistics /></PageBoundary></PageTransition>} />
+              <Route path="/onboarding" element={<PageTransition><PageBoundary><Onboarding /></PageBoundary></PageTransition>} />
             </Route>
-            <Route path="/onboarding" element={<PageTransition><PageBoundary><Onboarding /></PageBoundary></PageTransition>} />
-          </Route>
           <Route path="/terminos-y-condiciones" element={<PageTransition><PageBoundary><TermsConditions /></PageBoundary></PageTransition>} />
           <Route path="/terms-and-conditions" element={<PageTransition><PageBoundary><TermsConditions /></PageBoundary></PageTransition>} />
           <Route path="/politica-de-privacidad" element={<PageTransition><PageBoundary><PrivacyPolicy /></PageBoundary></PageTransition>} />

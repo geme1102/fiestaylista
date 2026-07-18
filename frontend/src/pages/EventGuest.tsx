@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { Skeleton } from '../components/ui/Skeleton';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import GiftCard from '../components/GiftCard';
 import RsvpForm from '../components/RsvpForm';
@@ -121,29 +122,29 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div role="status" aria-live="polite" className="min-h-screen bg-surface animate-pulse">
+      <div role="status" aria-live="polite" className="min-h-screen bg-surface">
         <div className="pt-16 w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
-            <div className="w-24 h-24 rounded-full bg-surface-container-highest mb-6" />
-            <div className="h-6 w-32 bg-surface-container-highest rounded-full mb-4" />
-            <div className="h-10 w-64 bg-surface-container-highest rounded-xl mb-2" />
-            <div className="h-5 w-40 bg-surface-container-highest rounded-lg mb-6" />
-            <div className="h-8 w-36 bg-surface-container-highest rounded-full" />
+            <Skeleton className="w-24 h-24 rounded-full mb-6" />
+            <Skeleton className="h-6 w-32 rounded-full mb-4" />
+            <Skeleton className="h-10 w-64 rounded-xl mb-2" />
+            <Skeleton className="h-5 w-40 rounded-lg mb-6" />
+            <Skeleton className="h-8 w-36 rounded-full" />
           </div>
         </div>
         <div className="max-w-4xl mx-auto px-4 -mt-6 relative z-10 space-y-8 py-12">
           <div className="flex gap-4 justify-center">
-            <div className="h-10 w-24 bg-surface-container-highest rounded-xl" />
-            <div className="h-10 w-24 bg-surface-container-highest rounded-xl" />
+            <Skeleton className="h-10 w-24 rounded-xl" />
+            <Skeleton className="h-10 w-24 rounded-xl" />
           </div>
           <div className="space-y-4">
-            <div className="h-8 w-48 bg-surface-container-highest rounded-lg" />
-            <div className="h-12 w-full bg-surface-container-highest rounded-2xl" />
+            <Skeleton className="h-8 w-48 rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-2xl" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-40 bg-surface-container-highest rounded-2xl" />
+              <Skeleton key={i} className="h-40 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -367,7 +368,7 @@ export default function EventGuest() {
             >
               <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-high border border-outline-variant/30 shadow-sm mb-4">
                 <span className="text-lg">🎉</span>
-                <span className="font-bold text-sm text-on-surface">Este evento ya fue</span>
+                <span className="font-bold text-sm text-on-surface">Este evento ya fue finalizado</span>
               </div>
               <h2 className={`font-bold text-on-surface ${easyReadMode ? 'text-3xl' : 'text-2xl'}`}>¡Gracias a todos los que asistieron!</h2>
               <p className="text-on-surface-variant mt-2">Revive los mejores momentos compartiendo y viendo las fotos del evento.</p>
@@ -515,7 +516,13 @@ export default function EventGuest() {
 
             <SectionErrorBoundary sectionName="GuestPhotoUpload"><GuestPhotoUpload eventId={event.id} onUploaded={reloadEvent} /></SectionErrorBoundary>
 
-            {photos.length > 0 && (
+            {photos.length === 0 ? (
+              <div className="text-center py-8 text-on-surface-variant/60">
+                <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>photo_library</span>
+                <p className="font-medium text-sm">No hay fotos aún</p>
+                <p className="text-xs mt-1">¡Sé el primero en subir una foto desde el botón de arriba!</p>
+              </div>
+            ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {photos.map((photo, idx) => (
                   <motion.div
@@ -559,7 +566,7 @@ export default function EventGuest() {
             transition={{ duration: 0.5, delay: 0.45 }}
           >
             <SectionErrorBoundary sectionName="CashFundSection">
-            <Suspense fallback={<div className="animate-pulse h-40 bg-surface-container-highest rounded-3xl" />}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
+            <Suspense fallback={<Skeleton className="h-40 rounded-3xl" />}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
             </SectionErrorBoundary>
           </motion.div>
           )}

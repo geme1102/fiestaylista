@@ -52,8 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         reportError(err, { source: 'AuthContext' });
-        if (import.meta.env.DEV) console.warn('[Auth] No se pudo restaurar la sesión:', err);
-        showToast('Error al restaurar tu sesión. Intenta iniciar sesión de nuevo.', 'error');
+        if (err instanceof Error && !err.message.includes('Sesión expirada') && !err.message.includes('No autorizado')) {
+          if (err.message.includes('Error de conexión')) {
+            if (import.meta.env.DEV) console.warn('[Auth] Error de conexión restaurando sesión:', err.message);
+            showToast('Error de conexión. Reintentando...', 'info');
+          } else if (import.meta.env.DEV) {
+            console.warn('[Auth] No se pudo restaurar la sesión:', err);
+          }
+        }
       } finally {
         if (mountedRef.current) setIsLoading(false);
       }
@@ -66,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handler = () => {
       clearTokens();
       setUser(null);
+      showToast('Sesión expirada. Serás redirigido al inicio de sesión.', 'error');
       navigate('/login', { replace: true });
     };
     window.addEventListener('auth:session-expired', handler);
@@ -115,8 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       reportError(err, { source: 'AuthContext' });
       if (err instanceof Error && !err.message.includes('Sesión expirada') && !err.message.includes('No autorizado')) {
-        if (import.meta.env.DEV) console.error('[Auth] Error transitorio refrescando usuario:', err);
-        showToast('No se pudieron cargar tus datos. Manteniendo la sesión actual.', 'info');
+        if (err.message.includes('Error de conexión')) {
+          if (import.meta.env.DEV) console.warn('[Auth] Error de conexión refrescando usuario:', err.message);
+          showToast('Error de conexión. Manteniendo la sesión actual.', 'info');
+        } else if (import.meta.env.DEV) {
+          console.error('[Auth] Error transitorio refrescando usuario:', err);
+        }
         return;
       }
       clearTokens();

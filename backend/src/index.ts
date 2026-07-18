@@ -118,8 +118,8 @@ if (cluster.isPrimary && workerCount > 1) {
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM', 0));
     process.on('SIGINT', () => gracefulShutdown('SIGINT', 0));
     process.on('uncaughtException', (error) => {
-      logger.fatal({ err: error }, 'Excepción no capturada');
-      gracefulShutdown('uncaughtException', 1);
+      logger.fatal({ err: error }, 'Excepción no capturada — estado inestable, saliendo inmediatamente');
+      process.exit(1);
     });
     process.on('unhandledRejection', (reason) => {
       logger.fatal({ err: reason }, 'Promesa rechazada no capturada — reiniciando servidor');

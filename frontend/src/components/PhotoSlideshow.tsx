@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
 import type { Photo } from '../types';
@@ -14,6 +14,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
   const [current, setCurrent] = useState(initialIndex);
   const slideshowRef = useFocusTrap(true);
   useLockedBody(true);
+  const shouldReduceMotion = useReducedMotion();
 
   const prev = useCallback(() => {
     setCurrent((i) => (i > 0 ? i - 1 : photos.length - 1));
@@ -75,9 +76,9 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
         <AnimatePresence mode="wait">
           <motion.div
             key={photo.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             className="max-w-full max-h-full flex flex-col items-center"
           >

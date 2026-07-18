@@ -25,8 +25,8 @@ describe('NavbarPremium', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, logout: vi.fn() });
     renderNavbar();
 
-    expect(screen.getByText('Entrar')).toBeTruthy();
-    expect(screen.getByText('Crear Lista Gratis')).toBeTruthy();
+    expect(screen.getAllByText('Entrar').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Crear Lista Gratis').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows dashboard link and logout when authenticated', () => {

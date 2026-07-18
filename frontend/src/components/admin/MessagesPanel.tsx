@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../services/api';
 import { reportError } from '../../lib/reportError';
 import { showToast } from '../../hooks/useToast';
+import { ConfirmModal } from '../../components/ConfirmModal';
+import { Skeleton } from '../ui/Skeleton';
 
 
 interface Message {
@@ -21,6 +24,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
@@ -41,6 +45,10 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
   }, [loadMessages, refreshKey]);
 
   const handleDelete = async (messageId: string) => {
+    setDeleteConfirmId(messageId);
+  };
+
+  const handleConfirmDelete = async (messageId: string) => {
     setDeletingId(messageId);
     try {
       await apiClient.del(`/api/events/${eventId}/messages/${messageId}`);
@@ -51,16 +59,17 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
       showToast(err instanceof Error ? err.message : 'Error al eliminar mensaje', 'error');
     } finally {
       setDeletingId(null);
+      setDeleteConfirmId(null);
     }
   };
 
   if (loading) {
     return (
       <div className="p-4 bg-surface-container rounded-2xl">
-        <div className="h-6 w-40 bg-surface-container-highest rounded animate-pulse mb-4" />
+        <Skeleton className="h-6 w-40 rounded mb-4" />
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-16 bg-surface-container-highest rounded-xl animate-pulse" />
+            <Skeleton key={i} className="h-16 rounded-xl" />
           ))}
         </div>
       </div>
@@ -76,7 +85,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
         <p className="text-sm font-semibold text-on-surface-variant">Error al cargar mensajes</p>
         <button
           onClick={loadMessages}
-          className="mt-3 px-4 py-2 text-xs font-semibold text-primary bg-primary-fixed/30 rounded-full min-h-[36px]"
+          className="mt-3 px-4 py-2 text-xs font-semibold text-primary bg-primary-fixed/30 rounded-full min-h-[44px]"
         >
           Reintentar
         </button>
@@ -133,6 +142,18 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <ConfirmModal
+            key="delete-msg"
+            message="¿Estás seguro de que quieres eliminar este mensaje? Esta acción no se puede deshacer."
+            onConfirm={() => handleConfirmDelete(deleteConfirmId)}
+            onClose={() => setDeleteConfirmId(null)}
+            loading={deletingId === deleteConfirmId}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

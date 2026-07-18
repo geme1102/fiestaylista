@@ -33,12 +33,14 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import ShareButtons from '../components/ShareButtons';
 import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar';
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useAchievements } from '../hooks/useAchievements';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import EventAdminLoadingSkeleton from '../components/admin/EventAdminLoadingSkeleton';
 import EditEventModal from '../components/admin/EditEventModal';
 import BoostModal from '../components/admin/BoostModal';
+import { AnimatePresence } from 'framer-motion';
 
 const GiftManagement = lazy(() => import('../components/admin/GiftManagement'));
 const PhotoGallery = lazy(() => import('../components/admin/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
@@ -728,10 +730,10 @@ onClick={() => {
           )}
 
           {/* Cash Fund Section for Admin */}
-          {(isBoosted || cashFund?.isActive) && id && (
+          {((isBoosted || cashFund?.isActive) || (cashFund && true)) && id && (
             <div className="mt-6">
               <SectionErrorBoundary sectionName="CashFundSectionAdmin">
-              <Suspense fallback={<div className="h-32 bg-gray-50 rounded-2xl animate-pulse" />}>
+              <Suspense fallback={<Skeleton className="h-32 rounded-2xl" />}>
                 <CashFundSection eventId={id} isOwner={true} />
               </Suspense>
               </SectionErrorBoundary>
@@ -814,7 +816,7 @@ onClick={() => {
 
         <div data-tour="add-gift">
         <SectionErrorBoundary sectionName="GiftManagement">
-        <Suspense fallback={<div className="animate-pulse h-48 bg-surface-container-highest rounded-3xl" />}>
+        <Suspense fallback={<Skeleton className="h-48 rounded-3xl" />}>
           <GiftManagement
             gifts={gifts}
             addingGift={addingGift}
@@ -838,16 +840,16 @@ onClick={() => {
 
         <div data-tour="guests">
         <SectionErrorBoundary sectionName="GuestsPanel">
-        <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><GuestsPanel eventId={id ?? ''} /></Suspense>
+        <Suspense fallback={<Skeleton className="h-32 rounded-3xl" />}><GuestsPanel eventId={id ?? ''} /></Suspense>
         </SectionErrorBoundary>
         </div>
 
         <SectionErrorBoundary sectionName="MessagesPanel">
-        <Suspense fallback={<div className="animate-pulse h-32 bg-surface-container-highest rounded-3xl" />}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>
+        <Suspense fallback={<Skeleton className="h-32 rounded-3xl" />}><MessagesPanel eventId={id ?? ''} refreshKey={messageRefreshKey} /></Suspense>
         </SectionErrorBoundary>
 
         <SectionErrorBoundary sectionName="PhotoGallery">
-        <Suspense fallback={<div className="animate-pulse h-64 bg-surface-container-highest rounded-3xl" />}>
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
           <PhotoGallery
             photos={photos}
             uploading={uploading}
@@ -869,44 +871,57 @@ onClick={() => {
         </SectionErrorBoundary>
       </div>
 
-      <EditEventModal
-        open={editingDetails}
-        titleDraft={titleDraft}
-        typeDraft={typeDraft}
-        dateDraft={dateDraft}
-        locationDraft={locationDraft}
-        noteDraft={noteDraft}
-        updatingDetails={updatingDetails}
-        dialogRef={editDialogRef}
-        onTitleChange={setTitleDraft}
-        onTypeChange={setTypeDraft}
-        onDateChange={setDateDraft}
-        onLocationChange={setLocationDraft}
-        onNoteChange={setNoteDraft}
-        onSave={handleUpdateDetails}
-        onClose={() => setEditingDetails(false)}
-      />
+      <AnimatePresence>
+        {editingDetails && (
+          <EditEventModal
+            key="edit"
+            open={editingDetails}
+            titleDraft={titleDraft}
+            typeDraft={typeDraft}
+            dateDraft={dateDraft}
+            locationDraft={locationDraft}
+            noteDraft={noteDraft}
+            updatingDetails={updatingDetails}
+            dialogRef={editDialogRef}
+            onTitleChange={setTitleDraft}
+            onTypeChange={setTypeDraft}
+            onDateChange={setDateDraft}
+            onLocationChange={setLocationDraft}
+            onNoteChange={setNoteDraft}
+            onSave={handleUpdateDetails}
+            onClose={() => setEditingDetails(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      <div ref={boostTurnstileRef} className="hidden" />
-      <BoostModal
-        open={boostModal}
-        loading={boostLoading}
-        dialogRef={boostDialogRef}
-        onConfirm={handleBoost}
-        onClose={() => setBoostModal(false)}
-      />
+      <div ref={boostTurnstileRef} className="fixed bottom-4 right-4 pointer-events-none -z-10" />
+      <AnimatePresence>
+        {boostModal && (
+          <BoostModal
+            key="boost"
+            open={boostModal}
+            loading={boostLoading}
+            dialogRef={boostDialogRef}
+            onConfirm={handleBoost}
+            onClose={() => setBoostModal(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Toggle Confirm Modal */}
-      {toggleConfirm && (
-        <ConfirmModal
-          message={event.isActive
-            ? '¿Pausar el evento? Los invitados verán la página como "no disponible" hasta que lo actives de nuevo.'
-            : '¿Activar el evento? Los invitados podrán ver la lista, apartar regalos y enviar dinero.'}
-          onConfirm={toggleActive}
-          onClose={() => setToggleConfirm(false)}
-          loading={toggling}
-        />
-      )}
+      <AnimatePresence>
+        {toggleConfirm && (
+          <ConfirmModal
+            key="toggle"
+            message={event.isActive
+              ? '¿Pausar el evento? Los invitados verán la página como "no disponible" hasta que lo actives de nuevo.'
+              : '¿Activar el evento? Los invitados podrán ver la lista, apartar regalos y enviar dinero.'}
+            onConfirm={toggleActive}
+            onClose={() => setToggleConfirm(false)}
+            loading={toggling}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation */}
       {/* Bottom Navigation */}
