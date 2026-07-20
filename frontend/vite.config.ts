@@ -77,6 +77,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
+    modulePreload: { polyfill: false },
     rollupOptions: {
       output: {
         manualChunks: {
