@@ -131,7 +131,12 @@ jobs:
 
   deploy-preview:
     name: Deploy Preview (PR)
-    if: github.event_name == 'pull_request'
+    # Sin secrets disponibles en PRs de Dependabot/forks — se omite el preview
+    # (backend-check, frontend-check y e2e-tests siguen corriendo en esos PRs)
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     needs: [backend-check, frontend-check]
     runs-on: ubuntu-latest
     defaults:
