@@ -96,18 +96,19 @@ router.post('/events/:eventId/messages', messageLimiter, verifyTurnstile, valida
 }));
 
 router.delete('/events/:eventId/messages/:messageId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('messageId'), asyncHandler(async (req: AuthRequest, res) => {
+  const eventId = req.params.eventId as string;
   const messageId = req.params.messageId as string;
   if (!messageId) throw new ValidationError('ID del mensaje requerido');
 
   const [msg] = await db
     .select({ id: messages.id })
     .from(messages)
-    .where(eq(messages.id, messageId))
+    .where(and(eq(messages.id, messageId), eq(messages.eventId, eventId)))
     .limit(1);
 
   if (!msg) throw new NotFoundError('Mensaje no encontrado');
 
-  await db.delete(messages).where(eq(messages.id, messageId));
+  await db.delete(messages).where(and(eq(messages.id, messageId), eq(messages.eventId, eventId)));
   res.json({ success: true });
 }));
 

@@ -4,28 +4,20 @@ import type { AuthRequest } from '../types/index.js';
 
 let warnLogged = false;
 
-export async function setRLSContext(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
-  const userId = req.user?.userId;
-
+export async function applyRLSContext(userId?: string, eventId?: string): Promise<void> {
   try {
-    if (userId) {
-      await sql`SET app.current_user_id = ${userId}`;
-    } else {
-      await sql`SET app.current_user_id = ''`;
-    }
-
-    if (req.params.eventId && req.user) {
-      await sql`SET app.current_event_id = ${req.params.eventId}`;
-    } else {
-      await sql`SET app.current_event_id = ''`;
-    }
+    await sql`SET app.current_user_id = ${userId ?? ''}`;
+    await sql`SET app.current_event_id = ${eventId ?? ''}`;
   } catch {
     if (!warnLogged) {
       warnLogged = true;
-      console.warn('[RLS] No se pudo establecer app.current_user_id — RLS puede no estar activo');
+      console.warn('[RLS] No se pudo establecer contexto RLS — las políticas pueden no estar activas');
     }
   }
+}
 
+export async function setRLSContext(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
+  await applyRLSContext(req.user?.userId, req.params.eventId);
   next();
 }
 

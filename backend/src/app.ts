@@ -138,7 +138,7 @@ export function createApp() {
         workerSrc: ["'none'"],
         manifestSrc: ["'self'"],
         upgradeInsecureRequests: [],
-        // reportUri: ['/api/csp-violation'],  // Descomentar cuando exista un endpoint collector
+        reportUri: ['/api/csp-report'],
       },
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -152,6 +152,14 @@ export function createApp() {
 
   app.use('/api/webhooks', webhookLimiter, webhooksRouter);
   app.use('/api/webhooks', webhookLimiter, resendWebhookRouter);
+
+  app.post('/api/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json'], limit: '64kb' }), (req, res) => {
+    const report = req.body?.['csp-report'] ?? req.body;
+    if (config.NODE_ENV !== 'test' && report) {
+      console.warn('[CSP]', report?.['violated-directive'] ?? 'unknown', report?.['blocked-uri'] ?? '');
+    }
+    res.status(204).end();
+  });
 
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));

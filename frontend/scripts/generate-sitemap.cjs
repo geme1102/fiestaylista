@@ -26,13 +26,16 @@ async function fetchJSON(url) {
 
 async function getPublicEventSlugs() {
   try {
-    const data = await fetchJSON(`${API_BASE}/api/public/events`);
-    if (Array.isArray(data)) {
-      return data
-        .filter((e) => e && e.slug)
-        .map((e) => ({ slug: e.slug, lastmod: e.updatedAt }));
-    }
-    return [];
+    const allEvents = [];
+    let cursor = null;
+    do {
+      const url = `${API_BASE}/api/public/events?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+      const data = await fetchJSON(url);
+      if (!data || !Array.isArray(data.events)) break;
+      allEvents.push(...data.events.filter((e) => e && e.slug).map((e) => ({ slug: e.slug, lastmod: e.updatedAt })));
+      cursor = data.hasMore ? data.nextCursor : null;
+    } while (cursor);
+    return allEvents;
   } catch {
     return [];
   }

@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from 'express';
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { events, gifts, photos, cashFunds } from '../db/schema.js';
+import { events, gifts, photos, cashFunds, messages } from '../db/schema.js';
 import { ForbiddenError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -71,6 +71,18 @@ export async function requireEventOwnership(
         .limit(1);
       if (!fund || fund.eventId !== rawId) {
         next(new ForbiddenError('El fondo monetario no pertenece a este evento'));
+        return;
+      }
+    }
+
+    if (rawParams.messageId) {
+      const [message] = await db
+        .select({ eventId: messages.eventId })
+        .from(messages)
+        .where(eq(messages.id, rawParams.messageId))
+        .limit(1);
+      if (!message || message.eventId !== rawId) {
+        next(new ForbiddenError('El mensaje no pertenece a este evento'));
         return;
       }
     }

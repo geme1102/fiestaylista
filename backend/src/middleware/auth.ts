@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
+import { applyRLSContext } from './rls.js';
 import type { AuthRequest, JwtPayload } from '../types/index.js';
 
 // Tokens SSE (EventSource) se firman con JWT_SECRET pero deben servir ÚNICAMENTE
@@ -59,6 +60,8 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
       email: decoded.email,
     };
 
+    await applyRLSContext(decoded.userId);
+
     next();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
@@ -110,6 +113,7 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
         userId: decoded.userId,
         email: decoded.email,
       };
+      await applyRLSContext(decoded.userId);
     }
 
     next();

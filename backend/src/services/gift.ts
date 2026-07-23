@@ -68,57 +68,55 @@ export async function updateGift(
   giftId: string,
   data: { isClaimed?: boolean; claimedBy?: string | null },
 ) {
-  const [giftMeta] = await db
-    .select({ eventId: giftsTable.eventId })
-    .from(giftsTable)
-    .where(eq(giftsTable.id, giftId))
-    .limit(1);
-  if (giftMeta) await ensureEventNotFrozen(giftMeta.eventId);
-
-  const updateData: Record<string, unknown> = {};
-
-  if (data.isClaimed !== undefined) {
-    updateData.isClaimed = data.isClaimed;
-    if (data.isClaimed && !data.claimedBy) {
-      throw new ValidationError('Debes especificar quién reserva el regalo');
-    }
-  }
-
-  if (data.claimedBy !== undefined) {
-    updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
-  }
-
-  if (data.isClaimed === false) {
-    updateData.claimedBy = null;
-  }
-
-  const whereConditions = [eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)];
-  if (data.isClaimed === true) {
-    whereConditions.push(eq(giftsTable.isClaimed, false));
-  }
-
-  const [gift] = await db
-    .update(giftsTable)
-    .set(updateData)
-    .where(and(...whereConditions))
-    .returning();
-
-  if (!gift) {
-    const [existing] = await db
-      .select({ id: giftsTable.id, isClaimed: giftsTable.isClaimed })
+  return await db.transaction(async (tx) => {
+    const [giftMeta] = await tx
+      .select({ eventId: giftsTable.eventId, frozenAt: events.frozenAt })
       .from(giftsTable)
-      .where(eq(giftsTable.id, giftId))
+      .innerJoin(events, eq(giftsTable.eventId, events.id))
+      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
+      .for('update')
       .limit(1);
-    if (!existing) {
+
+    if (!giftMeta) throw new NotFoundError('Regalo no encontrado');
+    if (giftMeta.frozenAt) throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
+
+    const updateData: Record<string, unknown> = {};
+
+    if (data.isClaimed !== undefined) {
+      updateData.isClaimed = data.isClaimed;
+      if (data.isClaimed && !data.claimedBy) {
+        throw new ValidationError('Debes especificar quién reserva el regalo');
+      }
+    }
+
+    if (data.claimedBy !== undefined) {
+      updateData.claimedBy = data.claimedBy ? sanitize(data.claimedBy) : null;
+    }
+
+    if (data.isClaimed === false) {
+      updateData.claimedBy = null;
+    }
+
+    const whereConditions = [eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)];
+    if (data.isClaimed === true) {
+      whereConditions.push(eq(giftsTable.isClaimed, false));
+    }
+
+    const [gift] = await tx
+      .update(giftsTable)
+      .set(updateData)
+      .where(and(...whereConditions))
+      .returning();
+
+    if (!gift) {
+      if (data.isClaimed === true) {
+        throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
+      }
       throw new NotFoundError('Regalo no encontrado');
     }
-    if (data.isClaimed === true) {
-      throw new ValidationError('Este regalo ya ha sido reservado por otra persona');
-    }
-    throw new NotFoundError('Regalo no encontrado');
-  }
 
-  return gift;
+    return gift;
+  });
 }
 
 export async function claimGift(giftId: string, claimedBy: string) {

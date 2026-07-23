@@ -4,4 +4,8 @@ Disallow: /dashboard
 Disallow: /account
 Disallow: /event/
 Disallow: /onboarding
+Disallow: /statistics
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
 Sitemap: https://fiestaylista.com/sitemap.xml

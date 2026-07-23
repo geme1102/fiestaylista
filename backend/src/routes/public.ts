@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { sql, isNull } from 'drizzle-orm';
+import { sql, and, isNull, type SQL } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events } from '../db/schema.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -28,18 +28,35 @@ router.get('/public/stats', publicStatsLimiter, cacheControl(300), asyncHandler(
   });
 }));
 
-router.get('/public/events', publicStatsLimiter, cacheControl(3600), asyncHandler(async (_req, res) => {
-  const rows = await db
-    .select({ slug: events.slug, updatedAt: events.updatedAt })
-    .from(events)
-    .where(sql`${events.isActive} = true AND ${events.deletedAt} IS NULL AND ${events.status} = 'active'`)
-    .orderBy(events.createdAt)
-    .limit(500);
+router.get('/public/events', publicStatsLimiter, cacheControl(300), asyncHandler(async (req, res) => {
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
+  const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : null;
 
-  res.json(rows
-    .filter((r) => r.slug)
-    .map((r) => ({ slug: r.slug, updatedAt: r.updatedAt?.toISOString() ?? null })),
-  );
+  const conditions: SQL[] = [
+    sql`${events.isActive} = true`,
+    sql`${events.deletedAt} IS NULL`,
+    sql`${events.status} = 'active'`,
+  ];
+  if (cursor) {
+    conditions.push(sql`${events.createdAt} > ${cursor}::timestamptz`);
+  }
+
+  const rows = await db
+    .select({ slug: events.slug, updatedAt: events.updatedAt, createdAt: events.createdAt })
+    .from(events)
+    .where(and(...conditions))
+    .orderBy(events.createdAt)
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const result = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore && result.length > 0 ? result[result.length - 1].createdAt?.toISOString() : null;
+
+  res.json({
+    events: result.filter(r => r.slug).map(r => ({ slug: r.slug, updatedAt: r.updatedAt?.toISOString() ?? null })),
+    hasMore,
+    nextCursor,
+  });
 }));
 
 export default router;

@@ -103,6 +103,8 @@ function ScrollToTop() {
   return null;
 }
 
+const NOINDEX_PREFIXES = ['/event/', '/dashboard', '/account', '/statistics', '/onboarding', '/verify-email', '/forgot-password', '/reset-password'];
+
 function TitleUpdater() {
   const location = useLocation();
   const path = location.pathname;
@@ -164,7 +166,7 @@ function TitleUpdater() {
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="Fiesta y Lista — Crea tu lista de regalos para baby showers, bodas, cumpleaños y más" />
       <meta name="twitter:image" content="https://fiestaylista.com/og-image.png" />
-      <meta name="robots" content={isUnknown ? 'noindex, nofollow' : 'index, follow'} />
+      <meta name="robots" content={(isUnknown || NOINDEX_PREFIXES.some(p => path === p || path.startsWith(p))) ? 'noindex, nofollow' : 'index, follow'} />
       <link rel="canonical" href={`${window.location.origin}${canonicalPath}`} />
       <link rel="alternate" href={`${window.location.origin}${canonicalPath}`} hrefLang="es-CO" />
       {ES_TO_EN[canonicalPath] && (

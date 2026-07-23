@@ -155,6 +155,9 @@ export async function getEvent(eventId: string, userId: string, giftParams: Pagi
 }
 
 export async function getEventBySlug(eventSlug: string, giftParams: PaginationParams = {}, photoParams: PaginationParams = {}) {
+  // El campo `id` (UUID v4 aleatorio) se expone públicamente porque el frontend lo necesita
+  // para llamadas API posteriores (gifts, photos, messages, rsvp). Es seguro: los UUID v4
+  // no son secuenciales ni enumerables, y las rutas de admin validan ownership con req.user.
   const [event] = await db
     .select({
       id: eventsTable.id,

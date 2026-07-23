@@ -573,6 +573,12 @@ export default function EventGuest() {
 
           <div className={`text-center pt-8 border-t border-outline-variant ${easyReadMode ? 'text-on-surface-variant' : 'text-sm text-on-surface-variant'}`}>
             <p>Hecho por <Link to="/" className="text-primary hover:text-primary-fixed-dim font-medium">Fiesta y Lista</Link></p>
+            <div className="flex justify-center gap-4 mt-3 flex-wrap">
+              <Link to="/terminos-y-condiciones" className="hover:text-primary transition-colors">Términos</Link>
+              <Link to="/politica-de-privacidad" className="hover:text-primary transition-colors">Privacidad</Link>
+              <Link to="/politica-de-cookies" className="hover:text-primary transition-colors">Cookies</Link>
+              <Link to="/derechos-arco" className="hover:text-primary transition-colors">ARCO</Link>
+            </div>
           </div>
         </div>
 
