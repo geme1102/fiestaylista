@@ -472,11 +472,11 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
     }
 
     setSubmitting(true);
-    let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
     try {
+      let token = turnstileTokenRef.current;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
       await createPromise({
         cashFundId: fundId,
         contributorName: guestName!.trim(),
@@ -576,11 +576,11 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
 
   const handleReveal = async () => {
     setRevealLoading(true);
-    let token = revealTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => revealTokenRef.current);
-    }
     try {
+      let token = revealTokenRef.current;
+      if (!token) {
+        token = await waitForTurnstile(() => revealTokenRef.current);
+      }
       const { apiClient } = await import('../services/api');
       const res = await apiClient.post<{ bankPhone: string }>(
         `/api/events/${eventId}/cash-fund/reveal-phone`,

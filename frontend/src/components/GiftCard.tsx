@@ -52,11 +52,11 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
     if (!claimName.trim()) return;
 
     setClaiming(true);
-    let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
     try {
+      let token = turnstileTokenRef.current;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
       const res = await apiClient.put<{ claim: GiftClaim }>(`/api/events/${gift.eventId}/gifts/${gift.id}/group-claim`, {
         claimedBy: claimName.trim(),
         message: claimMessage.trim() || undefined,

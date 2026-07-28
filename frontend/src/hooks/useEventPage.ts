@@ -192,8 +192,14 @@ export function useEventPage() {
     }
 
     let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
+    try {
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
+    } catch (err) {
+      setClaimingId(null);
+      showToast(err instanceof Error ? err.message : 'Error de validación', 'error');
+      return;
     }
 
     setClaimingId(giftId);

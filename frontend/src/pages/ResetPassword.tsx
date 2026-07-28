@@ -47,17 +47,17 @@ export default function ResetPassword() {
       return;
     }
 
-    let token = turnstileToken;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
-    if (!token) {
-      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
-      return;
-    }
-
     setLoading(true);
     try {
+      let token = turnstileToken;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
+      if (!token) {
+        showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+        return;
+      }
+
       await apiClient.post('/api/auth/reset-password', { token: resetToken, password, turnstileToken: token ?? undefined });
       setDone(true);
       showToast('Contraseña actualizada correctamente', 'success');

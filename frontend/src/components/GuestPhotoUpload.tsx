@@ -51,13 +51,12 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
     const file = fileInputRef.current?.files?.[0];
     if (!file) return;
 
-    let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
-
     setUploading(true);
     try {
+      let token = turnstileTokenRef.current;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
       const compressed = await compressImage(file);
 
       const formData = new FormData();
@@ -84,16 +83,19 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       const { url } = await res.json();
       resetTurnstile();
 
-      let photoToken = turnstileTokenRef.current;
-      if (!photoToken) {
-        photoToken = await waitForTurnstile(() => turnstileTokenRef.current);
+      try {
+        let photoToken = turnstileTokenRef.current;
+        if (!photoToken) {
+          photoToken = await waitForTurnstile(() => turnstileTokenRef.current);
+        }
+        await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
+          url,
+          caption: caption.trim() || undefined,
+          turnstileToken: photoToken ?? undefined,
+        });
+      } catch (e) {
+        throw e;
       }
-
-      await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
-        url,
-        caption: caption.trim() || undefined,
-        turnstileToken: photoToken ?? undefined,
-      });
 
       showToast('Foto subida 📸 ¡Gracias!', 'success');
       setShowForm(false);

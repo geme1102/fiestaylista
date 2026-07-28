@@ -79,23 +79,23 @@ export default function Register() {
 
     setLoading(true);
 
-    let token = turnstileToken;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
-    if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
-      setLoading(false);
-      showToast('Verificación de seguridad pendiente. Intenta de nuevo en un momento.', 'info');
-      resetTurnstile();
-      return;
-    }
-
-    safetyTimerRef.current = setTimeout(() => {
-      setLoading(false);
-      showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
-    }, 15000);
-
     try {
+      let token = turnstileToken;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
+      if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+        setLoading(false);
+        showToast('Verificación de seguridad pendiente. Intenta de nuevo en un momento.', 'info');
+        resetTurnstile();
+        return;
+      }
+
+      safetyTimerRef.current = setTimeout(() => {
+        setLoading(false);
+        showToast('El servicio está tardando más de lo esperado. Intenta de nuevo.', 'info');
+      }, 15000);
+
       await register(email, password, name, token ?? undefined);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       navigatedRef.current = true;

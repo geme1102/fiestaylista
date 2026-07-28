@@ -52,11 +52,11 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
       return;
     }
     setSubmitting(true);
-    let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
     try {
+      let token = turnstileTokenRef.current;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
       const res = await apiClient.post<{ message: Message }>(`/api/events/${eventId}/messages`, {
         authorName: guestName.trim(),
         message: newMessage.trim(),

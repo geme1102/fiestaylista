@@ -31,17 +31,17 @@ export default function ForgotPassword() {
       return;
     }
 
-    let token = turnstileToken;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
-    if (!token) {
-      showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
-      return;
-    }
-
     setLoading(true);
     try {
+      let token = turnstileToken;
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
+      if (!token) {
+        showToast('Verificación de seguridad no disponible. Desactiva tu bloqueador de anuncios o intenta con otro navegador.', 'error');
+        return;
+      }
+
       await apiClient.post('/api/auth/forgot-password', { email: email.trim(), turnstileToken: token ?? undefined });
       setSent(true);
     } catch (err) {

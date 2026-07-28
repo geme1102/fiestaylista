@@ -317,7 +317,11 @@ export default function Account() {
                               if (!turnstileReady) {
                                 showToast('Verificando que no eres un robot...', 'info');
                               }
-                              token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
+                              try {
+                                token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
+                              } catch (err) {
+                                token = null;
+                              }
                               if (!token && turnstileError) {
                                 showToast(`Verificación de seguridad no disponible. ${turnstileError} Puedes continuar, pero si el problema persiste desactiva tu bloqueador de anuncios.`, 'info');
                               } else if (!token) {
