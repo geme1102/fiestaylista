@@ -47,6 +47,21 @@ function validateConfig(): void {
     failConfig('DATABASE_URL debe comenzar con postgresql://');
   }
 
+  // Detectar Neon y verificar PgBouncer para escalabilidad horizontal
+  try {
+    const dbHost = new URL(process.env.DATABASE_URL).hostname;
+    const isNeon = dbHost.endsWith('.neon.tech');
+    const hasPooler = dbHost.includes('-pooler') || process.env.DATABASE_URL.includes('pgbouncer=true');
+    if (isNeon && !hasPooler) {
+      console.warn('[config] ════════════════════════════════════════════════════════════');
+      console.warn('[config]  DATABASE_URL apunta a Neon sin PgBouncer configurado.');
+      console.warn('[config]  Para escalar a múltiples instancias Railway, agrega:');
+      console.warn('[config]    ?pgbouncer=true al final de DATABASE_URL');
+      console.warn('[config]  O usa el host -pooler de Neon.');
+      console.warn('[config] ════════════════════════════════════════════════════════════');
+    }
+  } catch {} // Si la URL es inválida, el failConfig de abajo lo atrapa
+
   if (!process.env.JWT_SECRET) {
     failConfig('JWT_SECRET no está configurado');
   }
@@ -99,6 +114,13 @@ function validateConfig(): void {
     if (!process.env.FRONTEND_URL.startsWith('http://') && !process.env.FRONTEND_URL.startsWith('https://')) {
       failConfig('FRONTEND_URL debe comenzar con http:// o https://');
     }
+
+    // Verificar configuración de SSL/TLS en Cloudflare (dashboard, no código)
+    console.warn('[config] ════════════════════════════════════════════════════════════');
+    console.warn('[config]  RECORDATORIO: Verificar en Cloudflare Dashboard SSL/TLS:');
+    console.warn('[config]   • Modo → "Full (Strict)"');
+    console.warn('[config]   • Minimum TLS Version → TLS 1.3');
+    console.warn('[config] ════════════════════════════════════════════════════════════');
 
     const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
     const present = cloudKeys.filter(k => process.env[k]);
@@ -163,7 +185,7 @@ export const config = {
   ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean),
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   SENTRY_DSN: process.env.SENTRY_DSN || '',
-  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '10', 10),
+  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '5', 10),
   CLUSTER_WORKERS: parseInt(process.env.CLUSTER_WORKERS || '0', 10),
   PAYMENT_RATE_LIMIT: parseInt(process.env.PAYMENT_RATE_LIMIT || '10', 10),
   WEBHOOK_RATE_LIMIT: parseInt(process.env.WEBHOOK_RATE_LIMIT || '300', 10),

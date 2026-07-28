@@ -1,13 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useLockedBody } from '../hooks/useLockedBody';
+import Sheet from './ui/Sheet';
 
 interface WelcomeModalProps {
+  open: boolean;
   hasEvents: boolean;
   onCreateEvent: () => void;
-  onComplete: () => void;
+  onClose: () => void;
 }
 
 const STEPS = [
@@ -62,10 +61,9 @@ function StepIcon({ icon, index, reduceMotion }: { icon: string; index: number; 
   );
 }
 
-export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeModalProps) {
+export function WelcomeModal({ open, hasEvents, onCreateEvent, onClose }: WelcomeModalProps) {
   const [currentStep, setStep] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [exiting, setExiting] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   const isLast = currentStep === STEPS.length - 1;
@@ -76,25 +74,14 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
     setStep((s) => s + 1);
   }, [isLast]);
 
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => {
-    return () => timersRef.current.forEach(clearTimeout);
-  }, []);
-
   const handleSkip = useCallback(() => {
-    setExiting(true);
-    timersRef.current.push(setTimeout(onComplete, 300));
-  }, [onComplete]);
+    onClose();
+  }, [onClose]);
 
   const handleFinish = useCallback(() => {
-    if (exiting) return;
-    setExiting(true);
-    if (!hasEvents) {
-      onCreateEvent();
-    }
-    timersRef.current.push(setTimeout(onComplete, 300));
-  }, [hasEvents, onCreateEvent, onComplete, exiting]);
+    if (!hasEvents) onCreateEvent();
+    onClose();
+  }, [hasEvents, onCreateEvent, onClose]);
 
   const slideVariants = shouldReduceMotion ? {
     enter: { opacity: 0 },
@@ -108,94 +95,67 @@ export function WelcomeModal({ hasEvents, onCreateEvent, onComplete }: WelcomeMo
 
   const stepData = STEPS[currentStep];
 
-  const dialogRef = useFocusTrap(!exiting);
-  useLockedBody(!exiting);
-
-  return createPortal(
-    <motion.div
-      ref={dialogRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) handleSkip(); }}
-    >
-      <motion.div
-        initial={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
-        animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
-        exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
-        transition={shouldReduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 28, stiffness: 300 }}
-        className="relative w-full max-w-lg bg-surface rounded-t-[32px] sm:rounded-3xl p-8 pb-safe-lg sm:p-10 shadow-2xl max-h-[90dvh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Sheet open={open} onClose={handleSkip} ariaLabel="Introducción a la aplicación" className="p-8 pb-safe-lg sm:p-10">
+      <button
+        onClick={handleSkip}
+        className="absolute top-4 right-4 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant/50 hover:text-on-surface-variant rounded-full hover:bg-surface-container-high transition-colors"
+        aria-label="Cerrar introducción"
       >
-        {/* Drag handle (mobile) */}
-        <div className="w-12 h-1.5 bg-on-surface-variant/20 rounded-full mx-auto mb-6 sm:hidden" />
+        <span className="material-symbols-outlined text-xl">close</span>
+      </button>
 
-        {/* Close button */}
+      <div className="flex flex-col items-center text-center min-h-[300px] sm:min-h-[280px]">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentStep}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="flex flex-col items-center"
+          >
+            <StepIcon icon={stepData.icon} index={currentStep} reduceMotion={shouldReduceMotion ?? false} />
+            <h2 className="text-xl font-bold text-on-surface font-outfit mt-6 mb-3">
+              {stepData.title}
+            </h2>
+            <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
+              {stepData.body}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center justify-between mt-8 pt-4 border-t border-outline-variant/20">
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant/50 hover:text-on-surface-variant rounded-full hover:bg-surface-container-high transition-colors"
-          aria-label="Cerrar introducción"
+          className="text-xs font-semibold text-on-surface-variant/50 hover:text-on-surface-variant transition-colors px-2 py-2 min-h-[44px]"
         >
-          <span className="material-symbols-outlined text-xl">close</span>
+          Saltar introducción
         </button>
 
-        {/* Step content */}
-        <div className="flex flex-col items-center text-center min-h-[300px] sm:min-h-[280px]">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentStep}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col items-center"
+        <div className="flex items-center gap-4">
+          <Dots total={STEPS.length} current={currentStep} />
+
+          {!isLast ? (
+            <button
+              onClick={handleNext}
+              className="px-6 py-2.5 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-shadow"
             >
-              <StepIcon icon={stepData.icon} index={currentStep} reduceMotion={shouldReduceMotion ?? false} />
-              <h2 className="text-xl font-bold text-on-surface font-outfit mt-6 mb-3">
-                {stepData.title}
-              </h2>
-              <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                {stepData.body}
-              </p>
-            </motion.div>
-          </AnimatePresence>
+              Siguiente
+            </button>
+          ) : (
+            <button
+              onClick={handleFinish}
+              className="px-6 py-2.5 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-xl transition-shadow"
+            >
+              {hasEvents ? '¡Empezar a explorar!' : 'Crear mi primer evento'}
+            </button>
+          )}
         </div>
-
-        {/* Footer: dots + navigation */}
-        <div className="flex items-center justify-between mt-8 pt-4 border-t border-outline-variant/20">
-          <button
-            onClick={handleSkip}
-            className="text-xs font-semibold text-on-surface-variant/50 hover:text-on-surface-variant transition-colors px-2 py-2 min-h-[44px]"
-          >
-            Saltar introducción
-          </button>
-
-          <div className="flex items-center gap-4">
-            <Dots total={STEPS.length} current={currentStep} />
-
-            {!isLast ? (
-              <button
-                onClick={handleNext}
-                className="px-6 py-2.5 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-shadow"
-              >
-                Siguiente
-              </button>
-            ) : (
-              <button
-                onClick={handleFinish}
-                className="px-6 py-2.5 min-h-[44px] bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-xl transition-shadow"
-              >
-                {hasEvents ? '¡Empezar a explorar!' : 'Crear mi primer evento'}
-              </button>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>,
-    document.body,
+      </div>
+    </Sheet>
   );
 }

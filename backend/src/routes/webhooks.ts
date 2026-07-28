@@ -110,38 +110,45 @@ router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHan
     return;
   }
 
-  if (!info.topic || !info.id) {
+  const topic = info.topic;
+  const id = info.id;
+
+  if (!topic || !id) {
     res.status(200).json({ received: true });
     return;
   }
 
-  try {
-    if (info.topic === 'payment') {
-      await mpWebhooks.handlePaymentNotification(info.id);
-    } else if (info.topic === 'preapproval' || info.topic === 'subscription') {
-      await mpWebhooks.handleSubscriptionNotification(info.id);
-    }
+  // Responder 200 inmediato — Mercado Pago espera confirmación rápida
+  res.status(200).json({ received: true });
 
-    res.status(200).json({ received: true });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    log.error({ error: errorMessage }, 'Error:');
-
+  // Procesar en segundo plano, no bloquear la respuesta
+  const processWebhook = async () => {
     try {
-      await db.insert(failedWebhooks).values({
-        topic: info.topic,
-        resourceId: info.id,
-        errorMessage,
-        retryCount: 0,
-        lastAttemptAt: new Date(),
-        nextRetryAt: new Date(Date.now() + 60 * 1000),
-      });
-    } catch (dbError) {
-      log.error({ err: dbError }, 'Error guardando failed webhook:');
-    }
+      if (topic === 'payment') {
+        await mpWebhooks.handlePaymentNotification(id);
+      } else if (topic === 'preapproval' || topic === 'subscription') {
+        await mpWebhooks.handleSubscriptionNotification(id);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log.error({ error: errorMessage }, 'Error:');
 
-    res.status(200).json({ received: true });
-  }
+      try {
+        await db.insert(failedWebhooks).values({
+          topic,
+          resourceId: id,
+          errorMessage,
+          retryCount: 0,
+          lastAttemptAt: new Date(),
+          nextRetryAt: new Date(Date.now() + 60 * 1000),
+        });
+      } catch (dbError) {
+        log.error({ err: dbError }, 'Error guardando failed webhook:');
+      }
+    }
+  };
+
+  processWebhook();
 }));
 
 export default router;

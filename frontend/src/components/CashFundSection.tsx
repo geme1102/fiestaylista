@@ -5,8 +5,7 @@ import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { formatCOP } from '../utils/format';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useLockedBody } from '../hooks/useLockedBody';
+import Sheet from './ui/Sheet';
 import { Skeleton } from './ui/Skeleton';
 import type { CashFund, CashContribution } from '../types';
 
@@ -154,12 +153,28 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               Activar gratis
             </button>
           </div>
-          {boostModal && (
-            <>
-              <div ref={boostTurnstileRef} className="hidden" />
-              <BoostModal onConfirm={handleBoost} onClose={() => setBoostModal(false)} loading={boostLoading} />
-            </>
-          )}
+          {boostModal && <div ref={boostTurnstileRef} className="hidden" />}
+          <Sheet open={boostModal} onClose={() => setBoostModal(false)} ariaLabel="Activar Lluvia de Sobres">
+            <div className="p-6 pb-safe-lg">
+              <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
+              <p className="text-sm text-on-surface-variant mb-4">
+                Activa el Cash Fund para este evento durante 30 días <strong className="text-on-surface">gratis</strong>.
+              </p>
+              <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
+                <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
+                <li className="flex items-center gap-2">✅ 3x más visitas en tu lista</li>
+                <li className="flex items-center gap-2">✅ Sin necesidad de suscripción mensual</li>
+              </ul>
+              <div className="flex gap-3">
+                <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleBoost} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-[#994715] to-[#833e12] rounded-xl hover:shadow-lg btn-gpu disabled:opacity-50 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface">
+                  {boostLoading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
+                </button>
+              </div>
+            </div>
+          </Sheet>
         </section>
       );
     }
@@ -648,39 +663,6 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
           </button>
         )}
       </div>
-    </div>
-  );
-}
-
-function BoostModal({ onConfirm, onClose, loading }: { onConfirm: () => void; onClose: () => void; loading: boolean }) {
-  const boostRef = useFocusTrap(true);
-  useLockedBody(true);
-  return (
-    <div ref={boostRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
-      <motion.div
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-        className="w-full sm:max-w-md bg-surface p-6 pb-safe-lg rounded-t-2xl sm:rounded-2xl shadow-xl"
-      >
-        <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
-        <p className="text-sm text-on-surface-variant mb-4">
-          Activa el Cash Fund para este evento durante 30 días <strong className="text-on-surface">gratis</strong>.
-        </p>
-        <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
-          <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
-          <li className="flex items-center gap-2">✅ 3x más visitas en tu lista</li>
-          <li className="flex items-center gap-2">✅ Sin necesidad de suscripción mensual</li>
-        </ul>
-        <div className="flex gap-3">
-          <button onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
-            Cancelar
-          </button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-[#994715] to-[#833e12] rounded-xl hover:shadow-lg btn-gpu disabled:opacity-50 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface">
-            {loading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
-          </button>
-        </div>
-      </motion.div>
     </div>
   );
 }

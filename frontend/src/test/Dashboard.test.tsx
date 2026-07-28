@@ -161,7 +161,7 @@ describe('Dashboard', () => {
     await waitFor(() => expect(screen.getByTestId('create-event-baby_shower')).toBeTruthy());
 
     fireEvent.click(screen.getByTestId('create-event-baby_shower'));
-    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: /Crear nuevo evento/i })).toBeTruthy();
   });
 
   it('shows upgrade CTA when at event limit', async () => {

@@ -15,8 +15,6 @@ import {
   ChevronRight, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useLockedBody } from '../hooks/useLockedBody';
 import { useDebounce } from '../hooks/useDebounce';
 import { apiClient } from '../services/api';
 import { getCashFund, boostEvent } from '../services/cashFund';
@@ -94,8 +92,6 @@ export default function EventAdmin() {
   const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
-  const editDialogRef = useFocusTrap(!!editingDetails);
-  const boostDialogRef = useFocusTrap(!!boostModal);
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
   const boostTurnstileTokenRef = useRef(boostTurnstileToken);
   useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
@@ -104,8 +100,6 @@ export default function EventAdmin() {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
-
-  useLockedBody(!!editingDetails || !!boostModal);
 
   const isBoosted = useMemo(() =>
     !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
@@ -882,7 +876,6 @@ onClick={() => {
             locationDraft={locationDraft}
             noteDraft={noteDraft}
             updatingDetails={updatingDetails}
-            dialogRef={editDialogRef}
             onTitleChange={setTitleDraft}
             onTypeChange={setTypeDraft}
             onDateChange={setDateDraft}
@@ -895,18 +888,12 @@ onClick={() => {
       </AnimatePresence>
 
       <div ref={boostTurnstileRef} className="fixed bottom-4 right-4 pointer-events-none -z-10" />
-      <AnimatePresence>
-        {boostModal && (
-          <BoostModal
-            key="boost"
-            open={boostModal}
-            loading={boostLoading}
-            dialogRef={boostDialogRef}
-            onConfirm={handleBoost}
-            onClose={() => setBoostModal(false)}
-          />
-        )}
-      </AnimatePresence>
+      <BoostModal
+        open={boostModal}
+        loading={boostLoading}
+        onConfirm={handleBoost}
+        onClose={() => setBoostModal(false)}
+      />
 
       {/* Toggle Confirm Modal */}
       <AnimatePresence>

@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useLockedBody } from '../hooks/useLockedBody';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -19,6 +17,7 @@ import { cn } from '../utils/cn';
 import { completeWelcome } from '../services/onboarding';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { WelcomeModal } from '../components/WelcomeModal';
+import Sheet from '../components/ui/Sheet';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import SubscriptionBanners from '../components/dashboard/SubscriptionBanners';
 
@@ -488,18 +487,29 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {showCreateModal && (
-        <AnimatePresence>
-          <Modal onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }} reduceMotion={shouldReduceMotion ?? false}>
-            <CreateForm
-              formData={formData}
-              setFormData={setFormData}
-              creating={creating}
-              handleCreate={handleCreate}
-            />
-          </Modal>
-        </AnimatePresence>
-      )}
+      <Sheet
+        open={showCreateModal}
+        onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
+        ariaLabel="Crear nuevo evento"
+        className="p-8 pb-safe-lg"
+      >
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-xl font-bold text-on-surface font-outfit">Crear nuevo evento</h2>
+          <button
+            onClick={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-surface-variant hover:text-on-surface-variant rounded-full hover:bg-surface-container-high transition-colors"
+            aria-label="Cerrar modal"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <CreateForm
+          formData={formData}
+          setFormData={setFormData}
+          creating={creating}
+          handleCreate={handleCreate}
+        />
+      </Sheet>
 
       <AnimatePresence>
         {showFab && eventCount < limits.maxEvents && (
@@ -518,16 +528,12 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showWelcome && (
-          <WelcomeModal
-            key="welcome"
-            hasEvents={events.length > 0}
-            onCreateEvent={handleCreateFromWelcome}
-            onComplete={handleCompleteWelcome}
-          />
-        )}
-      </AnimatePresence>
+      <WelcomeModal
+        open={showWelcome}
+        hasEvents={events.length > 0}
+        onCreateEvent={handleCreateFromWelcome}
+        onClose={handleCompleteWelcome}
+      />
     </div>
   );
 
@@ -694,53 +700,5 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
         </div>
       </details>
     </form>
-  );
-}
-
-function Modal({ children, onClose, reduceMotion }: { children: React.ReactNode; onClose: () => void; reduceMotion: boolean }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useFocusTrap(true);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo(0, 0);
-  }, []);
-
-  useLockedBody(true);
-
-  return (
-    <motion.div
-      ref={dialogRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Crear nuevo evento"
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
-    >
-      <motion.div
-        ref={scrollRef}
-        initial={reduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
-        animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
-        exit={reduceMotion ? { opacity: 0 } : { y: '100%', opacity: 0 }}
-        transition={reduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative w-full max-w-xl bg-surface rounded-t-[32px] sm:rounded-3xl p-8 pb-safe-lg shadow-2xl max-h-[90dvh] overflow-y-auto"
-      >
-        <div className="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto mb-6 sm:hidden" />
-        <div className="flex justify-between items-start mb-6">
-          <h2 className="text-xl font-bold text-on-surface font-outfit">Crear nuevo evento</h2>
-          <button
-            onClick={onClose}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-surface-variant hover:text-on-surface-variant rounded-full hover:bg-surface-container-high transition-colors"
-            aria-label="Cerrar modal"
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        {children}
-      </motion.div>
-    </motion.div>
   );
 }

@@ -214,7 +214,7 @@ export function emitCashContribution(data: CashContributionEvent): void {
 }
 
 // SSE scavenger: cleanup abandoned connections + retry buffer
-const SSE_SCAVENGER_INTERVAL_MS = 60 * 1000;
+const SSE_SCAVENGER_INTERVAL_MS = 15 * 1000;
 const SSE_HALF_OPEN_TIMEOUT_MS = 90 * 1000;
 let scavengerTimer: ReturnType<typeof setInterval> | null = null;
 
