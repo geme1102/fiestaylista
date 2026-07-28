@@ -98,12 +98,6 @@ export async function rotateRefreshToken(
         rotatedFrom: claimed.id,
       });
 
-      // Increment tokenVersion for instant access-token revocation
-      await tx
-        .update(users)
-        .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
-        .where(eq(users.id, claimed.userId));
-
       // Cleanup old tokens
       await tx
         .delete(refreshTokens)
@@ -155,6 +149,12 @@ export async function rotateRefreshToken(
         .where(eq(refreshTokens.userId, existing.userId));
     }
 
+    // Invalidate current access tokens on reuse detection
+    await tx
+      .update(users)
+      .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+      .where(eq(users.id, existing.userId));
+
     throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
   });
 }
@@ -179,6 +179,10 @@ export async function revokeAllUserTokens(userId: string): Promise<void> {
     .update(refreshTokens)
     .set({ revoked: true })
     .where(eq(refreshTokens.userId, userId));
+  await db
+    .update(users)
+    .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+    .where(eq(users.id, userId));
 }
 
 export async function revokeTokenFamily(familyId: string, userId: string): Promise<void> {

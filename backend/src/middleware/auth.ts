@@ -124,10 +124,13 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
 
 export async function requireEmailVerified(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('Token de acceso requerido');
+    }
     const [user] = await db
       .select({ emailVerified: users.emailVerified })
       .from(users)
-      .where(eq(users.id, req.user!.userId))
+      .where(eq(users.id, req.user.userId))
       .limit(1);
 
     if (!user?.emailVerified) {

@@ -26,7 +26,7 @@ const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
    (API directa en Railway). Same-site usa SameSite=Lax (no bloqueado por ITP/webviews);
    cross-origin usa SameSite=None (requerido para cookies cross-site con credenciales). */
 function resolveSameSite(req: Request): 'lax' | 'none' {
-  if (process.env.NODE_ENV !== 'production') return 'lax';
+  if (config.NODE_ENV !== 'production') return 'lax';
   const origin = req.headers.origin;
   if (!origin) return 'lax';
   try {
@@ -38,7 +38,7 @@ function resolveSameSite(req: Request): 'lax' | 'none' {
 }
 
 function setRefreshCookie(req: Request, res: Response, refreshToken: string): void {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = config.NODE_ENV === 'production';
   const sameSite = resolveSameSite(req);
   res.cookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', refreshToken, {
     httpOnly: true,
@@ -117,28 +117,21 @@ router.post('/login', authLimiter, verifyTurnstileOptional, asyncHandlerWithVali
 }));
 
 router.post('/refresh', refreshLimiter, asyncHandler(async (req, res) => {
-  try {
-    if (req.headers['x-refresh-request'] !== 'true') {
-      throw new ValidationError('Token de refresco requerido');
-    }
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieName = isProduction ? '__Secure-refreshToken' : 'refreshToken';
-    const refreshToken = req.cookies?.[cookieName] ?? null;
-    if (!refreshToken) {
-      log.warn({ hasCookie: !!req.cookies?.[cookieName], origin: req.headers.origin }, 'Refresh sin token');
-      throw new UnauthorizedError('Token de refresco requerido');
-    }
-    const result = await authService.refreshToken(refreshToken);
-    setRefreshCookie(req, res, result.refreshToken);
-    const { refreshToken: _, ...safeResult } = result;
-    res.json(safeResult);
-  } catch (error) {
-    if (error instanceof ValidationError || error instanceof UnauthorizedError) {
-      throw error;
-    }
-    log.error({ err: error, method: req.method, path: req.path }, 'Error inesperado en refresh');
-    throw error;
+  if (req.headers['x-refresh-request'] !== 'true') {
+    log.warn({ method: req.method, path: req.path, origin: req.headers.origin }, 'Refresh sin header x-refresh-request');
+    throw new ValidationError('Encabezado de refresco requerido');
   }
+  const isProduction = config.NODE_ENV === 'production';
+  const cookieName = isProduction ? '__Secure-refreshToken' : 'refreshToken';
+  const refreshToken = req.cookies?.[cookieName] ?? null;
+  if (!refreshToken) {
+    log.warn({ hasCookie: !!req.cookies?.[cookieName], origin: req.headers.origin }, 'Refresh sin token');
+    throw new UnauthorizedError('Token de refresco requerido');
+  }
+  const result = await authService.refreshToken(refreshToken);
+  setRefreshCookie(req, res, result.refreshToken);
+  const { refreshToken: _, ...safeResult } = result;
+  res.json(safeResult);
 }));
 
 router.get('/me', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
@@ -190,7 +183,7 @@ router.patch('/welcome', requireAuth, apiLimiter, asyncHandler(async (req: AuthR
 }));
 
 router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = config.NODE_ENV === 'production';
   const sameSite = resolveSameSite(req);
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', {
     path: '/api/auth/refresh',

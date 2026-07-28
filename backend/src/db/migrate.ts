@@ -218,6 +218,15 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       END $$`,
     ],
   },
+  {
+    // Revierte audit_logs_immutable_trigger: rompe resetLockout/resetEmailLockout
+    // que hacen DELETE legítimo para limpiar intentos fallidos tras login exitoso.
+    name: 'remove_audit_logs_immutable_trigger',
+    statements: [
+      `DROP TRIGGER IF EXISTS audit_logs_immutable_trigger ON "audit_logs"`,
+      `DROP FUNCTION IF EXISTS prevent_audit_mutation`,
+    ],
+  },
   // Escalabilidad 100x: índices compuestos para queries de alta frecuencia
   {
     name: 'scalability_indexes_phase1',

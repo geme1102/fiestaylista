@@ -4,12 +4,12 @@ import { eq } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import { db, sql } from '../db/index.js';
 import { users, auditLogs } from '../db/schema.js';
-import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
+import { AppError, ConflictError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured } from './email.js';
 import { rotateRefreshToken, issueTokenPair, revokeAllUserTokens, hashToken } from './auth-tokens.js';
 export { revokeAllUserTokens } from './auth-tokens.js';
 import { createModuleLogger } from '../utils/logger.js';
-import { isLocked, recordFailedAttempt, resetLockout, isIpThrottled, recordEmailFailedAttempt, isEmailLocked, resetEmailLockout } from '../middleware/lockout.js';
+import { isLocked, resetLockout, isIpThrottled, recordEmailFailedAttempt, isEmailLocked, resetEmailLockout } from '../middleware/lockout.js';
 import { config } from '../config.js';
 
 const log = createModuleLogger('Auth');
@@ -181,7 +181,6 @@ export async function login(
 
   if (user.email.endsWith('@guest.fiestaylista.com')) {
     await bcrypt.compare(password, DUMMY_HASH);
-    recordFailedAttempt(user.id);
     await recordEmailFailedAttempt(emailLower, meta?.ipAddress ?? '');
     db.insert(auditLogs).values({
       userId: user.id,
@@ -198,7 +197,6 @@ export async function login(
   const isValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isValid) {
-    recordFailedAttempt(user.id);
     await recordEmailFailedAttempt(emailLower, meta?.ipAddress ?? '');
     db.insert(auditLogs).values({
       userId: user.id,
@@ -212,7 +210,7 @@ export async function login(
     throw new UnauthorizedError('Credenciales inválidas');
   }
 
-  resetLockout(user.id);
+  await resetLockout(user.id);
   // Reset email lockout on successful login
   await resetEmailLockout(emailLower);
   // Get current tokenVersion before issuing new tokens
@@ -237,7 +235,15 @@ export async function login(
     ...tokens,
   };
 } catch (error) {
-    log.error({ err: error, email }, 'Error inesperado en login:');
+    if (error instanceof AppError) {
+      if (error.statusCode >= 500) {
+        log.error({ err: error }, 'Error en login:');
+      } else {
+        log.warn({ err: error }, 'Intento de login fallido:');
+      }
+    } else {
+      log.error({ err: error }, 'Error inesperado en login:');
+    }
     throw error;
 }
 }

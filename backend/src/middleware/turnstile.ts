@@ -51,14 +51,17 @@ export async function verifyTurnstileOptional(req: Request, res: Response, next:
     if (!token) {
       // Sin token → aplicar rate limiter estricto como barrera anti-bot
       log.warn({ ip: req.ip, path: req.path }, 'Turnstile token ausente — aplicando rate limiter estricto');
+      res.setHeader('X-Turnstile-Status', 'bypassed');
       strictFallbackLimiter(req, res, next);
       return;
     }
 
     try {
       await verifyTurnstileToken(token, req.ip);
+      res.setHeader('X-Turnstile-Status', 'verified');
     } catch (err) {
       log.warn({ err, ip: req.ip, path: req.path }, 'Verificación Turnstile falló — aplicando rate limiter estricto');
+      res.setHeader('X-Turnstile-Status', 'failed');
       strictFallbackLimiter(req, res, next);
       return;
     }
