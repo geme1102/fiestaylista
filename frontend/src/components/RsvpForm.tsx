@@ -35,10 +35,11 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
     setSubmitting(true);
     setError('');
     let token = turnstileTokenRef.current;
-    if (!token) {
-      token = await waitForTurnstile(() => turnstileTokenRef.current);
-    }
     try {
+      if (!token) {
+        token = await waitForTurnstile(() => turnstileTokenRef.current);
+      }
+
       await apiClient.post(`/api/events/${eventId}/rsvp`, {
         name: guestName.trim(),
         companions,

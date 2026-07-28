@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { config } from '../config.js';
 import { ValidationError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { strictFallbackLimiter } from './rateLimit.js';
 
 const log = createModuleLogger('Turnstile');
 
@@ -34,7 +35,7 @@ export async function verifyTurnstile(req: Request, _res: Response, next: NextFu
   }
 }
 
-export async function verifyTurnstileOptional(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function verifyTurnstileOptional(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const token = req.body?.turnstileToken;
 
@@ -48,15 +49,18 @@ export async function verifyTurnstileOptional(req: Request, _res: Response, next
     }
 
     if (!token) {
-      log.warn({ ip: req.ip, path: req.path }, 'Turnstile token ausente — rate limiter activo como fallback');
-      next();
+      // Sin token → aplicar rate limiter estricto como barrera anti-bot
+      log.warn({ ip: req.ip, path: req.path }, 'Turnstile token ausente — aplicando rate limiter estricto');
+      strictFallbackLimiter(req, res, next);
       return;
     }
 
     try {
       await verifyTurnstileToken(token, req.ip);
     } catch (err) {
-      log.warn({ err, ip: req.ip, path: req.path }, 'Verificación Turnstile falló — continuando con rate limiter');
+      log.warn({ err, ip: req.ip, path: req.path }, 'Verificación Turnstile falló — aplicando rate limiter estricto');
+      strictFallbackLimiter(req, res, next);
+      return;
     }
     next();
   } catch (error) {

@@ -4,7 +4,6 @@ import helmet from 'helmet';
 
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
-import { v2 as cloudinary } from 'cloudinary';
 import { config } from './config.js';
 import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -13,8 +12,7 @@ import { cloudflareIP } from './middleware/cloudflare.js';
 import { isCloudflareIP, isPrivateOrLocal } from './middleware/cloudflare.js';
 import type { AppRequest } from './types/index.js';
 import * as Sentry from '@sentry/node';
-
-const sentryEnabled = !!config.SENTRY_DSN;
+import { initLoaders, isSentryEnabled, checkDatabase, checkCloudinary, checkMercadoPago, checkResend } from './loaders/index.js';
 
 import authRouter from './routes/auth.js';
 import eventsRouter from './routes/events.js';
@@ -34,33 +32,8 @@ import unsubscribeRouter from './routes/unsubscribe.js';
 import resendWebhookRouter from './routes/resendWebhook.js';
 
 export function createApp() {
-  if (sentryEnabled) {
-    try {
-      Sentry.init({
-        dsn: config.SENTRY_DSN,
-        environment: config.NODE_ENV,
-        tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 0,
-        beforeSend(event) {
-          const scrubKeys = ['payerEmail', 'hostPhone', 'bankPhone', 'contributorName', 'eventLocation', 'email', 'password', 'token', 'secret', 'authorization', 'cookie'];
-          const scrub = (obj: unknown) => {
-            if (!obj || typeof obj !== 'object') return;
-            for (const key of Object.keys(obj as Record<string, unknown>)) {
-              const lower = key.toLowerCase();
-              if (scrubKeys.some(k => lower.includes(k))) {
-                (obj as Record<string, unknown>)[key] = '[REDACTED]';
-              } else {
-                scrub((obj as Record<string, unknown>)[key]);
-              }
-            }
-          };
-          scrub(event);
-          return event;
-        },
-      });
-    } catch (e) {
-      console.error('[sentry] Error inicializando Sentry:', e);
-    }
-  }
+  // Inicializar servicios externos (Sentry, Cloudinary, etc.)
+  initLoaders();
 
   const app = express();
 
@@ -174,63 +147,21 @@ export function createApp() {
   });
 
   app.get('/api/health/ready', async (_req, res) => {
-    let overall: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    const checks: Record<string, { status: string; configured?: boolean }> = {};
+    const checks = {
+      database: await checkDatabase(),
+      mercadopago: checkMercadoPago(),
+      cloudinary: checkCloudinary(),
+      resend: checkResend(),
+    };
 
-    const dbStart = Date.now();
-    try {
-      const { sql } = await import('./db/index.js');
-      await sql`SELECT 1`;
-      checks.database = { status: 'ok', ...(Date.now() - dbStart > 0 && { latency: Date.now() - dbStart }) };
-    } catch {
-      checks.database = { status: 'error' };
-      overall = 'unhealthy';
-    }
-
-    if (config.MERCADO_PAGO_ACCESS_TOKEN) {
-      try {
-        const { MercadoPagoConfig } = await import('mercadopago');
-        new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
-        checks.mercadopago = { status: 'ok', configured: true };
-      } catch {
-        checks.mercadopago = { status: 'error', configured: false };
-        if (overall !== 'unhealthy') overall = 'degraded';
-      }
-    } else {
-      checks.mercadopago = { status: 'not_configured', configured: false };
-      if (overall !== 'unhealthy') overall = 'degraded';
-    }
-
-    try {
-      cloudinary.config({
-        cloud_name: config.CLOUDINARY_CLOUD_NAME || undefined,
-        api_key: config.CLOUDINARY_API_KEY || undefined,
-        api_secret: config.CLOUDINARY_API_SECRET || undefined,
-      });
-      const cfg = cloudinary.config();
-      if (cfg.cloud_name) {
-        checks.cloudinary = { status: 'ok', configured: true };
-      } else {
-        checks.cloudinary = { status: 'not_configured', configured: false };
-        if (overall !== 'unhealthy') overall = 'degraded';
-      }
-    } catch {
-      checks.cloudinary = { status: 'error', configured: false };
-      if (overall !== 'unhealthy') overall = 'degraded';
-    }
-
-    if (config.RESEND_API_KEY) {
-      checks.resend = { status: 'ok', configured: true };
-    } else {
-      checks.resend = { status: 'not_configured', configured: false };
-      if (overall !== 'unhealthy') overall = 'degraded';
-    }
+    const overall = checks.database.status === 'error'
+      ? 'unhealthy'
+      : Object.values(checks).some(c => c.status !== 'ok')
+        ? 'degraded'
+        : 'healthy';
 
     const statusCode = overall === 'unhealthy' ? 503 : 200;
-    res.status(statusCode).json({
-      status: overall,
-      checks,
-    });
+    res.status(statusCode).json({ status: overall, checks });
   });
 
   app.use('/uploads', express.static('uploads', { maxAge: '1y', immutable: true }));
@@ -252,7 +183,7 @@ export function createApp() {
     res.status(404).json({ error: 'Ruta no encontrada', errorId: randomUUID() });
   });
 
-  if (sentryEnabled) {
+  if (isSentryEnabled()) {
     Sentry.setupExpressErrorHandler(app);
   }
   app.use(errorHandler);

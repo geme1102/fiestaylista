@@ -165,3 +165,17 @@ export const createEventLimiter = rateLimit({
   keyGenerator,
   message: msg('Demasiados eventos creados. Intenta de nuevo en un minuto.'),
 });
+
+// Rate limiter ultra-estricto para endpoints que aceptan requests sin token Turnstile.
+// Actúa como barrera de seguridad cuando el captcha no se envía (posible bot).
+export const strictFallbackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => {
+    const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+    return `turnstile-fallback:${ip}`;
+  },
+  message: msg('Demasiados intentos sin verificación de seguridad. Intenta de nuevo en un minuto.'),
+});

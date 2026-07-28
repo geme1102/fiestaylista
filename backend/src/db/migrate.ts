@@ -3,151 +3,221 @@ import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Migrations');
 
-const COLUMN_MIGRATIONS: string[] = [
-  `ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp`,
+// Mapeo explícito: cada migración tiene un nombre estable y una o más sentencias SQL.
+// Los nombres DEBEN coincidir con los ya registrados en la tabla migration_journal
+// de producción para mantener retrocompatibilidad.
+interface MigrationEntry {
+  name: string;
+  statements: string[];
+}
 
-  `CREATE TABLE IF NOT EXISTS "guests" (
-    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
-    "name" text NOT NULL,
-    "email" text,
-    "phone" text,
-    "is_confirmed" boolean NOT NULL DEFAULT false,
-    "companions" integer NOT NULL DEFAULT 0,
-    "dietary_restrictions" text,
-    "message" text,
-    "created_at" timestamp DEFAULT now() NOT NULL
-  )`,
-  `CREATE INDEX IF NOT EXISTS "guests_event_id_idx" ON "guests"("event_id")`,
-  `CREATE INDEX IF NOT EXISTS "guests_event_id_confirmed_idx" ON "guests"("event_id", "is_confirmed")`,
-
-  `ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_phone" text`,
-  `ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_type" text`,
-
-  `ALTER TABLE "gifts" ADD COLUMN IF NOT EXISTS "is_group_gift" boolean NOT NULL DEFAULT false`,
-
-  `CREATE TABLE IF NOT EXISTS "gift_claims" (
-    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "gift_id" uuid NOT NULL REFERENCES "gifts"("id") ON DELETE CASCADE,
-    "claimed_by" text NOT NULL,
-    "message" text,
-    "created_at" timestamp DEFAULT now() NOT NULL
-  )`,
-  `CREATE INDEX IF NOT EXISTS "gift_claims_gift_id_idx" ON "gift_claims"("gift_id")`,
-
-  `CREATE TABLE IF NOT EXISTS "messages" (
-    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
-    "author_name" text NOT NULL,
-    "message" text NOT NULL,
-    "created_at" timestamp DEFAULT now() NOT NULL
-  )`,
-  `CREATE INDEX IF NOT EXISTS "messages_event_id_idx" ON "messages"("event_id")`,
-  `CREATE INDEX IF NOT EXISTS "messages_created_at_idx" ON "messages"("created_at")`,
-
-  `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "frozen_at" timestamp with time zone`,
-
-  // 0016: Ensure tier column has a CHECK constraint (solo si no existe)
-  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_tier_check') THEN ALTER TABLE "users" ADD CONSTRAINT "users_tier_check" CHECK (tier IN ('free'::text, 'pro'::text, 'pro_plus'::text)); END IF; END $$`,
-
-  `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "status" text NOT NULL DEFAULT 'active'`,
-  `ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "is_featured" boolean NOT NULL DEFAULT false`,
-  `CREATE INDEX IF NOT EXISTS "photos_is_featured_idx" ON "photos"("is_featured")`,
-
-  `CREATE INDEX IF NOT EXISTS "events_frozen_at_idx" ON "events"("frozen_at") WHERE "frozen_at" IS NOT NULL`,
-
-  `ALTER TABLE "consent_records" DROP CONSTRAINT IF EXISTS consent_records_user_id_fkey, ADD CONSTRAINT consent_records_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
-  `ALTER TABLE "consent_records" ALTER COLUMN "user_id" DROP NOT NULL`,
-  `ALTER TABLE "arco_requests" DROP CONSTRAINT IF EXISTS arco_requests_user_id_fkey, ADD CONSTRAINT arco_requests_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
-  `ALTER TABLE "arco_requests" ALTER COLUMN "user_id" DROP NOT NULL`,
-
-  `ALTER TABLE "pro_payments" DROP CONSTRAINT IF EXISTS pro_payments_user_id_fkey, ADD CONSTRAINT pro_payments_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
-  `ALTER TABLE "pro_payments" ALTER COLUMN "user_id" DROP NOT NULL`,
-
-  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_check" CHECK (amount > 0); END IF; END $$`,
-
-  // 0020: Add onboarding_completed column
-  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboarding_completed" boolean DEFAULT false`,
-  `UPDATE "users" SET "onboarding_completed" = false WHERE "onboarding_completed" IS NULL`,
-  `ALTER TABLE "users" ALTER COLUMN "onboarding_completed" SET NOT NULL`,
-
-  // 0021: Add welcome_tutorial_completed column
-  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "welcome_tutorial_completed" boolean DEFAULT false`,
-  `UPDATE "users" SET "welcome_tutorial_completed" = false WHERE "welcome_tutorial_completed" IS NULL`,
-  `ALTER TABLE "users" ALTER COLUMN "welcome_tutorial_completed" SET NOT NULL`,
-
-  // 0022: email_suppressions table for bounce/complaint handling
-  `CREATE TABLE IF NOT EXISTS "email_suppressions" (
-    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "email" text NOT NULL,
-    "reason" text NOT NULL,
-    "occurred_at" timestamptz DEFAULT now() NOT NULL
-  )`,
-  `CREATE UNIQUE INDEX IF NOT EXISTS "email_suppressions_email_unique_idx" ON "email_suppressions"("email")`,
-
-  `CREATE INDEX IF NOT EXISTS "event_views_viewed_at_idx" ON "event_views"("viewed_at")`,
-
-  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_max_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_max_check" CHECK (amount <= 500000); END IF; END $$`,
-
-  `CREATE INDEX IF NOT EXISTS "messages_event_id_created_at_idx" ON "messages"("event_id", "created_at")`,
-
-  `CREATE UNIQUE INDEX IF NOT EXISTS "guests_event_id_name_unique_idx" ON "guests"("event_id", "name")`,
-
-  `CREATE UNIQUE INDEX IF NOT EXISTS "subscriptions_mp_subscription_id_unique_idx" ON "subscriptions"("mp_subscription_id")`,
-
-  `DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'consent_records_immutable_trigger') THEN
-      CREATE OR REPLACE FUNCTION prevent_consent_mutation()
-      RETURNS TRIGGER AS $f$
-      BEGIN
-        RAISE EXCEPTION 'consent_records are immutable and cannot be modified or deleted';
-      END;
-      $f$ LANGUAGE plpgsql;
-      CREATE TRIGGER consent_records_immutable_trigger
-        BEFORE UPDATE OR DELETE ON "consent_records"
-        FOR EACH ROW EXECUTE FUNCTION prevent_consent_mutation();
-    END IF;
-  END $$`,
-
-  `DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_logs_immutable_trigger') THEN
-      CREATE OR REPLACE FUNCTION prevent_audit_mutation()
-      RETURNS TRIGGER AS $f$
-      BEGIN
-        RAISE EXCEPTION 'audit_logs are immutable and cannot be modified or deleted';
-      END;
-      $f$ LANGUAGE plpgsql;
-      CREATE TRIGGER audit_logs_immutable_trigger
-        BEFORE UPDATE OR DELETE ON "audit_logs"
-        FOR EACH ROW EXECUTE FUNCTION prevent_audit_mutation();
-    END IF;
-  END $$`,
-];
-
-// Stable names matching COLUMN_MIGRATIONS order — new migrations must append here + to COLUMN_MIGRATIONS.
-const COLUMN_MIGRATION_NAMES = [
-  'photos_deleted_at',
-  'guests_table',
-  'cash_funds_bank_fields',
-  'gifts_is_group_gift',
-  'gift_claims_table',
-  'messages_table',
-  'events_frozen_at',
-  'users_tier_check',
-  'events_status_photos',
-  'events_frozen_at_idx',
-  'consent_arco_pro_fk',
-  'cash_contributions_amount_check',
-  'onboarding_completed',
-  'welcome_tutorial_completed',
-  'email_suppressions',
-  'event_views_viewed_at_idx',
-  'cash_contributions_amount_max_check',
-  'messages_event_id_created_at_idx',
-  'guests_event_id_name_unique_idx',
-  'subscriptions_mp_subscription_id_unique_idx',
-  'consent_records_immutable_trigger',
-  'audit_logs_immutable_trigger',
+const COLUMN_MIGRATIONS: MigrationEntry[] = [
+  {
+    name: 'photos_deleted_at',
+    statements: [
+      `ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp`,
+    ],
+  },
+  {
+    name: 'guests_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "guests" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "name" text NOT NULL,
+        "email" text,
+        "phone" text,
+        "is_confirmed" boolean NOT NULL DEFAULT false,
+        "companions" integer NOT NULL DEFAULT 0,
+        "dietary_restrictions" text,
+        "message" text,
+        "created_at" timestamp DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "guests_event_id_idx" ON "guests"("event_id")`,
+      `CREATE INDEX IF NOT EXISTS "guests_event_id_confirmed_idx" ON "guests"("event_id", "is_confirmed")`,
+    ],
+  },
+  {
+    name: 'cash_funds_bank_fields',
+    statements: [
+      `ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_phone" text`,
+      `ALTER TABLE "cash_funds" ADD COLUMN IF NOT EXISTS "bank_type" text`,
+    ],
+  },
+  {
+    name: 'gifts_is_group_gift',
+    statements: [
+      `ALTER TABLE "gifts" ADD COLUMN IF NOT EXISTS "is_group_gift" boolean NOT NULL DEFAULT false`,
+    ],
+  },
+  {
+    name: 'gift_claims_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "gift_claims" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "gift_id" uuid NOT NULL REFERENCES "gifts"("id") ON DELETE CASCADE,
+        "claimed_by" text NOT NULL,
+        "message" text,
+        "created_at" timestamp DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "gift_claims_gift_id_idx" ON "gift_claims"("gift_id")`,
+    ],
+  },
+  {
+    name: 'messages_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "messages" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "author_name" text NOT NULL,
+        "message" text NOT NULL,
+        "created_at" timestamp DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "messages_event_id_idx" ON "messages"("event_id")`,
+      `CREATE INDEX IF NOT EXISTS "messages_created_at_idx" ON "messages"("created_at")`,
+    ],
+  },
+  {
+    name: 'events_frozen_at',
+    statements: [
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "frozen_at" timestamp with time zone`,
+    ],
+  },
+  {
+    // 0016: Ensure tier column has a CHECK constraint (solo si no existe)
+    name: 'users_tier_check',
+    statements: [
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_tier_check') THEN ALTER TABLE "users" ADD CONSTRAINT "users_tier_check" CHECK (tier IN ('free'::text, 'pro'::text, 'pro_plus'::text)); END IF; END $$`,
+    ],
+  },
+  {
+    name: 'events_status_photos',
+    statements: [
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "status" text NOT NULL DEFAULT 'active'`,
+      `ALTER TABLE "photos" ADD COLUMN IF NOT EXISTS "is_featured" boolean NOT NULL DEFAULT false`,
+      `CREATE INDEX IF NOT EXISTS "photos_is_featured_idx" ON "photos"("is_featured")`,
+    ],
+  },
+  {
+    name: 'events_frozen_at_idx',
+    statements: [
+      `CREATE INDEX IF NOT EXISTS "events_frozen_at_idx" ON "events"("frozen_at") WHERE "frozen_at" IS NOT NULL`,
+    ],
+  },
+  {
+    name: 'consent_arco_pro_fk',
+    statements: [
+      `ALTER TABLE "consent_records" DROP CONSTRAINT IF EXISTS consent_records_user_id_fkey, ADD CONSTRAINT consent_records_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+      `ALTER TABLE "consent_records" ALTER COLUMN "user_id" DROP NOT NULL`,
+      `ALTER TABLE "arco_requests" DROP CONSTRAINT IF EXISTS arco_requests_user_id_fkey, ADD CONSTRAINT arco_requests_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+      `ALTER TABLE "arco_requests" ALTER COLUMN "user_id" DROP NOT NULL`,
+      `ALTER TABLE "pro_payments" DROP CONSTRAINT IF EXISTS pro_payments_user_id_fkey, ADD CONSTRAINT pro_payments_user_id_fkey FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+      `ALTER TABLE "pro_payments" ALTER COLUMN "user_id" DROP NOT NULL`,
+    ],
+  },
+  {
+    name: 'cash_contributions_amount_check',
+    statements: [
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_check" CHECK (amount > 0); END IF; END $$`,
+    ],
+  },
+  {
+    // 0020: Add onboarding_completed column
+    name: 'onboarding_completed',
+    statements: [
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboarding_completed" boolean DEFAULT false`,
+      `UPDATE "users" SET "onboarding_completed" = false WHERE "onboarding_completed" IS NULL`,
+      `ALTER TABLE "users" ALTER COLUMN "onboarding_completed" SET NOT NULL`,
+    ],
+  },
+  {
+    // 0021: Add welcome_tutorial_completed column
+    name: 'welcome_tutorial_completed',
+    statements: [
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "welcome_tutorial_completed" boolean DEFAULT false`,
+      `UPDATE "users" SET "welcome_tutorial_completed" = false WHERE "welcome_tutorial_completed" IS NULL`,
+      `ALTER TABLE "users" ALTER COLUMN "welcome_tutorial_completed" SET NOT NULL`,
+    ],
+  },
+  {
+    // 0022: email_suppressions table for bounce/complaint handling
+    name: 'email_suppressions',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "email_suppressions" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "email" text NOT NULL,
+        "reason" text NOT NULL,
+        "occurred_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "email_suppressions_email_unique_idx" ON "email_suppressions"("email")`,
+    ],
+  },
+  {
+    name: 'event_views_viewed_at_idx',
+    statements: [
+      `CREATE INDEX IF NOT EXISTS "event_views_viewed_at_idx" ON "event_views"("viewed_at")`,
+    ],
+  },
+  {
+    name: 'cash_contributions_amount_max_check',
+    statements: [
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cash_contributions_amount_max_check') THEN ALTER TABLE "cash_contributions" ADD CONSTRAINT "cash_contributions_amount_max_check" CHECK (amount <= 500000); END IF; END $$`,
+    ],
+  },
+  {
+    name: 'messages_event_id_created_at_idx',
+    statements: [
+      `CREATE INDEX IF NOT EXISTS "messages_event_id_created_at_idx" ON "messages"("event_id", "created_at")`,
+    ],
+  },
+  {
+    name: 'guests_event_id_name_unique_idx',
+    statements: [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "guests_event_id_name_unique_idx" ON "guests"("event_id", "name")`,
+    ],
+  },
+  {
+    name: 'subscriptions_mp_subscription_id_unique_idx',
+    statements: [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "subscriptions_mp_subscription_id_unique_idx" ON "subscriptions"("mp_subscription_id")`,
+    ],
+  },
+  {
+    name: 'consent_records_immutable_trigger',
+    statements: [
+      `DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'consent_records_immutable_trigger') THEN
+          CREATE OR REPLACE FUNCTION prevent_consent_mutation()
+          RETURNS TRIGGER AS $f$
+          BEGIN
+            RAISE EXCEPTION 'consent_records are immutable and cannot be modified or deleted';
+          END;
+          $f$ LANGUAGE plpgsql;
+          CREATE TRIGGER consent_records_immutable_trigger
+            BEFORE UPDATE OR DELETE ON "consent_records"
+            FOR EACH ROW EXECUTE FUNCTION prevent_consent_mutation();
+        END IF;
+      END $$`,
+    ],
+  },
+  {
+    name: 'audit_logs_immutable_trigger',
+    statements: [
+      `DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_logs_immutable_trigger') THEN
+          CREATE OR REPLACE FUNCTION prevent_audit_mutation()
+          RETURNS TRIGGER AS $f$
+          BEGIN
+            RAISE EXCEPTION 'audit_logs are immutable and cannot be modified or deleted';
+          END;
+          $f$ LANGUAGE plpgsql;
+          CREATE TRIGGER audit_logs_immutable_trigger
+            BEFORE UPDATE OR DELETE ON "audit_logs"
+            FOR EACH ROW EXECUTE FUNCTION prevent_audit_mutation();
+        END IF;
+      END $$`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
@@ -218,26 +288,32 @@ export async function runMigrations(): Promise<void> {
   const appliedRows = await sql`SELECT "name" FROM "migration_journal"`;
   const appliedNames = new Set(appliedRows.map((r: any) => r.name));
 
-  // Apply each column migration individually (not in a single transaction)
-  // so a single failure doesn't block the rest.
-  for (let i = 0; i < COLUMN_MIGRATIONS.length; i++) {
-    const name = COLUMN_MIGRATION_NAMES[i];
-    if (appliedNames.has(name)) continue;
+  // Aplicar cada migración por nombre; cada entrada agrupa una o más sentencias SQL.
+  for (const migration of COLUMN_MIGRATIONS) {
+    if (appliedNames.has(migration.name)) continue;
 
-    log.info({ migration: name }, 'Aplicando migración');
-    try {
-      await sql.unsafe(COLUMN_MIGRATIONS[i]);
-    } catch (err) {
-      const isAlreadyExists = err instanceof Error && /already exists|duplicate/i.test(err.message);
-      if (!isAlreadyExists) {
-        log.warn({ migration: name, err }, 'Sentencia falló — saltando');
+    log.info({ migration: migration.name }, 'Aplicando migración');
+    let allOk = true;
+    for (const statement of migration.statements) {
+      try {
+        await sql.unsafe(statement);
+      } catch (err) {
+        const isAlreadyExists = err instanceof Error && /already exists|duplicate/i.test(err.message);
+        if (!isAlreadyExists) {
+          log.warn({ migration: migration.name, err }, 'Sentencia falló — saltando');
+          allOk = false;
+        }
       }
     }
 
-    try {
-      await sql`INSERT INTO "migration_journal" ("name") VALUES (${name}) ON CONFLICT DO NOTHING`;
-    } catch {}
-    log.info({ migration: name }, 'Migración aplicada');
+    if (allOk) {
+      try {
+        await sql`INSERT INTO "migration_journal" ("name") VALUES (${migration.name}) ON CONFLICT DO NOTHING`;
+      } catch {}
+      log.info({ migration: migration.name }, 'Migración aplicada');
+    } else {
+      log.warn({ migration: migration.name }, 'Migración parcialmente fallida — no se registra para reintentar en próximo arranque');
+    }
   }
 
   // Apply timestamptz conversion, each ALTER individually wrapped in IF EXISTS
