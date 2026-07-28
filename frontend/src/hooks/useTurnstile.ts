@@ -24,13 +24,13 @@ export async function waitForTurnstile(
   getToken: () => string | null,
   maxAttempts = 25,
   intervalMs = 200,
-): Promise<string> {
+): Promise<string | null> {
   for (let i = 0; i < maxAttempts; i++) {
     const token = getToken();
     if (token) return token;
     await new Promise(r => setTimeout(r, intervalMs));
   }
-  throw new Error('Tiempo de espera agotado para la verificación de seguridad. Por favor recarga la página o desactiva tu bloqueador de anuncios.');
+  return null;
 }
 
 export function useTurnstile() {
