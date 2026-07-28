@@ -218,6 +218,28 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       END $$`,
     ],
   },
+  // Escalabilidad 100x: índices compuestos para queries de alta frecuencia
+  {
+    name: 'scalability_indexes_phase1',
+    statements: [
+      // Lockout queries (cada login)
+      `CREATE INDEX IF NOT EXISTS "audit_logs_user_id_action_created_at_idx" ON "audit_logs"("user_id", "action", "created_at")`,
+      `CREATE INDEX IF NOT EXISTS "audit_logs_action_ip_address_created_at_idx" ON "audit_logs"("action", "ip_address", "created_at")`,
+      `CREATE INDEX IF NOT EXISTS "audit_logs_action_resource_id_created_at_idx" ON "audit_logs"("action", "resource_id", "created_at")`,
+      // Eventos congelados (cron diario de purge/freeze)
+      `CREATE INDEX IF NOT EXISTS "events_frozen_at_deleted_at_idx" ON "events"("frozen_at", "deleted_at") WHERE "frozen_at" IS NOT NULL AND "deleted_at" IS NULL`,
+      // Listado público de eventos (public.ts, reminder.ts)
+      `CREATE INDEX IF NOT EXISTS "events_public_listing_idx" ON "events"("is_active", "deleted_at", "status", "created_at") WHERE "is_active" = true AND "deleted_at" IS NULL AND "status" = 'active'`,
+      // Cleanup de refresh tokens (cron)
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_expires_at_idx" ON "refresh_tokens"("expires_at")`,
+      // Idempotencia de cash contributions
+      `CREATE INDEX IF NOT EXISTS "cash_contributions_idempotency_idx" ON "cash_contributions"("cash_fund_id", "contributor_name", "amount", "status")`,
+      // Cleanup de event_views por fecha
+      `CREATE INDEX IF NOT EXISTS "event_views_viewed_at_standalone_idx" ON "event_views"("viewed_at")`,
+      // Subscripciones atascadas por status + created_at
+      `CREATE INDEX IF NOT EXISTS "subscriptions_status_created_at_idx" ON "subscriptions"("status", "created_at")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

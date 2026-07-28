@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { Response } from 'express';
 import { createModuleLogger } from '../utils/logger.js';
+import { notifyEvent } from './sse-pubsub.js';
 
 const log = createModuleLogger('Notifications');
 
@@ -111,7 +112,7 @@ export function getTotalClientCount(): number {
   return total;
 }
 
-function broadcastToClients(eventId: string, data: Record<string, unknown>): void {
+export function broadcastToClients(eventId: string, data: Record<string, unknown>): void {
   const eventClients = clients.get(eventId);
   if (!eventClients) return;
   const payload = `data: ${JSON.stringify(data)}\n\n`;
@@ -169,7 +170,7 @@ export function emitGiftClaimed(data: GiftClaimedEvent): void {
       payload.claims = data.claims;
     }
     emitter.emit(`gift:claimed:${data.eventId}`, data);
-    broadcastToClients(data.eventId, payload);
+    notifyEvent(data.eventId, 'gift:claimed', payload);
   } catch (err) {
     log.error({ err }, 'Error emitiendo evento gift:claimed');
   }
@@ -178,8 +179,7 @@ export function emitGiftClaimed(data: GiftClaimedEvent): void {
 export function emitMessagePosted(data: MessagePostedEvent): void {
   try {
     emitter.emit(`message:posted:${data.eventId}`, data);
-    broadcastToClients(data.eventId, {
-      type: 'message:posted',
+    notifyEvent(data.eventId, 'message:posted', {
       authorName: data.authorName,
       messagePreview: data.messagePreview,
     });
@@ -191,8 +191,7 @@ export function emitMessagePosted(data: MessagePostedEvent): void {
 export function emitPhotoUploaded(data: PhotoUploadedEvent): void {
   try {
     emitter.emit(`photo:uploaded:${data.eventId}`, data);
-    broadcastToClients(data.eventId, {
-      type: 'photo:uploaded',
+    notifyEvent(data.eventId, 'photo:uploaded', {
       uploadedBy: data.uploadedBy,
       photoUrl: data.photoUrl,
     });
@@ -204,8 +203,7 @@ export function emitPhotoUploaded(data: PhotoUploadedEvent): void {
 export function emitCashContribution(data: CashContributionEvent): void {
   try {
     emitter.emit(`cash:contribution:${data.eventId}`, data);
-    broadcastToClients(data.eventId, {
-      type: 'cash:contribution',
+    notifyEvent(data.eventId, 'cash:contribution', {
       contributorName: data.contributorName,
       amount: data.amount,
       contributionType: data.type,

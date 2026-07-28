@@ -11,6 +11,10 @@ import { createModuleLogger } from './utils/logger.js';
 
 const log = createModuleLogger('Cron');
 
+function yieldToEventLoop(): Promise<void> {
+  return new Promise(resolve => setImmediate(resolve));
+}
+
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
 let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
@@ -102,7 +106,8 @@ export function startCronJobs(): void {
             sql`${subscriptions.createdAt} < NOW() - INTERVAL '1 hour'`,
           ));
 
-        for (const sub of stuck) {
+        for (let i = 0; i < stuck.length; i++) {
+          const sub = stuck[i];
           try {
             const interval = sub.currentPeriodEnd && sub.currentPeriodStart
               ? (sub.currentPeriodEnd.getTime() - sub.currentPeriodStart.getTime() > 330 * 24 * 60 * 60 * 1000 ? 'year' : 'month')
@@ -121,6 +126,7 @@ export function startCronJobs(): void {
           } catch (err) {
             log.error({ err, userId: sub.userId }, 'Error reconciliando suscripción atascada:');
           }
+          if (i % 5 === 4) await yieldToEventLoop();
         }
 
         if (stuck.length > 0) {
@@ -154,7 +160,8 @@ export function startCronJobs(): void {
           .where(sql`${failedWebhooks.nextRetryAt} <= NOW() AND ${failedWebhooks.status} = 'pending' AND ${failedWebhooks.retryCount} < 5`)
           .limit(20);
 
-        for (const webhook of failed) {
+        for (let i = 0; i < failed.length; i++) {
+          const webhook = failed[i];
           try {
             if (webhook.topic === 'payment') {
               await mpWebhooks.handlePaymentNotification(webhook.resourceId);
@@ -178,6 +185,7 @@ export function startCronJobs(): void {
               })
               .where(eq(failedWebhooks.id, webhook.id));
           }
+          if (i % 5 === 4) await yieldToEventLoop();
         }
       } catch (error) {
         log.error({ error }, 'Error en retry de webhooks:');
@@ -221,6 +229,7 @@ export function startCronJobs(): void {
         const affected = (result as any).rowCount ?? (result as any).length ?? 0;
         totalDeleted += affected;
         if (affected < BATCH_SIZE) break;
+        if (i % 10 === 9) await yieldToEventLoop();
       }
 
       if (totalDeleted > 0) {

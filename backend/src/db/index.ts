@@ -8,7 +8,15 @@ const isPrimary = typeof cluster.isPrimary === 'boolean' ? cluster.isPrimary : t
 const workerCount = isPrimary
   ? (config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : 1)
   : 1;
-const poolMax = Math.max(3, Math.ceil((config.DB_POOL_MAX || 10) / workerCount));
+// Pool reducido para escalabilidad horizontal:
+// - Cada instancia Railway usa pocas conexiones (default 5).
+// - El SSE pub/sub abre 1 conexión adicional vía sql.listen() fuera del pool.
+// - Con 10 instancias → ~60 conexiones totales (5 pool + 1 SSE), dentro del límite de Neon.
+// IMPORTANTE: Neon recomienda usar su pooler interno (PgBouncer) en modo transacción.
+// Configurar DATABASE_URL con el host '-pooler' de Neon o añadir ?pgbouncer=true
+// para que Neon enrute las conexiones a través de su pool administrado.
+// Esto evita Connection Limit Exceeded al escalar a más instancias.
+const poolMax = Math.max(3, Math.ceil((config.DB_POOL_MAX || 5) / workerCount));
 
 // SSL incondicional para conexiones non-localhost.
 // En producción: rejectUnauthorized verifica el CA de Neon.

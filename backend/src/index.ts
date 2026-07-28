@@ -8,6 +8,7 @@ import { createApp } from './app.js';
 import express, { type Express } from 'express';
 import { startCronJobs, stopCronJobs } from './cron.js';
 import { stopSSEScavenger } from './services/notifications.js';
+import { startSSEListener, stopSSEListener } from './services/sse-pubsub.js';
 import { logger } from './utils/logger.js';
 
 console.log('[startup] Imports cargados correctamente');
@@ -90,7 +91,10 @@ if (cluster.isPrimary && workerCount > 1) {
         backend: config.BACKEND_URL,
         workerId: cluster.isWorker ? `worker-${cluster.worker?.id}` : 'primary',
       }, 'Servidor iniciado');
-      if (migrationsOk) startCronJobs();
+      if (migrationsOk) {
+        startCronJobs();
+        startSSEListener();
+      }
     });
 
     server.timeout = 30000;
@@ -102,6 +106,7 @@ if (cluster.isPrimary && workerCount > 1) {
     function gracefulShutdown(signal: string, exitCode = 0) {
       logger.warn({ signal, exitCode }, 'Cerrando servidor...');
       stopSSEScavenger();
+      stopSSEListener();
       if (migrationsOk) stopCronJobs();
       server.close(() => {
         sql.end({ timeout: 5 }).then(() => {
