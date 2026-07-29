@@ -1,9 +1,8 @@
 import { eq, lte, and, inArray, sql, isNull, desc } from 'drizzle-orm';
-import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users, events, photos, proPayments, emailTracking } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
 import { TIER_LIMITS, type Tier, type SubscriptionStatus } from '../types/index.js';
@@ -353,12 +352,18 @@ export async function purgeExpiredData(): Promise<number> {
       const userEventIds = eventsToPurge.filter(e => e.user_id === userId).map(e => e.id);
       const userPhotos = userEventIds.flatMap(eid => photosByEvent.get(eid) || []);
 
-      for (const photo of userPhotos) {
-        if (isOwnCloudinaryUrl(photo.url)) {
-          const publicId = getPublicIdFromUrl(photo.url);
-          if (publicId) {
-            cloudinary.uploader.destroy(publicId).catch((err: Error) => log.warn({ err }, 'Error eliminando foto de Cloudinary durante purga'));
-          }
+      const toDestroy = userPhotos
+        .filter(p => isOwnCloudinaryUrl(p.url))
+        .map(p => getPublicIdFromUrl(p.url))
+        .filter((pid): pid is string => pid !== null);
+
+      const CONCURRENCY = 5;
+      for (let i = 0; i < toDestroy.length; i += CONCURRENCY) {
+        const batch = toDestroy.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(pid => destroyWithRetry(pid)));
+        const failed = results.filter(r => !r).length;
+        if (failed > 0) {
+          log.error({ failed, total: batch.length, userId }, 'Error eliminando fotos de Cloudinary durante purga:');
         }
       }
 

@@ -1,17 +1,13 @@
 import { eq, and, isNull, sql, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
-import { v2 as cloudinary } from 'cloudinary';
 import { isIP } from 'node:net';
 import { db } from '../db/index.js';
 import { photos as photosTable, events, users } from '../db/schema.js';
 import { sanitizeAndStrip } from '../utils/sanitize.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
-import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { TIER_LIMITS, type Tier } from '../types/index.js';
-import { createModuleLogger } from '../utils/logger.js';
 import { ensureEventNotFrozen } from './event.js';
-
-const log = createModuleLogger('Photo');
 
 function isPrivateHostname(hostname: string): boolean {
   const lower = hostname.toLowerCase();
@@ -96,7 +92,7 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
   } catch (err) {
     const publicId = getPublicIdFromUrl(url);
     if (publicId && isOwnCloudinaryUrl(url)) {
-      cloudinary.uploader.destroy(publicId).catch((err) => log.warn({ err }, 'Error eliminando imagen de Cloudinary tras fallo en DB'));
+      destroyWithRetry(publicId, { timeout: 5000 });
     }
     throw err;
   }
@@ -122,17 +118,7 @@ export async function deletePhoto(photoId: string) {
 
   const publicId = getPublicIdFromUrl(photo.url);
   if (publicId && isOwnCloudinaryUrl(photo.url)) {
-    try {
-      let timer: ReturnType<typeof setTimeout>;
-      await Promise.race([
-        cloudinary.uploader.destroy(publicId),
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Cloudinary request timed out')), 10000);
-        }),
-      ]).finally(() => clearTimeout(timer!));
-    } catch (err) {
-      log.error({ err }, 'Error al eliminar de Cloudinary:');
-    }
+    await destroyWithRetry(publicId);
   }
 
   return { success: true };

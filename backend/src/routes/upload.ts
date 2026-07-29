@@ -6,6 +6,7 @@ import { open, unlink, rename, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { v2 as cloudinary } from 'cloudinary';
+import { UPLOAD_FOLDER } from '../utils/cloudinary.js';
 import { requireAuth } from '../middleware/auth.js';
 import { uploadLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
 import { ValidationError } from '../utils/errors.js';
@@ -100,7 +101,7 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: 'fiestaylista',
+        folder: UPLOAD_FOLDER,
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto', flags: 'strip_exif' }],
       },

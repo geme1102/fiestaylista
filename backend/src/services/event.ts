@@ -1,11 +1,10 @@
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
-import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events as eventsTable, gifts, photos, cashFunds, giftClaims, messages, guests, eventViews, cashContributions } from '../db/schema.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
 import { generateSlug } from '../utils/slug.js';
-import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { EventType, Tier } from '../types/index.js';
 
@@ -318,10 +317,18 @@ export async function deleteEvent(eventId: string, userId: string) {
     }
   });
 
-  for (const photo of photoUrls) {
-    const publicId = getPublicIdFromUrl(photo.url);
-    if (publicId && isOwnCloudinaryUrl(photo.url)) {
-      cloudinary.uploader.destroy(publicId).catch((err: unknown) => log.error({ err, publicId }, 'Error eliminando foto de Cloudinary:'));
+  const toDestroy = photoUrls
+    .filter(p => isOwnCloudinaryUrl(p.url))
+    .map(p => getPublicIdFromUrl(p.url))
+    .filter((pid): pid is string => pid !== null);
+
+  const CONCURRENCY = 5;
+  for (let i = 0; i < toDestroy.length; i += CONCURRENCY) {
+    const batch = toDestroy.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(batch.map(pid => destroyWithRetry(pid)));
+    const failed = results.filter(r => !r).length;
+    if (failed > 0) {
+      log.error({ failed, total: batch.length }, 'Error eliminando fotos de Cloudinary durante deleteEvent:');
     }
   }
 

@@ -1,9 +1,8 @@
 import { eq, and, inArray } from 'drizzle-orm';
-import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { cancelPreapproval } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -118,20 +117,12 @@ export async function deleteUserAccount(userId: string) {
     const CONCURRENCY = 5;
     for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
       const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
-      const results = await Promise.allSettled(
-        batch.map(publicId => {
-          let timer: ReturnType<typeof setTimeout>;
-          return Promise.race([
-            cloudinary.uploader.destroy(publicId),
-            new Promise<never>((_, reject) => {
-              timer = setTimeout(() => reject(new Error('Cloudinary timeout')), 10000);
-            }),
-          ]).finally(() => clearTimeout(timer!));
-        }),
+      const results = await Promise.all(
+        batch.map(publicId => destroyWithRetry(publicId)),
       );
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const failed = results.filter(r => !r).length;
       if (failed > 0) {
-        log.error({ failed, total: batch.length, userId }, 'Error deleting Cloudinary images: some assets may be orphaned');
+        log.error({ failed, total: batch.length, userId }, 'Error eliminando imágenes de Cloudinary: algunos assets pueden quedar huérfanos');
       }
     }
   }
