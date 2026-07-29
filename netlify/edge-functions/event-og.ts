@@ -46,10 +46,18 @@ export default async (request: Request, context: Context) => {
   }
 
   try {
-    const apiRes = await fetch(`${url.origin}/api/events/slug/${encodeURIComponent(slug)}`, {
-      headers: { "Accept": "application/json" },
-      signal: AbortSignal.timeout(5000),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    let apiRes: Response;
+    try {
+      apiRes = await fetch(`${url.origin}/api/events/slug/${encodeURIComponent(slug)}`, {
+        headers: { "Accept": "application/json" },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!apiRes.ok) return context.next();
 
@@ -100,7 +108,8 @@ export default async (request: Request, context: Context) => {
         "Cache-Control": "public, max-age=300, s-maxage=600",
       },
     });
-  } catch {
+  } catch (err) {
+    console.error('event-og error:', err);
     return context.next();
   }
 };
