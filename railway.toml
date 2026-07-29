@@ -1,5 +1,3 @@
-[deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 30
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
+[service]
+healthcheck-path = "/health"
+readiness-path = "/api/health/ready"

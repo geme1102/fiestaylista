@@ -106,7 +106,9 @@ function validateConfig(): void {
     if (!process.env.FROM_EMAIL) failConfig('FROM_EMAIL no está configurado');
     warnConfig('RESEND_WEBHOOK_SECRET', process.env.RESEND_WEBHOOK_SECRET);
     warnConfig('TURNSTILE_SECRET_KEY', process.env.TURNSTILE_SECRET_KEY);
-    warnConfig('BACKEND_URL', process.env.BACKEND_URL);
+    if (!process.env.BACKEND_URL && !process.env.RAILWAY_PUBLIC_DOMAIN) {
+      failConfig('BACKEND_URL no está configurado y no hay RAILWAY_PUBLIC_DOMAIN');
+    }
     if (process.env.BACKEND_URL && !process.env.BACKEND_URL.startsWith('http://') && !process.env.BACKEND_URL.startsWith('https://')) {
       failConfig('BACKEND_URL debe comenzar con http:// o https://');
     }
@@ -114,6 +116,7 @@ function validateConfig(): void {
     if (!process.env.FRONTEND_URL.startsWith('http://') && !process.env.FRONTEND_URL.startsWith('https://')) {
       failConfig('FRONTEND_URL debe comenzar con http:// o https://');
     }
+
 
     // Verificar configuración de SSL/TLS en Cloudflare (dashboard, no código)
     console.warn('[config] ════════════════════════════════════════════════════════════');
@@ -188,6 +191,6 @@ export const config = {
   DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || '5', 10),
   CLUSTER_WORKERS: parseInt(process.env.CLUSTER_WORKERS || '0', 10),
   PAYMENT_RATE_LIMIT: parseInt(process.env.PAYMENT_RATE_LIMIT || '10', 10),
-  WEBHOOK_RATE_LIMIT: parseInt(process.env.WEBHOOK_RATE_LIMIT || '300', 10),
+  WEBHOOK_RATE_LIMIT: parseInt(process.env.WEBHOOK_RATE_LIMIT || '600', 10),
   API_RATE_LIMIT: parseInt(process.env.API_RATE_LIMIT || '200', 10),
 } as const;

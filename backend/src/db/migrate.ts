@@ -299,12 +299,17 @@ const TIMESTAMPTZ_MIGRATION_NAME = 'timestamptz_conversion';
 export async function runMigrations(): Promise<void> {
   // Acquire migration lock via DB table (works with any pool config, unlike advisory locks)
   await sql.unsafe(`CREATE TABLE IF NOT EXISTS "migration_lock" ("id" integer PRIMARY KEY, "locked_at" timestamptz NOT NULL DEFAULT now())`);
-  await sql.unsafe(`DELETE FROM "migration_lock" WHERE "locked_at" < now() - interval '5 minutes'`);
+  await sql.unsafe(`CREATE INDEX IF NOT EXISTS idx_migration_lock_locked_at ON migration_lock(locked_at)`);
+  await sql.unsafe(`DELETE FROM "migration_lock" WHERE "locked_at" < now() - interval '30 minutes'`);
   const lockResult = await sql`INSERT INTO "migration_lock" ("id", "locked_at") VALUES (1, now()) ON CONFLICT ("id") DO NOTHING RETURNING "locked_at"`;
   if (lockResult.length === 0) {
     log.info('Otra instancia está ejecutando migraciones — omitiendo');
     return;
   }
+
+  const heartbeatTimer = setInterval(async () => {
+    try { await sql`UPDATE "migration_lock" SET "locked_at" = now() WHERE "id" = 1`; } catch {}
+  }, 60_000);
 
   try {
   // Ensure migration_journal table exists
@@ -385,6 +390,7 @@ export async function runMigrations(): Promise<void> {
   }
 
   } finally {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
     await sql`DELETE FROM "migration_lock" WHERE "id" = 1`.catch(() => {});
   }
 

@@ -98,7 +98,7 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
       - name: Deploy to Railway
-        run: railway up --service=fiestaylista
+        run: railway up --service=${{ vars.RAILWAY_SERVICE_NAME || 'fiestaylista' }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 

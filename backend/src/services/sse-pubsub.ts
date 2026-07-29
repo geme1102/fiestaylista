@@ -57,11 +57,12 @@ function startHealthCheck(): void {
 
 async function restartSSEListener(): Promise<void> {
   cleanupHealthCheck();
-  if (unlistenFn) {
-    try { await unlistenFn(); } catch {} 
-    unlistenFn = null;
-  }
+  const oldUnlisten = unlistenFn;
+  unlistenFn = null;
   await startSSEListener();
+  if (oldUnlisten) {
+    try { await oldUnlisten(); } catch {}
+  }
 }
 
 function cleanupHealthCheck(): void {

@@ -69,11 +69,12 @@ export function createApp() {
 
   app.use((req, res, next) => {
     const origin = req.headers.origin;
+    const normalizeUrl = (url: string) => url.replace(/\/+$/, '').toLowerCase();
     const allowedOrigins = [
       config.FRONTEND_URL,
       ...(config.ALLOWED_ORIGINS ?? []),
     ].filter(Boolean);
-    const isAllowed = origin && allowedOrigins.includes(origin);
+    const isAllowed = origin && allowedOrigins.some(a => normalizeUrl(a) === normalizeUrl(origin));
     if (isAllowed) {
       res.setHeader('Access-Control-Allow-Origin', origin!);
       res.setHeader('Access-Control-Allow-Credentials', 'true');

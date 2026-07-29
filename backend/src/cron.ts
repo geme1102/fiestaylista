@@ -8,6 +8,8 @@ import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import * as mercadopagoService from './services/mercadopago.js';
 import { createModuleLogger } from './utils/logger.js';
+import { isSentryEnabled } from './loaders/index.js';
+import * as Sentry from '@sentry/node';
 
 const log = createModuleLogger('Cron');
 
@@ -36,6 +38,9 @@ export const runWithLock = async (name: string, fn: () => Promise<void>) => {
     await fn();
   } catch (error) {
     log.error({ error }, `Error en lock para ${name}:`);
+    if (isSentryEnabled()) {
+      Sentry.captureException(error, { tags: { cron: name } });
+    }
   }
 };
 
@@ -127,6 +132,7 @@ export function startCronJobs(): void {
             log.error({ err, userId: sub.userId }, 'Error reconciliando suscripción atascada:');
           }
           if (i % 5 === 4) await yieldToEventLoop();
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
 
         if (stuck.length > 0) {

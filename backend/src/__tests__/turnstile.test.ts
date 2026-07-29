@@ -9,6 +9,12 @@ vi.mock('../config.js', () => ({
   },
 }));
 
+vi.mock('../db/index.js', () => {
+  const mockSql: any = () => Promise.resolve([]);
+  mockSql.unsafe = async () => [];
+  return { sql: mockSql, db: {} };
+});
+
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 

@@ -19,7 +19,7 @@ const workerCount = isPrimary
 // - Neon recomienda PgBouncer (modo transacción) para evitar Connection Limit Exceeded.
 //   Configurar DATABASE_URL con host '-pooler' o ?pgbouncer=true
 //   para enrutar conexiones a través del pool administrado de Neon.
-const poolMax = Math.max(3, Math.ceil(config.DB_POOL_MAX / workerCount));
+const poolMax = Math.max(1, Math.floor(config.DB_POOL_MAX / workerCount));
 
 // Auto-transformar URL para agregar ?pgbouncer=true en Neon si no está presente
 let databaseUrl = config.DATABASE_URL;

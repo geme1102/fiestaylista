@@ -1,6 +1,7 @@
 console.log('[startup] Iniciando servidor...');
 
 import cluster from 'node:cluster';
+import type { Worker } from 'node:cluster';
 import { config } from './config.js';
 import { sql } from './db/index.js';
 import { runMigrations } from './db/migrate.js';
@@ -14,6 +15,7 @@ import { logger } from './utils/logger.js';
 console.log('[startup] Imports cargados correctamente');
 
 const workerCount = config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : (config.NODE_ENV === 'production' ? 1 : 0);
+const SHUTDOWN_TIMEOUT = 30_000;
 
 if (cluster.isPrimary && workerCount > 1) {
   logger.info({ workers: workerCount }, 'Modo cluster iniciando workers');
@@ -22,11 +24,13 @@ if (cluster.isPrimary && workerCount > 1) {
     cluster.fork();
   }
 
+  let isShuttingDown = false;
   let restartAttempts = 0;
   const MAX_RESTART_ATTEMPTS = 10;
   const RESTART_BACKOFF_BASE_MS = 1000;
 
   cluster.on('exit', (worker, code, signal) => {
+    if (isShuttingDown) return;
     restartAttempts++;
     if (restartAttempts > MAX_RESTART_ATTEMPTS) {
       logger.fatal({ attempts: restartAttempts }, 'Demasiados reinicios de worker — abortando cluster');
@@ -37,12 +41,28 @@ if (cluster.isPrimary && workerCount > 1) {
     setTimeout(() => cluster.fork(), delay);
   });
 
-  // Reset counter on SIGTERM (intentional shutdown, not crash)
-  const shutdownSignal = (signal: string) => {
-    logger.warn({ signal }, 'Cerrando cluster...');
-    for (const id in cluster.workers) {
-      cluster.workers[id]?.kill();
+  const shutdownSignal = async (signal: string) => {
+    isShuttingDown = true;
+    logger.warn({ signal }, 'Cerrando cluster — esperando workers...');
+
+    const aliveWorkers = Object.values(cluster.workers ?? {}).filter(Boolean) as Worker[];
+    if (aliveWorkers.length === 0) {
+      process.exit(0);
+      return;
     }
+
+    const exitPromises = aliveWorkers.map(w => new Promise<void>(resolve => {
+      w.on('exit', () => resolve());
+      w.kill();
+    }));
+
+    const timeout = setTimeout(() => {
+      logger.error('Timeout esperando workers — forzando salida');
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT);
+
+    await Promise.all(exitPromises);
+    clearTimeout(timeout);
     process.exit(0);
   };
 
@@ -101,8 +121,6 @@ if (cluster.isPrimary && workerCount > 1) {
     server.timeout = 30000;
     server.keepAliveTimeout = 5000;
     server.headersTimeout = 31000;
-
-    const SHUTDOWN_TIMEOUT = 10_000;
 
     function gracefulShutdown(signal: string, exitCode = 0) {
       logger.warn({ signal, exitCode }, 'Cerrando servidor...');

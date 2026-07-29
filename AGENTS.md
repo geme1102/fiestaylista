@@ -88,3 +88,32 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - Respuestas de error: `{ error: string, errorId: uuid }`. 4xx para subclases de `AppError`, 500 para inesperados.
 - Notificaciones toast del frontend via `sonner` (`showToast` de `hooks/useToast`).
 - Reporte de errores via `reportError(err, { source: '...' })` de `lib/reportError.ts`.
+
+## Railway Audit — Correcciones Aplicadas (Jul 2026)
+
+### Fase 1 — Foundation
+- **H4**: Pool sizing `Math.ceil → Math.floor` en `db/index.ts` — evita exceder DB_POOL_MAX en cluster
+- **H2**: Migration lock timeout 5→30 min + heartbeat cada 60s + índice en `locked_at`
+- **H3**: Cluster primary ahora espera `Promise.all` de workers en shutdown (timeout 30s), flag `isShuttingDown` evita reinicios falsos
+- **H11**: SHUTDOWN_TIMEOUT 10→30s, movido a scope de módulo
+
+### Fase 2 — Shared Rate Limiting
+- **H1**: `PostgresStore` en `rateLimitStore.ts` — tabla `rate_limits` con upsert atómico, fail-open en error DB. 16 tests
+- 17 limiters migrados de MemoryStore a PostgreSQL vía `createLimiter()`
+- Cleanup singleton cada 60s de registros expirados
+
+### Fase 3 — Config & CORS
+- **H8**: CORS normaliza trailing slash + lowercase antes de comparar
+- **H9**: BACKEND_URL `warnConfig → failConfig` en producción
+- **H14**: Railway service name configurable via `vars.RAILWAY_SERVICE_NAME`
+
+### Fase 4 — Robustez
+- **H7**: `railway.toml` con `readiness-path`
+- **H5**: SSE reconnect conecta nuevo listener antes de desconectar el anterior
+- **H10**: Cron errors reportados a Sentry vía `runWithLock`
+- **H12**: 200ms delay entre llamadas MP API en `reconcileStuckSubscriptions`
+- **H13**: Webhook limiter default 300→600
+
+### Counters
+- Backend: 231 tests (antes 215) | typecheck 0 errors | lint 0 errors
+- Frontend: 340 tests | typecheck 0 errors | lint 0 errors
