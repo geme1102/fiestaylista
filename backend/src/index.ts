@@ -8,7 +8,7 @@ import { createApp } from './app.js';
 import express, { type Express } from 'express';
 import { startCronJobs, stopCronJobs } from './cron.js';
 import { stopSSEScavenger } from './services/notifications.js';
-import { startSSEListener, stopSSEListener } from './services/sse-pubsub.js';
+import { startSSEListener, startHeartbeatSender, stopSSEListener } from './services/sse-pubsub.js';
 import { logger } from './utils/logger.js';
 
 console.log('[startup] Imports cargados correctamente');
@@ -94,6 +94,7 @@ if (cluster.isPrimary && workerCount > 1) {
       if (migrationsOk) {
         startCronJobs();
         startSSEListener();
+        startHeartbeatSender();
       }
     });
 

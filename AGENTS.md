@@ -58,9 +58,11 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **Migraciones corren al arranque** antes de `app.listen()`. Runner custom en `src/db/migrate.ts` con tabla `migration_journal`. Cada entrada es un string SQL completo pasado a `sql.unsafe()` — NO dividir por `;` (rompe bloques `DO $$ ... $$`).
 - **SSE cross-instance via Postgres LISTEN/NOTIFY**: El módulo `services/sse-pubsub.ts` usa `sql.listen()` (conexión dedicada) y `sql.notify()` para broadcast de eventos SSE entre instancias Railway. Cada instancia abre 1 conexión extra para el listener. `notifyEvent()` es fire-and-forget (el catch logea pero no lanza).
 - **Pool de conexiones reducido**: default `DB_POOL_MAX=5` para escalar horizontalmente sin saturar Neon. Cada instancia usa ~6 conexiones (5 pool + 1 SSE listener). Neon recomienda usar su pooler interno (PgBouncer) — configurar DATABASE_URL con host `-pooler` o `?pgbouncer=true`. **Auto-config**: `db/index.ts` añade automáticamente `?pgbouncer=true` a URLs de Neon que no lo tengan.
+- **Migraciones DDL con PgBouncer**: correr migraciones (ALTER TABLE, CREATE FUNCTION, DO $$) a través de PgBouncer en modo transacción puede causar connection pinning o timeouts. Para migraciones manuales en producción, usar una conexión directa (sin pooler) vía Railway Connect tab o configurar `DATABASE_URL_UNPOOLED`.
 - **`COLUMN_MIGRATIONS` tiene 34+ entradas**. Cada migración requiere nombre único en `migration_journal`. Índices de escalabilidad (`scalability_indexes_phase1`) agregan compuestos para audit_logs, events, refresh_tokens, cash_contributions, event_views, subscriptions.
 - **Cron jobs**: `yieldToEventLoop()` cada N iteraciones en loops batch para no bloquear el event loop. `runWithLock` con advisory lock previene ejecución duplicada entre instancias.
 - **Carga de env**: `src/config.ts` lee `.env` manualmente (no dotenv). `process.env` tiene prioridad sobre `.env`. Vars críticas causan `process.exit(1)` si faltan en producción.
+- **Validación de requests**: se hace inline en cada ruta con Zod + `asyncHandlerWithValidation`. No hay middleware centralizado `validation.ts`. El wrapper captura `ZodError` automáticamente, no es necesario try-catch manual.
 - **SSL**: incondicional para conexiones non-localhost. Localhost (`docker compose`) desactiva SSL. **TLS 1.3 forzado vía Cloudflare Dashboard** (no código) — configurar SSL/TLS → "Full (Strict)" + "Minimum TLS Version → TLS 1.3".
 - **Turnstile**: `verifyTurnstile` es obligatorio (lanza 400 sin token). `verifyTurnstileOptional` deja pasar sin token (rate limiter actúa como fallback). Login/register usan opcional; forgot/reset password y todos los endpoints de invitados usan obligatorio.
 - **Cookie refresh token**: httpOnly, path `/api/auth/refresh`, prefijo `__Secure-` en producción. Cookie compañera no-httpOnly `hasRefresh=1` en path `/` permite al frontend saltar llamadas innecesarias de refresh.
@@ -68,13 +70,14 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 ### Frontend
 - **No hay `.env` en el repo** — vars configuradas via dashboards de Netlify/Railway. `VITE_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` son separadas (frontend vs backend).
 - **Access token solo en memoria** — `accessToken` es variable de módulo en `api.ts`, nunca en localStorage. Refresh via `tryRefreshToken()` revisa `document.cookie` por `hasRefresh=1` antes de hacer la request.
-- **CSP en `netlify.toml`** — `img-src` permite solo `self`, `cloudinary`, `data:`, `blob:`. NO usar Unsplash ni otras URLs externas de imágenes.
+- **CSP en `netlify.toml`** — `img-src` permite solo `self`, `cloudinary`, `data:`, `blob:`. NO usar Unsplash ni otras URLs externas de imágenes. `connect-src` incluye la URL de Railway hardcodeada — si el proyecto Railway se renombra o migra, actualizar también en CSP y en el redirect `/api/*`.
 - **`index.html`** incluye el script tag de Turnstile y contenido SEO (fallback SSR-like). Ambos deben mantenerse en sync.
 - **El entorno de test es jsdom** — `document.cookie` persiste entre tests. Al testear lógica dependiente de cookies, setearla/limpiarla explícitamente.
 
 ### Deploy
 - **Orden de CI**: lint → typecheck → test → build. Push a `main` dispara Railway (backend) + Netlify (frontend). PRs generan preview en Netlify.
 - **Healthcheck de Railway**: 30s de timeout en `/health`. Si migraciones o `createApp()` fallan, el servidor nunca arranca y el healthcheck falla el deploy.
+- **Cloudflare SSL/TLS**: configurar en Cloudflare Dashboard → SSL/TLS → "Full (Strict)" + Minimum TLS Version → TLS 1.3. No se puede forzar desde el código; el startup log lo recuerda cada vez que arranca el server.
 - **`Dockerfile`**: build multi-stage. Imagen final copia `dist/`, corre `startup.sh` (`node dist/backend/src/index.js` con `--max-old-space-size=448`). El heap de Node está ajustado a 448MB para dejar ~64MB al OS Alpine en un contenedor de 512MB, evitando OOM kills silenciosos de Railway.
 
 ## Convenciones

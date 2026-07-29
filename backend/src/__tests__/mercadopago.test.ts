@@ -188,6 +188,7 @@ describe('createPreApproval', () => {
         status: 'pending',
         reason: 'Fiesta y Lista Pro Mensual',
       },
+      requestOptions: { timeout: expect.any(Number) },
     });
   });
 });
@@ -232,6 +233,7 @@ describe('cancelPreapproval', () => {
     expect(mockPreApprovalUpdate).toHaveBeenCalledWith({
       id: 'pre-1',
       body: { status: 'cancelled' },
+      requestOptions: { timeout: expect.any(Number) },
     });
   });
 });

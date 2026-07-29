@@ -32,7 +32,7 @@ export function serializeError(error: unknown): Error {
 }
 
 export async function retryable<T>(
-  fn: (signal?: AbortSignal) => Promise<T>,
+  fn: (opts: { signal: AbortSignal; timeout: number }) => Promise<T>,
   maxRetries = 2,
   timeoutMs = 10000,
 ): Promise<T> {
@@ -41,7 +41,7 @@ export async function retryable<T>(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const result = await fn(controller.signal);
+      const result = await fn({ signal: controller.signal, timeout: timeoutMs });
       return result;
     } catch (error) {
       lastError = serializeError(error);
@@ -72,7 +72,7 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
   }
 
   const payment = new Payment(client);
-  const info = await retryable(() => payment.get({ id: paymentId }));
+  const info = await retryable((opts) => payment.get({ id: paymentId, requestOptions: { timeout: opts.timeout } }));
 
   return {
     status: info.status ?? 'unknown',
@@ -91,11 +91,11 @@ export async function searchPaymentsByRef(externalReference: string): Promise<{
   if (!client) return null;
 
   try {
-    const result = await retryable(async (signal) => {
+    const result = await retryable(async (opts) => {
       const url = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}&limit=5`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
-        signal,
+        signal: opts.signal,
       });
       if (!res.ok) throw new Error(`MP API error: ${res.status}`);
       return res.json() as Promise<{ results: Array<{ id: number; status: string; transaction_amount: number }> }>;
@@ -130,7 +130,7 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   }
 
   const preapproval = new PreApproval(client);
-  const info = await retryable(() => preapproval.get({ id: preapprovalId }));
+  const info = await retryable((opts) => preapproval.get({ id: preapprovalId, requestOptions: { timeout: opts.timeout } }));
 
   const autoRecurring = (info as unknown as Record<string, unknown>).auto_recurring as Record<string, unknown> | undefined;
 
@@ -158,7 +158,7 @@ export async function createPreApproval(opts: {
   }
 
   const preapproval = new PreApproval(client);
-  const result = await retryable(() => preapproval.create({
+  const result = await retryable((rop) => preapproval.create({
     body: {
       preapproval_plan_id: opts.planId,
       payer_email: opts.payerEmail,
@@ -167,6 +167,7 @@ export async function createPreApproval(opts: {
       status: 'pending',
       reason: opts.reason,
     },
+    requestOptions: { timeout: rop.timeout },
   }));
 
   return {
@@ -179,11 +180,11 @@ export async function searchPreapprovalsByRef(externalReference: string): Promis
   if (!client) return null;
 
   try {
-    const result = await retryable(async (signal) => {
+    const result = await retryable(async (opts) => {
       const url = `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(externalReference)}&status=authorized&status=active`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
-        signal,
+        signal: opts.signal,
       });
       if (!res.ok) throw new Error(`MP API error: ${res.status}`);
       return res.json() as Promise<{ results: Array<{ id: string; status: string }> }>;
@@ -207,5 +208,5 @@ export async function cancelPreapproval(preapprovalId: string): Promise<void> {
   }
 
   const preapproval = new PreApproval(client);
-  await retryable(() => preapproval.update({ id: preapprovalId, body: { status: 'cancelled' } }));
+  await retryable((opts) => preapproval.update({ id: preapprovalId, body: { status: 'cancelled' }, requestOptions: { timeout: opts.timeout } }));
 }

@@ -100,7 +100,7 @@ function validateConfig(): void {
 
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd) {
-    warnConfig('MERCADO_PAGO_ACCESS_TOKEN', process.env.MERCADO_PAGO_ACCESS_TOKEN);
+    if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) failConfig('MERCADO_PAGO_ACCESS_TOKEN no está configurado');
     if (!process.env.MERCADO_PAGO_WEBHOOK_SECRET) failConfig('MERCADO_PAGO_WEBHOOK_SECRET no está configurado');
     if (!process.env.RESEND_API_KEY) failConfig('RESEND_API_KEY no está configurado');
     if (!process.env.FROM_EMAIL) failConfig('FROM_EMAIL no está configurado');

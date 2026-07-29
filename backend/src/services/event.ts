@@ -3,10 +3,13 @@ import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
 import { users, events as eventsTable, gifts, photos, cashFunds, giftClaims, messages, guests, eventViews, cashContributions } from '../db/schema.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors.js';
+import { createModuleLogger } from '../utils/logger.js';
 import { generateSlug } from '../utils/slug.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { TIER_LIMITS } from '../types/index.js';
 import type { EventType, Tier } from '../types/index.js';
+
+const log = createModuleLogger('EventService');
 
 export interface CreateEventData {
   title: string;
@@ -318,7 +321,7 @@ export async function deleteEvent(eventId: string, userId: string) {
   for (const photo of photoUrls) {
     const publicId = getPublicIdFromUrl(photo.url);
     if (publicId && isOwnCloudinaryUrl(photo.url)) {
-      cloudinary.uploader.destroy(publicId).catch(() => {});
+      cloudinary.uploader.destroy(publicId).catch((err: unknown) => log.error({ err, publicId }, 'Error eliminando foto de Cloudinary:'));
     }
   }
 

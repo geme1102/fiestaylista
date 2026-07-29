@@ -46,7 +46,7 @@ export default async (request: Request, context: Context) => {
   }
 
   try {
-    const apiRes = await fetch(`https://fiestaylista.com/api/events/slug/${encodeURIComponent(slug)}`, {
+    const apiRes = await fetch(`${url.origin}/api/events/slug/${encodeURIComponent(slug)}`, {
       headers: { "Accept": "application/json" },
       signal: AbortSignal.timeout(5000),
     });

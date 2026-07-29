@@ -11,6 +11,7 @@ const path = require('path');
 
 const SITEMAP_PATH = path.resolve(__dirname, '..', 'dist', 'sitemap.xml');
 const API_BASE = process.env.VITE_API_URL || 'https://fiestaylista-production.up.railway.app';
+const SITE_URL = process.env.VITE_APP_URL || 'https://fiestaylista.com';
 
 async function fetchJSON(url) {
   return new Promise((resolve, reject) => {
@@ -58,7 +59,7 @@ async function generateSitemap() {
   const entries = events
     .map((e) => {
       const lastmod = e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : '';
-      return `  <url>\n    <loc>https://fiestaylista.com/e/${encodeURIComponent(e.slug)}</loc>${lastmod}\n    <changefreq>daily</changefreq>\n    <priority>0.5</priority>\n  </url>`;
+      return `  <url>\n    <loc>${SITE_URL}/e/${encodeURIComponent(e.slug)}</loc>${lastmod}\n    <changefreq>daily</changefreq>\n    <priority>0.5</priority>\n  </url>`;
     })
     .join('\n');
 

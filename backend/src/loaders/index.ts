@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import * as Sentry from '@sentry/node';
 import { config } from '../config.js';
+import { sql } from '../db/index.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Loaders');
@@ -79,7 +80,6 @@ export interface ServiceCheck {
 export async function checkDatabase(): Promise<ServiceCheck> {
   const start = Date.now();
   try {
-    const { sql } = await import('../db/index.js');
     await sql`SELECT 1`;
     return { status: 'ok', latency: Date.now() - start };
   } catch {

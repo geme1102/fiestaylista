@@ -77,12 +77,6 @@ const upload = multer({
   },
 });
 
-cloudinary.config({
-  cloud_name: config.CLOUDINARY_CLOUD_NAME || undefined,
-  api_key: config.CLOUDINARY_API_KEY || undefined,
-  api_secret: config.CLOUDINARY_API_SECRET || undefined,
-});
-
 async function cleanupFile(filePath: string): Promise<void> {
   try { await unlink(filePath); } catch { /* ignore cleanup errors */ }
 }
@@ -120,6 +114,21 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
   });
 }
 
+async function uploadWithRetry(filePath: string, mimeType: string, maxRetries = 2): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await cloudinaryUploadWithTimeout(filePath, mimeType);
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): Promise<string> {
   let timer: ReturnType<typeof setTimeout>;
   return Promise.race([
@@ -155,7 +164,7 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
         throw new ValidationError('El archivo no es una imagen válida');
       }
 
-      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
+      const url = await uploadWithRetry(filePath, detectedMime || req.file.mimetype);
       await cleanupFile(filePath);
       res.status(201).json({ url });
     } catch (error) {
@@ -208,7 +217,7 @@ router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Respo
         await cleanupFile(filePath);
         throw new ValidationError('El archivo no es una imagen válida');
       }
-      const url = await cloudinaryUploadWithTimeout(filePath, detectedMime || req.file.mimetype);
+      const url = await uploadWithRetry(filePath, detectedMime || req.file.mimetype);
       await cleanupFile(filePath);
       res.status(201).json({ url });
     } catch (error) {
