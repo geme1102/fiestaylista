@@ -178,13 +178,13 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
   const ref = info.externalReference;
 
   if (ref && ref.startsWith('pro_')) {
+    const match = ref.match(/^pro_plus?_(.+)_(month|year)$/);
+    if (!match) return;
     const isProPlus = ref.startsWith('pro_plus_');
     if (info.status === 'approved') {
-      const parts = ref.split('_');
       const tier = isProPlus ? 'pro_plus' : 'pro';
-      const userId = parts[isProPlus ? 2 : 1];
-      const interval = parts[isProPlus ? 3 : 2] || 'month';
-      if (!userId || !/^(month|year)$/.test(interval)) return;
+      const userId = match[1];
+      const interval = match[2] as 'month' | 'year';
       const expectedAmount = interval === 'year'
         ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
         : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
@@ -195,8 +195,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
       }
       await handleProPayment(paymentId, userId, interval, tier);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
-      const parts = ref.split('_');
-      const userId = parts[isProPlus ? 2 : 1];
+      const userId = match[1];
       await db
         .update(proPayments)
         .set({ status: 'refunded' })
@@ -255,11 +254,12 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   const ref = info.externalReference;
 
   if (ref && ref.startsWith('pro_')) {
+    const match = ref.match(/^pro_plus?_(.+)_(month|year)$/);
+    if (!match) return;
     const isProPlus = ref.startsWith('pro_plus_');
-    const parts = ref.split('_');
-    userId = parts[isProPlus ? 2 : 1];
+    userId = match[1];
     detectedTier = isProPlus ? 'pro_plus' : 'pro';
-    detectedInterval = (parts[isProPlus ? 3 : 2] || 'month') as 'month' | 'year';
+    detectedInterval = match[2] as 'month' | 'year';
 
     const expectedAmount = detectedInterval === 'year'
       ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)

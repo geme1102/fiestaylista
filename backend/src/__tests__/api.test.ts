@@ -789,7 +789,8 @@ describe('Subscription Routes', () => {
     expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
   });
 
-  it('POST /api/subscriptions/cancel - returns 502 when MP cancel fails, does not cancel locally', async () => {
+  it('POST /api/subscriptions/cancel - cancels locally even when MP cancel fails (DB-first)', async () => {
+    mockSubscriptionService.cancelSubscription.mockResolvedValue({ success: true });
     mockSubscriptionService.getCurrentSubscription.mockResolvedValue({ tier: 'pro', status: 'active', mpSubscriptionId: 'mp-1' });
     mockMercadopagoService.cancelPreapproval.mockRejectedValue(new Error('MP API error'));
 
@@ -798,9 +799,9 @@ describe('Subscription Routes', () => {
       .set(auth)
       .send({ password: 'Password1' });
 
-    expect(res.status).toBe(502);
-    expect(res.body.error).toContain('No pudimos cancelar');
-    expect(mockSubscriptionService.cancelSubscription).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-1');
+    expect(mockMercadopagoService.cancelPreapproval).toHaveBeenCalledWith('mp-1');
   });
 
   it('POST /api/subscriptions/cancel - cancels locally when no mpSubscriptionId and MP search finds nothing', async () => {
@@ -1009,10 +1010,9 @@ describe('Webhook Routes', () => {
 
     const res = await request(app)
       .post('/api/webhooks/mercadopago')
-      .query({ 'data.id': dataId })
+      .query({ 'data.id': dataId, topic: 'payment' })
       .set('x-signature', signature)
-      .set('x-request-id', requestId)
-      .send({ type: 'payment', data: { id: dataId } });
+      .set('x-request-id', requestId);
 
     expect(res.status).toBe(200);
     expect(res.body.received).toBe(true);

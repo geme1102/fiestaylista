@@ -237,20 +237,16 @@ router.post('/cancel', requireAuth, requireEmailVerified, cancelLimiter, asyncHa
     }
   }
 
+  await subscriptionService.cancelSubscription(req.user!.userId);
+
   if (mpSubscriptionId) {
-    try {
-      await mercadopagoService.cancelPreapproval(mpSubscriptionId);
-    } catch (err) {
-      log.error({ err }, 'Error al cancelar en MercadoPago — no se cancela local para evitar desincronización:');
-      sendError(res, 502, 'No pudimos cancelar el cobro automático en Mercado Pago. Intenta de nuevo o contacta a soporte.');
-      return;
-    }
+    mercadopagoService.cancelPreapproval(mpSubscriptionId).catch((err) => {
+      log.error({ err, userId: req.user!.userId }, 'Error no crítico cancelando preapproval en MP — DB ya actualizada:');
+    });
   } else {
-    // No se encontró preapproval ni localmente ni en MP
     log.warn({ userId: req.user!.userId }, 'Intento de cancelación sin mpSubscriptionId — no se encontró preapproval en MP');
   }
 
-  await subscriptionService.cancelSubscription(req.user!.userId);
   res.json({ message: 'Suscripción cancelada exitosamente' });
 }));
 

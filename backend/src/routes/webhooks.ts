@@ -1,6 +1,4 @@
 import { Router, type Request, type Response } from 'express';
-import express from 'express';
-import { z } from 'zod';
 import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago';
 import * as mpWebhooks from '../services/mp-webhooks.js';
 import { config } from '../config.js';
@@ -11,15 +9,6 @@ import { failedWebhooks } from '../db/schema.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Webhook');
-
-const mpWebhookPayloadSchema = z.object({
-  id: z.string().optional(),
-  topic: z.string().optional(),
-  type: z.string().optional(),
-  data: z.object({
-    id: z.string().min(1),
-  }).optional(),
-});
 
 const router = Router();
 
@@ -79,29 +68,13 @@ function verifyMpSignature(req: Request): boolean {
 }
 
 function extractTopicId(req: Request): { topic?: string; id?: string } {
-  try {
-    const bodyStr = Buffer.isBuffer(req.body) ? req.body.toString('utf-8') : '';
-    if (!bodyStr) {
-      return {
-        topic: req.query.topic as string,
-        id: req.query.id as string,
-      };
-    }
-    const parsed = mpWebhookPayloadSchema.parse(JSON.parse(bodyStr));
-    return {
-      topic: parsed.topic || parsed.type,
-      id: parsed.data?.id || parsed.id,
-    };
-  } catch (err) {
-    log.error({ err }, 'Error parsing webhook body:');
-    return {
-      topic: req.query.topic as string,
-      id: req.query.id as string,
-    };
-  }
+  return {
+    topic: req.query.topic as string,
+    id: (req.query.id as string) || (req.query['data.id'] as string),
+  };
 }
 
-router.post('/mercadopago', express.raw({ type: '*/*', limit: '1mb' }), asyncHandler(async (req: Request, res: Response) => {
+router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => {
   const info = extractTopicId(req);
 
   if (!verifyMpSignature(req)) {

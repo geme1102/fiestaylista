@@ -10,6 +10,15 @@ vi.mock('../db/index.js', () => ({
   ),
 }));
 
+vi.mock('../utils/logger.js', () => ({
+  createModuleLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  }),
+}));
+
 describe('PostgresStore', () => {
   let store: PostgresStore;
 
