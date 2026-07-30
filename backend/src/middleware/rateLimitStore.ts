@@ -13,12 +13,12 @@ export class PostgresStore implements Store {
   localKeys = false;
 
   private windowMs: number = 60_000;
-  private initialized = false;
+  private static initialized = false;
 
   async init(options: { windowMs?: number }): Promise<void> {
     this.windowMs = options.windowMs ?? 60_000;
-    if (this.initialized) return;
-    this.initialized = true;
+    if (PostgresStore.initialized) return;
+    PostgresStore.initialized = true;
 
     try {
       await sql.unsafe(`
