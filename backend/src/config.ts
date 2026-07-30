@@ -23,7 +23,7 @@ loadEnv();
 
 function warnConfig(key: string, value: string | undefined): void {
   if (!value) {
-    console.error(`[config] Variable de entorno no configurada: ${key} — la funcionalidad asociada no estará disponible`);
+    console.warn(`[config] Variable opcional no configurada: ${key} — la funcionalidad asociada no estará disponible`);
   }
 }
 

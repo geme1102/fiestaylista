@@ -249,6 +249,12 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE INDEX IF NOT EXISTS "subscriptions_status_created_at_idx" ON "subscriptions"("status", "created_at")`,
     ],
   },
+  {
+    name: 'last_sequence_check_column',
+    statements: [
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_sequence_check" timestamp with time zone`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
