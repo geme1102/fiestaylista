@@ -2,7 +2,7 @@ import type { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
-import { UnauthorizedError, ValidationError } from '../utils/errors.js';
+import { UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { applyRLSContext } from './rls.js';
@@ -119,27 +119,6 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
     next();
   } catch {
     next();
-  }
-}
-
-export async function requireEmailVerified(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
-  try {
-    if (!req.user) {
-      throw new UnauthorizedError('Token de acceso requerido');
-    }
-    const [user] = await db
-      .select({ emailVerified: users.emailVerified })
-      .from(users)
-      .where(eq(users.id, req.user.userId))
-      .limit(1);
-
-    if (!user?.emailVerified) {
-      throw new ValidationError('Debes verificar tu correo electrónico antes de continuar. Revisa tu bandeja de entrada.');
-    }
-
-    next();
-  } catch (error) {
-    next(error);
   }
 }
 

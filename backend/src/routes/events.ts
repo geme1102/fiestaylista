@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { requireAuth, requireEmailVerified } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
 import { checkActiveEventLimit } from '../middleware/subscription.js';
 import * as eventService from '../services/event.js';
@@ -47,7 +47,7 @@ router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   res.json({ events });
 }));
 
-router.post('/', requireAuth, requireEmailVerified, createEventLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, createEventLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = createEventSchema.parse(req.body) as CreateEventData;
   const event = await eventService.createEvent(req.user!.userId, data);
   res.status(201).json({ event });
@@ -83,7 +83,7 @@ router.put('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), 
   res.json({ event });
 }));
 
-router.delete('/:id', requireAuth, requireEmailVerified, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
   const result = await eventService.deleteEvent(req.params.id as string, req.user!.userId);
   res.json(result);
 }));
