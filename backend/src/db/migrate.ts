@@ -255,6 +255,42 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_sequence_check" timestamp with time zone`,
     ],
   },
+  // 🔴 CRITICAL: needed by auth.ts register() — cada registro falla sin esta columna
+  {
+    name: 'users_token_version',
+    statements: [
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "token_version" integer NOT NULL DEFAULT 0`,
+    ],
+  },
+  // 🔴 CRITICAL: needed by mp-webhooks.ts:57 — cada webhook de pago falla sin esta columna
+  {
+    name: 'pro_payments_tier',
+    statements: [
+      `ALTER TABLE "pro_payments" ADD COLUMN IF NOT EXISTS "tier" text NOT NULL DEFAULT 'pro'`,
+    ],
+  },
+  // 🟡 Preventiva: todas las columnas del schema sin ADD COLUMN previo
+  {
+    name: 'ensure_all_schema_columns',
+    statements: [
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "boosted_until" timestamp with time zone`,
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone`,
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_date" timestamp with time zone`,
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_location" text`,
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_note" text`,
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "view_count" integer NOT NULL DEFAULT 0`,
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "mp_subscription_id" text`,
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "tier" text NOT NULL DEFAULT 'free'`,
+      `ALTER TABLE "cash_contributions" ADD COLUMN IF NOT EXISTS "fee_amount" integer NOT NULL DEFAULT 0`,
+      `ALTER TABLE "cash_contributions" ADD COLUMN IF NOT EXISTS "net_amount" integer NOT NULL DEFAULT 0`,
+      `ALTER TABLE "cash_contributions" ADD COLUMN IF NOT EXISTS "mp_payment_id" text`,
+      `ALTER TABLE "pro_payments" ADD COLUMN IF NOT EXISTS "interval" text NOT NULL DEFAULT 'month'`,
+      `ALTER TABLE "failed_webhooks" ADD COLUMN IF NOT EXISTS "retry_count" integer NOT NULL DEFAULT 0`,
+      `ALTER TABLE "failed_webhooks" ADD COLUMN IF NOT EXISTS "status" text NOT NULL DEFAULT 'pending'`,
+      `ALTER TABLE "event_views" ADD COLUMN IF NOT EXISTS "referrer" text`,
+      `ALTER TABLE "event_views" ADD COLUMN IF NOT EXISTS "user_agent" text`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
