@@ -51,6 +51,8 @@ export default function Account() {
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelSubmittingRef = useRef(false);
+  const deleteAccountSubmittingRef = useRef(false);
   const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
@@ -91,6 +93,8 @@ export default function Account() {
   }, []);
 
   const handleCancelSubscription = async () => {
+    if (cancelSubmittingRef.current) return;
+    cancelSubmittingRef.current = true;
     setCancelLoading(true);
     try {
       const res = await apiClient.post<{ message: string; mpWarning?: string }>('/api/subscriptions/cancel', { password: cancelPassword });
@@ -113,6 +117,7 @@ export default function Account() {
         showToast('Error al cancelar suscripción', 'error');
       }
     } finally {
+      cancelSubmittingRef.current = false;
       setCancelLoading(false);
     }
   };
@@ -138,6 +143,8 @@ export default function Account() {
   };
 
   const handleDeleteAccount = async () => {
+    if (deleteAccountSubmittingRef.current) return;
+    deleteAccountSubmittingRef.current = true;
     setDeletingAccount(true);
     try {
       await apiClient.post('/api/auth/arco/delete-account', { password: deletePassword });
@@ -149,6 +156,7 @@ export default function Account() {
       reportError(err, { source: 'Account' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
+      deleteAccountSubmittingRef.current = false;
       setDeletingAccount(false);
     }
   };

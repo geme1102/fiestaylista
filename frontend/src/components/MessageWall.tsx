@@ -27,6 +27,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +47,8 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     if (!guestName.trim() || !newMessage.trim()) {
       if (!guestName.trim()) showToast('Debes ingresar tu nombre primero', 'error');
       else showToast('Escribe un mensaje', 'error');
@@ -71,6 +74,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
       reportError(err, { source: 'MessageWall' });
       showToast(err instanceof Error ? err.message : 'Error al publicar mensaje', 'error');
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };

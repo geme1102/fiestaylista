@@ -47,6 +47,7 @@ export default function Dashboard() {
 
   const tierRef = useRef(user?.tier);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submittingRef = useRef(false);
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
   const [syncingPayment, setSyncingPayment] = useState(false);
@@ -183,6 +184,8 @@ export default function Dashboard() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     if (!formData.title.trim()) {
       showToast('El nombre del evento es obligatorio', 'error');
       return;
@@ -213,6 +216,7 @@ export default function Dashboard() {
       showToast(err instanceof Error ? err.message : 'Error al crear el evento. Verifica los datos e intenta de nuevo.', 'error');
     } finally {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      submittingRef.current = false;
       setCreating(false);
     }
   };

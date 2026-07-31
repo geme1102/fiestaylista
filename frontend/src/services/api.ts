@@ -3,6 +3,11 @@ import { reportError } from '../lib/reportError';
 let accessToken: string | null = null;
 const REQUEST_TIMEOUT = 10000;
 const MAX_RETRIES = 1;
+// Fase 6: solo métodos idempotentes se reintentan en 5xx/errores de red.
+// Un POST que devuelve 500 puede haberse COMMITEADO parcialmente en el server
+// (ej: usuario creado, emisión de tokens falló) — reintentarlo produce
+// 409 "ya existe" y cascadas de estados corruptos.
+const RETRYABLE_METHODS: ReadonlySet<HttpMethod> = new Set(['GET']);
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,7 +96,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
         }
         reportError(error, { source: 'api' });
-        if (attempt < MAX_RETRIES) {
+        if (RETRYABLE_METHODS.has(method) && attempt < MAX_RETRIES) {
           lastError = new Error('Error de conexión. Reintentando...');
           continue;
         }
@@ -141,7 +146,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         }
       }
 
-      if (res.status >= 500 && attempt < MAX_RETRIES) {
+      if (RETRYABLE_METHODS.has(method) && res.status >= 500 && attempt < MAX_RETRIES) {
         lastError = new Error(`Error del servidor (${res.status}). Reintentando...`);
         continue;
       }
@@ -264,13 +269,8 @@ export const apiClient = {
             return;
           }
 
-          // Server error: retry with exponential backoff
-          if (retriesLeft > 0) {
-            await delay(Math.min(1000 * Math.pow(2, MAX_RETRIES - retriesLeft), 4000));
-            resolve(doUpload(token, retriesLeft - 1));
-            return;
-          }
-
+          // Server error: Fase 6 — NO reintentar en 5xx (upload es POST no
+          // idempotente: el server pudo crear la foto y fallar después).
           let msg = `Error ${xhr.status}`;
           try { const err = JSON.parse(xhr.responseText); msg = err.message ?? err.error ?? msg; } catch {}
           reject(new Error(msg));

@@ -93,6 +93,7 @@ export default function Pricing() {
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const submittingRef = useRef(false);
   useEffect(() => { return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current); }; }, []);
 
   useEffect(() => {
@@ -128,6 +129,8 @@ export default function Pricing() {
       navigate('/dashboard');
       return;
     }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     let token = turnstileToken;
     if (!token) {
       if (!turnstileReady) {
@@ -173,6 +176,8 @@ export default function Pricing() {
       showToast(err instanceof Error ? err.message : 'Error al procesar el pago. Recarga la página e intenta de nuevo.', 'error');
       setLoading(false);
       setSelectedTier(null);
+    } finally {
+      submittingRef.current = false;
     }
   };
 

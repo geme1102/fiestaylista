@@ -21,6 +21,7 @@ export default function Login() {
   const navigatedRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const submittingRef = useRef(false);
 
   const { containerRef, token: turnstileToken, error: turnstileError, reset: resetTurnstile } = useTurnstile();
   const isFormValid = email.length > 0 && password.length > 0 && (!!turnstileToken || !import.meta.env.VITE_TURNSTILE_SITE_KEY);
@@ -36,6 +37,8 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     if (loading) return;
 
     if (!email || !password) {
@@ -103,6 +106,8 @@ export default function Login() {
       } else {
         showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
       }
+    } finally {
+      submittingRef.current = false;
     }
   };
 

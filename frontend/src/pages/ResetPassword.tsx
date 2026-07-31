@@ -23,6 +23,7 @@ export default function ResetPassword() {
   const { containerRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const submittingRef = useRef(false);
 
   if (!resetToken) {
     return <Navigate to="/login" replace />;
@@ -47,6 +48,9 @@ export default function ResetPassword() {
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     setLoading(true);
     try {
       let token = turnstileToken;
@@ -65,6 +69,7 @@ export default function ResetPassword() {
       reportError(err, { source: 'ResetPassword' });
       showToast(err instanceof Error ? err.message : 'Error al restablecer contraseña', 'error');
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };

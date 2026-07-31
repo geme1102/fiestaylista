@@ -36,6 +36,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [loadError, setLoadError] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boostSubmittingRef = useRef(false);
 
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
   const boostTurnstileTokenRef = useRef(boostTurnstileToken);
@@ -90,6 +91,8 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   }, [fund?.collectedAmount, fund?.targetAmount]);
 
   const handleBoost = async () => {
+    if (boostSubmittingRef.current) return;
+    boostSubmittingRef.current = true;
     setBoostLoading(true);
     try {
       let token: string | null = boostTurnstileToken;
@@ -104,6 +107,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
       reportError(err, { source: 'CashFundSection' });
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
+      boostSubmittingRef.current = false;
       setBoostLoading(false);
     }
   };
@@ -387,8 +391,11 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
   const [type, setType] = useState(fund.bankType || 'nequi');
   const [saving, setSaving] = useState(false);
   const [show, setShow] = useState(false);
+  const saveSubmittingRef = useRef(false);
 
   const handleSave = async () => {
+    if (saveSubmittingRef.current) return;
+    saveSubmittingRef.current = true;
     setSaving(true);
     try {
       const { apiClient } = await import('../services/api');
@@ -402,6 +409,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
       reportError(err, { source: 'AdminBankConfig' });
       showToast(err instanceof Error ? err.message : 'Error al guardar', 'error');
     } finally {
+      saveSubmittingRef.current = false;
       setSaving(false);
     }
   };
@@ -472,6 +480,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const promiseSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -485,6 +494,9 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
       showToast('El monto debe ser un número entero mayor o igual a $2,000', 'error');
       return;
     }
+
+    if (promiseSubmittingRef.current) return;
+    promiseSubmittingRef.current = true;
 
     setSubmitting(true);
     try {
@@ -507,6 +519,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
       reportError(err, { source: 'PromiseForm' });
       showToast(err instanceof Error ? err.message : 'Error al registrar tu aporte', 'error');
     } finally {
+      promiseSubmittingRef.current = false;
       setSubmitting(false);
     }
   };

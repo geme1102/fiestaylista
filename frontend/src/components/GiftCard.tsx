@@ -36,6 +36,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const submittingRef = useRef(false);
   const tilt = use3DTilt(8);
 
   useEffect(() => {
@@ -49,6 +50,8 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   const onImgError = () => setImgError(true);
 
   const handleGroupClaim = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     if (!claimName.trim()) return;
 
     setClaiming(true);
@@ -72,6 +75,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       reportError(err, { source: 'GiftCard' });
       showToast(err instanceof Error ? err.message : 'Error al unirte al regalo', 'error');
     } finally {
+      submittingRef.current = false;
       setClaiming(false);
     }
   };

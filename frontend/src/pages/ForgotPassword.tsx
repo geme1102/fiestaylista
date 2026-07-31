@@ -19,6 +19,7 @@ export default function ForgotPassword() {
   const { containerRef, token: turnstileToken } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const submittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +31,9 @@ export default function ForgotPassword() {
       showToast('Ingresa un correo electrónico válido', 'error');
       return;
     }
+
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     setLoading(true);
     try {
@@ -48,6 +52,7 @@ export default function ForgotPassword() {
       reportError(err, { source: 'ForgotPassword' });
       showToast(err instanceof Error ? err.message : 'Error al enviar correo', 'error');
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };

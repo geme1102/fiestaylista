@@ -95,6 +95,10 @@ export default function EventAdmin() {
   const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
   const boostTurnstileTokenRef = useRef(boostTurnstileToken);
   useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
+  const addGiftSubmittingRef = useRef(false);
+  const addSuggestionSubmittingRef = useRef(false);
+  const updateDetailsSubmittingRef = useRef(false);
+  const boostSubmittingRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -206,6 +210,8 @@ export default function EventAdmin() {
   });
 
   const handleAddGift = useCallback(async () => {
+    if (addGiftSubmittingRef.current) return;
+    addGiftSubmittingRef.current = true;
     if (!newGiftName.trim() || addingGift) return;
     setAddingGift(true);
     try {
@@ -217,6 +223,7 @@ export default function EventAdmin() {
       reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al agregar regalo', 'error');
     } finally {
+      addGiftSubmittingRef.current = false;
       setAddingGift(false);
     }
   }, [newGiftName, addingGift, id]);
@@ -248,6 +255,8 @@ export default function EventAdmin() {
   }, [id]);
 
   const handleAddSuggestion = useCallback(async (name: string) => {
+    if (addSuggestionSubmittingRef.current) return;
+    addSuggestionSubmittingRef.current = true;
     setAddingGift(true);
     try {
       const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name });
@@ -257,11 +266,14 @@ export default function EventAdmin() {
       reportError(err, { source: 'EventAdmin' });
       showToast('Error al agregar regalo', 'error');
     } finally {
+      addSuggestionSubmittingRef.current = false;
       setAddingGift(false);
     }
   }, [id]);
 
   const handleUpdateDetails = async () => {
+    if (updateDetailsSubmittingRef.current) return;
+    updateDetailsSubmittingRef.current = true;
     if (!titleDraft.trim()) {
       showToast('El nombre del evento es obligatorio', 'error');
       return;
@@ -282,6 +294,7 @@ export default function EventAdmin() {
       reportError(err, { source: 'EventAdmin' });
       showToast('Error al actualizar los datos del evento. Verifica los campos e intenta de nuevo.', 'error');
     } finally {
+      updateDetailsSubmittingRef.current = false;
       setUpdatingDetails(false);
     }
   };
@@ -399,6 +412,8 @@ export default function EventAdmin() {
   }, [id, event, completing]);
 
   const handleBoost = async () => {
+    if (boostSubmittingRef.current) return;
+    boostSubmittingRef.current = true;
     if (!id) return;
     setBoostLoading(true);
     try {
@@ -424,6 +439,7 @@ export default function EventAdmin() {
       reportError(err, { source: 'EventAdmin' });
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
+      boostSubmittingRef.current = false;
       setBoostLoading(false);
     }
   };

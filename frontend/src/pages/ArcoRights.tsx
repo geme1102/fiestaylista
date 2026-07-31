@@ -111,6 +111,8 @@ export default function ArcoRights() {
   const [formType, setFormType] = useState<'rectify' | 'oppose' | null>(null);
   const [formDetails, setFormDetails] = useState('');
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const requestSubmittingRef = useRef(false);
+  const deleteAccountSubmittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -146,6 +148,8 @@ export default function ArcoRights() {
   useLockedBody(showDeleteModal);
 
   const handleDeleteAccount = async () => {
+    if (deleteAccountSubmittingRef.current) return;
+    deleteAccountSubmittingRef.current = true;
     setLoading(true);
     try {
       await apiClient.post('/api/auth/arco/delete-account', { password: deletePassword });
@@ -157,12 +161,15 @@ export default function ArcoRights() {
       reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al eliminar cuenta', 'error');
     } finally {
+      deleteAccountSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (requestSubmittingRef.current) return;
+    requestSubmittingRef.current = true;
     if (!formType) return;
     setLoading(true);
     try {
@@ -179,6 +186,7 @@ export default function ArcoRights() {
       reportError(err, { source: 'ArcoRights' });
       showToast(err instanceof Error ? err.message : 'Error al enviar solicitud', 'error');
     } finally {
+      requestSubmittingRef.current = false;
       setLoading(false);
     }
   };

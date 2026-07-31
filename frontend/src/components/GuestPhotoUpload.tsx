@@ -23,6 +23,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -48,6 +49,8 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   };
 
   const handleUpload = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const file = fileInputRef.current?.files?.[0];
     if (!file) return;
 
@@ -107,6 +110,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       reportError(err, { source: 'GuestPhotoUpload' });
       showToast(err instanceof Error ? err.message : 'Error al subir la foto', 'error');
     } finally {
+      submittingRef.current = false;
       setUploading(false);
     }
   };

@@ -204,6 +204,32 @@ describe('request retry and error handling', () => {
     );
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
+
+  // Fase 6: POST no es idempotente — un 500 puede haber commiteado parcialmente
+  // en el server (ej: usuario creado, emisión de tokens falló). Reintentar
+  // produce 409 "ya existe" y cascadas de estados corruptos.
+  it('does not retry on 5xx for POST (non-idempotent)', async () => {
+    mockFetchOnce(500, { error: 'Server error' });
+
+    await expect(apiClient.post('/api/crear', { foo: 1 })).rejects.toThrow('Server error');
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry on network error for POST (non-idempotent)', async () => {
+    mockFetchNetworkError();
+
+    await expect(apiClient.post('/api/crear', { foo: 1 })).rejects.toThrow(
+      'Error de conexión. Verifica tu internet e intenta de nuevo.'
+    );
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry on 5xx for PUT (non-idempotent path)', async () => {
+    mockFetchOnce(500, { error: 'Server error' });
+
+    await expect(apiClient.put('/api/actualizar', { foo: 1 })).rejects.toThrow('Server error');
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('401 refresh token flow', () => {
@@ -315,6 +341,19 @@ describe('uploadWithProgress (XHR)', () => {
 
     await expect(promise).rejects.toThrow('Error de conexión');
     vi.useRealTimers();
+  });
+
+  // Fase 6: upload es POST no idempotente — no reintentar en 5xx (el server
+  // pudo haber creado la foto y fallado en la respuesta).
+  it('does not retry on 5xx for upload (non-idempotent POST)', async () => {
+    const xhr = mockXhr();
+    xhr.status = 500;
+    xhr.responseText = JSON.stringify({ error: 'Fallo interno' });
+
+    const promise = apiClient.uploadWithProgress('/api/upload', new FormData(), vi.fn());
+    xhr.onload!();
+
+    await expect(promise).rejects.toThrow('Fallo interno');
   });
 
   it('calls onprogress callback', async () => {
