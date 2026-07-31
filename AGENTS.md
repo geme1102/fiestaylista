@@ -64,7 +64,7 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **Cron jobs**: `yieldToEventLoop()` cada N iteraciones en loops batch para no bloquear el event loop. `runWithLock` con advisory lock previene ejecución duplicada entre instancias.
 - **Carga de env**: `src/config.ts` lee `.env` manualmente (no dotenv). `process.env` tiene prioridad sobre `.env`. Vars críticas causan `process.exit(1)` si faltan en producción.
 - **Validación de requests**: se hace inline en cada ruta con Zod + `asyncHandlerWithValidation`. No hay middleware centralizado `validation.ts`. El wrapper captura `ZodError` automáticamente, no es necesario try-catch manual.
-- **SSL**: incondicional para conexiones non-localhost. Localhost (`docker compose`) desactiva SSL. **TLS 1.3 forzado vía Cloudflare Dashboard** (no código) — configurar SSL/TLS → "Full (Strict)" + "Minimum TLS Version → TLS 1.3".
+- **SSL**: incondicional para conexiones non-localhost. Localhost (`docker compose`) desactiva SSL. HTTPS del frontend lo gestiona Netlify (certificados automáticos sobre el dominio `fiestaylista.com`); el de la API lo gestiona Railway (dominio público `*.up.railway.app`). El dominio NO está proxyado por Cloudflare; Cloudflare se usa solo para Turnstile (CAPTCHA). No hay TLS 1.3 "forzado" en edge — se hereda el mínimo de Netlify/Railway (TLS 1.2+).
 - **Turnstile**: `verifyTurnstile` es obligatorio (lanza 400 sin token). `verifyTurnstileOptional` deja pasar sin token (rate limiter actúa como fallback). Login/register usan opcional; forgot/reset password y todos los endpoints de invitados usan obligatorio.
 - **Cookie refresh token**: httpOnly, path `/api/auth/refresh`, prefijo `__Secure-` en producción. Cookie compañera no-httpOnly `hasRefresh=1` en path `/` permite al frontend saltar llamadas innecesarias de refresh.
 
@@ -78,7 +78,7 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 ### Deploy
 - **Orden de CI**: lint → typecheck → test → build. Push a `main` dispara Railway (backend) + Netlify (frontend). PRs generan preview en Netlify.
 - **Healthcheck de Railway**: 30s de timeout en `/health`. Si migraciones o `createApp()` fallan, el servidor nunca arranca y el healthcheck falla el deploy.
-- **Cloudflare SSL/TLS**: configurar en Cloudflare Dashboard → SSL/TLS → "Full (Strict)" + Minimum TLS Version → TLS 1.3. No se puede forzar desde el código; el startup log lo recuerda cada vez que arranca el server.
+- **SSL/HTTPS**: gestionado por Netlify (frontend, certificados automáticos) y Railway (API). Cloudflare solo participa como proveedor de Turnstile (CAPTCHA) — no hay nada que configurar en su dashboard. Si el proyecto Railway se renombra, actualizar el redirect `/api/*` en `netlify.toml`, el `connect-src` del CSP y `BACKEND_URL` en Railway.
 - **`Dockerfile`**: build multi-stage. Imagen final copia `dist/`, corre `startup.sh` (`node dist/backend/src/index.js` con `--max-old-space-size=448`). El heap de Node está ajustado a 448MB para dejar ~64MB al OS Alpine en un contenedor de 512MB, evitando OOM kills silenciosos de Railway.
 
 ## Convenciones

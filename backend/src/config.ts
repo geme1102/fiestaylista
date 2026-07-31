@@ -118,11 +118,16 @@ function validateConfig(): void {
     }
 
 
-    // Verificar configuración de SSL/TLS en Cloudflare (dashboard, no código)
+    // Recordatorio de infraestructura (Netlify/Railway — Cloudflare NO proxy del dominio):
+    // - SSL del frontend: certificados automáticos de Netlify sobre fiestaylista.com.
+    // - SSL de la API: dominio público de Railway (*.up.railway.app).
+    // - Cloudflare se usa SOLO para Turnstile (CAPTCHA), no como CDN/proxy.
+    // - Si el proyecto Railway se renombra, actualizar netlify.toml (redirect /api/*)
+    //   y el CSP connect-src, además de BACKEND_URL.
     console.warn('[config] ════════════════════════════════════════════════════════════');
-    console.warn('[config]  RECORDATORIO: Verificar en Cloudflare Dashboard SSL/TLS:');
-    console.warn('[config]   • Modo → "Full (Strict)"');
-    console.warn('[config]   • Minimum TLS Version → TLS 1.3');
+    console.warn('[config]  SSL/HTTPS gestionado por Netlify (frontend) y Railway (API).');
+    console.warn('[config]  Cloudflare solo participa como Turnstile (CAPTCHA).');
+    console.warn('[config]  Si Railway se renombra: actualizar netlify.toml, CSP, BACKEND_URL.');
     console.warn('[config] ════════════════════════════════════════════════════════════');
 
     const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
