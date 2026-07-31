@@ -23,19 +23,22 @@ let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
 
 export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
-    let acquired = false;
+    // El lock se adquiere y LIBERA dentro de la misma transacción (xact lock).
+    // fn() se ejecuta DENTRO de la transacción para que el lock siga activo
+    // mientras corre — antes se ejecutaba fuera y dos instancias podían
+    // correr el mismo cron en paralelo (emails/llamadas MP duplicados).
     await db.transaction(async (tx) => {
       const [result] = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(1, hashtext(${name})) as acquired`);
       const row = Array.isArray(result) ? result[0] : result;
-      acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
+      const acquired = row !== null && (row as Record<string, unknown>)?.acquired === true;
+
+      if (!acquired) {
+        log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
+        return;
+      }
+
+      await fn();
     });
-
-    if (!acquired) {
-      log.info(`Saltando ${name} - lock no adquirido (otra instancia está ejecutando)`);
-      return;
-    }
-
-    await fn();
   } catch (error) {
     log.error({ error }, `Error en lock para ${name}:`);
     if (isSentryEnabled()) {

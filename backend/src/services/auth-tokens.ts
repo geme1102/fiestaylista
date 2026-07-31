@@ -64,7 +64,10 @@ export async function rotateRefreshToken(
 ): Promise<TokenPair> {
   const tokenHash = hashToken(token);
 
-  return await db.transaction(async (tx) => {
+  // Transacción 1: claim atómico. Solo el camino de éxito escribe aquí.
+  // El reuso se DETECTA sin escribir (ROLLBACK borraría las escrituras de
+  // seguridad si se lanzara el error dentro de la transacción).
+  const rotation = await db.transaction(async (tx) => {
     // Atomic claim: UPDATE...RETURNING serializes concurrent requests.
     // Only ONE request gets the row back; others get nothing.
     const [claimed] = await tx
@@ -109,13 +112,16 @@ export async function rotateRefreshToken(
           ),
         ));
 
-      return { accessToken: '', refreshToken: newToken, userId: claimed.userId };
+      return {
+        ok: true as const,
+        tokenPair: { accessToken: '', refreshToken: newToken, userId: claimed.userId },
+      };
     }
 
     // Token was NOT claimed — either doesn't exist or already revoked.
     // Fallback SELECT to determine which.
     const [existing] = await tx
-      .select({ userId: refreshTokens.userId, familyId: refreshTokens.familyId, revoked: refreshTokens.revoked })
+      .select({ userId: refreshTokens.userId, familyId: refreshTokens.familyId })
       .from(refreshTokens)
       .where(eq(refreshTokens.tokenHash, tokenHash))
       .limit(1);
@@ -125,17 +131,19 @@ export async function rotateRefreshToken(
     }
 
     // Token exists but was already revoked → REUSE DETECTED
-    const familyId = existing.familyId;
-    log.warn({ userId: existing.userId, familyId }, 'Intento de reuso de refresh token detectado. Revocando toda la familia.');
+    return { ok: false as const, userId: existing.userId, familyId: existing.familyId };
+  });
 
-    await tx.insert(auditLogs).values({
-      userId: existing.userId,
-      action: 'TOKEN_REUSE',
-      resource: 'auth',
-      resourceId: existing.userId,
-      metadata: JSON.stringify({ detail: 'Refresh token reuse detected — entire family revoked', familyId: familyId ?? 'legacy' }),
-    }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
+  if (rotation.ok) {
+    return rotation.tokenPair;
+  }
 
+  // Transacción 2 (separada): las escrituras de seguridad se COMMITEAN antes
+  // de lanzar el error — sobreviven al throw.
+  const { userId, familyId } = rotation;
+  log.warn({ userId, familyId }, 'Intento de reuso de refresh token detectado. Revocando toda la familia.');
+
+  await db.transaction(async (tx) => {
     if (familyId) {
       await tx
         .update(refreshTokens)
@@ -146,17 +154,26 @@ export async function rotateRefreshToken(
       await tx
         .update(refreshTokens)
         .set({ revoked: true })
-        .where(eq(refreshTokens.userId, existing.userId));
+        .where(eq(refreshTokens.userId, userId));
     }
 
     // Invalidate current access tokens on reuse detection
     await tx
       .update(users)
       .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
-      .where(eq(users.id, existing.userId));
-
-    throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
+      .where(eq(users.id, userId));
   });
+
+  // Audit best-effort: nunca debe bloquear la revocación de seguridad
+  db.insert(auditLogs).values({
+    userId,
+    action: 'TOKEN_REUSE',
+    resource: 'auth',
+    resourceId: userId,
+    metadata: JSON.stringify({ detail: 'Refresh token reuse detected — entire family revoked', familyId: familyId ?? 'legacy' }),
+  }).catch((err: unknown) => log.error({ err }, 'Error al registrar audit log de reuso de token:'));
+
+  throw new UnauthorizedError('Token de refresco inválido o ya utilizado');
 }
 
 export async function issueTokenPair(userId: string, email: string, currentTokenVersion: number, client: DbClient = db): Promise<TokenPair> {
