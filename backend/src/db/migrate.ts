@@ -354,6 +354,309 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE UNIQUE INDEX IF NOT EXISTS "gifts_event_id_name_unique" ON "gifts"("event_id", "name") WHERE "deleted_at" IS NULL`,
     ],
   },
+  // Bootstrap: CREATE TABLE IF NOT EXISTS de las tablas que solo existían en
+  // SQL legacy (nunca ejecutados por el runner). Reproducen schema.ts con
+  // timestamptz — no-op en DBs existentes, permiten arrancar en DBs nuevas.
+  {
+    name: 'bootstrap_users_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "users" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "email" text NOT NULL,
+        "password_hash" text NOT NULL,
+        "name" text NOT NULL,
+        "tier" text NOT NULL DEFAULT 'free',
+        "last_sequence_check" timestamptz,
+        "email_verified" boolean NOT NULL DEFAULT false,
+        "onboarding_completed" boolean NOT NULL DEFAULT false,
+        "welcome_tutorial_completed" boolean NOT NULL DEFAULT false,
+        "verification_token" text,
+        "verification_token_expires" timestamptz,
+        "reset_token" text,
+        "reset_token_expires" timestamptz,
+        "token_version" integer NOT NULL DEFAULT 0,
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        "updated_at" timestamptz DEFAULT now() NOT NULL,
+        CONSTRAINT "users_email_unique" UNIQUE("email")
+      )`,
+      `CREATE INDEX IF NOT EXISTS "users_verification_token_idx" ON "users"("verification_token")`,
+      `CREATE INDEX IF NOT EXISTS "users_reset_token_idx" ON "users"("reset_token")`,
+      `CREATE INDEX IF NOT EXISTS "users_token_version_idx" ON "users"("token_version")`,
+    ],
+  },
+  {
+    name: 'bootstrap_events_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "events" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "title" text NOT NULL,
+        "event_type" text NOT NULL DEFAULT 'BABY_SHOWER',
+        "host_phone" text,
+        "slug" text NOT NULL,
+        "status" text NOT NULL DEFAULT 'active' CHECK ("status" IN ('active','completed','paused')),
+        "is_active" boolean NOT NULL DEFAULT true,
+        "boosted_until" timestamptz,
+        "deleted_at" timestamptz,
+        "event_date" timestamptz,
+        "event_location" text,
+        "event_note" text,
+        "frozen_at" timestamptz,
+        "view_count" integer NOT NULL DEFAULT 0,
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        "updated_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "events_user_id_idx" ON "events"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "events_user_id_deleted_at_idx" ON "events"("user_id", "deleted_at")`,
+      `CREATE INDEX IF NOT EXISTS "events_deleted_at_idx" ON "events"("deleted_at")`,
+      `CREATE INDEX IF NOT EXISTS "events_user_id_is_active_deleted_at_idx" ON "events"("user_id", "is_active", "deleted_at")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "events_slug_unique" ON "events"("slug") WHERE "deleted_at" IS NULL`,
+    ],
+  },
+  {
+    name: 'bootstrap_gifts_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "gifts" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "name" text NOT NULL,
+        "is_claimed" boolean NOT NULL DEFAULT false,
+        "claimed_by" text,
+        "is_group_gift" boolean NOT NULL DEFAULT false,
+        "deleted_at" timestamptz,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "gifts_event_id_deleted_at_idx" ON "gifts"("event_id", "deleted_at")`,
+      `CREATE INDEX IF NOT EXISTS "gifts_event_id_unclaimed_idx" ON "gifts"("event_id") WHERE "is_claimed" = false`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "gifts_event_id_name_unique" ON "gifts"("event_id", "name") WHERE "deleted_at" IS NULL`,
+    ],
+  },
+  {
+    name: 'bootstrap_photos_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "photos" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "url" text NOT NULL,
+        "caption" text,
+        "is_featured" boolean NOT NULL DEFAULT false,
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        "deleted_at" timestamptz
+      )`,
+      `CREATE INDEX IF NOT EXISTS "photos_event_id_idx" ON "photos"("event_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_subscriptions_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "subscriptions" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "mp_subscription_id" text,
+        "status" text NOT NULL DEFAULT 'incomplete',
+        "tier" text NOT NULL DEFAULT 'free',
+        "current_period_start" timestamptz,
+        "current_period_end" timestamptz,
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        "updated_at" timestamptz DEFAULT now() NOT NULL,
+        CONSTRAINT "subscriptions_user_id_unique" UNIQUE("user_id")
+      )`,
+      `CREATE INDEX IF NOT EXISTS "subscriptions_status_current_period_end_idx" ON "subscriptions"("status", "current_period_end")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "subscriptions_mp_subscription_id_unique_idx" ON "subscriptions"("mp_subscription_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_cash_funds_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "cash_funds" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "title" text NOT NULL DEFAULT 'Lluvia de sobres',
+        "description" text,
+        "target_amount" integer,
+        "collected_amount" integer NOT NULL DEFAULT 0,
+        "is_active" boolean NOT NULL DEFAULT true,
+        "bank_phone" text,
+        "bank_type" text,
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        "updated_at" timestamptz DEFAULT now() NOT NULL,
+        CONSTRAINT "cash_funds_event_id_unique" UNIQUE("event_id")
+      )`,
+    ],
+  },
+  {
+    name: 'bootstrap_cash_contributions_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "cash_contributions" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "cash_fund_id" uuid NOT NULL REFERENCES "cash_funds"("id") ON DELETE CASCADE,
+        "contributor_name" text NOT NULL,
+        "message" text,
+        "amount" integer NOT NULL,
+        "fee_amount" integer NOT NULL DEFAULT 0,
+        "net_amount" integer NOT NULL DEFAULT 0,
+        "mp_payment_id" text,
+        "status" text NOT NULL DEFAULT 'promised' CHECK ("status" IN ('promised','paid','cancelled')),
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        CONSTRAINT "cash_contributions_mp_payment_id_unique" UNIQUE("mp_payment_id")
+      )`,
+      `CREATE INDEX IF NOT EXISTS "cash_contributions_cash_fund_id_idx" ON "cash_contributions"("cash_fund_id")`,
+      `CREATE INDEX IF NOT EXISTS "cash_contributions_status_created_at_idx" ON "cash_contributions"("status", "created_at")`,
+    ],
+  },
+  {
+    name: 'bootstrap_pro_payments_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "pro_payments" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid REFERENCES "users"("id") ON DELETE SET NULL,
+        "mp_payment_id" text NOT NULL,
+        "amount" integer NOT NULL,
+        "interval" text NOT NULL DEFAULT 'month',
+        "tier" text NOT NULL DEFAULT 'pro',
+        "status" text NOT NULL DEFAULT 'completed',
+        "created_at" timestamptz DEFAULT now() NOT NULL,
+        CONSTRAINT "pro_payments_mp_payment_id_unique" UNIQUE("mp_payment_id")
+      )`,
+      `CREATE INDEX IF NOT EXISTS "pro_payments_user_id_idx" ON "pro_payments"("user_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_failed_webhooks_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "failed_webhooks" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "topic" text NOT NULL,
+        "resource_id" text NOT NULL,
+        "error_message" text,
+        "retry_count" integer NOT NULL DEFAULT 0,
+        "last_attempt_at" timestamptz,
+        "next_retry_at" timestamptz,
+        "status" text NOT NULL DEFAULT 'pending',
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "failed_webhooks_status_idx" ON "failed_webhooks"("status")`,
+      `CREATE INDEX IF NOT EXISTS "failed_webhooks_next_retry_at_idx" ON "failed_webhooks"("next_retry_at")`,
+    ],
+  },
+  {
+    name: 'bootstrap_platform_fees_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "platform_fees" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "contribution_id" uuid NOT NULL REFERENCES "cash_contributions"("id") ON DELETE CASCADE,
+        "amount" integer NOT NULL,
+        "fee_amount" integer NOT NULL,
+        "net_amount" integer NOT NULL,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "platform_fees_contribution_id_idx" ON "platform_fees"("contribution_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_email_tracking_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "email_tracking" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "type" text NOT NULL,
+        "sent_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "email_tracking_user_id_type_unique_idx" ON "email_tracking"("user_id", "type")`,
+      `CREATE INDEX IF NOT EXISTS "email_tracking_sent_at_idx" ON "email_tracking"("sent_at")`,
+      `CREATE INDEX IF NOT EXISTS "email_tracking_user_id_type_sent_at_idx" ON "email_tracking"("user_id", "type", "sent_at")`,
+    ],
+  },
+  {
+    name: 'bootstrap_event_views_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "event_views" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "event_id" uuid NOT NULL REFERENCES "events"("id") ON DELETE CASCADE,
+        "referrer" text,
+        "user_agent" text,
+        "viewed_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "event_views_event_id_viewed_at_idx" ON "event_views"("event_id", "viewed_at")`,
+    ],
+  },
+  {
+    name: 'bootstrap_refresh_tokens_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "refresh_tokens" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "token_hash" text NOT NULL,
+        "expires_at" timestamptz NOT NULL,
+        "revoked" boolean NOT NULL DEFAULT false,
+        "family_id" uuid,
+        "rotated_from" uuid REFERENCES "refresh_tokens"("id") ON DELETE SET NULL,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_token_hash_idx" ON "refresh_tokens"("token_hash")`,
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_user_id_idx" ON "refresh_tokens"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_family_id_idx" ON "refresh_tokens"("family_id")`,
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_rotated_from_idx" ON "refresh_tokens"("rotated_from")`,
+    ],
+  },
+  {
+    name: 'bootstrap_consent_records_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "consent_records" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid REFERENCES "users"("id") ON DELETE SET NULL,
+        "type" text NOT NULL,
+        "version" text NOT NULL DEFAULT '1.0',
+        "ip_address" text,
+        "user_agent" text,
+        "granted" boolean NOT NULL DEFAULT true,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "consent_records_user_id_idx" ON "consent_records"("user_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_arco_requests_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "arco_requests" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid REFERENCES "users"("id") ON DELETE SET NULL,
+        "request_type" text NOT NULL,
+        "details" text,
+        "status" text NOT NULL DEFAULT 'pending',
+        "completed_at" timestamptz,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "arco_requests_user_id_idx" ON "arco_requests"("user_id")`,
+    ],
+  },
+  {
+    name: 'bootstrap_audit_logs_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "audit_logs" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid REFERENCES "users"("id") ON DELETE SET NULL,
+        "action" text NOT NULL,
+        "resource" text NOT NULL,
+        "resource_id" text,
+        "ip_address" text,
+        "user_agent" text,
+        "metadata" text,
+        "created_at" timestamptz DEFAULT now() NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS "audit_logs_user_id_idx" ON "audit_logs"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "audit_logs_action_idx" ON "audit_logs"("action")`,
+      `CREATE INDEX IF NOT EXISTS "audit_logs_created_at_idx" ON "audit_logs"("created_at")`,
+    ],
+  },
+  // Drift: schema.ts usa default 'promised' pero la DB real (legacy 0000) quedó
+  // con 'pending'. SET DEFAULT es idempotente — repetirlo es seguro.
+  {
+    name: 'cash_contributions_status_default_fix',
+    statements: [
+      `ALTER TABLE "cash_contributions" ALTER COLUMN "status" SET DEFAULT 'promised'`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
