@@ -291,6 +291,29 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `ALTER TABLE "event_views" ADD COLUMN IF NOT EXISTS "user_agent" text`,
     ],
   },
+  // 🔴 CRITICAL: refresh_tokens family_id/rotated_from (RTR) — solo existían en
+  // 0022_add_token_family_and_version.sql (legacy, nunca ejecutado por el runner).
+  // Sin estas columnas, cada login/register/refresh falla con
+  // 'column "family_id" of relation "refresh_tokens" does not exist'.
+  {
+    name: 'refresh_tokens_family_id',
+    statements: [
+      `ALTER TABLE "refresh_tokens" ADD COLUMN IF NOT EXISTS "family_id" uuid`,
+    ],
+  },
+  {
+    name: 'refresh_tokens_rotated_from',
+    statements: [
+      `ALTER TABLE "refresh_tokens" ADD COLUMN IF NOT EXISTS "rotated_from" uuid REFERENCES "refresh_tokens"("id") ON DELETE SET NULL`,
+    ],
+  },
+  {
+    name: 'refresh_tokens_rtr_indexes',
+    statements: [
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_family_id_idx" ON "refresh_tokens"("family_id")`,
+      `CREATE INDEX IF NOT EXISTS "refresh_tokens_rotated_from_idx" ON "refresh_tokens"("rotated_from")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
