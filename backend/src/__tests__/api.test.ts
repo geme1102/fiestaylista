@@ -293,7 +293,7 @@ const mockArcoService = vi.hoisted(() => ({
 
 vi.mock('../services/arco.js', () => mockArcoService);
 
-const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', boostedUntil: null, viewCount: 0, createdAt: new Date(), updatedAt: new Date(), emailVerified: true }));
+const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', viewCount: 0, createdAt: new Date(), updatedAt: new Date(), emailVerified: true }));
 
 const mockNotifications = vi.hoisted(() => ({
   emitGiftClaimed: vi.fn(),
@@ -872,27 +872,6 @@ describe('Cash Fund Routes', () => {
     mockCashFundService.getCashFund.mockResolvedValue({ collectedAmount: 100, isActive: true });
 
     const res = await request(app).get('/api/events/evt-1/cash-fund');
-    expect(res.status).toBe(200);
-  });
-});
-
-describe('Boost Routes', () => {
-  const auth = { Authorization: 'Bearer token' };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('POST /api/events/:eventId/boost - activate cash fund', async () => {
-    const res = await request(app)
-      .post('/api/events/evt-1/boost')
-      .set(auth);
-
-    expect(res.status).toBe(200);
-  });
-
-  it('GET /api/events/:eventId/boost-status - get boost status', async () => {
-    const res = await request(app).get('/api/events/evt-1/boost-status');
     expect(res.status).toBe(200);
   });
 });

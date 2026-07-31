@@ -1,11 +1,10 @@
 import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { getCashFund, getContributions, boostEvent, createPromise } from '../services/cashFund';
+import { getCashFund, getContributions, activateCashFund, createPromise } from '../services/cashFund';
 import { showToast } from '../hooks/useToast';
 import { reportError } from '../lib/reportError';
 import { formatCOP } from '../utils/format';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
-import Sheet from './ui/Sheet';
 import { Skeleton } from './ui/Skeleton';
 import type { CashFund, CashContribution } from '../types';
 
@@ -30,17 +29,12 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const [promisedTotal, setPromisedTotal] = useState(0);
   const [contributions, setContributions] = useState<CashContribution[]>([]);
   const [loading, setLoading] = useState(true);
-  const [boostModal, setBoostModal] = useState(false);
-  const [boostLoading, setBoostLoading] = useState(false);
+  const [activating, setActivating] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const boostSubmittingRef = useRef(false);
-
-  const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
-  const boostTurnstileTokenRef = useRef(boostTurnstileToken);
-  useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
+  const activateSubmittingRef = useRef(false);
 
   const canContribute = !isOwner && fund?.isActive;
 
@@ -90,25 +84,20 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
     }
   }, [fund?.collectedAmount, fund?.targetAmount]);
 
-  const handleBoost = async () => {
-    if (boostSubmittingRef.current) return;
-    boostSubmittingRef.current = true;
-    setBoostLoading(true);
+  const handleActivate = async () => {
+    if (activateSubmittingRef.current) return;
+    activateSubmittingRef.current = true;
+    setActivating(true);
     try {
-      let token: string | null = boostTurnstileToken;
-      if (!token) {
-        token = await waitForTurnstile(() => boostTurnstileTokenRef.current);
-      }
-      await boostEvent(eventId, token ?? undefined);
+      await activateCashFund(eventId);
       showToast('Lluvia de sobres activada 🚀', 'success');
-      setBoostModal(false);
       loadFund();
     } catch (err) {
       reportError(err, { source: 'CashFundSection' });
       showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
     } finally {
-      boostSubmittingRef.current = false;
-      setBoostLoading(false);
+      activateSubmittingRef.current = false;
+      setActivating(false);
     }
   };
 
@@ -151,34 +140,13 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Activa la Lluvia de Sobres</h3>
             <p className="font-body-md text-body-md text-on-surface-variant mb-6">Permite que tus invitados te envíen regalos en efectivo de forma elegante y segura.</p>
             <button
-              onClick={() => setBoostModal(true)}
-              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              onClick={handleActivate}
+              disabled={activating}
+              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
             >
-              Activar gratis
+              {activating ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
             </button>
           </div>
-          {boostModal && <div ref={boostTurnstileRef} className="hidden" />}
-          <Sheet open={boostModal} onClose={() => setBoostModal(false)} ariaLabel="Activar Lluvia de Sobres">
-            <div className="p-6 pb-safe-lg">
-              <h3 className="text-lg font-bold text-on-surface mb-2">Activar Lluvia de Sobres</h3>
-              <p className="text-sm text-on-surface-variant mb-4">
-                Activa el Cash Fund para este evento durante 30 días <strong className="text-on-surface">gratis</strong>.
-              </p>
-              <ul className="space-y-2 text-sm text-on-surface-variant mb-6">
-                <li className="flex items-center gap-2">✅ Recibe aportaciones de tus invitados</li>
-                <li className="flex items-center gap-2">✅ 3x más visitas en tu lista</li>
-                <li className="flex items-center gap-2">✅ Sin necesidad de suscripción mensual</li>
-              </ul>
-              <div className="flex gap-3">
-                <button onClick={() => setBoostModal(false)} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-medium text-on-surface-variant bg-surface-container-high rounded-xl hover:bg-surface-container-highest transition-colors">
-                  Cancelar
-                </button>
-                <button onClick={handleBoost} disabled={boostLoading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-gradient-to-r from-[#994715] to-[#833e12] rounded-xl hover:shadow-lg btn-gpu disabled:opacity-50 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface">
-                  {boostLoading ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar gratis'}
-                </button>
-              </div>
-            </div>
-          </Sheet>
         </section>
       );
     }
@@ -340,10 +308,11 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Activa la Lluvia de Sobres</h3>
             <p className="font-body-md text-body-md text-on-surface-variant mb-6">Permite que tus invitados te envíen regalos en efectivo de forma elegante y segura.</p>
             <button
-              onClick={() => setBoostModal(true)}
-              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              onClick={handleActivate}
+              disabled={activating}
+              className="px-8 py-3 bg-gradient-to-r from-[#994715] to-[#833e12] text-white font-bold rounded-xl shadow-lg shadow-[#994715]/20 active:scale-95 btn-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
             >
-              Activar
+              {activating ? <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Activar'}
             </button>
           </div>
         </section>

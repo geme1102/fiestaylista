@@ -13,7 +13,7 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
 vi.mock('../services/api', () => ({ apiClient: mockApiClient }));
-vi.mock('../services/cashFund', () => ({ getCashFund: vi.fn().mockResolvedValue({ collectedAmount: 0, isActive: false }), boostEvent: vi.fn() }));
+vi.mock('../services/cashFund', () => ({ getCashFund: vi.fn().mockResolvedValue({ collectedAmount: 0, isActive: false }) }));
 vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
 vi.mock('../components/ui/ProductTour', () => ({ ProductTour: () => null }));
 vi.mock('../components/GiftCard', () => ({ default: () => <div /> }));

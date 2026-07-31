@@ -69,7 +69,6 @@ const mockSingleEvent = {
   cashFund: { collectedAmount: 150000 },
   isActive: true,
   createdAt: '2025-01-01',
-  boostedUntil: null,
   status: 'active',
 };
 
@@ -85,7 +84,6 @@ const mockEvents = [
     cashFund: null,
     isActive: true,
     createdAt: '2025-02-01',
-    boostedUntil: new Date(Date.now() + 86400000).toISOString(),
     status: 'active',
   },
 ];

@@ -219,8 +219,7 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
         log.error({ err, paymentId }, 'Error marcando pago como reembolsado:');
         return [];
       });
-    // Solo cancelar suscripción si este era un pago de suscripción (tier no es null)
-    // Los pagos de boost ($4.99) no tienen tier y no deben cancelar la suscripción.
+    // Solo cancelar suscripción si este era un pago de suscripción (tier no es null).
     if (updated?.userId && updated.tier) {
       await subscriptionService.cancelSubscription(updated.userId, true);
     }

@@ -24,7 +24,6 @@ export interface Event {
   isActive: boolean;
   giftCount?: number;
   photoCount?: number;
-  boostedUntil?: string;
   viewCount?: number;
   cashFund?: { collectedAmount: number; targetAmount?: number | null } | null;
   eventDate?: string | null;

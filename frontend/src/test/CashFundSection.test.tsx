@@ -10,7 +10,7 @@ const mockShowToast = vi.hoisted(() => vi.fn());
 vi.mock('../services/cashFund', () => ({
   getCashFund: mockGetCashFund,
   getContributions: mockGetContributions,
-  boostEvent: vi.fn(),
+  activateCashFund: vi.fn(),
   createPromise: mockCreatePromise,
 }));
 
@@ -65,7 +65,7 @@ describe('CashFundSection', () => {
     });
   });
 
-  it('shows boost activation for owner when no fund exists', async () => {
+  it('shows activation button for owner when no fund exists', async () => {
     mockGetCashFund.mockResolvedValue({ cashFund: null, promisedTotal: 0 });
 
     render(<CashFundSection eventId="event-1" isOwner={true} />);
@@ -75,7 +75,24 @@ describe('CashFundSection', () => {
     });
   });
 
-  it('shows boost activation for owner when fund exists but inactive', async () => {
+  it('activates the cash fund via activateCashFund when owner clicks Activar gratis', async () => {
+    mockGetCashFund.mockResolvedValue({ cashFund: null, promisedTotal: 0 });
+    const { activateCashFund } = await import('../services/cashFund');
+    const mockActivate = vi.mocked(activateCashFund).mockResolvedValue({ cashFund: { ...activeFund, id: 'fund-new', title: 'Lluvia de sobres' } });
+
+    render(<CashFundSection eventId="event-1" isOwner={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Activar gratis')).toBeInTheDocument();
+    });
+    screen.getByText('Activar gratis').click();
+
+    await waitFor(() => {
+      expect(mockActivate).toHaveBeenCalledWith('event-1');
+    });
+  });
+
+  it('shows activation button for owner when fund exists but inactive', async () => {
     mockGetCashFund.mockResolvedValue({ cashFund: { ...activeFund, isActive: false }, promisedTotal: 0 });
 
     render(<CashFundSection eventId="event-1" isOwner={true} />);

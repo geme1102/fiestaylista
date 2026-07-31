@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockPost = vi.fn();
 const mockGet = vi.fn();
+const mockPut = vi.fn();
 
 vi.mock('../services/api', () => ({
   apiClient: {
     get: mockGet,
     post: mockPost,
-    put: vi.fn(),
+    put: mockPut,
     del: vi.fn(),
   },
 }));
@@ -41,13 +42,14 @@ describe('cashFund service', () => {
     expect(result.contributions).toHaveLength(1);
   });
 
-  it('boostEvent posts to /api/events/:id/boost without body', async () => {
-    mockPost.mockResolvedValue({ ok: true });
-    const { boostEvent } = await import('../services/cashFund');
+  it('activateCashFund creates the fund via PUT /api/events/:id/cash-fund', async () => {
+    mockPut.mockResolvedValue({ cashFund: { id: 'cf-1', isActive: true } });
+    const { activateCashFund } = await import('../services/cashFund');
 
-    await boostEvent('evt-1');
+    const result = await activateCashFund('evt-1');
 
-    expect(mockPost).toHaveBeenCalledWith('/api/events/evt-1/boost', { turnstileToken: undefined });
+    expect(mockPut).toHaveBeenCalledWith('/api/events/evt-1/cash-fund', {});
+    expect(result.cashFund?.id).toBe('cf-1');
   });
 
   it('createPromise posts promise to /api/cash-fund/promise', async () => {

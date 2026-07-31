@@ -38,7 +38,6 @@ export const events = pgTable('events', {
   slug: text('slug').notNull(),
   status: eventStatusEnum('status').notNull().default('active'),
   isActive: boolean('is_active').notNull().default(true),
-  boostedUntil: timestamp('boosted_until', { mode: 'date', withTimezone: true }),
   deletedAt: timestamp('deleted_at', { mode: 'date', withTimezone: true }),
   eventDate: timestamp('event_date', { mode: 'date', withTimezone: true }),
   eventLocation: text('event_location'),

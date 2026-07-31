@@ -273,7 +273,6 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
   {
     name: 'ensure_all_schema_columns',
     statements: [
-      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "boosted_until" timestamp with time zone`,
       `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone`,
       `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_date" timestamp with time zone`,
       `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_location" text`,
@@ -396,7 +395,6 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
         "slug" text NOT NULL,
         "status" text NOT NULL DEFAULT 'active' CHECK ("status" IN ('active','completed','paused')),
         "is_active" boolean NOT NULL DEFAULT true,
-        "boosted_until" timestamptz,
         "deleted_at" timestamptz,
         "event_date" timestamptz,
         "event_location" text,
@@ -657,6 +655,15 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `ALTER TABLE "cash_contributions" ALTER COLUMN "status" SET DEFAULT 'promised'`,
     ],
   },
+  // El boost nunca se habilitó ni se habilitará: eliminar todo rastro.
+  // DROP COLUMN/TABLE IF EXISTS son idempotentes — no-ops donde no existan.
+  {
+    name: 'drop_events_boosted_until',
+    statements: [
+      `ALTER TABLE "events" DROP COLUMN IF EXISTS "boosted_until"`,
+      `DROP TABLE IF EXISTS "boost_payments"`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
@@ -668,7 +675,6 @@ const TIMESTAMPTZ_ALTERS: string[] = [
   `ALTER TABLE users ALTER COLUMN reset_token_expires TYPE TIMESTAMPTZ USING reset_token_expires AT TIME ZONE 'UTC'`,
   `ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC'`,
   `ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMPTZ USING updated_at AT TIME ZONE 'UTC'`,
-  `ALTER TABLE events ALTER COLUMN boosted_until TYPE TIMESTAMPTZ USING boosted_until AT TIME ZONE 'UTC'`,
   `ALTER TABLE events ALTER COLUMN deleted_at TYPE TIMESTAMPTZ USING deleted_at AT TIME ZONE 'UTC'`,
   `ALTER TABLE events ALTER COLUMN event_date TYPE TIMESTAMPTZ USING event_date AT TIME ZONE 'UTC'`,
   `ALTER TABLE events ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC'`,

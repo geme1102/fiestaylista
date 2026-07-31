@@ -190,4 +190,4 @@ fiesta-y-lista/
 - **Webhooks**: Firma HMAC-SHA256 con timestamp validation (±5 min, replay protection)
 - **Uploads**: Validación de magic bytes (independiente del mimetype), almacenamiento temporal en disco
 - **IDOR**: Ownership middleware para eventos/regalos/fotos, userId desde JWT (nunca del body)
-- **TOCTOU**: `FOR UPDATE` en transacciones críticas (suscripciones, fotos, boosts)
+- **TOCTOU**: `FOR UPDATE` en transacciones críticas (suscripciones, fotos)

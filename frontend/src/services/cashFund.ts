@@ -9,8 +9,8 @@ export function getContributions(cashFundId: string): Promise<{ contributions: C
   return apiClient.get<{ contributions: CashContribution[]; nextCursor: string | null }>(`/api/cash-fund/${cashFundId}/contributions`, { skipAuthRedirect: true });
 }
 
-export function boostEvent(eventId: string, turnstileToken?: string): Promise<{ url?: string; message?: string; boostedUntil?: string }> {
-  return apiClient.post<{ url?: string; message?: string; boostedUntil?: string }>(`/api/events/${eventId}/boost`, { turnstileToken });
+export function activateCashFund(eventId: string): Promise<{ cashFund: CashFund }> {
+  return apiClient.put<{ cashFund: CashFund }>(`/api/events/${eventId}/cash-fund`, {});
 }
 
 export function createPromise(data: { cashFundId: string; contributorName: string; amount: number; message?: string; turnstileToken?: string }): Promise<{ contribution: CashContribution; cashFund: CashFund }> {

@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { apiClient } from '../services/api';
-import { getCashFund, boostEvent } from '../services/cashFund';
+import { getCashFund } from '../services/cashFund';
 import { reportError } from '../lib/reportError';
 import { showToast } from '../hooks/useToast';
 import { useSSE } from '../hooks/useSSE';
@@ -25,7 +25,6 @@ import { uploadPhoto, addPhoto } from '../services/events';
 import { completeOnboarding } from '../services/onboarding';
 import { EVENT_ICONS, TIER_LIMITS, type EventType, type Gift, type Photo } from '../types';
 import { GIFT_SUGGESTIONS } from '../data/giftSuggestions';
-import { validateRedirectUrl } from '../utils/format';
 
 import { ConfirmModal } from '../components/ConfirmModal';
 import ShareButtons from '../components/ShareButtons';
@@ -33,11 +32,9 @@ import { EventReadyBar, type SetupChecklist } from '../components/EventReadyBar'
 import { ProductTour, type TourStep } from '../components/ui/ProductTour';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useAchievements } from '../hooks/useAchievements';
-import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import EventAdminLoadingSkeleton from '../components/admin/EventAdminLoadingSkeleton';
 import EditEventModal from '../components/admin/EditEventModal';
-import BoostModal from '../components/admin/BoostModal';
 import { AnimatePresence } from 'framer-motion';
 
 const GiftManagement = lazy(() => import('../components/admin/GiftManagement'));
@@ -47,7 +44,7 @@ const MessagesPanel = lazy(() => import('../components/admin/MessagesPanel'));
 const CashFundSection = lazy(() => import('../components/CashFundSection'));
 
 interface AdminEvent {
-  id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean; boostedUntil?: string;
+  id: string; title: string; eventType: EventType; slug: string; status?: 'active' | 'completed' | 'paused'; isActive: boolean;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
   viewCount?: number;
   frozenAt?: string | null;
@@ -77,8 +74,6 @@ export default function EventAdmin() {
   const [uploadPercent, setUploadPercent] = useState(0);
 
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
-  const [boostModal, setBoostModal] = useState(false);
-  const [boostLoading, setBoostLoading] = useState(false);
 
   const [deletePhotoConfirm, setDeletePhotoConfirm] = useState<string | null>(null);
   const [addingGift, setAddingGift] = useState(false);
@@ -92,23 +87,14 @@ export default function EventAdmin() {
   const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
-  const { containerRef: boostTurnstileRef, token: boostTurnstileToken } = useTurnstile();
-  const boostTurnstileTokenRef = useRef(boostTurnstileToken);
-  useEffect(() => { boostTurnstileTokenRef.current = boostTurnstileToken; }, [boostTurnstileToken]);
   const addGiftSubmittingRef = useRef(false);
   const addSuggestionSubmittingRef = useRef(false);
   const updateDetailsSubmittingRef = useRef(false);
-  const boostSubmittingRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
-
-  const isBoosted = useMemo(() =>
-    !!(event?.boostedUntil && new Date(event.boostedUntil) > new Date()),
-    [event]
-  );
 
   const isFrozen = !!event?.frozenAt;
 
@@ -119,10 +105,10 @@ export default function EventAdmin() {
     hasLocation: !!event?.eventLocation,
     hasNote: !!event?.eventNote,
     hasPhotos: photos.length > 0,
-    hasCashFund: !!cashFund?.isActive || isBoosted,
+    hasCashFund: !!cashFund?.isActive,
     hasRsvp: gifts.some((g) => g.isClaimed),
     hasBeenShared: id ? (() => { try { return localStorage.getItem(`fy_shared_${id}`) === 'true'; } catch { return false; } })() : false,
-  }), [gifts, photos, event, cashFund, id, isBoosted]);
+  }), [gifts, photos, event, cashFund, id]);
 
   const setupPercent = useMemo(() => {
     const weights = { hasGifts: 15, hasThreeGifts: 10, hasDate: 15, hasLocation: 10, hasNote: 10, hasPhotos: 10, hasCashFund: 10, hasRsvp: 10, hasBeenShared: 10 };
@@ -411,39 +397,6 @@ export default function EventAdmin() {
     }
   }, [id, event, completing]);
 
-  const handleBoost = async () => {
-    if (boostSubmittingRef.current) return;
-    boostSubmittingRef.current = true;
-    if (!id) return;
-    setBoostLoading(true);
-    try {
-      let token: string | null = boostTurnstileToken;
-      if (!token) {
-        token = await waitForTurnstile(() => boostTurnstileTokenRef.current);
-      }
-      const res = await boostEvent(id!, token ?? undefined);
-      if (res.url) {
-        const validatedUrl = validateRedirectUrl(res.url);
-        if (validatedUrl) {
-          window.location.href = validatedUrl;
-        } else {
-          showToast('URL de pago inválida', 'error');
-          setBoostLoading(false);
-        }
-      } else {
-        showToast('¡Lluvia de sobres premium habilitada con éxito! ⚡💰', 'success');
-        setBoostModal(false);
-        setEvent((prev) => prev ? { ...prev, boostedUntil: res.boostedUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() } : prev);
-      }
-    } catch (err) {
-      reportError(err, { source: 'EventAdmin' });
-      showToast(err instanceof Error ? err.message : 'Error al activar Lluvia de Sobres. Intenta de nuevo.', 'error');
-    } finally {
-      boostSubmittingRef.current = false;
-      setBoostLoading(false);
-    }
-  };
-
   const [toggling, setToggling] = useState(false);
 
   const [toggleConfirm, setToggleConfirm] = useState(false);
@@ -708,39 +661,8 @@ export default function EventAdmin() {
             </div>
           )}
 
-          {/* Lluvia de Sobres Banner */}
-          {!isBoosted && !cashFund?.isActive && (
-            <div className="bg-gradient-to-r from-[#fff5ee] via-[#fffbf7] to-[#fff5ee] border border-orange-200/20 rounded-2xl p-5 mt-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
-              <div className="flex items-start md:items-center gap-4 text-amber-950">
-                <span className="text-2xl leading-none bg-amber-100 text-amber-700 w-11 h-11 flex items-center justify-center rounded-2xl shadow-sm border border-amber-200/40 shrink-0">⚡</span>
-                <div className="flex flex-col text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-extrabold tracking-tight">Activar Lluvia de Sobres Premium</span>
-                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-amber-200">Recomendado</span>
-                  </div>
-                  <span className="text-xs text-amber-900/80 font-medium tracking-normal mt-0.5 max-w-lg">
-                    Permite aportes voluntarios directamente transferidos a tu banco en formato digital seguro con PSE, tarjetas o efectivo.
-                  </span>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.04, y: -2 }}
-                whileTap={{ scale: 0.96 }}
-              data-testid="boost-button"
-onClick={() => {
-                  setBoostModal(true);
-                }}
-              className="bg-[#994715] hover:bg-[#833e12] text-white text-xs md:text-sm font-extrabold tracking-wider py-3.5 px-6 rounded-full btn-gpu cursor-pointer shadow-md flex items-center justify-center gap-1.5 self-stretch md:self-auto text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#994715]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-            >
-              <span>Activar Lluvia de Sobres</span>
-              <span className="bg-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-black border border-white/10 whitespace-nowrap">GRATIS</span>
-            </motion.button>
-            </div>
-          )}
-
           {/* Cash Fund Section for Admin */}
-          {((isBoosted || cashFund?.isActive) || (cashFund && true)) && id && (
+          {id && (
             <div className="mt-6">
               <SectionErrorBoundary sectionName="CashFundSectionAdmin">
               <Suspense fallback={<Skeleton className="h-32 rounded-2xl" />}>
@@ -902,14 +824,6 @@ onClick={() => {
           />
         )}
       </AnimatePresence>
-
-      <div ref={boostTurnstileRef} className="fixed bottom-4 right-4 pointer-events-none -z-10" />
-      <BoostModal
-        open={boostModal}
-        loading={boostLoading}
-        onConfirm={handleBoost}
-        onClose={() => setBoostModal(false)}
-      />
 
       {/* Toggle Confirm Modal */}
       <AnimatePresence>

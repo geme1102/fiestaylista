@@ -24,7 +24,6 @@ import uploadRouter from './routes/upload.js';
 import analyticsRouter from './routes/analytics.js';
 import publicRouter from './routes/public.js';
 import cashRouter from './routes/cash.js';
-import boostRouter from './routes/boost.js';
 import arcoRouter from './routes/arco.js';
 import guestsRouter from './routes/guests.js';
 import messagesRouter from './routes/messages.js';
@@ -175,7 +174,6 @@ export function createApp() {
   app.use('/api/upload', uploadRouter);
   app.use('/api', analyticsRouter);
   app.use('/api', cashRouter);
-  app.use('/api', boostRouter);
   app.use('/api', guestsRouter);
   app.use('/api', messagesRouter);
   app.use('/api/auth/arco', arcoRouter);

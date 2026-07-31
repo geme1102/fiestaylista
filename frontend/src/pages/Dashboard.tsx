@@ -386,7 +386,6 @@ export default function Dashboard() {
                 const total = event.giftCount || 0;
                 const progress = limits.maxGiftsPerEvent > 0 ? Math.min((total / limits.maxGiftsPerEvent) * 100, 100) : 0;
                 const fund = event.cashFund;
-                const isBoosted = event.boostedUntil && new Date(event.boostedUntil) > new Date();
 
                 return (
                   <div
@@ -400,11 +399,6 @@ export default function Dashboard() {
                         <div className="w-12 h-12 bg-primary-fixed rounded-2xl flex items-center justify-center text-2xl shadow-inner">
                           {EVENT_ICONS[event.eventType]}
                         </div>
-                        {isBoosted && (
-                          <Badge variant="gold" size="sm" icon="rocket_launch">
-                            BOOST
-                          </Badge>
-                        )}
                         {event.status === 'completed' && (
                           <Badge variant="neutral" size="sm" icon="check_circle">
                             FINALIZADO
