@@ -34,30 +34,34 @@ router.post('/analytics/view', viewLimiter, verifyTurnstileOptional, asyncHandle
     const referrer = sanitizeAndStrip(String(req.headers.referer || req.headers.referrer || 'direct')).slice(0, 200);
     const userAgent = sanitizeAndStrip(String(req.headers['user-agent'] || 'unknown')).slice(0, 200);
 
-    const [dup] = await db
-      .select({ exists: sql`1` })
-      .from(eventViews)
-      .where(
-        sql`${eventViews.eventId} = ${eventId}
-          AND ${eventViews.referrer} = ${referrer}
-          AND ${eventViews.userAgent} = ${userAgent}
-          AND ${eventViews.viewedAt} > NOW() - INTERVAL '5 minutes'`,
-      )
-      .limit(1);
+    // D8: dup-check + INSERT + UPDATE en una sola transacción — antes eran 3
+    // statements sueltos: dos requests concurrentes podían pasar el dup-check,
+    // insertar 2 filas y contar 2 views de la misma visita.
+    const inserted = await db.transaction(async (tx) => {
+      const [dup] = await tx
+        .select({ exists: sql`1` })
+        .from(eventViews)
+        .where(
+          sql`${eventViews.eventId} = ${eventId}
+            AND ${eventViews.referrer} = ${referrer}
+            AND ${eventViews.userAgent} = ${userAgent}
+            AND ${eventViews.viewedAt} > NOW() - INTERVAL '5 minutes'`,
+        )
+        .limit(1);
 
-    if (dup) {
-      res.status(200).json({ ok: true, deduped: true });
-      return;
-    }
+      if (dup) return false;
 
-    await db.insert(eventViews).values({ eventId, referrer, userAgent });
+      await tx.insert(eventViews).values({ eventId, referrer, userAgent });
 
-    await db
-      .update(events)
-      .set({ viewCount: sql`${events.viewCount} + 1` })
-      .where(eq(events.id, eventId));
+      await tx
+        .update(events)
+        .set({ viewCount: sql`${events.viewCount} + 1` })
+        .where(eq(events.id, eventId));
 
-    res.status(200).json({ ok: true });
+      return true;
+    });
+
+    res.status(200).json({ ok: true, deduped: !inserted });
   } catch (err) {
     log.error({ err }, 'Error registrando vista:');
     res.status(200).json({ ok: true });

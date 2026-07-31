@@ -460,15 +460,20 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
 
-  await db
-    .update(users)
-    .set({
-      passwordHash,
-      resetToken: null,
-      resetTokenExpires: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, user.id));
+  // D6: password + revocación de tokens en una sola transacción — si la
+  // revocación falla, el cambio de password también se revierte (antes las
+  // sesiones viejas sobrevivían a un reset de password).
+  await db.transaction(async (tx) => {
+    await tx
+      .update(users)
+      .set({
+        passwordHash,
+        resetToken: null,
+        resetTokenExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id));
 
-  await revokeAllUserTokens(user.id);
+    await revokeAllUserTokens(user.id, tx);
+  });
 }

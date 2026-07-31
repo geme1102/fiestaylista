@@ -191,12 +191,12 @@ export async function issueTokenPair(userId: string, email: string, currentToken
   return { accessToken, refreshToken, userId };
 }
 
-export async function revokeAllUserTokens(userId: string): Promise<void> {
-  await db
+export async function revokeAllUserTokens(userId: string, client: DbClient = db): Promise<void> {
+  await client
     .update(refreshTokens)
     .set({ revoked: true })
     .where(eq(refreshTokens.userId, userId));
-  await db
+  await client
     .update(users)
     .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
     .where(eq(users.id, userId));

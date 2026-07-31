@@ -240,7 +240,16 @@ router.post('/cancel', requireAuth, requireEmailVerified, cancelLimiter, asyncHa
   await subscriptionService.cancelSubscription(req.user!.userId);
 
   if (mpSubscriptionId) {
-    mercadopagoService.cancelPreapproval(mpSubscriptionId).catch((err) => {
+    // D4: MP cancel con reintentos (3 intentos, backoff exponencial) —
+    // antes era fire-and-forget sin retry: si fallaba, el usuario seguía
+    // siendo cobrado mensualmente.
+    mercadopagoService.retryable(
+      () => mercadopagoService.cancelPreapproval(mpSubscriptionId),
+      3,
+      10000,
+    ).then(() => {
+      log.info({ userId: req.user!.userId, mpSubscriptionId }, 'Preapproval cancelado en MP');
+    }).catch((err) => {
       log.error({ err, userId: req.user!.userId }, 'Error no crítico cancelando preapproval en MP — DB ya actualizada:');
     });
   } else {

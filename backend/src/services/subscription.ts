@@ -56,12 +56,23 @@ export async function createOrUpdateSubscription(
   if (data.status === 'active') {
     const now = new Date();
     const limits = TIER_LIMITS[data.tier] ?? TIER_LIMITS.free;
+
+    // D9: solo descongelar hasta completar el cupo del tier — si el usuario
+    // ya tiene eventos activos (reactivación tras bajar de tier), no exceder maxEvents.
+    const [activeRow] = await conn
+      .select({ count: sql<number>`count(*)` })
+      .from(events)
+      .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
+    const activeCount = Number(activeRow?.count ?? 0);
+    const slots = Math.max(0, limits.maxEvents - activeCount);
+    if (slots <= 0) return sub;
+
     const frozenEventIds = await conn
       .select({ id: events.id })
       .from(events)
       .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)))
       .orderBy(sql`${events.frozenAt} DESC`)
-      .limit(limits.maxEvents);
+      .limit(slots);
 
     if (frozenEventIds.length > 0) {
       await conn
@@ -109,7 +120,10 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
     .where(and(inArray(events.userId, userIds), eq(events.isActive, true), isNull(events.deletedAt)));
 
   // Restaurar hasta maxEvents según el tier actual de cada usuario
-  // (tras expireStaleSubscriptions el tier es 'free', maxEvents = 1)
+  // (tras expireStaleSubscriptions el tier es 'free', maxEvents = 1).
+  // D1: solo se restauran eventos congelados EN ESTA corrida (frozenAt = now) —
+  // si se restauraran los de corridas anteriores, el evento "kept" reseteaba
+  // su frozenAt diario y nunca entraba en la ventana de purge (flip-flop).
   for (const userId of userIds) {
     const [userRow] = await conn
       .select({ tier: users.tier })
@@ -122,7 +136,12 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
     const eventsToKeep = await conn
       .select({ id: events.id })
       .from(events)
-      .where(and(eq(events.userId, userId), sql`${events.frozenAt} IS NOT NULL`, isNull(events.deletedAt)))
+      .where(and(
+        eq(events.userId, userId),
+        sql`${events.frozenAt} IS NOT NULL`,
+        sql`${events.frozenAt} >= ${now.toISOString()}::timestamptz`,
+        isNull(events.deletedAt),
+      ))
       .orderBy(desc(events.frozenAt))
       .limit(limits.maxEvents);
 
@@ -141,9 +160,20 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
 
   for (const user of userRows) {
     if (user?.email) {
-      sendFreezeEmail(user.email, user.name, `${config.FRONTEND_URL}/pricing`).catch((err: Error) => {
+      // D1: dedupe por email_tracking — el email de congelación solo se envía
+      // una vez por usuario (mismo patrón que sendPurgeWarnings).
+      try {
+        await sendFreezeEmail(user.email, user.name, `${config.FRONTEND_URL}/pricing`);
+        try {
+          await conn.insert(emailTracking).values({ userId: user.id, type: 'freeze' });
+        } catch {
+          await conn.update(emailTracking)
+            .set({ sentAt: new Date() })
+            .where(and(eq(emailTracking.userId, user.id), eq(emailTracking.type, 'freeze')));
+        }
+      } catch (err) {
         log.error({ err, userId: user.id }, 'Error enviando email de congelamiento:');
-      });
+      }
     }
   }
 }
@@ -270,7 +300,8 @@ export async function expireStaleSubscriptions(): Promise<number> {
     const staleRows = await tx.execute(sql`
       SELECT id, user_id FROM ${subsTable} 
       WHERE current_period_end <= ${freezeThreshold.toISOString()}::timestamptz 
-        AND status IN ('active', 'past_due', 'canceled') 
+        AND status IN ('active', 'past_due', 'canceled')
+        AND NOT (status = 'canceled' AND tier = 'free')
       FOR UPDATE SKIP LOCKED
     `) as unknown as { id: string; user_id: string }[];
 

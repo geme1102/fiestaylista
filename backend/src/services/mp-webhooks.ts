@@ -82,6 +82,9 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     }
   }
 
+  // D2: el emailTracking SOLO se registra si el envío resolvió OK — antes se
+  // marcaba como enviado aunque Resend fallara, y el check `existingEmail`
+  // bloqueaba cualquier reintento futuro (usuario pagaba y nunca recibía el email).
   try {
     const emailType = isProPlus ? 'pro_plus_confirmation' : 'pro_confirmation';
     const [existingEmail] = await db
@@ -96,45 +99,45 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
-    if (user) {
+    if (!user) return;
+
+    if (isProPlus) {
       const period = interval === 'year' ? 'anual' : 'mensual';
-      if (isProPlus) {
-        emailService.sendEmail({
-          from: config.FROM_EMAIL,
-          to: user.email,
-          subject: 'Bienvenido a Fiesta y Lista Pro Plus',
-          emailType: 'pro_plus_confirmation',
-          html: `
-            <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-              <div style="text-align:center;margin-bottom:16px">
-                <div style="display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
-                <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
-              </div>
-              <h1 style="text-align:center;color:#1f2937;font-size:20px">Bienvenido a Pro Plus, ${escapeHtml(user.name)}</h1>
-              <p style="color:#6b7280;text-align:center;margin:16px 0">Tu suscripción ${period} ya está activa. Ahora tienes acceso a todas las funciones premium con más espacio para tus eventos.</p>
-              <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;margin:16px 0">
-                <p style="margin:0;color:#5b21b6;font-size:14px"><strong>Qué incluye:</strong></p>
-                <ul style="margin:8px 0 0;padding-left:20px;color:#5b21b6;font-size:14px">
-                  <li>3 eventos</li>
-                  <li>100 regalos por evento</li>
-                  <li>20 fotos por evento</li>
-                  <li>Lluvia de Sobres: tus invitados reportan sus aportes</li>
-                </ul>
-              </div>
-              <div style="text-align:center;margin:24px 0">
-                <a href="${config.FRONTEND_URL}/dashboard" style="display:inline-block;padding:12px 32px;background:#8b5cf6;color:white;text-decoration:none;border-radius:12px;font-weight:600">Ir al dashboard</a>
-              </div>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
-              <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
+      await emailService.sendEmail({
+        from: config.FROM_EMAIL,
+        to: user.email,
+        subject: 'Bienvenido a Fiesta y Lista Pro Plus',
+        emailType: 'pro_plus_confirmation',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+            <div style="text-align:center;margin-bottom:16px">
+              <div style="display:inline-flex;align-items:center;justify-content:center;background:#8b5cf6;width:48px;height:48px;border-radius:12px;color:white;font-size:24px;font-weight:bold;line-height:48px;margin-bottom:4px">F</div>
+              <p style="margin:0;color:#1f2937;font-size:18px;font-weight:bold">Fiesta y Lista</p>
             </div>
-          `,
-        }).catch((err) => log.error({ err }, `Error enviando email de confirmación PRO Plus para ${userId}:`));
-      } else {
-        const periodLabel = interval === 'year' ? 'anual' : 'mensual';
-        emailService.sendProConfirmationEmail(user.email, user.name, periodLabel)
-          .catch((err) => log.error({ err }, `Error enviando email de confirmación PRO para ${userId}:`));
-      }
+            <h1 style="text-align:center;color:#1f2937;font-size:20px">Bienvenido a Pro Plus, ${escapeHtml(user.name)}</h1>
+            <p style="color:#6b7280;text-align:center;margin:16px 0">Tu suscripción ${period} ya está activa. Ahora tienes acceso a todas las funciones premium con más espacio para tus eventos.</p>
+            <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;margin:16px 0">
+              <p style="margin:0;color:#5b21b6;font-size:14px"><strong>Qué incluye:</strong></p>
+              <ul style="margin:8px 0 0;padding-left:20px;color:#5b21b6;font-size:14px">
+                <li>3 eventos</li>
+                <li>100 regalos por evento</li>
+                <li>20 fotos por evento</li>
+                <li>Lluvia de Sobres: tus invitados reportan sus aportes</li>
+              </ul>
+            </div>
+            <div style="text-align:center;margin:24px 0">
+              <a href="${config.FRONTEND_URL}/dashboard" style="display:inline-block;padding:12px 32px;background:#8b5cf6;color:white;text-decoration:none;border-radius:12px;font-weight:600">Ir al dashboard</a>
+            </div>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+            <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>
+          </div>
+        `,
+      });
+    } else {
+      const periodLabel = interval === 'year' ? 'anual' : 'mensual';
+      await emailService.sendProConfirmationEmail(user.email, user.name, periodLabel);
     }
+
     await db.insert(emailTracking).values({ userId, type: emailType }).onConflictDoNothing();
   } catch (err) {
     log.error({ err }, `Error enviando email de confirmación para ${userId}:`);
@@ -366,14 +369,14 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       if (existing) return;
 
       try {
-        await db.insert(emailTracking).values({ userId, type: 'past_due' });
-      } catch {
-        return; // race condition: otro webhook ya insertó
-      }
-
-      emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`).catch((err: Error) => {
+        // D3: enviar PRIMERO y registrar el tracking SOLO si el send resolvió OK —
+        // antes se marcaba como enviado aunque Resend fallara y el reintento
+        // (webhook duplicado de MP) quedaba bloqueado por el check `existing`.
+        await emailService.sendPastDueEmail(pastDueUser.email, pastDueUser.name, 7, `${config.FRONTEND_URL}/account`);
+        await db.insert(emailTracking).values({ userId, type: 'past_due' }).onConflictDoNothing();
+      } catch (err) {
         log.error({ err, userId }, 'Error enviando email de past_due:');
-      });
+      }
     }
   }
 }

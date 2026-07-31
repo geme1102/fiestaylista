@@ -259,6 +259,10 @@ vi.mock('../services/cashFund.js', () => mockCashFundService);
 const mockMercadopagoService = vi.hoisted(() => ({
   cancelPreapproval: vi.fn(),
   searchPreapprovalsByRef: vi.fn(),
+  // D4: la ruta de cancelación ahora usa retryable() de 3 intentos
+  retryable: vi.fn(async (fn: (opts: { signal: AbortSignal; timeout: number }) => Promise<unknown>) =>
+    fn({ signal: new AbortController().signal, timeout: 10000 }),
+  ),
 }));
 
 vi.mock('../services/mercadopago.js', () => mockMercadopagoService);

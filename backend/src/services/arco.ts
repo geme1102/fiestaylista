@@ -88,6 +88,35 @@ export async function deleteUserAccount(userId: string) {
     .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
     .limit(1);
 
+  // D5: recolectar assets externos ANTES del borrado en DB
+  const userEvents = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(eq(events.userId, userId));
+
+  const eventIds = userEvents.map(e => e.id);
+  let cloudinaryDeletes: string[] = [];
+  if (eventIds.length > 0) {
+    const userPhotos = await db
+      .select({ url: photos.url })
+      .from(photos)
+      .where(inArray(photos.eventId, eventIds));
+
+    cloudinaryDeletes = userPhotos
+      .filter(p => isOwnCloudinaryUrl(p.url))
+      .map(p => getPublicIdFromUrl(p.url))
+      .filter(Boolean) as string[];
+  }
+
+  // 1) Borrado en DB PRIMERO: si falla, la cuenta queda intacta y los
+  //    assets externos nunca se tocan. El DELETE del user hace cascade
+  //    a events → gifts/photos/cashFunds/guests/messages.
+  await db.transaction(async (tx) => {
+    await tx.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+    await tx.delete(users).where(eq(users.id, userId));
+  });
+
+  // 2) Cancelación MP best-effort (no bloquea la eliminación)
   if (activeSubscription?.mpSubscriptionId) {
     try {
       await cancelPreapproval(activeSubscription.mpSubscriptionId);
@@ -97,40 +126,18 @@ export async function deleteUserAccount(userId: string) {
     }
   }
 
-  const userEvents = await db
-    .select({ id: events.id })
-    .from(events)
-    .where(eq(events.userId, userId));
-
-  const eventIds = userEvents.map(e => e.id);
-  if (eventIds.length > 0) {
-    const userPhotos = await db
-      .select({ url: photos.url })
-      .from(photos)
-      .where(inArray(photos.eventId, eventIds));
-
-    const cloudinaryDeletes = userPhotos
-      .filter(p => isOwnCloudinaryUrl(p.url))
-      .map(p => getPublicIdFromUrl(p.url))
-      .filter(Boolean) as string[];
-
-    const CONCURRENCY = 5;
-    for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
-      const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
-      const results = await Promise.all(
-        batch.map(publicId => destroyWithRetry(publicId)),
-      );
-      const failed = results.filter(r => !r).length;
-      if (failed > 0) {
-        log.error({ failed, total: batch.length, userId }, 'Error eliminando imágenes de Cloudinary: algunos assets pueden quedar huérfanos');
-      }
+  // 3) Cloudinary best-effort (huérfanos posibles, aceptado)
+  const CONCURRENCY = 5;
+  for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
+    const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(publicId => destroyWithRetry(publicId)),
+    );
+    const failed = results.filter(r => !r).length;
+    if (failed > 0) {
+      log.error({ failed, total: batch.length, userId }, 'Error eliminando imágenes de Cloudinary: algunos assets pueden quedar huérfanos');
     }
   }
-
-  await db.transaction(async (tx) => {
-    await tx.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
-    await tx.delete(users).where(eq(users.id, userId));
-  });
 }
 
 export async function createArcoRequest(

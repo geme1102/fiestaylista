@@ -27,7 +27,9 @@ function mockUpdateChain() {
 function mockSelectChain(limitResult: any[]) {
   const limitSelect = vi.fn().mockResolvedValue(limitResult);
   const orderBy = vi.fn().mockReturnValue({ limit: limitSelect });
-  const where = vi.fn().mockReturnValue({ orderBy });
+  // `then` hace que `where` sea awaitable directamente (queries que terminan
+  // en .where(), como el count de D9) Y que soporte .orderBy().limit()
+  const where = vi.fn().mockReturnValue({ orderBy, then: (resolve: any) => resolve(limitResult) });
   const from = vi.fn().mockReturnValue({ where });
   const select = vi.fn().mockReturnValue({ from });
   return { select, from, where, orderBy, limit: limitSelect };
