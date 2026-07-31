@@ -314,6 +314,46 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE INDEX IF NOT EXISTS "refresh_tokens_rotated_from_idx" ON "refresh_tokens"("rotated_from")`,
     ],
   },
+  // 🟡 Dedupe de emails: unique (user_id, type) existe solo en legacy 0002 —
+  // sin él, past_due/purge/reminder/sequence pueden duplicar emails.
+  {
+    name: 'email_tracking_user_id_type_unique_idx',
+    statements: [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "email_tracking_user_id_type_unique_idx" ON "email_tracking"("user_id", "type")`,
+    ],
+  },
+  // 🟡 Slug único soft-delete-aware: la constraint completa legacy bloquea
+  // reusar el slug de un evento eliminado ("Ya existe un evento con ese nombre").
+  {
+    name: 'events_slug_unique_partial',
+    statements: [
+      `DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'events_slug_unique') THEN
+          ALTER TABLE "events" DROP CONSTRAINT "events_slug_unique";
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'events_slug_unique' AND tablename = 'events') THEN
+          DROP INDEX "events_slug_unique";
+        END IF;
+      END $$`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "events_slug_unique" ON "events"("slug") WHERE "deleted_at" IS NULL`,
+    ],
+  },
+  // 🟡 Idem para gifts: (event_id, name) parcial — permite re-agregar el
+  // nombre de un regalo eliminado.
+  {
+    name: 'gifts_event_id_name_unique_partial',
+    statements: [
+      `DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'gifts_event_id_name_unique') THEN
+          ALTER TABLE "gifts" DROP CONSTRAINT "gifts_event_id_name_unique";
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'gifts_event_id_name_unique' AND tablename = 'gifts') THEN
+          DROP INDEX "gifts_event_id_name_unique";
+        END IF;
+      END $$`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "gifts_event_id_name_unique" ON "gifts"("event_id", "name") WHERE "deleted_at" IS NULL`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.
