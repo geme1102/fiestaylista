@@ -159,7 +159,7 @@ export async function rotateRefreshToken(
   });
 }
 
-export async function issueTokenPair(userId: string, email: string, currentTokenVersion: number): Promise<TokenPair> {
+export async function issueTokenPair(userId: string, email: string, currentTokenVersion: number, client: DbClient = db): Promise<TokenPair> {
   const accessToken = jwt.sign(
     { userId, email, type: 'access', tokenVersion: currentTokenVersion },
     config.JWT_SECRET,
@@ -169,7 +169,7 @@ export async function issueTokenPair(userId: string, email: string, currentToken
   const refreshToken = generateOpaqueToken();
   const familyId = randomBytes(16).toString('hex');
 
-  await persistRefreshToken(userId, refreshToken, familyId, null, db);
+  await persistRefreshToken(userId, refreshToken, familyId, null, client);
 
   return { accessToken, refreshToken, userId };
 }

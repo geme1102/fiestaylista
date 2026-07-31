@@ -84,9 +84,9 @@ export async function register(
       .returning();
 
     user = newUser;
-  });
 
-  tokens = await issueTokenPair(user.id, user.email, 0);
+    tokens = await issueTokenPair(user.id, user.email, 0, tx);
+  });
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
       throw new ConflictError('El correo electrónico ya está registrado');

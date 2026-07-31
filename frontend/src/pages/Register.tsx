@@ -34,6 +34,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigatedRef = useRef(false);
+  const submittingRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const params = new URLSearchParams(location.search);
@@ -55,6 +56,9 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     if (!name || !email || !password) {
       showToast('Completa todos los campos', 'error');
@@ -110,6 +114,7 @@ export default function Register() {
       reportError(err, { source: 'Register' });
       showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
