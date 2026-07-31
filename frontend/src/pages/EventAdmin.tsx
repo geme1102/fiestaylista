@@ -50,6 +50,16 @@ interface AdminEvent {
   frozenAt?: string | null;
 }
 
+const toLocalDateTimeInput = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  // A2: el input datetime-local espera hora LOCAL — slice(0,16) de la ISO UTC
+  // desplazaba la hora +5h (Bogotá) al guardar.
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export default function EventAdmin() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -84,6 +94,7 @@ export default function EventAdmin() {
   const [deletingPhoto, setDeletingPhoto] = useState(false);
   const [selectedPhotoForPreview, setSelectedPhotoForPreview] = useState<Photo | null>(null);
   const [messageRefreshKey, setMessageRefreshKey] = useState(0);
+  const [sharedTick, setSharedTick] = useState(0);
   const { evaluate: evaluateAchievements } = useAchievements();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
@@ -108,7 +119,16 @@ export default function EventAdmin() {
     hasCashFund: !!cashFund?.isActive,
     hasRsvp: gifts.some((g) => g.isClaimed),
     hasBeenShared: id ? (() => { try { return localStorage.getItem(`fy_shared_${id}`) === 'true'; } catch { return false; } })() : false,
-  }), [gifts, photos, event, cashFund, id]);
+  }), [gifts, photos, event, cashFund, id, sharedTick]);
+
+  // M1: el checklist "Enlace compartido" nunca se completaba — la key de
+  // localStorage solo se leía. Ahora se escribe al compartir/copiar.
+  const handleShared = useCallback(() => {
+    try {
+      localStorage.setItem(`fy_shared_${id}`, 'true');
+    } catch { /* almacenamiento no disponible */ }
+    setSharedTick((t) => t + 1);
+  }, [id]);
 
   const setupPercent = useMemo(() => {
     const weights = { hasGifts: 15, hasThreeGifts: 10, hasDate: 15, hasLocation: 10, hasNote: 10, hasPhotos: 10, hasCashFund: 10, hasRsvp: 10, hasBeenShared: 10 };
@@ -153,7 +173,7 @@ export default function EventAdmin() {
       setEvent(ev);
       setTitleDraft(ev.title);
       setTypeDraft(ev.eventType);
-      setDateDraft(ev.eventDate ? ev.eventDate.slice(0, 16) : '');
+      setDateDraft(toLocalDateTimeInput(ev.eventDate));
       setLocationDraft(ev.eventLocation ?? '');
       setNoteDraft(ev.eventNote ?? '');
       setGifts(ev.gifts || []);
@@ -197,8 +217,8 @@ export default function EventAdmin() {
 
   const handleAddGift = useCallback(async () => {
     if (addGiftSubmittingRef.current) return;
-    addGiftSubmittingRef.current = true;
     if (!newGiftName.trim() || addingGift) return;
+    addGiftSubmittingRef.current = true;
     setAddingGift(true);
     try {
       const res = await apiClient.post<{ gift: Gift }>(`/api/events/${id}/gifts`, { name: newGiftName.trim() });
@@ -259,11 +279,11 @@ export default function EventAdmin() {
 
   const handleUpdateDetails = async () => {
     if (updateDetailsSubmittingRef.current) return;
-    updateDetailsSubmittingRef.current = true;
     if (!titleDraft.trim()) {
       showToast('El nombre del evento es obligatorio', 'error');
       return;
     }
+    updateDetailsSubmittingRef.current = true;
     setUpdatingDetails(true);
     try {
       const res = await apiClient.put<{ event: AdminEvent }>(`/api/events/${id}`, {
@@ -558,7 +578,7 @@ export default function EventAdmin() {
                         setEditingDetails(true);
                         setTitleDraft(event.title);
                         setTypeDraft(event.eventType);
-                        setDateDraft(event.eventDate ? event.eventDate.slice(0, 16) : '');
+                        setDateDraft(toLocalDateTimeInput(event.eventDate));
                         setLocationDraft(event.eventLocation ?? '');
                         setNoteDraft(event.eventNote ?? '');
                       }}
@@ -674,7 +694,7 @@ export default function EventAdmin() {
 
           {/* Share & Preview */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] mt-6">
-            <ShareButtons slug={event.slug} title={event.title} hostName={user?.name} eventType={event.eventType} eventDate={event.eventDate} eventLocation={event.eventLocation} />
+            <ShareButtons slug={event.slug} title={event.title} hostName={user?.name} eventType={event.eventType} eventDate={event.eventDate} eventLocation={event.eventLocation} onShared={handleShared} />
             <motion.a
               href={`/e/${event.slug}`}
               target="_blank"

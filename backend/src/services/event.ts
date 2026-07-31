@@ -53,14 +53,20 @@ export async function createEvent(userId: string, data: CreateEventData) {
     const tier = (user?.tier ?? 'free') as Tier;
     const limits = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
 
+    // H1: contar solo eventos ACTIVOS (pausados/congelados no ocupan cupo),
+    // consistente con updateEvent, reactivateEvent y checkActiveEventLimit.
     const [countResult] = await tx
       .select({ count: sql<number>`count(*)` })
       .from(eventsTable)
-      .where(and(eq(eventsTable.userId, userId), isNull(eventsTable.deletedAt)));
+      .where(and(
+        eq(eventsTable.userId, userId),
+        eq(eventsTable.isActive, true),
+        isNull(eventsTable.deletedAt),
+      ));
 
     const eventCount = Number(countResult?.count ?? 0);
     if (eventCount >= limits.maxEvents) {
-      throw new ForbiddenError(`Has alcanzado el límite de ${limits.maxEvents} eventos en tu plan ${tier}`);
+      throw new ForbiddenError(`Has alcanzado el límite de ${limits.maxEvents} eventos activos en tu plan ${tier}`);
     }
 
     const baseSlug = generateSlug(data.title);

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.setConfig({ testTimeout: 15000 });
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -93,5 +93,31 @@ describe('EventAdmin', () => {
     await screen.findAllByText('Baby Shower María', {}, { timeout: 10000 });
     fireEvent.click(screen.getByLabelText('Regresar'));
     expect(mockNavigate).toHaveBeenCalled();
+  });
+
+  it('A1: título con solo espacios no deja el botón guardar bloqueado', async () => {
+    mockApiClient.put.mockResolvedValue({
+      event: { id: 'evt-1', title: 'Boda Actualizada', eventType: 'WEDDING', slug: 'boda-actualizada', isActive: true, createdAt: '2025-01-01' },
+    });
+    renderAdmin();
+    await screen.findAllByText('Baby Shower María', {}, { timeout: 10000 });
+
+    fireEvent.click(screen.getByTestId('edit-event-button'));
+    const titleInput = document.getElementById('edit-title') as HTMLInputElement;
+    fireEvent.change(titleInput, { target: { value: '   ' } });
+    fireEvent.click(screen.getByTestId('save-event-changes'));
+
+    expect(document.getElementById('edit-title')).toBeTruthy();
+    expect(mockApiClient.put).not.toHaveBeenCalled();
+
+    fireEvent.change(titleInput, { target: { value: 'Boda Actualizada' } });
+    fireEvent.click(screen.getByTestId('save-event-changes'));
+
+    await waitFor(() => {
+      expect(mockApiClient.put).toHaveBeenCalledWith(
+        '/api/events/evt-1',
+        expect.objectContaining({ title: 'Boda Actualizada' }),
+      );
+    });
   });
 });

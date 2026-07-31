@@ -169,8 +169,8 @@ export default function ArcoRights() {
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (requestSubmittingRef.current) return;
-    requestSubmittingRef.current = true;
     if (!formType) return;
+    requestSubmittingRef.current = true;
     setLoading(true);
     try {
       await apiClient.post('/api/auth/arco/request', {

@@ -66,6 +66,7 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
   transactionAmount: number;
   payerName: string;
   payerEmail: string;
+  preapprovalId: string | null;
 }> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');
@@ -80,6 +81,7 @@ export async function fetchPaymentInfo(paymentId: string): Promise<{
     transactionAmount: info.transaction_amount ?? 0,
     payerName: info.payer?.first_name ?? '',
     payerEmail: info.payer?.email ?? '',
+    preapprovalId: (info as unknown as Record<string, unknown>).preapproval_id as string || null,
   };
 }
 

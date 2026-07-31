@@ -60,4 +60,27 @@ describe('ShareButtons', () => {
     });
     expect(screen.queryByText('✅ Copiado')).not.toBeInTheDocument();
   });
+
+  it('M1: invoca onShared al copiar el enlace', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const onShared = vi.fn();
+
+    render(<ShareButtons slug="mi-evento" title="Mi Fiesta" onShared={onShared} />);
+    fireEvent.click(screen.getByText('Copiar Link'));
+
+    await waitFor(() => {
+      expect(onShared).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('M1: invoca onShared al compartir por WhatsApp', () => {
+    window.open = vi.fn();
+    const onShared = vi.fn();
+
+    render(<ShareButtons slug="mi-evento" title="Mi Fiesta" onShared={onShared} />);
+    fireEvent.click(screen.getByText('WhatsApp'));
+
+    expect(onShared).toHaveBeenCalledTimes(1);
+  });
 });

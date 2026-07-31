@@ -11,9 +11,11 @@ interface ShareButtonsProps {
   eventType?: EventType;
   eventDate?: string | null;
   eventLocation?: string | null;
+  /** Se invoca cuando el usuario comparte/copia el enlace (para el checklist de configuración). */
+  onShared?: () => void;
 }
 
-const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventType, eventDate, eventLocation }: ShareButtonsProps) {
+const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventType, eventDate, eventLocation, onShared }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const url = `${window.location.origin}/e/${slug}`;
@@ -32,6 +34,7 @@ const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventTy
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      onShared?.();
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -43,7 +46,10 @@ const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventTy
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
-        onClick={() => window.open(whatsappUrl, '_blank')}
+        onClick={() => {
+          onShared?.();
+          window.open(whatsappUrl, '_blank');
+        }}
         className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#22c55e] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#22c55e]/20"
       >
         <span className="material-symbols-outlined text-3xl">chat</span>

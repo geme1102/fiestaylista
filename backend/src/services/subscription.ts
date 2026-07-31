@@ -38,7 +38,10 @@ export async function createOrUpdateSubscription(
     .onConflictDoUpdate({
       target: subsTable.userId,
       set: {
-        mpSubscriptionId: sql`COALESCE(${data.mpSubscriptionId}, ${subsTable.mpSubscriptionId})`,
+        // C1: set directo (sin COALESCE) — un id nulo LIMPIA el preapproval anterior.
+        // COALESCE conservaba el id viejo y dejaba la sub apuntando a un preapproval
+        // que ya no existe o que fue reemplazado.
+        mpSubscriptionId: data.mpSubscriptionId,
         tier: data.tier,
         status: data.status,
         currentPeriodStart: data.currentPeriodStart,
@@ -48,10 +51,15 @@ export async function createOrUpdateSubscription(
     })
     .returning();
 
-  await conn
-    .update(users)
-    .set({ tier: data.tier, updatedAt: new Date() })
-    .where(eq(users.id, userId));
+  // A1: un estado 'pending_approval' NO otorga el tier — el usuario solo lo
+  // obtiene cuando el primer cobro se confirma (webhook active). Evita el
+  // "Pro gratis indefinido" si el cobro nunca se completa.
+  if (data.status !== 'pending_approval') {
+    await conn
+      .update(users)
+      .set({ tier: data.tier, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 
   if (data.status === 'active') {
     const now = new Date();
@@ -64,6 +72,26 @@ export async function createOrUpdateSubscription(
       .from(events)
       .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)));
     const activeCount = Number(activeRow?.count ?? 0);
+
+    // A5: si el usuario compró un tier MENOR (downgrade pro_plus → pro), congelar
+    // el exceso de eventos activos, manteniendo los más recientes.
+    if (activeCount > limits.maxEvents) {
+      const excess = activeCount - limits.maxEvents;
+      const excessEvents = await conn
+        .select({ id: events.id })
+        .from(events)
+        .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)))
+        .orderBy(desc(events.updatedAt))
+        .limit(excess);
+      if (excessEvents.length > 0) {
+        await conn
+          .update(events)
+          .set({ isActive: false, frozenAt: now, updatedAt: now })
+          .where(inArray(events.id, excessEvents.map(e => e.id)));
+        log.info({ userId, frozen: excessEvents.length, tier: data.tier }, 'Eventos congelados por downgrade de tier');
+      }
+    }
+
     const slots = Math.max(0, limits.maxEvents - activeCount);
     if (slots <= 0) return sub;
 
@@ -204,7 +232,9 @@ export async function reconcileSubscriptionOnLogin(userId: string): Promise<void
     if (!sub || sub.status === 'active' || !sub.mpSubscriptionId) return;
 
     const mpInfo = await fetchPreapprovalInfo(sub.mpSubscriptionId);
-    if (mpInfo.status === 'active' || mpInfo.status === 'authorized') {
+    // A2: solo un status 'active' confirma que MP sigue cobrando — 'authorized'
+    // (cobro inicial aún no confirmado) ya no reactiva la suscripción.
+    if (mpInfo.status === 'active') {
       const periodEnd = mpInfo.nextChargeDate ? new Date(mpInfo.nextChargeDate) : null;
       if (periodEnd && periodEnd <= new Date()) {
         log.info({ userId, mpSubscriptionId: sub.mpSubscriptionId }, 'Suscripción con periodo vencido en MP — no se reactiva');
@@ -249,6 +279,29 @@ export async function cancelSubscription(userId: string, immediate = false) {
 
       try {
         await freezeUserEvents(userId, tx as unknown as typeof db);
+
+        // M3: restaurar el evento "kept" del plan free (1) — mismo patrón que
+        // batchFreezeEvents: solo los congelados EN ESTA corrida (frozenAt = now),
+        // el más reciente primero. Sin esto, la cancelación inmediata congelaba
+        // TODOS los eventos mientras el cron sí dejaba 1 activo (inconsistencia).
+        const eventsToKeep = await tx
+          .select({ id: events.id })
+          .from(events)
+          .where(and(
+            eq(events.userId, userId),
+            sql`${events.frozenAt} IS NOT NULL`,
+            sql`${events.frozenAt} >= ${new Date().toISOString()}::timestamptz`,
+            isNull(events.deletedAt),
+          ))
+          .orderBy(desc(events.frozenAt))
+          .limit(TIER_LIMITS.free.maxEvents);
+
+        if (eventsToKeep.length > 0) {
+          await tx
+            .update(events)
+            .set({ isActive: true, frozenAt: null, updatedAt: new Date() })
+            .where(inArray(events.id, eventsToKeep.map(e => e.id)));
+        }
       } catch (err) {
         log.error({ err }, `Error congelando eventos tras cancelación para ${userId}:`);
       }
@@ -293,14 +346,19 @@ export async function updateSubscriptionStatus(
 export async function expireStaleSubscriptions(): Promise<number> {
   const now = new Date();
   const freezeThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  // A1: un pending_approval cuyo cobro nunca se completó expira a los 10 días —
+  // antes quedaba en estado pendiente indefinidamente (y con el tier ya otorgado).
+  const pendingThreshold = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
 
   const result = await db.transaction(async (tx) => {
     // Bloquear filas con FOR UPDATE SKIP LOCKED para evitar que dos cron concurrentes
     // procesen las mismas suscripciones
     const staleRows = await tx.execute(sql`
       SELECT id, user_id FROM ${subsTable} 
-      WHERE current_period_end <= ${freezeThreshold.toISOString()}::timestamptz 
-        AND status IN ('active', 'past_due', 'canceled')
+      WHERE (
+          (status IN ('active', 'past_due', 'canceled') AND current_period_end <= ${freezeThreshold.toISOString()}::timestamptz)
+          OR (status = 'pending_approval' AND current_period_end <= ${pendingThreshold.toISOString()}::timestamptz)
+        )
         AND NOT (status = 'canceled' AND tier = 'free')
       FOR UPDATE SKIP LOCKED
     `) as unknown as { id: string; user_id: string }[];

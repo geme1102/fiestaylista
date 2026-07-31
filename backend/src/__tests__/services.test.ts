@@ -244,6 +244,26 @@ describe('Event Service', () => {
       const result = await createEvent('u1', { title: 'Mi Boda', eventType: 'WEDDING' });
       expect(result.slug).toBe('mi-boda');
     });
+
+    it('H1: permite crear cuando solo hay eventos pausados/congelados (cuenta solo activos)', async () => {
+      const { db } = await import('../db/index.js');
+      const { createEvent } = await import('../services/event.js');
+      const mockEvent = { id: 'e1', title: 'Mi Boda', slug: 'mi-boda', eventType: 'WEDDING', userId: 'u1' };
+      const tx = queryMock([[{ tier: 'free' }], [{ count: 0 }]]);
+      tx._insertResult = [mockEvent];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      const result = await createEvent('u1', { title: 'Mi Boda', eventType: 'WEDDING' });
+      expect(result.slug).toBe('mi-boda');
+    });
+
+    it('H1: bloquea al alcanzar el límite de eventos ACTIVOS con mensaje "activos"', async () => {
+      const { db } = await import('../db/index.js');
+      const { createEvent } = await import('../services/event.js');
+      const tx = queryMock([[{ tier: 'free' }], [{ count: 1 }]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(createEvent('u1', { title: 'Mi Boda', eventType: 'WEDDING' }))
+        .rejects.toThrow('límite de 1 eventos activos en tu plan free');
+    });
   });
 });
 

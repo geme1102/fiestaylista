@@ -38,8 +38,8 @@ const updateEventSchema = z.object({
   hostPhone: z.preprocess(normalizePhone, z.string().regex(phoneRegex, 'Teléfono inválido')).optional(),
   isActive: z.boolean().optional(),
   eventDate: z.string().datetime({ offset: true }).nullable().optional(),
-  eventLocation: z.string().max(200).nullable().optional().transform(v => v ? sanitizeAndStrip(v) : undefined),
-  eventNote: z.string().max(1000).nullable().optional().transform(v => v ? sanitizeAndStrip(v) : undefined),
+  eventLocation: z.string().max(200).nullable().optional().transform(v => (v ? sanitizeAndStrip(v) : v)),
+  eventNote: z.string().max(1000).nullable().optional().transform(v => (v ? sanitizeAndStrip(v) : v)),
 });
 
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res) => {

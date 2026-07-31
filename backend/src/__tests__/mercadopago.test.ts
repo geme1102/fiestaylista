@@ -146,6 +146,7 @@ describe('fetchPaymentInfo', () => {
       external_reference: 'ref-1',
       transaction_amount: 50000,
       payer: { first_name: 'Juan', email: 'juan@test.com' },
+      preapproval_id: 'pre-1',
     });
 
     const info = await fetchPaymentInfo('pay-1');
@@ -154,6 +155,18 @@ describe('fetchPaymentInfo', () => {
     expect(info.transactionAmount).toBe(50000);
     expect(info.payerName).toBe('Juan');
     expect(info.payerEmail).toBe('juan@test.com');
+    expect(info.preapprovalId).toBe('pre-1');
+  });
+
+  it('returns null preapprovalId when payment has none', async () => {
+    mockPaymentGet.mockResolvedValueOnce({
+      status: 'approved',
+      external_reference: 'ref-2',
+      transaction_amount: 50000,
+    });
+
+    const info = await fetchPaymentInfo('pay-2');
+    expect(info.preapprovalId).toBeNull();
   });
 });
 

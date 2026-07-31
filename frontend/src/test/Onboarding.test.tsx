@@ -73,4 +73,20 @@ describe('Onboarding', () => {
     fireEvent.click(screen.getByText('Saltar este paso'));
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
+
+  it('A3: Enter repetido no duplica la creación del evento', async () => {
+    mockCreateEvent.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ id: 'evt-1' }), 50)));
+    renderOnboarding();
+    fireEvent.click(screen.getByText('Boda'));
+    fireEvent.click(screen.getByText('Continuar'));
+    const input = screen.getByPlaceholderText(/boda de/i);
+    fireEvent.change(input, { target: { value: 'Mi Boda' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    });
+    expect(mockCreateEvent).toHaveBeenCalledTimes(1);
+  });
 });

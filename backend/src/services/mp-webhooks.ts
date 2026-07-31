@@ -12,7 +12,7 @@ import { TIER_ORDER } from '../types/index.js';
 
 const log = createModuleLogger('MP');
 
-export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus'): Promise<void> {
+export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus', newPreapprovalId?: string | null): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
   const isProPlus = tier === 'pro_plus';
   const expectedAmount = interval === 'year'
@@ -21,6 +21,19 @@ export async function handleProPayment(paymentId: string, userId: string, interv
 
   let oldMpSubscriptionId: string | null = null;
   let oldTier: string | null = null;
+
+  // C1: si el pago no trae preapproval_id, buscarlo por external_reference
+  // (patrón ya usado abajo para upgrades sin id). Garantiza que el nuevo
+  // preapproval sea la fuente de verdad y el viejo no siga cobrando.
+  let effectivePreapprovalId = newPreapprovalId ?? null;
+  if (!effectivePreapprovalId) {
+    try {
+      const found = await mercadopagoService.searchPreapprovalsByRef(`${tier}_${userId}_${interval}`);
+      effectivePreapprovalId = found?.id ?? null;
+    } catch (err) {
+      log.warn({ err, userId }, 'No se pudo buscar el preapproval nuevo por external_reference');
+    }
+  }
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'payment_' + paymentId}))`);
@@ -45,8 +58,12 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     oldMpSubscriptionId = existingId;
     oldTier = currentSub[0]?.tier ?? null;
 
+    // C1: guardar el preapproval NUEVO (no el viejo) para que el webhook del
+    // preapproval viejo no sea tratado como "actual" ni lo pisque como duplicado.
+    const mpSubscriptionId = effectivePreapprovalId ?? existingId;
+
     await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: existingId,
+      mpSubscriptionId,
       tier,
       status: 'active',
       currentPeriodStart: new Date(),
@@ -58,27 +75,19 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       .onConflictDoNothing();
   });
 
-  // Cancelar preapproval anterior si es un upgrade
-  if (oldTier && oldTier !== 'free' && oldTier !== tier) {
-    const oldLevel = TIER_ORDER[oldTier as keyof typeof TIER_ORDER] ?? 0;
-    const newLevel = TIER_ORDER[tier] ?? 0;
-    if (oldLevel < newLevel) {
-      try {
-        if (oldMpSubscriptionId) {
-          await mercadopagoService.cancelPreapproval(oldMpSubscriptionId);
-          log.info({ oldMpSubscriptionId, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por upgrade');
-        } else {
-          const oldInterval = interval;
-          const oldExternalRef = `${oldTier}_${userId}_${oldInterval}`;
-          const oldPreapproval = await mercadopagoService.searchPreapprovalsByRef(oldExternalRef);
-          if (oldPreapproval && oldPreapproval.id) {
-            await mercadopagoService.cancelPreapproval(oldPreapproval.id);
-            log.info({ oldMpSubscriptionId: oldPreapproval.id, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por upgrade (por external_reference)');
-          }
-        }
-      } catch (err) {
-        log.warn({ err, userId, from: oldTier, to: tier }, 'Error no crítico cancelando preapproval anterior en upgrade');
-      }
+  // C1: cancelar el preapproval anterior SIEMPRE que exista un preapproval nuevo
+  // distinto (upgrade, downgrade o recompra en el mismo tier). El viejo quedó
+  // huérfano y seguiría cobrando mensualmente en MP.
+  if (oldMpSubscriptionId && effectivePreapprovalId && oldMpSubscriptionId !== effectivePreapprovalId) {
+    try {
+      await mercadopagoService.retryable(
+        () => mercadopagoService.cancelPreapproval(oldMpSubscriptionId!),
+        3,
+        10000,
+      );
+      log.info({ oldMpSubscriptionId, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por reemplazo de suscripción');
+    } catch (err) {
+      log.warn({ err, userId, from: oldTier, to: tier }, 'Error no crítico cancelando preapproval anterior por reemplazo');
     }
   }
 
@@ -153,6 +162,17 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
   return user?.id ?? null;
 }
 
+// A4: true si el pago pertenece al preapproval actual (o no existe uno más nuevo).
+// Un refund de un pago antiguo (ya reemplazado por otra compra) no debe cancelar la sub nueva.
+async function isPaymentFromCurrentPreapproval(userId: string, preapprovalId: string | null): Promise<boolean> {
+  const [currentSub] = await db
+    .select({ mpSubscriptionId: subscriptions.mpSubscriptionId })
+    .from(subscriptions)
+    .where(eq(subscriptions.userId, userId))
+    .limit(1);
+  return !currentSub?.mpSubscriptionId || currentSub.mpSubscriptionId === preapprovalId;
+}
+
 function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; interval: 'month' | 'year' } | null {
   const proMonthly = config.PRO_MONTHLY_PRICE_CENTS;
   const proYearly = config.PRO_YEARLY_PRICE_CENTS;
@@ -181,13 +201,15 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
   const ref = info.externalReference;
 
   if (ref && ref.startsWith('pro_')) {
-    const match = ref.match(/^pro_plus?_(.+)_(month|year)$/);
+    // 'pro_plus?' como regex NO matchea refs de Pro (pro_user-1_month) — el
+    // grupo (plus_)? captura el prefijo opcional y (.+) el userId.
+    const match = ref.match(/^pro_(plus_)?(.+)_(month|year)$/);
     if (!match) return;
     const isProPlus = ref.startsWith('pro_plus_');
     if (info.status === 'approved') {
       const tier = isProPlus ? 'pro_plus' : 'pro';
-      const userId = match[1];
-      const interval = match[2] as 'month' | 'year';
+      const userId = match[2];
+      const interval = match[3] as 'month' | 'year';
       const expectedAmount = interval === 'year'
         ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
         : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
@@ -196,15 +218,20 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
         log.error(`Monto de ${tier.toUpperCase()} inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
         return;
       }
-      await handleProPayment(paymentId, userId, interval, tier);
+      await handleProPayment(paymentId, userId, interval, tier, info.preapprovalId);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
-      const userId = match[1];
+      const userId = match[2];
       await db
         .update(proPayments)
         .set({ status: 'refunded' })
         .where(eq(proPayments.mpPaymentId, paymentId))
         .catch((err: unknown) => log.error({ err }, 'Error marcando pago como reembolsado:'));
-      if (userId) await subscriptionService.cancelSubscription(userId, true);
+      // A4: solo cancelar si el pago reembolsado pertenece al preapproval ACTUAL
+      // (o no existe uno más nuevo) — un refund de un pago antiguo no debe
+      // tumbar una suscripción nueva.
+      if (userId && (await isPaymentFromCurrentPreapproval(userId, info.preapprovalId))) {
+        await subscriptionService.cancelSubscription(userId, true);
+      }
     }
     return;
   }
@@ -219,8 +246,9 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
         log.error({ err, paymentId }, 'Error marcando pago como reembolsado:');
         return [];
       });
-    // Solo cancelar suscripción si este era un pago de suscripción (tier no es null).
-    if (updated?.userId && updated.tier) {
+    // Solo cancelar suscripción si este era un pago de suscripción (tier no es null)
+    // Y pertenece al preapproval actual (A4).
+    if (updated?.userId && updated.tier && (await isPaymentFromCurrentPreapproval(updated.userId, info.preapprovalId))) {
       await subscriptionService.cancelSubscription(updated.userId, true);
     }
     return;
@@ -256,12 +284,12 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   const ref = info.externalReference;
 
   if (ref && ref.startsWith('pro_')) {
-    const match = ref.match(/^pro_plus?_(.+)_(month|year)$/);
+    const match = ref.match(/^pro_(plus_)?(.+)_(month|year)$/);
     if (!match) return;
     const isProPlus = ref.startsWith('pro_plus_');
-    userId = match[1];
+    userId = match[2];
     detectedTier = isProPlus ? 'pro_plus' : 'pro';
-    detectedInterval = match[2] as 'month' | 'year';
+    detectedInterval = match[3] as 'month' | 'year';
 
     const expectedAmount = detectedInterval === 'year'
       ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
@@ -305,7 +333,19 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       return;
     }
 
-    if (currentSub && currentSub.mpSubscriptionId === preapprovalId && currentSub.status === 'active') {
+    if (currentSub && currentSub.status === 'active') {
+      // C1: webhook de un preapproval REEMPLAZADO (compra nueva) — no es la fuente de verdad.
+      if (currentSub.mpSubscriptionId !== preapprovalId) {
+        log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook de preapproval reemplazado');
+        return;
+      }
+      // A3: un webhook tardío de un tier menor no debe degradar el tier activo.
+      const currentTierLevel = TIER_ORDER[currentSub.tier as keyof typeof TIER_ORDER] ?? 0;
+      const detectedLevel = TIER_ORDER[detectedTier] ?? 0;
+      if (detectedLevel < currentTierLevel) {
+        log.info({ userId, preapprovalId, detectedTier, currentTier: currentSub.tier }, 'Ignorando webhook de tier menor al activo');
+        return;
+      }
       log.info({ preapprovalId, userId }, 'Preapproval ya procesado, ignorando webhook duplicado');
       return;
     }
@@ -348,8 +388,21 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       }, tx as unknown as typeof db);
     });
   } else if (info.status === 'cancelled') {
+    // C2: solo cancelar si este preapproval es el ACTUAL — un webhook de
+    // cancelled de un preapproval viejo no debe cancelar la sub nueva.
+    const currentSub = await subscriptionService.getCurrentSubscription(userId);
+    if (currentSub && currentSub.mpSubscriptionId && currentSub.mpSubscriptionId !== preapprovalId) {
+      log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook cancelled de preapproval reemplazado');
+      return;
+    }
     await subscriptionService.cancelSubscription(userId);
   } else if (info.status === 'past_due') {
+    // C2: mismo guard — past_due de un preapproval viejo no afecta la sub actual.
+    const currentSub = await subscriptionService.getCurrentSubscription(userId);
+    if (currentSub && currentSub.mpSubscriptionId && currentSub.mpSubscriptionId !== preapprovalId) {
+      log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook past_due de preapproval reemplazado');
+      return;
+    }
     await subscriptionService.updateSubscriptionStatus(userId, 'past_due');
 
     const [pastDueUser] = await db

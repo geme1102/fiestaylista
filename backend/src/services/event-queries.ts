@@ -26,7 +26,7 @@ export async function getUserEvents(userId: string) {
     })
     .from(eventsTable)
     .where(and(eq(eventsTable.userId, userId), sql`${eventsTable.deletedAt} IS NULL`))
-    .orderBy(eventsTable.createdAt)
+    .orderBy(desc(eventsTable.createdAt))
     .limit(50);
 
   if (userEvents.length === 0) return [];
@@ -103,28 +103,35 @@ export async function getEvent(eventId: string, userId: string, giftParams: Pagi
     throw new ForbiddenError('No tienes permiso para ver este evento');
   }
 
-  const { limit: giftLimit } = buildPaginationConditions(
+  const { limit: giftLimit, cursorCondition: giftCursor } = buildPaginationConditions(
     gifts.createdAt as unknown as SQL,
     giftParams,
     50,
   );
-  const { limit: photoLimit } = buildPaginationConditions(
+  const giftConditions = giftCursor
+    ? and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt), giftCursor)
+    : and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt));
+
+  const { limit: photoLimit, cursorCondition: photoCursor } = buildPaginationConditions(
     photos.createdAt as unknown as SQL,
     photoParams,
     50,
   );
+  const photoConditions = photoCursor
+    ? and(eq(photos.eventId, eventId), isNull(photos.deletedAt), photoCursor)
+    : and(eq(photos.eventId, eventId), isNull(photos.deletedAt));
 
   const [eventGifts, eventPhotos, allClaims] = await Promise.all([
     db
       .select()
       .from(gifts)
-      .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
+      .where(giftConditions)
       .orderBy(desc(gifts.createdAt))
       .limit(giftLimit),
     db
       .select()
       .from(photos)
-      .where(and(eq(photos.eventId, eventId), isNull(photos.deletedAt)))
+      .where(photoConditions)
       .orderBy(desc(photos.createdAt))
       .limit(photoLimit),
     db

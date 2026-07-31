@@ -164,7 +164,7 @@ router.put('/:giftId/toggle-group', requireAuth, requireEventOwnership, validate
   res.json({ gift });
 }));
 
-router.post('/sse-token', requireAuth, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
+router.post('/sse-token', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

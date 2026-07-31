@@ -38,6 +38,11 @@ router.post('/analytics/view', viewLimiter, verifyTurnstileOptional, asyncHandle
     // statements sueltos: dos requests concurrentes podían pasar el dup-check,
     // insertar 2 filas y contar 2 views de la misma visita.
     const inserted = await db.transaction(async (tx) => {
+      // Advisory lock por evento: serializa el registro de vistas y cierra la
+      // race de duplicados (dos requests concurrentes pasaban el dup-check e
+      // insertaban 2 filas para la misma visita).
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'view_' + eventId}))`);
+
       const [dup] = await tx
         .select({ exists: sql`1` })
         .from(eventViews)

@@ -1,12 +1,14 @@
 -- ============================================================
 -- RLS (Row-Level Security) Migration — Fiesta y Lista
 -- ============================================================
--- Ejecutar manualmente en Neon SQL Editor o via psql.
--- Este script habilita RLS en todas las tablas con datos de usuario.
+-- REFERENCIA LEGACY — NO ejecutar con PgBouncer en modo transacción:
+-- las políticas dependen de SET app.current_user_id, que NO es sticky
+-- con transaction pooling (cada statement puede caer en otra conexión).
+-- Solo sería aplicable con conexiones directas (sin pooler) y ajustando
+-- el backend para emitir el SET en cada transacción.
 --
--- IMPORTANTE: Requiere crear un rol de aplicación (app_role) y
--- configurar el backend para SET app.current_user_id por request.
--- Ver documentación en backend/docs/RLS_SETUP.md
+-- El runner de migraciones (db/migrate.ts) NUNCA ejecuta este archivo.
+-- Corregido a los nombres de columna reales (snake_case).
 -- ============================================================
 
 -- Tablas con userId directo
@@ -46,10 +48,10 @@ CREATE POLICY users_isolation ON users
 -- Excepción: login necesita buscar por email sin knowing el userId.
 -- Crear función SECURITY DEFINER que bypassa RLS para lookup de login.
 CREATE OR REPLACE FUNCTION lookup_user_by_email(p_email text)
-RETURNS TABLE (id uuid, email text, name text, "passwordHash" text, tier text, "emailVerified" boolean, "onboardingCompleted" boolean, "welcomeTutorialCompleted" boolean, "createdAt" timestamptz)
+RETURNS TABLE (id uuid, email text, name text, password_hash text, tier text, email_verified boolean, onboarding_completed boolean, welcome_tutorial_completed boolean, created_at timestamptz)
 LANGUAGE sql SECURITY DEFINER
 AS $$
-  SELECT id, email, name, "passwordHash", tier, "emailVerified", "onboardingCompleted", "welcomeTutorialCompleted", "createdAt"
+  SELECT id, email, name, password_hash, tier, email_verified, onboarding_completed, welcome_tutorial_completed, created_at
   FROM users
   WHERE email = lower(p_email)
   LIMIT 1;
@@ -61,7 +63,7 @@ $$;
 CREATE POLICY events_owner ON events
   FOR ALL
   USING (
-    "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     OR id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
@@ -70,42 +72,42 @@ CREATE POLICY events_owner ON events
 -- ============================================================
 CREATE POLICY subs_isolation ON subscriptions
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — refresh_tokens
 -- ============================================================
 CREATE POLICY tokens_isolation ON refresh_tokens
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — pro_payments
 -- ============================================================
 CREATE POLICY payments_isolation ON pro_payments
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — email_tracking
 -- ============================================================
 CREATE POLICY email_tracking_isolation ON email_tracking
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — consent_records
 -- ============================================================
 CREATE POLICY consent_isolation ON consent_records
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — arco_requests
 -- ============================================================
 CREATE POLICY arco_isolation ON arco_requests
   FOR ALL
-  USING ("userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
+  USING (user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid);
 
 -- ============================================================
 -- POLÍTICAS — audit_logs
@@ -113,8 +115,8 @@ CREATE POLICY arco_isolation ON arco_requests
 CREATE POLICY audit_isolation ON audit_logs
   FOR ALL
   USING (
-    "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
-    OR "userId" IS NULL  -- system logs (login failures sin userId conocido)
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+    OR user_id IS NULL  -- system logs (login failures sin userId conocido)
   );
 
 -- ============================================================
@@ -123,11 +125,11 @@ CREATE POLICY audit_isolation ON audit_logs
 CREATE POLICY gifts_owner ON gifts
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -136,14 +138,14 @@ CREATE POLICY gifts_owner ON gifts
 CREATE POLICY claims_owner ON gift_claims
   FOR ALL
   USING (
-    "giftId" IN (
+    gift_id IN (
       SELECT g.id FROM gifts g
-      JOIN events e ON g."eventId" = e.id
-      WHERE e."userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      JOIN events e ON g.event_id = e.id
+      WHERE e.user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "giftId" IN (
+    OR gift_id IN (
       SELECT g.id FROM gifts g
-      WHERE g."eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+      WHERE g.event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
     )
   );
 
@@ -153,11 +155,11 @@ CREATE POLICY claims_owner ON gift_claims
 CREATE POLICY photos_owner ON photos
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -166,11 +168,11 @@ CREATE POLICY photos_owner ON photos
 CREATE POLICY cashfunds_owner ON cash_funds
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -179,14 +181,14 @@ CREATE POLICY cashfunds_owner ON cash_funds
 CREATE POLICY contributions_owner ON cash_contributions
   FOR ALL
   USING (
-    "cashFundId" IN (
+    cash_fund_id IN (
       SELECT cf.id FROM cash_funds cf
-      JOIN events e ON cf."eventId" = e.id
-      WHERE e."userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      JOIN events e ON cf.event_id = e.id
+      WHERE e.user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "cashFundId" IN (
+    OR cash_fund_id IN (
       SELECT cf.id FROM cash_funds cf
-      WHERE cf."eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+      WHERE cf.event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
     )
   );
 
@@ -196,11 +198,11 @@ CREATE POLICY contributions_owner ON cash_contributions
 CREATE POLICY messages_owner ON messages
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -209,11 +211,11 @@ CREATE POLICY messages_owner ON messages
 CREATE POLICY guests_owner ON guests
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -222,11 +224,11 @@ CREATE POLICY guests_owner ON guests
 CREATE POLICY views_owner ON event_views
   FOR ALL
   USING (
-    "eventId" IN (
+    event_id IN (
       SELECT id FROM events
-      WHERE "userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      WHERE user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
-    OR "eventId" = NULLIF(current_setting('app.current_event_id', true), '')::uuid
+    OR event_id = NULLIF(current_setting('app.current_event_id', true), '')::uuid
   );
 
 -- ============================================================
@@ -235,11 +237,11 @@ CREATE POLICY views_owner ON event_views
 CREATE POLICY fees_owner ON platform_fees
   FOR ALL
   USING (
-    "contributionId" IN (
+    contribution_id IN (
       SELECT cc.id FROM cash_contributions cc
-      JOIN cash_funds cf ON cc."cashFundId" = cf.id
-      JOIN events e ON cf."eventId" = e.id
-      WHERE e."userId" = NULLIF(current_setting('app.current_user_id', true), '')::uuid
+      JOIN cash_funds cf ON cc.cash_fund_id = cf.id
+      JOIN events e ON cf.event_id = e.id
+      WHERE e.user_id = NULLIF(current_setting('app.current_user_id', true), '')::uuid
     )
   );
 

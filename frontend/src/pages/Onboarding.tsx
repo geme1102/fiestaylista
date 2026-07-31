@@ -43,6 +43,9 @@ export default function Onboarding() {
   const [creating, setCreating] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  // A3: guard de doble submit — Enter repetido disparaba createEvent varias veces
+  // (el estado `creating` es asíncrono; un ref corta el camino inmediatamente).
+  const creatingRef = useRef(false);
 
   // Derivar icon/label desde eventType (H-8: sync persistido)
   const eventTypeInfo = getEventTypeInfo(eventType);
@@ -63,10 +66,12 @@ export default function Onboarding() {
   }, [step]);
 
   const handleFinish = async () => {
+    if (creatingRef.current) return;
     if (!title.trim()) {
       showToast('Ingresa un nombre para tu evento', 'error');
       return;
     }
+    creatingRef.current = true;
     setCreating(true);
     try {
       await createEvent({ title: title.trim(), eventType, eventNote: eventNote.trim() || undefined });
@@ -75,6 +80,7 @@ export default function Onboarding() {
     } catch (err) {
       reportError(err, { source: 'Onboarding' });
       showToast(err instanceof Error ? err.message : 'Error al crear evento', 'error');
+      creatingRef.current = false;
       setCreating(false);
     }
   };

@@ -185,11 +185,11 @@ export default function Dashboard() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    submittingRef.current = true;
     if (!formData.title.trim()) {
       showToast('El nombre del evento es obligatorio', 'error');
       return;
     }
+    submittingRef.current = true;
     setCreating(true);
     safetyTimerRef.current = setTimeout(() => {
       setCreating(false);
