@@ -18,9 +18,9 @@ vi.mock('../config.js', () => ({
     PRO_MONTHLY_PRICE_CENTS: 59900,
     PRO_YEARLY_PRICE_CENTS: 660000,
     PRO_PLUS_MONTHLY_PRICE_CENTS: 99900,
-    PRO_MONTHLY_CHECKOUT_URL: 'https://mpago.test/pro-monthly',
-    PRO_YEARLY_CHECKOUT_URL: 'https://mpago.test/pro-yearly',
-    PRO_PLUS_MONTHLY_CHECKOUT_URL: 'https://mpago.test/pro-plus',
+    PRO_MONTHLY_PLAN_ID: 'plan-pro-month',
+    PRO_YEARLY_PLAN_ID: 'plan-pro-year',
+    PRO_PLUS_MONTHLY_PLAN_ID: 'plan-pro-plus-month',
     CLOUDINARY_CLOUD_NAME: '',
     CLOUDINARY_API_KEY: '',
     CLOUDINARY_API_SECRET: '',
@@ -33,6 +33,7 @@ function queryBuilder(initialResult: any = []) {
   const qb: any = Promise.resolve(initialResult);
   qb.select = vi.fn(() => qb);
   qb.from = vi.fn(() => qb);
+  qb.innerJoin = vi.fn(() => qb);
   qb.where = vi.fn(() => qb);
   qb.limit = vi.fn(() => qb);
   qb.offset = vi.fn(() => qb);
@@ -259,6 +260,7 @@ vi.mock('../services/cashFund.js', () => mockCashFundService);
 const mockMercadopagoService = vi.hoisted(() => ({
   cancelPreapproval: vi.fn(),
   searchPreapprovalsByRef: vi.fn(),
+  createPreApproval: vi.fn(),
   // D4: la ruta de cancelación ahora usa retryable() de 3 intentos
   retryable: vi.fn(async (fn: (opts: { signal: AbortSignal; timeout: number }) => Promise<unknown>) =>
     fn({ signal: new AbortController().signal, timeout: 10000 }),
@@ -293,7 +295,7 @@ const mockArcoService = vi.hoisted(() => ({
 
 vi.mock('../services/arco.js', () => mockArcoService);
 
-const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', viewCount: 0, createdAt: new Date(), updatedAt: new Date(), emailVerified: true }));
+const mockEventData = vi.hoisted(() => ({ id: 'evt-1', userId: 'user-1', title: 'Test Event', eventType: 'BABY_SHOWER', slug: 'test-event', isActive: true, status: 'active', viewCount: 0, createdAt: new Date(), updatedAt: new Date(), emailVerified: true, ownerTier: 'pro' }));
 
 const mockNotifications = vi.hoisted(() => ({
   emitGiftClaimed: vi.fn(),
@@ -723,27 +725,41 @@ describe('Subscription Routes', () => {
     vi.clearAllMocks();
   });
 
-  it('POST /api/subscriptions/create-checkout - returns static URL for pro monthly', async () => {
+  it('POST /api/subscriptions/create-checkout - creates preapproval for pro monthly', async () => {
+    mockMercadopagoService.createPreApproval.mockResolvedValue({ initPoint: 'https://mpago.test/pro-month', id: 'preapp-1' });
+
     const res = await request(app)
       .post('/api/subscriptions/create-checkout')
       .set(auth)
       .send({ tier: 'pro', interval: 'month' });
 
     expect(res.status).toBe(200);
-    expect(res.body.url).toBe('https://mpago.test/pro-monthly');
+    expect(res.body.url).toBe('https://mpago.test/pro-month');
+    expect(mockMercadopagoService.createPreApproval).toHaveBeenCalledWith(expect.objectContaining({
+      planId: 'plan-pro-month',
+      externalReference: 'pro_user-1_month',
+    }));
   });
 
-  it('POST /api/subscriptions/create-checkout - returns static URL for pro yearly', async () => {
+  it('POST /api/subscriptions/create-checkout - creates preapproval for pro yearly', async () => {
+    mockMercadopagoService.createPreApproval.mockResolvedValue({ initPoint: 'https://mpago.test/pro-year', id: 'preapp-2' });
+
     const res = await request(app)
       .post('/api/subscriptions/create-checkout')
       .set(auth)
       .send({ tier: 'pro', interval: 'year' });
 
     expect(res.status).toBe(200);
-    expect(res.body.url).toBe('https://mpago.test/pro-yearly');
+    expect(res.body.url).toBe('https://mpago.test/pro-year');
+    expect(mockMercadopagoService.createPreApproval).toHaveBeenCalledWith(expect.objectContaining({
+      planId: 'plan-pro-year',
+      externalReference: 'pro_user-1_year',
+    }));
   });
 
-  it('POST /api/subscriptions/create-checkout - returns static URL for pro_plus monthly', async () => {
+  it('POST /api/subscriptions/create-checkout - creates preapproval for pro_plus monthly', async () => {
+    mockMercadopagoService.createPreApproval.mockResolvedValue({ initPoint: 'https://mpago.test/pro-plus', id: 'preapp-3' });
+
     const res = await request(app)
       .post('/api/subscriptions/create-checkout')
       .set(auth)
@@ -751,6 +767,10 @@ describe('Subscription Routes', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.url).toBe('https://mpago.test/pro-plus');
+    expect(mockMercadopagoService.createPreApproval).toHaveBeenCalledWith(expect.objectContaining({
+      planId: 'plan-pro-plus-month',
+      externalReference: 'pro_plus_user-1_month',
+    }));
   });
 
   it('POST /api/subscriptions/create-checkout - pro_plus yearly returns error', async () => {

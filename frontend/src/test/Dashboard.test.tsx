@@ -68,6 +68,7 @@ const mockSingleEvent = {
   photoCount: 2,
   cashFund: { collectedAmount: 150000 },
   isActive: true,
+  frozenAt: null as string | null,
   createdAt: '2025-01-01',
   status: 'active',
 };
@@ -167,6 +168,24 @@ describe('Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByTestId('upgrade-cta')).toBeTruthy();
     });
+  });
+
+  it('M3: muestra badge CONGELADO en eventos con frozenAt e inactivos', async () => {
+    renderDashboard([
+      { ...mockSingleEvent, isActive: false, frozenAt: '2025-06-01T00:00:00Z' },
+    ]);
+    await waitFor(() => {
+      expect(screen.getByText('CONGELADO')).toBeTruthy();
+    });
+    expect(screen.queryByText('FINALIZADO')).not.toBeInTheDocument();
+  });
+
+  it('no muestra badge CONGELADO en eventos activos', async () => {
+    renderDashboard(mockEvents);
+    await waitFor(() => {
+      expect(screen.getByTestId('event-card-evt-1')).toBeTruthy();
+    });
+    expect(screen.queryByText('CONGELADO')).not.toBeInTheDocument();
   });
 
   it('copies event link to clipboard', async () => {

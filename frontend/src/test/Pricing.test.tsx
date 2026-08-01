@@ -104,6 +104,15 @@ describe('Pricing', () => {
     );
   });
 
+  it('M3: muestra toast al volver de un pago cancelado (?cancelado=1)', () => {
+    mockUseLocation.mockReturnValue({ search: '?cancelado=1' });
+    renderPricing();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      'Cancelaste el proceso de pago. No se realizó ningún cargo.',
+      'info'
+    );
+  });
+
   it('renders FAQ section', () => {
     renderPricing();
     expect(screen.getByText('Preguntas Frecuentes')).toBeTruthy();

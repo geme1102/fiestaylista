@@ -664,6 +664,12 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `DROP TABLE IF EXISTS "boost_payments"`,
     ],
   },
+  {
+    name: 'subscriptions_cancel_requested_at',
+    statements: [
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "cancel_requested_at" timestamp with time zone`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

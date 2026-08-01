@@ -58,6 +58,16 @@ describe('GiftManagement', () => {
     expect(screen.getByTestId('add-gift-button').hasAttribute('disabled')).toBe(true);
   });
 
+  it('C3: al llegar al límite deshabilita también el input y los chips de sugerencias', () => {
+    render(<GiftManagement {...defaultProps} gifts={Array.from({ length: 15 }, (_, i) => ({ ...sampleGifts[0], id: `g-${i}`, name: `Gift ${i}` }))} />);
+
+    expect(screen.getByTestId('gift-name-input').hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('Límite alcanzado')).toBeTruthy();
+    const chip = screen.getByText('Sartén').closest('button');
+    expect(chip).not.toBeNull();
+    expect(chip!.hasAttribute('disabled')).toBe(true);
+  });
+
   it('disables add button when input empty', () => {
     render(<GiftManagement {...defaultProps} newGiftName="" />);
     expect(screen.getByTestId('add-gift-button').hasAttribute('disabled')).toBe(true);

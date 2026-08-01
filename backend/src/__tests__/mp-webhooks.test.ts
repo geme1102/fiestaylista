@@ -66,7 +66,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function makePaymentTx(currentSub: { mpSubscriptionId: string | null; tier: string | null }) {
+function makePaymentTx(currentSub: { mpSubscriptionId: string | null; tier: string | null; status?: string | null }) {
   const tx: any = {
     execute: vi.fn().mockResolvedValue(undefined),
     insert: vi.fn(() => ({ values: vi.fn(() => ({ onConflictDoNothing: vi.fn().mockResolvedValue(undefined) })) })),
@@ -147,6 +147,43 @@ describe('handleProPayment', () => {
       expect.anything(),
     );
   });
+
+  it('H3: lanza error si no se puede identificar el preapproval (ni del pago ni por búsqueda)', async () => {
+    const { db } = await import('../db/index.js');
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-OLD', tier: 'pro' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+    mockMp.searchPreapprovalsByRef.mockResolvedValue(null);
+
+    await expect(handleProPayment('pay-5', 'user-1', 'month', 'pro')).rejects.toThrow(/No se pudo identificar el preapproval/);
+
+    // El doble cobro ocurría aquí: se conservaba el id viejo y se cancelaba el
+    // preapproval equivocado. Ahora no se actualiza ni cancela nada.
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
+  });
+
+  it('C1 (pago): ignora un pago de un preapproval REEMPLAZADO — no degrada ni cancela el nuevo', async () => {
+    const { db } = await import('../db/index.js');
+    // Sub activa apuntando al preapproval NUEVO (PA-NEW); llega un pago tardío
+    // del preapproval VIEJO (PA-OLD) — antes degradaba a pro y cancelaba PA-NEW.
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+
+    await handleProPayment('pay-6', 'user-1', 'month', 'pro', 'PA-OLD');
+
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
+  });
+
+  it('A3 (pago): ignora un pago de tier menor al activo', async () => {
+    const { db } = await import('../db/index.js');
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-SAME', tier: 'pro_plus', status: 'active' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+
+    await handleProPayment('pay-7', 'user-1', 'month', 'pro', 'PA-SAME');
+
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+  });
 });
 
 describe('handleSubscriptionNotification', () => {
@@ -221,6 +258,83 @@ describe('handleSubscriptionNotification', () => {
       expect.objectContaining({ mpSubscriptionId: 'PA-NEW', tier: 'pro', status: 'pending_approval' }),
       expect.anything(),
     );
+  });
+
+  it('MEDIUM-2: authorized de un preapproval REEMPLAZADO no toca la sub activa', async () => {
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({ ...basePreapproval, status: 'authorized' });
+    mockSubsService.getCurrentSubscription.mockResolvedValue({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' } as any);
+
+    await handleSubscriptionNotification('PA-OLD');
+
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+  });
+
+  it('MEDIUM-2: authorized NO degrada una sub activa (aunque sea el mismo preapproval)', async () => {
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({ ...basePreapproval, status: 'authorized' });
+    mockSubsService.getCurrentSubscription.mockResolvedValue({ mpSubscriptionId: 'PA-CUR', tier: 'pro', status: 'active' } as any);
+
+    await handleSubscriptionNotification('PA-CUR');
+
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+  });
+
+  it('MEDIUM-2: authorized de plan anual usa periodDays=365 (no 30 hardcodeados)', async () => {
+    const { db } = await import('../db/index.js');
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({
+      ...basePreapproval,
+      status: 'authorized',
+      externalReference: 'pro_user-1_year',
+      nextChargeDate: null,
+      amountSource: 'recurring',
+    });
+    mockSubsService.getCurrentSubscription.mockResolvedValue(null);
+    const tx: any = { execute: vi.fn().mockResolvedValue(undefined) };
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+
+    await handleSubscriptionNotification('PA-YEAR');
+
+    const call = mockSubsService.createOrUpdateSubscription.mock.calls[0][1] as any;
+    const end = new Date(call.currentPeriodEnd).getTime();
+    const diffDays = (end - Date.now()) / (24 * 60 * 60 * 1000);
+    expect(diffDays).toBeGreaterThan(360);
+    expect(diffDays).toBeLessThan(370);
+  });
+
+  it('M7: preapproval con solo auto_recurring (amountSource recurring) no valida monto — no se ignora', async () => {
+    const { db } = await import('../db/index.js');
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({
+      ...basePreapproval,
+      transactionAmount: 890, // no coincide con el precio mensual (8900)
+      amountSource: 'recurring',
+    });
+    mockSubsService.getCurrentSubscription.mockResolvedValue(null);
+    const tx: any = { execute: vi.fn().mockResolvedValue(undefined) };
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+
+    await handleSubscriptionNotification('PA-REC');
+
+    expect(mockSubsService.createOrUpdateSubscription).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ tier: 'pro', status: 'active' }),
+      expect.anything(),
+    );
+  });
+
+  it('M7: preapproval con initial_amount (amountSource initial) y monto incorrecto lanza error', async () => {
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({
+      ...basePreapproval,
+      transactionAmount: 5000,
+      amountSource: 'initial',
+    });
+
+    await expect(handleSubscriptionNotification('PA-INIT')).rejects.toThrow(/Monto de suscripción no coincide/);
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+  });
+
+  it('HIGH-1: preapproval sin external_reference pro_* lanza error (requiere revisión)', async () => {
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({ ...basePreapproval, externalReference: '', status: 'active' });
+
+    await expect(handleSubscriptionNotification('PA-NOREF')).rejects.toThrow(/external_reference pro_\*/);
   });
 
   it('C2: ignora webhook past_due de un preapproval reemplazado', async () => {
@@ -300,5 +414,29 @@ describe('handlePaymentNotification (refund/chargeback)', () => {
     await handlePaymentNotification('pay-nosub');
 
     expect(mockSubsService.cancelSubscription).toHaveBeenCalledWith('user-1', true);
+  });
+
+  it('H1: pago approved con monto incorrecto lanza error (entra a failedWebhooks en vez de silenciarse)', async () => {
+    mockMp.fetchPaymentInfo.mockResolvedValue({
+      status: 'approved',
+      externalReference: 'pro_user-1_month',
+      transactionAmount: 12345,
+      preapprovalId: 'PA-PRO',
+    });
+
+    await expect(handlePaymentNotification('pay-wrong-amount')).rejects.toThrow(/Monto de PRO inválido/);
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+  });
+
+  it('HIGH-1: pago approved sin external_reference pro_* lanza error — no otorga tier por monto', async () => {
+    mockMp.fetchPaymentInfo.mockResolvedValue({
+      status: 'approved',
+      externalReference: '',
+      transactionAmount: 599, // antes: normalización ×100 → matcheaba el precio completo
+      preapprovalId: null,
+    });
+
+    await expect(handlePaymentNotification('pay-noref')).rejects.toThrow(/external_reference pro_\*/);
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
   });
 });

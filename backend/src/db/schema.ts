@@ -99,6 +99,7 @@ export const subscriptions = pgTable('subscriptions', {
   tier: text('tier').notNull().default('free'),
   currentPeriodStart: timestamp('current_period_start', { mode: 'date', withTimezone: true }),
   currentPeriodEnd: timestamp('current_period_end', { mode: 'date', withTimezone: true }),
+  cancelRequestedAt: timestamp('cancel_requested_at', { mode: 'date', withTimezone: true }),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({

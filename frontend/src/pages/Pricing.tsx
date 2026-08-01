@@ -105,6 +105,11 @@ export default function Pricing() {
       shouldClean = true;
     }
 
+    if (params.get('cancelado') === '1') {
+      showToast('Cancelaste el proceso de pago. No se realizó ningún cargo.', 'info');
+      shouldClean = true;
+    }
+
     if (params.get('interval') === 'year') {
       setYearly(true);
       shouldClean = true;
@@ -159,7 +164,7 @@ export default function Pricing() {
     try {
       const interval = tier === 'pro_plus' ? 'month' : yearly ? 'year' : 'month';
       const successUrl = `${window.location.origin}/dashboard?pro=activated`;
-      const cancelUrl = `${window.location.origin}/pricing`;
+      const cancelUrl = `${window.location.origin}/pricing?cancelado=1`;
       const res = await createCheckoutSession(tier as Tier, successUrl, cancelUrl, interval, token ?? undefined);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       const validatedUrl = validateRedirectUrl(res.url);

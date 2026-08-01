@@ -12,7 +12,7 @@ import { ValidationError, NotFoundError } from '../utils/errors.js';
 import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { db } from '../db/index.js';
-import { events } from '../db/schema.js';
+import { events, users } from '../db/schema.js';
 
 const router = Router({ mergeParams: true });
 
@@ -29,12 +29,19 @@ router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (re
     throw new ValidationError('ID del evento requerido');
   }
   const [event] = await db
-    .select({ isActive: events.isActive })
+    .select({ isActive: events.isActive, ownerTier: users.tier })
     .from(events)
+    .innerJoin(users, eq(users.id, events.userId))
     .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
     .limit(1);
   if (!event || !event.isActive) {
     throw new NotFoundError('Evento no encontrado');
+  }
+  // MEDIUM-1: el dueño free (downgrade) no comparte fotos — se ocultan sin
+  // borrar; si reactiva Pro vuelven a ser visibles.
+  if ((event.ownerTier ?? 'free') === 'free') {
+    res.json({ photos: [], hasMore: false });
+    return;
   }
   const result = await photoService.getEventPhotos(eventId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,

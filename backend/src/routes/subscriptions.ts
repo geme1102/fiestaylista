@@ -27,11 +27,6 @@ const PLAN_IDS: Record<string, Record<string, string>> = {
   pro_plus: { month: config.PRO_PLUS_MONTHLY_PLAN_ID },
 };
 
-const CHECKOUT_URLS: Record<string, Record<string, string>> = {
-  pro: { month: config.PRO_MONTHLY_CHECKOUT_URL, year: config.PRO_YEARLY_CHECKOUT_URL },
-  pro_plus: { month: config.PRO_PLUS_MONTHLY_CHECKOUT_URL },
-};
-
 const checkoutSchema = z.object({
   tier: z.enum(['pro', 'pro_plus'], {
     errorMap: () => ({ message: 'Plan inválido. Debe ser pro o pro_plus' }),
@@ -71,26 +66,24 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
   const successUrl = data.successUrl || `${config.FRONTEND_URL}/dashboard?pro=activated`;
   const cancelUrl = data.cancelUrl || `${config.FRONTEND_URL}/pricing`;
 
-  if (planId) {
-    const externalReference = `${data.tier}_${req.user!.userId}_${data.interval}`;
-    const result = await mercadopagoService.createPreApproval({
-      planId,
-      payerEmail: req.user!.email,
-      externalReference,
-      successUrl,
-      cancelUrl,
-      reason: `Fiesta y Lista ${data.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} ${data.interval === 'year' ? 'Anual' : 'Mensual'}`,
-    });
-    res.json({ url: result.initPoint });
-    return;
-  }
-
-  const url = CHECKOUT_URLS[data.tier]?.[data.interval];
-  if (!url) {
+  // HIGH-1: todo pago debe venir de un preapproval con external_reference
+  // (pro_<userId>_<interval>). El flujo legacy de CHECKOUT_URLS genéricas sin
+  // referencia se eliminó: permitía identificar el tier por monto en el webhook
+  // (un pago de ~1/100 del precio otorgaba Pro).
+  if (!planId) {
     throw new ValidationError('URL de pago no configurada para este plan');
   }
 
-  res.json({ url });
+  const externalReference = `${data.tier}_${req.user!.userId}_${data.interval}`;
+  const result = await mercadopagoService.createPreApproval({
+    planId,
+    payerEmail: req.user!.email,
+    externalReference,
+    successUrl,
+    cancelUrl,
+    reason: `Fiesta y Lista ${data.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} ${data.interval === 'year' ? 'Anual' : 'Mensual'}`,
+  });
+  res.json({ url: result.initPoint });
 }));
 
 router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
@@ -99,6 +92,14 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   const sub = await subscriptionService.getCurrentSubscription(userId);
   if (sub && sub.status === 'active') {
     res.json({ tier: sub.tier, synced: false, message: `Ya tienes ${sub.tier === 'pro_plus' ? 'Pro Plus' : 'Pro'} activo` });
+    return;
+  }
+
+  // M2: una suscripción cancelada NO se reactiva por sync — el usuario pidió
+  // cancelar (o expiró); reactivar desde un pago viejo era un bug que revertía
+  // la cancelación sin cancelar el preapproval en MP.
+  if (sub && sub.status === 'canceled') {
+    res.json({ tier: 'free', synced: false, message: 'Tu suscripción está cancelada. Suscríbete de nuevo para continuar.' });
     return;
   }
 
@@ -151,7 +152,9 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
 
     const tier = payment.tier ?? 'pro';
     await subscriptionService.createOrUpdateSubscription(userId, {
-      mpSubscriptionId: null,
+      // M2: conservar el preapproval conocido (si existe) — escribir null borraba
+      // la referencia y desactivaba los guards C2/A4 que comparan el preapproval.
+      mpSubscriptionId: sub?.mpSubscriptionId ?? null,
       tier: tier as 'pro' | 'pro_plus',
       status: 'active',
       currentPeriodStart: periodStart,
@@ -186,7 +189,9 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
           const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
           if (periodEnd <= new Date()) continue;
           await subscriptionService.createOrUpdateSubscription(userId, {
-            mpSubscriptionId: null,
+            // M2: el webhook recovery (handlePaymentNotification) ya registró el
+            // preapproval correcto — conservar el id existente, nunca sobrescribir con null.
+            mpSubscriptionId: sub?.mpSubscriptionId ?? null,
             tier: newPayment.tier as 'pro' | 'pro_plus',
             status: 'active',
             currentPeriodStart: periodStart,

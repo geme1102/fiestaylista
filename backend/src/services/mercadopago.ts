@@ -124,6 +124,10 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   payerEmail: string;
   reason: string;
   transactionAmount: number;
+  // 'initial' cuando MP reporta el cobro inicial (validable contra el precio
+  // del plan); 'recurring' cuando solo hay auto_recurring (monto mensual — para
+  // planes anuales NO coincide con el precio anual, no debe validarse).
+  amountSource: 'initial' | 'recurring';
   nextChargeDate: string | null;
   dateCreated: string | null;
 }> {
@@ -135,13 +139,15 @@ export async function fetchPreapprovalInfo(preapprovalId: string): Promise<{
   const info = await retryable((opts) => preapproval.get({ id: preapprovalId, requestOptions: { timeout: opts.timeout } }));
 
   const autoRecurring = (info as unknown as Record<string, unknown>).auto_recurring as Record<string, unknown> | undefined;
+  const initialAmount = (info as unknown as Record<string, unknown>).initial_amount as number | undefined;
 
   return {
     status: info.status ?? 'unknown',
     externalReference: info.external_reference ?? '',
     payerEmail: info.payer_email ?? '',
     reason: info.reason ?? '',
-    transactionAmount: (info as unknown as Record<string, unknown>).initial_amount as number ?? autoRecurring?.transaction_amount as number ?? 0,
+    transactionAmount: initialAmount ?? autoRecurring?.transaction_amount as number ?? 0,
+    amountSource: typeof initialAmount === 'number' && !Number.isNaN(initialAmount) ? 'initial' : 'recurring',
     nextChargeDate: (info as unknown as Record<string, unknown>).next_charge_date as string || (info as unknown as Record<string, unknown>).scheduled_date as string || null,
     dateCreated: (info as unknown as Record<string, unknown>).date_created as string || null,
   };

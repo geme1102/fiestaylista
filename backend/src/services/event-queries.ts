@@ -1,7 +1,7 @@
 import { eq, and, sql, isNull, inArray, desc, type SQL } from 'drizzle-orm';
 import { type PaginationParams, buildPaginationConditions } from '../utils/pagination.js';
 import { db } from '../db/index.js';
-import { events as eventsTable, gifts, photos, cashFunds, giftClaims } from '../db/schema.js';
+import { events as eventsTable, gifts, photos, cashFunds, giftClaims, users } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 
 export async function getUserEvents(userId: string) {
@@ -175,8 +175,13 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       eventLocation: eventsTable.eventLocation,
       eventNote: eventsTable.eventNote,
       viewCount: eventsTable.viewCount,
+      // ownerTier: expone el plan del dueño (free/pro/pro_plus) para que el
+      // frontend oculte la UI de fotos en eventos free — requisito de negocio:
+      // FREE no sube ni comparte fotos.
+      ownerTier: users.tier,
     })
     .from(eventsTable)
+    .innerJoin(users, eq(users.id, eventsTable.userId))
     .where(and(eq(eventsTable.slug, eventSlug), isNull(eventsTable.deletedAt)))
     .limit(1);
 
@@ -206,6 +211,10 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     ? and(eq(photos.eventId, event.id), isNull(photos.deletedAt), photoCursor)
     : and(eq(photos.eventId, event.id), isNull(photos.deletedAt));
 
+  // MEDIUM-1: el dueño free (downgrade) NO comparte fotos — se ocultan de la
+  // vista pública (galería y og:image) sin borrarlas: si reactiva Pro vuelven.
+  const isFreeEvent = (event.ownerTier ?? 'free') === 'free';
+
   const [eventGifts, eventPhotos] = await Promise.all([
     db
       .select()
@@ -213,12 +222,14 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       .where(giftConditions)
       .orderBy(desc(gifts.createdAt))
       .limit(giftLimit),
-    db
-      .select()
-      .from(photos)
-      .where(photoConditions)
-      .orderBy(desc(photos.createdAt))
-      .limit(photoLimit),
+    isFreeEvent
+      ? Promise.resolve([])
+      : db
+          .select()
+          .from(photos)
+          .where(photoConditions)
+          .orderBy(desc(photos.createdAt))
+          .limit(photoLimit),
   ]);
 
   const groupGiftIds = eventGifts.filter(g => g.isGroupGift).map(g => g.id);

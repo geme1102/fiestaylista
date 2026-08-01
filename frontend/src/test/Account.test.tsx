@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const mockUseAuth = vi.hoisted(() => vi.fn());
@@ -8,6 +8,7 @@ const mockGetPaymentHistory = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockFormatDate = vi.hoisted(() => vi.fn(() => '1 ene 2024'));
 const mockUseAchievements = vi.hoisted(() => vi.fn(() => ({ getEarned: () => new Set(), allAchievements: [] })));
+const mockApiPost = vi.hoisted(() => vi.fn());
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
 vi.mock('../services/mercadopago', () => ({ getCurrentSubscription: mockGetCurrentSubscription, getPaymentHistory: mockGetPaymentHistory }));
@@ -16,6 +17,11 @@ vi.mock('../utils/format', () => ({ formatDate: mockFormatDate, validateRedirect
 vi.mock('../hooks/useAchievements', () => ({ useAchievements: () => mockUseAchievements() }));
 vi.mock('../components/LoadingSpinner', () => ({ default: () => <div data-testid="loading-spinner" /> }));
 vi.mock('../components/AchievementsStrip', () => ({ AchievementsStrip: () => <div data-testid="achievements-strip" /> }));
+vi.mock('../services/api', () => ({ apiClient: { post: mockApiPost } }));
+vi.mock('../hooks/useTurnstile', () => ({
+  useTurnstile: () => ({ containerRef: { current: null }, token: 'tok-1', ready: true, error: null, reset: vi.fn() }),
+  waitForTurnstile: vi.fn(() => 'tok-1'),
+}));
 vi.mock('framer-motion', async () => {
   const actual = await vi.importActual('framer-motion');
   return { ...actual, AnimatePresence: ({ children }: { children: React.ReactNode }) => children };
@@ -116,5 +122,39 @@ describe('Account', () => {
     await waitFor(() => {
       expect(screen.getByText('Mejorar a Pro Plus')).toBeTruthy();
     });
+  });
+
+  it('M3: retry de past_due preserva el intervalo anual de la suscripción', async () => {
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', { value: { ...originalLocation, href: '' }, writable: true });
+
+    mockApiPost.mockResolvedValue({ url: 'https://mpago.test/checkout' });
+    mockUseAuth.mockReturnValue({ user: { ...mockUser, tier: 'pro' as const }, resendVerification: vi.fn(), refreshUser: vi.fn(), logout: vi.fn() });
+    mockGetCurrentSubscription.mockResolvedValue({
+      subscription: {
+        id: 'sub-1',
+        userId: 'user-1',
+        tier: 'pro' as const,
+        status: 'past_due' as const,
+        currentPeriodStart: '2024-01-01T00:00:00Z',
+        currentPeriodEnd: '2025-01-01T00:00:00Z',
+      },
+    });
+
+    renderAccount();
+    await waitFor(() => {
+      expect(screen.getByText('Pago vencido')).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByText('Reintentar pago'));
+
+    await waitFor(() => {
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/api/subscriptions/create-checkout',
+        expect.objectContaining({ tier: 'pro', interval: 'year' }),
+      );
+    });
+
+    Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
   });
 });

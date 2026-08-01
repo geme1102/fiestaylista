@@ -49,18 +49,46 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       return;
     }
 
+    // H3: sin preapproval identificable (ni del pago ni por búsqueda) no se
+    // actualiza la suscripción — antes se conservaba el id VIEJO como si fuera
+    // el nuevo: el preapproval viejo seguía cobrando y el nuevo (creado por el
+    // usuario) quedaba huérfano → doble cobro. Lanzar error lo registra en
+    // failedWebhooks y el cron reintenta cuando la búsqueda resuelva.
+    if (!effectivePreapprovalId) {
+      throw new Error(`No se pudo identificar el preapproval del pago ${paymentId} (ref ${tier}_${userId}_${interval}) — requiere revisión`);
+    }
+
     const currentSub = await tx
-      .select({ mpSubscriptionId: subscriptions.mpSubscriptionId, tier: subscriptions.tier })
+      .select({ mpSubscriptionId: subscriptions.mpSubscriptionId, tier: subscriptions.tier, status: subscriptions.status })
       .from(subscriptions)
       .where(eq(subscriptions.userId, userId))
       .limit(1);
     const existingId = currentSub[0]?.mpSubscriptionId ?? null;
+    const existingStatus = currentSub[0]?.status ?? null;
+
+    // C1 (pago): este pago pertenece a un preapproval REEMPLAZADO por una compra
+    // nueva — no es la fuente de verdad. Ignorarlo evita degradar el tier activo
+    // y que el bloque de abajo cancele el preapproval NUEVO (la compra actual).
+    if (existingStatus === 'active' && existingId && existingId !== effectivePreapprovalId) {
+      log.info({ userId, paymentId, current: existingId, incoming: effectivePreapprovalId }, 'Ignorando pago de preapproval reemplazado');
+      return;
+    }
+
+    // A3 (pago): un pago de un tier menor al activo no debe degradar la sub.
+    const currentTierLevel = TIER_ORDER[(currentSub[0]?.tier as keyof typeof TIER_ORDER) ?? 'free'] ?? 0;
+    if (existingStatus === 'active' && TIER_ORDER[tier] < currentTierLevel) {
+      log.info({ userId, paymentId, detectedTier: tier, currentTier: currentSub[0]?.tier }, 'Ignorando pago de tier menor al activo');
+      return;
+    }
+
+    // Solo registrar el preapproval anterior si el pago se procesa — así el
+    // bloque post-transacción no cancela nada cuando un guard ya ignoró el pago.
     oldMpSubscriptionId = existingId;
     oldTier = currentSub[0]?.tier ?? null;
 
     // C1: guardar el preapproval NUEVO (no el viejo) para que el webhook del
     // preapproval viejo no sea tratado como "actual" ni lo pisque como duplicado.
-    const mpSubscriptionId = effectivePreapprovalId ?? existingId;
+    const mpSubscriptionId = effectivePreapprovalId;
 
     await subscriptionService.createOrUpdateSubscription(userId, {
       mpSubscriptionId,
@@ -153,15 +181,6 @@ export async function handleProPayment(paymentId: string, userId: string, interv
   }
 }
 
-async function findUserIdByEmail(email: string): Promise<string | null> {
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, email.toLowerCase()))
-    .limit(1);
-  return user?.id ?? null;
-}
-
 // A4: true si el pago pertenece al preapproval actual (o no existe uno más nuevo).
 // Un refund de un pago antiguo (ya reemplazado por otra compra) no debe cancelar la sub nueva.
 async function isPaymentFromCurrentPreapproval(userId: string, preapprovalId: string | null): Promise<boolean> {
@@ -171,29 +190,6 @@ async function isPaymentFromCurrentPreapproval(userId: string, preapprovalId: st
     .where(eq(subscriptions.userId, userId))
     .limit(1);
   return !currentSub?.mpSubscriptionId || currentSub.mpSubscriptionId === preapprovalId;
-}
-
-function detectTierFromAmount(amount: number): { tier: 'pro' | 'pro_plus'; interval: 'month' | 'year' } | null {
-  const proMonthly = config.PRO_MONTHLY_PRICE_CENTS;
-  const proYearly = config.PRO_YEARLY_PRICE_CENTS;
-  const proPlusMonthly = config.PRO_PLUS_MONTHLY_PRICE_CENTS;
-
-  const minConfigPrice = Math.min(proMonthly, proYearly, proPlusMonthly);
-  const normalizationThreshold = Math.max(Math.round(minConfigPrice / 2), 1000);
-
-  const normalized = amount < normalizationThreshold ? Math.round(amount * 100) : Math.round(amount);
-
-  const diff = (a: number, b: number) => Math.abs(a - b);
-  const closeEnough = (a: number, b: number) => diff(a, b) <= 1 || diff(a, b) / Math.max(a, b) < 0.01;
-
-  if (closeEnough(normalized, proMonthly)) return { tier: 'pro', interval: 'month' };
-  if (closeEnough(normalized, proYearly)) return { tier: 'pro', interval: 'year' };
-  if (closeEnough(normalized, proPlusMonthly)) return { tier: 'pro_plus', interval: 'month' };
-
-  const proPlusYearly = config.PRO_PLUS_YEARLY_PRICE_CENTS;
-  if (closeEnough(normalized, proPlusYearly)) return { tier: 'pro_plus', interval: 'year' };
-
-  return null;
 }
 
 export async function handlePaymentNotification(paymentId: string): Promise<void> {
@@ -215,8 +211,10 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
         : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
       const diff = Math.abs(info.transactionAmount - expectedAmount);
       if (diff > 1 && diff / expectedAmount > 0.01) {
-        log.error(`Monto de ${tier.toUpperCase()} inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
-        return;
+        // H1: un pago aprobado con monto inesperado NO se descarta en silencio —
+        // el error entra a failedWebhooks y el cron reintenta (dinero cobrado
+        // sin tier sería pérdida permanente para el usuario).
+        throw new Error(`Monto de ${tier.toUpperCase()} inválido: esperado ${expectedAmount}, recibido ${info.transactionAmount} (pago ${paymentId})`);
       }
       await handleProPayment(paymentId, userId, interval, tier, info.preapprovalId);
     } else if (info.status === 'refunded' || info.status === 'charged_back') {
@@ -256,24 +254,11 @@ export async function handlePaymentNotification(paymentId: string): Promise<void
 
   if (info.status !== 'approved') return;
 
-  if (!info.payerEmail) {
-    log.error({ paymentId }, 'Pago sin email de pagador — no se puede identificar al usuario');
-    return;
-  }
-
-  const detected = detectTierFromAmount(info.transactionAmount);
-  if (!detected) {
-    log.error({ paymentId, amount: info.transactionAmount }, 'Monto de pago no coincide con ningún plan conocido');
-    return;
-  }
-
-  const userId = await findUserIdByEmail(info.payerEmail);
-  if (!userId) {
-    log.error({ email: info.payerEmail }, 'Usuario no encontrado para el email del pagador');
-    return;
-  }
-
-  await handleProPayment(paymentId, userId, detected.interval, detected.tier);
+  // HIGH-1: sin external_reference pro_* el pago no puede identificarse como
+  // suscripción nuestra. Antes un fallback por monto otorgaba el tier a pagos
+  // ajenos (~1/100 del precio). Todo pago aprobado sin ref válida se rechaza
+  // y queda registrado en failedWebhooks para revisión manual.
+  throw new Error(`Pago aprobado ${paymentId} sin external_reference pro_* válida (ref: ${ref || 'vacía'}) — requiere revisión manual`);
 }
 
 export async function handleSubscriptionNotification(preapprovalId: string): Promise<void> {
@@ -291,42 +276,29 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     detectedTier = isProPlus ? 'pro_plus' : 'pro';
     detectedInterval = match[3] as 'month' | 'year';
 
-    const expectedAmount = detectedInterval === 'year'
-      ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
-      : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
-    const diff = Math.abs(info.transactionAmount - expectedAmount);
-    if (diff > 1 && diff / expectedAmount > 0.01) {
-      log.error({ preapprovalId, expectedAmount, receivedAmount: info.transactionAmount, tier: detectedTier, interval: detectedInterval }, 'Monto de suscripción no coincide con el plan detectado');
-      return;
+    // M7: el monto del preapproval solo se valida cuando MP reporta el cobro
+    // inicial (initial_amount). Con solo auto_recurring.transaction_amount el
+    // valor es el cobro recurrente (mensual) — para planes anuales no coincide
+    // con el precio anual y un webhook legítimo se ignoraba en silencio.
+    if (info.amountSource === 'initial') {
+      const expectedAmount = detectedInterval === 'year'
+        ? (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS * 11 : config.PRO_YEARLY_PRICE_CENTS)
+        : (isProPlus ? config.PRO_PLUS_MONTHLY_PRICE_CENTS : config.PRO_MONTHLY_PRICE_CENTS);
+      const diff = Math.abs(info.transactionAmount - expectedAmount);
+      if (diff > 1 && diff / expectedAmount > 0.01) {
+        throw new Error(`Monto de suscripción no coincide con el plan detectado (preapproval ${preapprovalId}): esperado ${expectedAmount}, recibido ${info.transactionAmount}`);
+      }
     }
-  }
-
-  if (!userId) {
-    if (!info.payerEmail) {
-      log.error({ preapprovalId }, 'Preapproval sin external_reference ni payer_email — no se puede identificar al usuario');
-      return;
-    }
-    userId = await findUserIdByEmail(info.payerEmail);
-    if (!userId) {
-      log.error({ email: info.payerEmail }, 'Usuario no encontrado para el email del pagador en preapproval');
-      return;
-    }
-  }
-
-  if (!detectedTier) {
-    const detected = detectTierFromAmount(info.transactionAmount);
-    if (!detected) {
-      log.error({ preapprovalId, amount: info.transactionAmount }, 'Monto de suscripción no coincide con ningún plan conocido');
-      return;
-    }
-    detectedTier = detected.tier;
-    detectedInterval = detected.interval;
+  } else {
+    // HIGH-1: preapproval sin external_reference pro_* no es de Fiesta y Lista.
+    // Antes se detectaba el tier por monto con el email del pagador (fuga de tier).
+    throw new Error(`Preapproval ${preapprovalId} sin external_reference pro_* válida (ref: ${ref || 'vacía'}) — requiere revisión manual`);
   }
 
   const periodDays = detectedInterval === 'year' ? 365 : 30;
 
   if (info.status === 'active') {
-    const currentSub = await subscriptionService.getCurrentSubscription(userId);
+    const currentSub = await subscriptionService.getCurrentSubscription(userId!);
 
     if (currentSub && currentSub.status === 'canceled') {
       log.warn({ userId, preapprovalId }, 'Ignorando webhook tardío — suscripción cancelada');
@@ -341,7 +313,7 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
       }
       // A3: un webhook tardío de un tier menor no debe degradar el tier activo.
       const currentTierLevel = TIER_ORDER[currentSub.tier as keyof typeof TIER_ORDER] ?? 0;
-      const detectedLevel = TIER_ORDER[detectedTier] ?? 0;
+      const detectedLevel = TIER_ORDER[detectedTier!] ?? 0;
       if (detectedLevel < currentTierLevel) {
         log.info({ userId, preapprovalId, detectedTier, currentTier: currentSub.tier }, 'Ignorando webhook de tier menor al activo');
         return;
@@ -360,28 +332,41 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     await db.transaction(async (tx) => {
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'preapproval_' + preapprovalId}))`);
 
-      await subscriptionService.createOrUpdateSubscription(userId, {
+      await subscriptionService.createOrUpdateSubscription(userId!, {
         mpSubscriptionId: preapprovalId,
-        tier: detectedTier,
+        tier: detectedTier!,
         status: 'active',
         currentPeriodStart,
         currentPeriodEnd,
       }, tx as unknown as typeof db);
     });
   } else if (info.status === 'authorized') {
+    // MEDIUM-2: un authorized tardío NO debe sobreescribir una suscripción
+    // activa (antes degradaba a pending_approval y el usuario perdía el servicio
+    // habiendo pagado). Solo aplica cuando no hay sub activa.
+    const currentSub = await subscriptionService.getCurrentSubscription(userId!);
+    if (currentSub && currentSub.status === 'active') {
+      if (currentSub.mpSubscriptionId && currentSub.mpSubscriptionId !== preapprovalId) {
+        log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook authorized de preapproval reemplazado');
+      } else {
+        log.info({ userId, preapprovalId }, 'Ignorando webhook authorized — ya existe suscripción activa');
+      }
+      return;
+    }
+
     const currentPeriodStart = info.dateCreated
       ? new Date(info.dateCreated)
       : new Date();
     const currentPeriodEnd = info.nextChargeDate
       ? new Date(info.nextChargeDate)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      : new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
 
     await db.transaction(async (tx) => {
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${'preapproval_' + preapprovalId}))`);
 
-      await subscriptionService.createOrUpdateSubscription(userId, {
+      await subscriptionService.createOrUpdateSubscription(userId!, {
         mpSubscriptionId: preapprovalId,
-        tier: detectedTier,
+        tier: detectedTier!,
         status: 'pending_approval',
         currentPeriodStart,
         currentPeriodEnd,

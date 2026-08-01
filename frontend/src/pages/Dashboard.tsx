@@ -404,6 +404,11 @@ export default function Dashboard() {
                             FINALIZADO
                           </Badge>
                         )}
+                        {event.frozenAt && !event.isActive && (
+                          <Badge variant="locked" size="sm" icon="ac_unit">
+                            CONGELADO
+                          </Badge>
+                        )}
                       </div>
 
                       <h3 className="text-lg font-bold text-on-surface mb-3 truncate tracking-tight">{event.title}</h3>

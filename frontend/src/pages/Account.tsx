@@ -339,8 +339,14 @@ export default function Account() {
 
                             const successUrl = `${window.location.origin}/dashboard?pro=activated`;
                             const cancelUrl = `${window.location.origin}/account`;
+                            // M3: preservar el intervalo original (un usuario anual no
+                            // debe reintentar con un preapproval mensual por defecto).
+                            const interval = subscription?.currentPeriodEnd && subscription?.currentPeriodStart
+                              ? (new Date(subscription.currentPeriodEnd).getTime() - new Date(subscription.currentPeriodStart).getTime()) > 330 * 24 * 60 * 60 * 1000 ? 'year' : 'month'
+                              : 'month';
                             const res = await apiClient.post<{ url: string }>('/api/subscriptions/create-checkout', {
                               tier: subscription?.tier ?? user?.tier ?? 'pro',
+                              interval,
                               successUrl,
                               cancelUrl,
                               turnstileToken: token ?? undefined,

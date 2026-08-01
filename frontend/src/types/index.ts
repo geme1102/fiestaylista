@@ -29,6 +29,8 @@ export interface Event {
   eventDate?: string | null;
   eventLocation?: string | null;
   eventNote?: string | null;
+  ownerTier?: Tier;
+  frozenAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

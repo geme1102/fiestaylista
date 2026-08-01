@@ -12,6 +12,7 @@ import type { Gift, Photo, EventType } from '../types';
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; status?: string; isActive: boolean; createdAt: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
+  ownerTier?: string;
 }
 
 export function useEventPage() {

@@ -3,7 +3,7 @@ import { db } from './db/index.js';
 import { failedWebhooks, refreshTokens, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
-import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings } from './services/subscription.js';
+import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations } from './services/subscription.js';
 import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import * as mercadopagoService from './services/mercadopago.js';
@@ -20,6 +20,7 @@ function yieldToEventLoop(): Promise<void> {
 let cronInterval: ReturnType<typeof setInterval> | null = null;
 let webhookRetryInterval: ReturnType<typeof setInterval> | null = null;
 let cashReconcileInterval: ReturnType<typeof setInterval> | null = null;
+let cancelRetryInterval: ReturnType<typeof setInterval> | null = null;
 
 export const runWithLock = async (name: string, fn: () => Promise<void>) => {
   try {
@@ -202,6 +203,19 @@ export function startCronJobs(): void {
     });
   };
 
+  const retryPendingCancelJob = async () => {
+    await runWithLock('retry-pending-cancellations', async () => {
+      try {
+        const resolved = await retryPendingCancellations();
+        if (resolved > 0) {
+          log.info(`Cancelaciones pendientes resueltas: ${resolved}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error reintentando cancelaciones pendientes:');
+      }
+    });
+  };
+
   const cleanupExpiredWebhooks = async () => {
     try {
       const result = await db
@@ -262,6 +276,7 @@ export function startCronJobs(): void {
   cleanupExpiredWebhooks().catch((err) => log.error({ err }, 'cleanupExpiredWebhooks falló'));
   runDaily().catch((err) => log.error({ err }, 'runDaily falló'));
   reconcileCashFundsJob().catch((err) => log.error({ err }, 'reconcileCashFundsJob falló'));
+  retryPendingCancelJob().catch((err) => log.error({ err }, 'retryPendingCancelJob falló'));
 
   const WEBHOOK_RETRY_MS = 60 * 1000;
 
@@ -283,6 +298,15 @@ export function startCronJobs(): void {
     reconcileCashFundsJob().catch((err) => log.error({ err }, 'reconcileCashFundsJob falló'));
   }, CASH_RECONCILLE_MS);
 
+  // H2: reintentar cada hora la cancelación en MP de suscripciones con
+  // intención de cancelación pendiente — MP puede seguir cobrando si el
+  // primer intento falló.
+  const CANCEL_RETRY_MS = 60 * 60 * 1000;
+
+  cancelRetryInterval = setInterval(() => {
+    retryPendingCancelJob().catch((err) => log.error({ err }, 'retryPendingCancelJob falló'));
+  }, CANCEL_RETRY_MS);
+
   log.info('Jobs iniciados correctamente');
 }
 
@@ -298,6 +322,10 @@ export function stopCronJobs(): void {
   if (cashReconcileInterval) {
     clearInterval(cashReconcileInterval);
     cashReconcileInterval = null;
+  }
+  if (cancelRetryInterval) {
+    clearInterval(cancelRetryInterval);
+    cancelRetryInterval = null;
   }
   log.info('Jobs detenidos');
 }

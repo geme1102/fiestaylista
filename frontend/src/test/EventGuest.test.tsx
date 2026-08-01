@@ -57,4 +57,41 @@ describe('EventGuest page', () => {
 
     expect(container.querySelector('div')).toBeTruthy();
   });
+
+  it('MEDIUM-1: evento free (sin ownerTier) no muestra el upload de fotos — muestra candado', () => {
+    render(
+      <MemoryRouter initialEntries={['/event/mi-evento']}>
+        <EventGuestPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('La galería de fotos se abrirá cuando el anfitrión active el Plan Pro')).toBeInTheDocument();
+    expect(screen.queryByText(/¿Tomaste fotos/)).not.toBeInTheDocument();
+    expect(screen.getByText('Cuando el anfitrión active el Plan Pro podrán subirse fotos aquí')).toBeInTheDocument();
+  });
+
+  it('MEDIUM-1: evento con ownerTier pro sí muestra el upload de fotos', () => {
+    mockUseEventPage.mockReturnValue({
+      event: { id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento', isActive: true, createdAt: '2025-01-01', ownerTier: 'pro' },
+      gifts: [], photos: [], loading: false, error: null,
+      claimingId: null, guestName: '', setGuestName: vi.fn(), shaking: false,
+      showConfetti: false, showSuccessModal: false, setShowSuccessModal: vi.fn(),
+      easyReadMode: false, setEasyReadMode: vi.fn(),
+      categoryFilter: null, setCategoryFilter: vi.fn(),
+      inputRef: { current: null }, filterBarRef: { current: null },
+      turnstileRef: { current: null },
+      availableGifts: [], claimedGifts: [], categories: [], filteredGifts: [],
+      eventDateFormatted: '', eventTimeFormatted: '',
+      handleClaim: vi.fn(), handleDownload: vi.fn(), reloadEvent: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/event/mi-evento']}>
+        <EventGuestPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/¿Tomaste fotos/)).toBeInTheDocument();
+    expect(screen.queryByText('La galería de fotos se abrirá cuando el anfitrión active el Plan Pro')).not.toBeInTheDocument();
+  });
 });

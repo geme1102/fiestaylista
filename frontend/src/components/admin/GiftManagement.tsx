@@ -30,6 +30,9 @@ export default memo(function GiftManagement({
 }: GiftManagementProps) {
   const [addedGifts, setAddedGifts] = useState<Set<string>>(new Set());
   const suggestionLoadingRef = useRef(false);
+  // C3: al llegar al límite del plan se deshabilitan todas las formas de agregar
+  // regalos (input, botón y chips) — la UI mostraba chips activos que fallaban al enviar.
+  const atLimit = maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent;
 
   const handleAddSuggestion = useCallback(async (s: string) => {
     if (suggestionLoadingRef.current || addedGifts.has(s)) return;
@@ -68,11 +71,12 @@ export default memo(function GiftManagement({
             id="gift-name"
             data-testid="gift-name-input"
             type="text"
-            placeholder="Nombre del regalo (Ej: Juego de Sábanas)..."
+            placeholder={atLimit ? `Límite alcanzado (${maxGiftsPerEvent} regalos)` : 'Nombre del regalo (Ej: Juego de Sábanas)...'}
             value={newGiftName}
+            disabled={atLimit}
             onChange={(e) => { onNewGiftNameChange(e.target.value); onShowSuggestionsChange(true); }}
             onKeyDown={(e) => { if (e.key === 'Escape') onShowSuggestionsChange(false); }}
-            className="flex-1 border border-outline-variant rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-surface text-on-surface"
+            className="flex-1 border border-outline-variant rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-surface text-on-surface disabled:opacity-50 disabled:cursor-not-allowed"
             role="combobox"
             aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
             aria-autocomplete="list"
@@ -83,10 +87,10 @@ export default memo(function GiftManagement({
             whileTap={{ scale: 0.95 }}
             type="submit"
             data-testid="add-gift-button"
-            disabled={!newGiftName.trim() || addingGift || (maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent)}
+            disabled={!newGiftName.trim() || addingGift || atLimit}
             className="bg-gradient-to-r from-primary to-primary-container text-on-primary py-3 px-6 rounded-full text-xs font-black shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{addingGift ? <span className="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent ? 'Límite alcanzado' : 'Añadir'}</span>
+            <span>{addingGift ? <span className="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : atLimit ? 'Límite alcanzado' : 'Añadir'}</span>
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </motion.button>
         </div>
@@ -143,7 +147,7 @@ export default memo(function GiftManagement({
                     whileHover={{ scale: 1.05, y: -1 }}
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    disabled={suggestionLoadingRef.current || addedGifts.has(s)}
+                    disabled={suggestionLoadingRef.current || addedGifts.has(s) || atLimit}
                     onClick={() => handleAddSuggestion(s)}
                     className="text-xs font-bold py-2 px-[18px] min-h-[44px] rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border bg-surface hover:bg-primary-fixed border-outline-variant text-on-surface hover:border-primary/40 disabled:opacity-50"
                   >

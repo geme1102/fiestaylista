@@ -1,4 +1,4 @@
-import { eq, lte, and, inArray, sql, isNull, desc } from 'drizzle-orm';
+import { eq, lte, and, inArray, sql, isNull, desc, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { subscriptions as subsTable, users, events, photos, proPayments, emailTracking } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -6,7 +6,7 @@ import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../uti
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
 import { TIER_LIMITS, type Tier, type SubscriptionStatus } from '../types/index.js';
-import { fetchPreapprovalInfo } from './mercadopago.js';
+import { fetchPreapprovalInfo, cancelPreapproval, retryable } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('Subscription');
@@ -46,6 +46,9 @@ export async function createOrUpdateSubscription(
         status: data.status,
         currentPeriodStart: data.currentPeriodStart,
         currentPeriodEnd: data.currentPeriodEnd,
+        // H2: reactivación (compra nueva o reconciliación) cancela cualquier
+        // intención de cancelación pendiente.
+        cancelRequestedAt: null,
         updatedAt: new Date(),
       },
     })
@@ -74,14 +77,16 @@ export async function createOrUpdateSubscription(
     const activeCount = Number(activeRow?.count ?? 0);
 
     // A5: si el usuario compró un tier MENOR (downgrade pro_plus → pro), congelar
-    // el exceso de eventos activos, manteniendo los más recientes.
+    // el exceso de eventos activos, manteniendo los más recientes. Los eventos se
+    // congelan en orden ASC (los MÁS VIEJOS primero) para que el "kept" del free
+    // (frozenAt DESC) coincida con el mismo criterio de frescura.
     if (activeCount > limits.maxEvents) {
       const excess = activeCount - limits.maxEvents;
       const excessEvents = await conn
         .select({ id: events.id })
         .from(events)
         .where(and(eq(events.userId, userId), eq(events.isActive, true), isNull(events.deletedAt)))
-        .orderBy(desc(events.updatedAt))
+        .orderBy(asc(events.updatedAt))
         .limit(excess);
       if (excessEvents.length > 0) {
         await conn
@@ -206,6 +211,31 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
   }
 }
 
+// M3: restaurar el evento "kept" del plan free (1) tras congelar — mismo patrón
+// que batchFreezeEvents: solo los congelados EN ESTA corrida (frozenAt = now),
+// el más reciente primero. Sin esto, la cancelación inmediata congelaba TODOS
+// los eventos mientras el cron sí dejaba 1 activo (inconsistencia).
+async function restoreKeptEvents(userId: string, conn: typeof db, now: Date) {
+  const eventsToKeep = await conn
+    .select({ id: events.id })
+    .from(events)
+    .where(and(
+      eq(events.userId, userId),
+      sql`${events.frozenAt} IS NOT NULL`,
+      sql`${events.frozenAt} >= ${now.toISOString()}::timestamptz`,
+      isNull(events.deletedAt),
+    ))
+    .orderBy(desc(events.frozenAt))
+    .limit(TIER_LIMITS.free.maxEvents);
+
+  if (eventsToKeep.length > 0) {
+    await conn
+      .update(events)
+      .set({ isActive: true, frozenAt: null, updatedAt: now })
+      .where(inArray(events.id, eventsToKeep.map(e => e.id)));
+  }
+}
+
 export async function getCurrentSubscription(userId: string) {
   const [sub] = await db
     .select({
@@ -216,6 +246,7 @@ export async function getCurrentSubscription(userId: string) {
       status: subsTable.status,
       currentPeriodStart: subsTable.currentPeriodStart,
       currentPeriodEnd: subsTable.currentPeriodEnd,
+      cancelRequestedAt: subsTable.cancelRequestedAt,
       createdAt: subsTable.createdAt,
       updatedAt: subsTable.updatedAt,
     })
@@ -230,6 +261,13 @@ export async function reconcileSubscriptionOnLogin(userId: string): Promise<void
   try {
     const sub = await getCurrentSubscription(userId);
     if (!sub || sub.status === 'active' || !sub.mpSubscriptionId) return;
+
+    // H2: intención de cancelación pendiente — el usuario pidió cancelar y la
+    // cancelación en MP aún no se confirma; NO reactivar la suscripción.
+    if (sub.cancelRequestedAt) {
+      log.info({ userId, mpSubscriptionId: sub.mpSubscriptionId }, 'Suscripción con cancelación pendiente — no se reactiva on-login');
+      return;
+    }
 
     const mpInfo = await fetchPreapprovalInfo(sub.mpSubscriptionId);
     // A2: solo un status 'active' confirma que MP sigue cobrando — 'authorized'
@@ -267,41 +305,24 @@ export async function cancelSubscription(userId: string, immediate = false) {
     const periodAlreadyExpired = existing.currentPeriodEnd && existing.currentPeriodEnd <= new Date();
     const effectiveImmediate = immediate || periodAlreadyExpired;
 
+    // H2: registrar la intención de cancelación (cancel_requested_at). Si la
+    // cancelación del preapproval en MP falla, el cron retryPendingCancellations
+    // la reintenta, y la reconciliación on-login nunca reactiva la sub.
+    const now = new Date();
     const [s] = effectiveImmediate
-      ? await tx.update(subsTable).set({ status: 'canceled', tier: 'free', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning()
-      : await tx.update(subsTable).set({ status: 'canceled', updatedAt: new Date() }).where(eq(subsTable.userId, userId)).returning();
+      ? await tx.update(subsTable).set({ status: 'canceled', tier: 'free', cancelRequestedAt: now, updatedAt: now }).where(eq(subsTable.userId, userId)).returning()
+      : await tx.update(subsTable).set({ status: 'canceled', cancelRequestedAt: now, updatedAt: now }).where(eq(subsTable.userId, userId)).returning();
 
     if (effectiveImmediate) {
       await tx
         .update(users)
-        .set({ tier: 'free', updatedAt: new Date() })
+        .set({ tier: 'free', updatedAt: now })
         .where(eq(users.id, userId));
 
       try {
         await freezeUserEvents(userId, tx as unknown as typeof db);
 
-        // M3: restaurar el evento "kept" del plan free (1) — mismo patrón que
-        // batchFreezeEvents: solo los congelados EN ESTA corrida (frozenAt = now),
-        // el más reciente primero. Sin esto, la cancelación inmediata congelaba
-        // TODOS los eventos mientras el cron sí dejaba 1 activo (inconsistencia).
-        const eventsToKeep = await tx
-          .select({ id: events.id })
-          .from(events)
-          .where(and(
-            eq(events.userId, userId),
-            sql`${events.frozenAt} IS NOT NULL`,
-            sql`${events.frozenAt} >= ${new Date().toISOString()}::timestamptz`,
-            isNull(events.deletedAt),
-          ))
-          .orderBy(desc(events.frozenAt))
-          .limit(TIER_LIMITS.free.maxEvents);
-
-        if (eventsToKeep.length > 0) {
-          await tx
-            .update(events)
-            .set({ isActive: true, frozenAt: null, updatedAt: new Date() })
-            .where(inArray(events.id, eventsToKeep.map(e => e.id)));
-        }
+        await restoreKeptEvents(userId, tx as unknown as typeof db, now);
       } catch (err) {
         log.error({ err }, `Error congelando eventos tras cancelación para ${userId}:`);
       }
@@ -311,6 +332,51 @@ export async function cancelSubscription(userId: string, immediate = false) {
   });
 
   return sub;
+}
+
+// H2: reintentar la cancelación en MP de suscripciones con intención de
+// cancelación pendiente (cancel_requested_at seteado). Corre en cron con lock.
+export async function retryPendingCancellations(): Promise<number> {
+  const pending = await db
+    .select({ id: subsTable.id, userId: subsTable.userId, mpSubscriptionId: subsTable.mpSubscriptionId })
+    .from(subsTable)
+    .where(and(
+      eq(subsTable.status, 'canceled'),
+      sql`${subsTable.cancelRequestedAt} IS NOT NULL`,
+      sql`${subsTable.mpSubscriptionId} IS NOT NULL`,
+    ))
+    .limit(20);
+
+  let resolved = 0;
+  for (const sub of pending) {
+    const mpId = sub.mpSubscriptionId!;
+    try {
+      const mpInfo = await fetchPreapprovalInfo(mpId);
+      const stillCharging = mpInfo.status === 'active' || mpInfo.status === 'authorized' || mpInfo.status === 'pending';
+      if (stillCharging) {
+        await retryableCancelPreapproval(mpId);
+        log.info({ userId: sub.userId, mpSubscriptionId: mpId }, 'Preapproval cancelado por reintento de cancelación pendiente');
+      } else {
+        log.info({ userId: sub.userId, mpSubscriptionId: mpId, status: mpInfo.status }, 'Preapproval ya no está cobrando — cancelación confirmada');
+      }
+      await db
+        .update(subsTable)
+        .set({ cancelRequestedAt: null, updatedAt: new Date() })
+        .where(eq(subsTable.id, sub.id));
+      resolved++;
+    } catch (err) {
+      log.warn({ err, userId: sub.userId, mpSubscriptionId: mpId }, 'Reintento de cancelación pendiente falló — se intentará de nuevo');
+    }
+  }
+
+  if (pending.length > 0) {
+    log.info({ total: pending.length, resolved }, 'Cancelaciones pendientes procesadas');
+  }
+  return resolved;
+}
+
+function retryableCancelPreapproval(preapprovalId: string): Promise<void> {
+  return retryable(() => cancelPreapproval(preapprovalId), 3, 10000);
 }
 
 export async function updateSubscriptionStatus(
@@ -335,6 +401,10 @@ export async function updateSubscriptionStatus(
         .where(eq(users.id, userId));
 
       await freezeUserEvents(userId, tx as unknown as typeof db);
+
+      // M6: un cobro incompleto nunca otorgó beneficios — restaurar el evento
+      // kept del plan free para no congelar todo (consistencia con cancelación).
+      await restoreKeptEvents(userId, tx as unknown as typeof db, new Date());
     }
 
     return s;
@@ -351,6 +421,25 @@ export async function expireStaleSubscriptions(): Promise<number> {
   const pendingThreshold = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
 
   const result = await db.transaction(async (tx) => {
+    // M6: filas 'incomplete' huérfanas (nunca otorgaron beneficios) expiran igual:
+    // solo se marcan canceladas sin congelar eventos ni enviar emails (nunca fueron pro).
+    const incompleteRows = await tx.execute(sql`
+      SELECT id FROM ${subsTable}
+      WHERE status = 'incomplete' AND created_at <= ${pendingThreshold.toISOString()}::timestamptz
+      FOR UPDATE SKIP LOCKED
+    `) as unknown as { id: string }[];
+
+    const incompleteIds = (incompleteRows as unknown as Record<string, unknown>[])
+      .map((r: Record<string, unknown>) => r.id as string)
+      .filter(Boolean);
+
+    if (incompleteIds.length > 0) {
+      await tx
+        .update(subsTable)
+        .set({ status: 'canceled', tier: 'free', cancelRequestedAt: now, updatedAt: now })
+        .where(inArray(subsTable.id, incompleteIds));
+    }
+
     // Bloquear filas con FOR UPDATE SKIP LOCKED para evitar que dos cron concurrentes
     // procesen las mismas suscripciones
     const staleRows = await tx.execute(sql`
@@ -371,11 +460,11 @@ export async function expireStaleSubscriptions(): Promise<number> {
       if (r.id) staleIds.push(r.id as string);
     }
 
-    if (userIds.length === 0) return 0;
+    if (userIds.length === 0) return incompleteIds.length;
 
     await tx
       .update(subsTable)
-      .set({ status: 'canceled', tier: 'free', updatedAt: new Date() })
+      .set({ status: 'canceled', tier: 'free', cancelRequestedAt: now, updatedAt: now })
       .where(inArray(subsTable.id, staleIds));
 
     await tx
