@@ -130,11 +130,13 @@ function validateConfig(): void {
     console.warn('[config]  Si Railway se renombra: actualizar netlify.toml, CSP, BACKEND_URL.');
     console.warn('[config] ════════════════════════════════════════════════════════════');
 
+    // Cloudinary es esencial en producción: sin él ninguna subida de foto
+    // funciona (fotos de invitados y anfitrión). Validación completa al startup.
     const cloudKeys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'] as const;
     const present = cloudKeys.filter(k => process.env[k]);
-    if (present.length > 0 && present.length < cloudKeys.length) {
+    if (present.length !== cloudKeys.length) {
       const missing = cloudKeys.filter(k => !process.env[k]);
-      failConfig(`Cloudinary configurado parcialmente. Faltan: ${missing.join(', ')}`);
+      failConfig(`Cloudinary incompleto en producción. Faltan: ${missing.join(', ')}`);
     }
 
     warnConfig('MERCADO_PAGO_PRO_MONTHLY_PLAN_ID', process.env.MERCADO_PAGO_PRO_MONTHLY_PLAN_ID);

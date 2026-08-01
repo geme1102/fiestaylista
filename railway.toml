@@ -1,3 +1,4 @@
 [service]
 healthcheck-path = "/health"
 readiness-path = "/api/health/ready"
+healthcheck-timeout = 30
