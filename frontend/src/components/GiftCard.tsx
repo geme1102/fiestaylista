@@ -20,9 +20,10 @@ interface GiftCardProps {
   deletingId?: string | null;
   isAdmin?: boolean;
   guestName?: string;
+  readOnly?: boolean;
 }
 
-const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, freeingId, deletingId, isAdmin, guestName }: GiftCardProps) {
+const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claimingId, freeingId, deletingId, isAdmin, guestName, readOnly }: GiftCardProps) {
   const image = getGiftImage(gift.name);
   const category = getGiftCategory(gift.name);
   const [imgError, setImgError] = useState(false);
@@ -103,7 +104,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
               {isAdmin ? gift.claimedBy : 'Alguien ya apartó este regalo'}
             </span>
           </div>
-          {isAdmin && onFree && (
+          {isAdmin && onFree && !readOnly && (
             <button
               onClick={() => onFree(gift.id)}
               disabled={freeingId === gift.id}
@@ -182,7 +183,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
         </div>
       </div>
 
-      {isAdmin && (
+      {isAdmin && !readOnly && (
         <div className="absolute top-4 right-4 flex gap-1 z-10">
           <button
             onClick={async () => {

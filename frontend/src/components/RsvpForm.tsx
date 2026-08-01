@@ -30,11 +30,11 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    submittingRef.current = true;
     if (!guestName.trim()) {
       setError('El nombre es obligatorio');
       return;
     }
+    submittingRef.current = true;
     setSubmitting(true);
     setError('');
     let token = turnstileTokenRef.current;

@@ -82,6 +82,7 @@ export default function EventAdmin() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [uploadPercent, setUploadPercent] = useState(0);
+  const uploadInFlightRef = useRef(false);
 
   const [cashFund, setCashFund] = useState<{ collectedAmount?: number; isActive?: boolean } | null>(null);
 
@@ -306,9 +307,10 @@ export default function EventAdmin() {
   };
 
   const handleUploadPhoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!id) return;
+    if (!id || uploadInFlightRef.current || isFrozen) return;
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+    uploadInFlightRef.current = true;
 
     const validFiles = files.filter((f) => {
       if (!f.type.startsWith('image/')) {
@@ -358,8 +360,9 @@ export default function EventAdmin() {
     setUploadProgress(null);
     setUploadPercent(0);
     setUploading(false);
+    uploadInFlightRef.current = false;
     e.target.value = '';
-  }, [id]);
+  }, [id, isFrozen]);
 
   const handleToggleFeatured = useCallback(async (photoId: string) => {
     try {
@@ -392,7 +395,7 @@ export default function EventAdmin() {
     setCompleting(true);
     try {
       await apiClient.post(`/api/events/${id}/complete`);
-      setEvent((prev) => prev ? { ...prev, status: 'completed' } : null);
+      setEvent((prev) => prev ? { ...prev, status: 'completed', isActive: false } : null);
       showToast('Evento finalizado 🎉', 'success');
     } catch (err) {
       reportError(err, { source: 'EventAdmin' });
@@ -572,9 +575,11 @@ export default function EventAdmin() {
                       type="button"
                       data-testid="edit-event-button"
                       data-tour="edit"
+                      disabled={isFrozen}
                       whileHover={{ scale: 1.15, rotate: 15 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => {
+                        if (isFrozen) return;
                         setEditingDetails(true);
                         setTitleDraft(event.title);
                         setTypeDraft(event.eventType);
@@ -582,9 +587,10 @@ export default function EventAdmin() {
                         setLocationDraft(event.eventLocation ?? '');
                         setNoteDraft(event.eventNote ?? '');
                       }}
-                      className="min-w-[44px] min-h-[44px] p-2.5 text-primary hover:bg-primary/15 rounded-xl transition-[background-color,border-color] cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+                      className={`min-w-[44px] min-h-[44px] p-2.5 rounded-xl transition-[background-color,border-color] cursor-pointer bg-white border border-primary/15 shadow-sm flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 ${isFrozen ? 'opacity-40 pointer-events-none' : 'text-primary hover:bg-primary/15'}`}
                       title={`Editar evento ${event.title}`}
                       aria-label={`Editar evento ${event.title}`}
+                      aria-disabled={isFrozen}
                     >
                       <Pencil className="w-[18px] h-[18px]" />
                     </motion.button>
@@ -615,9 +621,11 @@ export default function EventAdmin() {
 
               <button
               data-testid="toggle-event-status"
-              onClick={() => setToggleConfirm(true)}
-              className={`touch-compact relative w-14 h-11 min-h-[44px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'}`}
+              onClick={() => { if (!isFrozen) setToggleConfirm(true); }}
+              disabled={isFrozen}
+              className={`touch-compact relative w-14 h-11 min-h-[44px] rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer flex items-center ${event.isActive ? 'bg-primary' : 'bg-gray-200'} ${isFrozen ? 'opacity-40 cursor-not-allowed' : ''}`}
               aria-label="Cambiar estado del evento"
+              aria-disabled={isFrozen}
               >
                 {event.isActive && (
                   <span className="absolute inset-0 bg-primary rounded-full blur-[2px] opacity-30 animate-pulse" />
@@ -675,7 +683,7 @@ export default function EventAdmin() {
               <div className="flex flex-col text-left">
                 <span className="text-sm font-extrabold text-on-surface">Evento finalizado</span>
                 <span className="text-xs text-on-surface-variant font-medium mt-0.5">
-                  Los invitados ya no pueden apartar regalos ni usar la Lluvia de Sobres. La galería y el muro de mensajes siguen activos.
+                  El evento quedó inactivo: la página pública ya no está disponible para los invitados. Reactívalo cuando quieras volver a compartirlo.
                 </span>
               </div>
             </div>
@@ -779,6 +787,7 @@ export default function EventAdmin() {
             suggestions={suggestions}
             filteredSuggestions={filteredSuggestions}
             maxGiftsPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxGiftsPerEvent}
+            disabled={isFrozen}
             onAddGift={handleAddGift}
             onFreeGift={handleFreeGift}
             onDeleteGift={handleDeleteGift}
@@ -811,6 +820,7 @@ export default function EventAdmin() {
             deletePhotoConfirm={deletePhotoConfirm}
             fileInputRef={fileInputRef}
             maxPhotosPerEvent={TIER_LIMITS[user?.tier ?? 'free'].maxPhotosPerEvent}
+            disabled={isFrozen}
             onUpload={handleUploadPhoto}
             onDelete={handleDeletePhoto}
             onRequestDelete={setDeletePhotoConfirm}

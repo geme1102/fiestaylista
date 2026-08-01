@@ -163,8 +163,16 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
       const [event] = await tx
         .update(eventsTable)
         .set(updateData)
-        .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
+        .where(and(
+          eq(eventsTable.id, eventId),
+          eq(eventsTable.userId, userId),
+          isNull(eventsTable.frozenAt),
+        ))
         .returning();
+
+      if (!event) {
+        throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
+      }
 
       return event;
     });
@@ -185,8 +193,16 @@ export async function updateEvent(eventId: string, userId: string, data: UpdateE
   const [event] = await db
     .update(eventsTable)
     .set(updateData)
-    .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)))
+    .where(and(
+      eq(eventsTable.id, eventId),
+      eq(eventsTable.userId, userId),
+      isNull(eventsTable.frozenAt),
+    ))
     .returning();
+
+  if (!event) {
+    throw new ValidationError('Este evento está congelado. Reactívalo desde la configuración.');
+  }
 
   return event;
 }
@@ -204,7 +220,7 @@ export async function completeEvent(eventId: string, userId: string) {
 
   await db
     .update(eventsTable)
-    .set({ status: 'completed', updatedAt: new Date() })
+    .set({ status: 'completed', isActive: false, updatedAt: new Date() })
     .where(and(eq(eventsTable.id, eventId), eq(eventsTable.userId, userId)));
 
   return { success: true };

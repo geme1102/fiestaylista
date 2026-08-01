@@ -39,7 +39,7 @@ const promiseSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
-router.put('/events/:eventId/cash-fund', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/events/:eventId/cash-fund', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -63,9 +63,11 @@ router.get('/events/:eventId/cash-fund', optionalAuth, validateUuidParam('eventI
     .from(events)
     .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
     .limit(1);
-  if (!event || !event.isActive) throw new NotFoundError('Evento no encontrado');
+  if (!event) throw new NotFoundError('Evento no encontrado');
 
   const isOwner = event.userId === req.user?.userId;
+  if (!event.isActive && !isOwner) throw new NotFoundError('Evento no encontrado');
+
   const fund = await cashFundService.getCashFund(eventId);
 
   if (fund && !isOwner && fund.bankPhone) {
@@ -100,13 +102,15 @@ router.get('/cash-fund/:cashFundId/contributions', optionalAuth, validateUuidPar
     .innerJoin(cashFunds, eq(events.id, cashFunds.eventId))
     .where(and(eq(cashFunds.id, cashFundId), isNull(events.deletedAt)))
     .limit(1);
-  if (!activeEvent || !activeEvent.isActive) throw new NotFoundError('Evento no encontrado');
+  if (!activeEvent) throw new NotFoundError('Evento no encontrado');
 
   const isOwner = activeEvent.userId === req.user?.userId;
+  if (!activeEvent.isActive && !isOwner) throw new NotFoundError('Evento no encontrado');
+
   const result = await cashFundService.getContributions(cashFundId, {
     limit: isOwner ? (req.query.limit ? Number(req.query.limit) : undefined) : 5,
     cursor: isOwner ? (req.query.cursor as string | undefined) : undefined,
-  });
+  }, !isOwner);
   res.json({
     contributions: result.data,
     nextCursor: isOwner ? result.nextCursor : null,
@@ -115,10 +119,10 @@ router.get('/cash-fund/:cashFundId/contributions', optionalAuth, validateUuidPar
 
 router.post('/events/:eventId/cash-fund/:cashFundId/contributions/:contributionId/cancel',
   requireAuth,
-  requireEventOwnership,
   validateUuidParam('eventId'),
   validateUuidParam('cashFundId'),
   validateUuidParam('contributionId'),
+  requireEventOwnership,
   asyncHandler(async (req: AuthRequest, res) => {
     const { cashFundId, contributionId } = req.params as { cashFundId: string; contributionId: string };
     const result = await cashFundService.cancelContribution(contributionId, cashFundId);

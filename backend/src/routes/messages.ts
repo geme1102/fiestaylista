@@ -95,7 +95,7 @@ router.post('/events/:eventId/messages', messageLimiter, verifyTurnstile, valida
   res.status(201).json({ message: msg });
 }));
 
-router.delete('/events/:eventId/messages/:messageId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('messageId'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/events/:eventId/messages/:messageId', requireAuth, validateUuidParam('eventId'), validateUuidParam('messageId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   const messageId = req.params.messageId as string;
   if (!messageId) throw new ValidationError('ID del mensaje requerido');

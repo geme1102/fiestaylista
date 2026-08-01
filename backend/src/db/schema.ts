@@ -77,6 +77,7 @@ export const giftClaims = pgTable('gift_claims', {
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   giftIdIdx: index('gift_claims_gift_id_idx').on(table.giftId),
+  giftParticipantUnique: uniqueIndex('gift_claims_gift_participant_unique').on(table.giftId, table.claimedBy),
 }));
 
 export const photos = pgTable('photos', {
@@ -125,6 +126,7 @@ export const cashContributions = pgTable('cash_contributions', {
   id: uuid('id').defaultRandom().primaryKey(),
   cashFundId: uuid('cash_fund_id').notNull().references(() => cashFunds.id, { onDelete: 'cascade' }),
   contributorName: text('contributor_name').notNull(),
+  contributorNameKey: text('contributor_name_key').notNull(),
   message: text('message'),
   amount: integer('amount').notNull(),
   feeAmount: integer('fee_amount').notNull().default(0),
@@ -135,6 +137,7 @@ export const cashContributions = pgTable('cash_contributions', {
 }, (table) => ({
   cashFundIdIdx: index('cash_contributions_cash_fund_id_idx').on(table.cashFundId),
   statusCreatedAtIdx: index('cash_contributions_status_created_at_idx').on(table.status, table.createdAt),
+  fundNameKeyUnique: uniqueIndex('cash_contributions_fund_name_key_unique').on(table.cashFundId, table.contributorNameKey),
 }));
 
 export const proPayments = pgTable('pro_payments', {
@@ -191,6 +194,7 @@ export const guests = pgTable('guests', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
+  nameKey: text('name_key').notNull(),
   email: text('email'),
   phone: text('phone'),
   isConfirmed: boolean('is_confirmed').notNull().default(false),
@@ -201,7 +205,7 @@ export const guests = pgTable('guests', {
 }, (table) => ({
   eventIdIdx: index('guests_event_id_idx').on(table.eventId),
   eventIdConfirmedIdx: index('guests_event_id_confirmed_idx').on(table.eventId, table.isConfirmed),
-  nameEventUnique: uniqueIndex('guests_event_id_name_unique_idx').on(table.eventId, table.name),
+  nameKeyUnique: uniqueIndex('guests_event_id_name_key_unique_idx').on(table.eventId, table.nameKey),
 }));
 
 export const emailTracking = pgTable('email_tracking', {

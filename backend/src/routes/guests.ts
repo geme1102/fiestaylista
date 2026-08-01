@@ -23,7 +23,7 @@ const rsvpSchema = z.object({
   message: z.string().max(500).optional().or(z.literal('')),
 });
 
-router.get('/events/:eventId/guests', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
+router.get('/events/:eventId/guests', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 
@@ -65,19 +65,24 @@ router.post('/events/:eventId/rsvp', rsvpLimiter, verifyTurnstile, validateUuidP
 
   if (!evt) throw new NotFoundError('Evento no encontrado o inactivo');
 
+  const cleanName = sanitizeAndStrip(data.name);
+  if (!cleanName) throw new ValidationError('El nombre es requerido');
+
   const [guest] = await db
     .insert(guests)
     .values({
       eventId,
-      name: sanitizeAndStrip(data.name),
+      name: cleanName,
+      nameKey: cleanName.toLowerCase(),
       companions: data.companions,
       dietaryRestrictions: data.dietaryRestrictions ? sanitizeAndStrip(data.dietaryRestrictions) : null,
       message: data.message ? sanitizeAndStrip(data.message) : null,
       isConfirmed: true,
     })
     .onConflictDoUpdate({
-      target: [guests.eventId, guests.name],
+      target: [guests.eventId, guests.nameKey],
       set: {
+        name: cleanName,
         companions: data.companions,
         dietaryRestrictions: data.dietaryRestrictions ? sanitizeAndStrip(data.dietaryRestrictions) : null,
         message: data.message ? sanitizeAndStrip(data.message) : null,

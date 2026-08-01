@@ -14,6 +14,7 @@ interface GiftManagementProps {
   suggestions: string[];
   filteredSuggestions: string[];
   maxGiftsPerEvent?: number;
+  disabled?: boolean;
   onAddGift: () => Promise<void>;
   onFreeGift: (giftId: string) => Promise<void>;
   onDeleteGift: (giftId: string) => Promise<void>;
@@ -25,14 +26,15 @@ interface GiftManagementProps {
 export default memo(function GiftManagement({
   gifts, addingGift, freeingGiftId, deletingGiftId,
   newGiftName, showSuggestions, suggestions, filteredSuggestions,
-  maxGiftsPerEvent, onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
+  maxGiftsPerEvent, disabled, onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
   onNewGiftNameChange, onShowSuggestionsChange,
 }: GiftManagementProps) {
   const [addedGifts, setAddedGifts] = useState<Set<string>>(new Set());
   const suggestionLoadingRef = useRef(false);
   // C3: al llegar al límite del plan se deshabilitan todas las formas de agregar
   // regalos (input, botón y chips) — la UI mostraba chips activos que fallaban al enviar.
-  const atLimit = maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent;
+  // Con evento congelado (disabled) se bloquea TODA la edición de regalos.
+  const atLimit = disabled || (maxGiftsPerEvent !== undefined && gifts.length >= maxGiftsPerEvent);
 
   const handleAddSuggestion = useCallback(async (s: string) => {
     if (suggestionLoadingRef.current || addedGifts.has(s)) return;
@@ -171,9 +173,10 @@ export default memo(function GiftManagement({
             <GiftCard
               key={gift.id}
               gift={gift}
-              onFree={onFreeGift}
-              onDelete={onDeleteGift}
+              onFree={disabled ? undefined : onFreeGift}
+              onDelete={disabled ? undefined : onDeleteGift}
               isAdmin
+              readOnly={disabled}
               freeingId={freeingGiftId}
               deletingId={deletingGiftId}
             />

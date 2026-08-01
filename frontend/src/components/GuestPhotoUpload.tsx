@@ -50,9 +50,9 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
   const handleUpload = async () => {
     if (submittingRef.current) return;
-    submittingRef.current = true;
     const file = fileInputRef.current?.files?.[0];
     if (!file) return;
+    submittingRef.current = true;
 
     setUploading(true);
     try {
@@ -70,7 +70,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const apiBase = import.meta.env.VITE_API_URL || '';
-      const uploadUrl = `${apiBase}/api/upload/guest-upload?turnstileToken=${encodeURIComponent(token ?? '')}`;
+      const uploadUrl = `${apiBase}/api/upload/guest-upload`;
 
       const res = await fetch(uploadUrl, {
         method: 'POST',
@@ -84,21 +84,13 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
         throw new Error(err.message || 'Error al subir la imagen');
       }
       const { url } = await res.json();
-      resetTurnstile();
 
-      try {
-        let photoToken = turnstileTokenRef.current;
-        if (!photoToken) {
-          photoToken = await waitForTurnstile(() => turnstileTokenRef.current);
-        }
-        await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
-          url,
-          caption: caption.trim() || undefined,
-          turnstileToken: photoToken ?? undefined,
-        });
-      } catch (e) {
-        throw e;
-      }
+      await apiClient.post(`/api/events/${eventId}/photos/guest-upload`, {
+        url,
+        caption: caption.trim() || undefined,
+        turnstileToken: token ?? undefined,
+      });
+      resetTurnstile();
 
       showToast('Foto subida 📸 ¡Gracias!', 'success');
       setShowForm(false);

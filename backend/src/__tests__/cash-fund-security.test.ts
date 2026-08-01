@@ -94,9 +94,9 @@ describe('createPromise (C1) — incrementa collectedAmount', () => {
   it('reutiliza una promesa existente del mismo nombre+monto (idempotencia suave)', async () => {
     const { db } = await import('../db/index.js');
 
-    const mockFund = { id: 'fund-1', eventId: 'event-1', isActive: true };
+    const mockFund = { id: 'fund-1', eventId: 'event-1', isActive: true, collectedAmount: 50000 };
     const mockEvent = { id: 'event-1' };
-    const existing = { id: 'existing-1' };
+    const existing = { id: 'existing-1', status: 'promised', amount: 50000 };
 
     const tx = createMockTx();
     let limitCount = 0;
@@ -105,7 +105,7 @@ describe('createPromise (C1) — incrementa collectedAmount', () => {
       if (limitCount === 1) return Promise.resolve([mockFund]);
       if (limitCount === 2) return Promise.resolve([mockEvent]);
       if (limitCount === 3) return Promise.resolve([existing]);
-      return Promise.resolve([]);
+      return Promise.resolve([mockFund]);
     });
     tx.returning.mockResolvedValue([{ id: 'existing-1', message: 'nuevo', status: 'promised' }]);
     tx.execute.mockResolvedValue(undefined);

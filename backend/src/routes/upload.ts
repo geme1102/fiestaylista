@@ -13,7 +13,7 @@ import { ValidationError } from '../utils/errors.js';
 import { config } from '../config.js';
 import { verifyTurnstileToken } from '../middleware/turnstile.js';
 import { db } from '../db/index.js';
-import { events } from '../db/schema.js';
+import { events, users } from '../db/schema.js';
 import { eq, and, isNull } from 'drizzle-orm';
 
 const router = Router();
@@ -179,8 +179,9 @@ router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Respo
   try {
     if (config.TURNSTILE_SECRET_KEY) {
       const token = typeof req.query.turnstileToken === 'string' ? req.query.turnstileToken : undefined;
-      if (!token) throw new ValidationError('Token de seguridad requerido');
-      await verifyTurnstileToken(token, req.ip);
+      if (token) {
+        await verifyTurnstileToken(token, req.ip);
+      }
     }
   } catch (err) {
     return next(err);
@@ -202,13 +203,21 @@ router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Respo
       }
 
       const eventId = req.body?.eventId;
-      if (eventId) {
-        const [evt] = await db
-          .select({ id: events.id })
-          .from(events)
-          .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
-          .limit(1);
-        if (!evt) throw new ValidationError('El evento no está disponible para recibir fotos');
+      if (typeof eventId !== 'string' || !eventId) {
+        throw new ValidationError('ID del evento requerido');
+      }
+
+      const [evt] = await db
+        .select({ id: events.id, ownerTier: users.tier })
+        .from(events)
+        .innerJoin(users, eq(users.id, events.userId))
+        .where(and(eq(events.id, eventId), eq(events.isActive, true), isNull(events.deletedAt)))
+        .limit(1);
+
+      if (!evt) throw new ValidationError('El evento no está disponible para recibir fotos');
+
+      if ((evt.ownerTier ?? 'free') === 'free') {
+        throw new ValidationError('Este evento no acepta fotos');
       }
 
       const filePath = req.file.path;

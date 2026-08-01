@@ -93,6 +93,7 @@ function queryMock(selectResults: any[][] = []) {
   q.offset = vi.fn(() => q);
   q.orderBy = vi.fn(() => q);
   q.groupBy = vi.fn(() => q);
+  q.for = vi.fn(() => q);
   q.set = vi.fn(() => q);
   q.values = vi.fn(() => q);
   q.delete = vi.fn(() => q);
@@ -304,6 +305,22 @@ describe('Gift Service', () => {
       const { claimGift } = await import('../services/gift.js');
       await expect(claimGift('g1', '')).rejects.toThrow('El nombre es requerido');
     });
+
+    it('rejects group gifts (must use group-claim)', async () => {
+      const { db } = await import('../db/index.js');
+      const { claimGift } = await import('../services/gift.js');
+      const tx = queryMock([[{ eventId: 'e1', isClaimed: false, isGroupGift: true }]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(claimGift('g1', 'Ana')).rejects.toThrow('Este regalo es grupal — usa la opción de unirse al grupo');
+    });
+
+    it('rejects claim when gift belongs to a different event', async () => {
+      const { db } = await import('../db/index.js');
+      const { claimGift } = await import('../services/gift.js');
+      const tx = queryMock([[{ eventId: 'e1', isClaimed: false, isGroupGift: false }]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(claimGift('g1', 'Ana', 'e2')).rejects.toThrow('Regalo no encontrado');
+    });
   });
 
   describe('releaseGift', () => {
@@ -326,6 +343,109 @@ describe('Gift Service', () => {
       const { getEventGifts } = await import('../services/gift.js');
       vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'g1', name: 'Gift' }]]));
       expect(await getEventGifts('e1')).toHaveLength(1);
+    });
+  });
+
+  describe('addGroupClaim', () => {
+    it('rejects when gift belongs to a different event', async () => {
+      const { db } = await import('../db/index.js');
+      const { addGroupClaim } = await import('../services/gift.js');
+      const tx = queryMock([[{ isGroupGift: true, isClaimed: false, eventId: 'e1' }]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(addGroupClaim('g1', 'Ana', undefined, 'e2')).rejects.toThrow('Regalo no encontrado');
+    });
+
+    it('returns friendly error on duplicate participant (23505)', async () => {
+      const { db } = await import('../db/index.js');
+      const { addGroupClaim } = await import('../services/gift.js');
+      const tx = queryMock([
+        [{ isGroupGift: true, isClaimed: false, eventId: 'e1' }],
+        [{ count: 0 }],
+        [{ status: 'active', isActive: true }],
+      ]);
+      tx.insert = vi.fn(() => ({
+        values: vi.fn(() => ({
+          returning: vi.fn().mockRejectedValue({ code: '23505' }),
+        })),
+      }));
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(addGroupClaim('g1', 'Ana', undefined, 'e1')).rejects.toThrow('Ya te has unido a este regalo grupal');
+    });
+  });
+
+  describe('deleteGift', () => {
+    it('deletes the claims of the gift as well', async () => {
+      const { db } = await import('../db/index.js');
+      const { deleteGift } = await import('../services/gift.js');
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ eventId: 'evt-1' }]]));
+      const tx = queryMock([]);
+      tx._deleteResult = [];
+      tx._updateResult = [{ id: 'g1', deletedAt: new Date() }];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      const result = await deleteGift('g1');
+      expect(result.success).toBe(true);
+      expect(tx.delete).toHaveBeenCalled();
+      expect(tx.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('toggleGroupGift', () => {
+    it('releases claim state when converting a reserved gift to group', async () => {
+      const { db } = await import('../db/index.js');
+      const { toggleGroupGift } = await import('../services/gift.js');
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ eventId: 'evt-1' }]]));
+      const tx = queryMock([[{ id: 'g1', isClaimed: true, claimedBy: 'Ana', isGroupGift: false, deletedAt: null }]]);
+      tx._updateResult = [{ id: 'g1', isGroupGift: true, claimedBy: null, isClaimed: false }];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      const result = await toggleGroupGift('g1', true);
+      expect(result.isGroupGift).toBe(true);
+      expect(result.isClaimed).toBe(false);
+      expect(result.claimedBy).toBeNull();
+    });
+  });
+});
+
+describe('Event Service', () => {
+  describe('updateEvent', () => {
+    it('rejects edit when event gets frozen between check and update (TOCTOU)', async () => {
+      const { db } = await import('../db/index.js');
+      const { updateEvent } = await import('../services/event.js');
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ frozenAt: null }]]));
+      const upd = queryMock();
+      upd._updateResult = [];
+      vi.mocked(db.update).mockReturnValue(upd);
+      await expect(updateEvent('e1', 'u1', { title: 'X' })).rejects.toThrow('Este evento está congelado');
+    });
+
+    it('reactivation does not overwrite a frozen event (frozenAt guard)', async () => {
+      const { db } = await import('../db/index.js');
+      const { updateEvent } = await import('../services/event.js');
+      const tx = queryMock([
+        [{ frozenAt: null }],
+        [{ tier: 'free' }],
+        [{ count: 0 }],
+      ]);
+      tx._updateResult = [];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      await expect(updateEvent('e1', 'u1', { isActive: true })).rejects.toThrow('Este evento está congelado');
+    });
+  });
+
+  describe('completeEvent', () => {
+    it('marks event as inactive so the public page is no longer served', async () => {
+      const { db } = await import('../db/index.js');
+      const { completeEvent } = await import('../services/event.js');
+      vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'e1', userId: 'u1', status: 'active' }]]));
+      const upd = queryMock();
+      upd._updateResult = [{ id: 'e1' }];
+      const setFn = vi.fn((_data: Record<string, unknown>) => ({ where: vi.fn(() => Promise.resolve(upd._updateResult)) }));
+      upd.set = setFn;
+      vi.mocked(db.update).mockReturnValue(upd);
+      const result = await completeEvent('e1', 'u1');
+      expect(result.success).toBe(true);
+      const updateData = setFn.mock.calls[0][0];
+      expect(updateData.status).toBe('completed');
+      expect(updateData.isActive).toBe(false);
     });
   });
 });

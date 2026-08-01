@@ -670,6 +670,70 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "cancel_requested_at" timestamp with time zone`,
     ],
   },
+  // Anti-duplicados: un participante solo puede unirse una vez por regalo grupal.
+  // El backend valida con catch 23505 para mensaje amigable; el índice es el respaldo.
+  {
+    name: 'gift_claims_unique_participant',
+    statements: [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "gift_claims_gift_participant_unique" ON "gift_claims"("gift_id", "claimed_by")`,
+    ],
+  },
+  // Anti-spam Lluvia de Sobres: una persona (nombre normalizado en minúsculas) solo
+  // puede tener una promesa por fondo. El backfill deduplica filas legacy y el
+  // recálculo de collected_amount deja los totales consistentes de inmediato.
+  {
+    name: 'cash_contributions_name_key',
+    statements: [
+      `ALTER TABLE "cash_contributions" ADD COLUMN IF NOT EXISTS "contributor_name_key" text`,
+      `UPDATE "cash_contributions" SET "contributor_name_key" = lower(btrim("contributor_name")) WHERE "contributor_name_key" IS NULL`,
+      `WITH ranked AS (
+        SELECT "id", "status", row_number() OVER (
+          PARTITION BY "cash_fund_id", "contributor_name_key"
+          ORDER BY ("status" = 'promised') DESC, "created_at" DESC
+        ) AS rn
+        FROM "cash_contributions"
+        WHERE "contributor_name_key" IS NOT NULL
+      )
+      UPDATE "cash_contributions" c
+      SET "status" = 'cancelled', "updated_at" = now()
+      FROM ranked r
+      WHERE c."id" = r."id" AND r.rn > 1 AND c."status" = 'promised'`,
+      `WITH ranked AS (
+        SELECT "id", row_number() OVER (
+          PARTITION BY "cash_fund_id", "contributor_name_key"
+          ORDER BY ("status" = 'promised') DESC, "created_at" DESC
+        ) AS rn
+        FROM "cash_contributions"
+        WHERE "contributor_name_key" IS NOT NULL
+      )
+      DELETE FROM "cash_contributions" c
+      USING ranked r
+      WHERE c."id" = r."id" AND r.rn > 1 AND c."status" <> 'promised'`,
+      `UPDATE "cash_funds" f SET "collected_amount" = COALESCE(
+        (SELECT SUM("amount") FROM "cash_contributions" c
+         WHERE c."cash_fund_id" = f."id" AND c."status" = 'promised'), 0),
+        "updated_at" = now()`,
+      `ALTER TABLE "cash_contributions" ALTER COLUMN "contributor_name_key" SET NOT NULL`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "cash_contributions_fund_name_key_unique" ON "cash_contributions"("cash_fund_id", "contributor_name_key")`,
+    ],
+  },
+  // RSVP case-insensitive: el índice anterior (event_id, name) permitía duplicados
+  // por mayúsculas. Se reemplaza por (event_id, name_key) con backfill + dedupe.
+  {
+    name: 'guests_name_key',
+    statements: [
+      `ALTER TABLE "guests" ADD COLUMN IF NOT EXISTS "name_key" text`,
+      `UPDATE "guests" SET "name_key" = lower(btrim("name")) WHERE "name_key" IS NULL`,
+      `DELETE FROM "guests" g USING (
+        SELECT "id", row_number() OVER (
+          PARTITION BY "event_id", "name_key" ORDER BY "created_at" DESC
+        ) AS rn FROM "guests" WHERE "name_key" IS NOT NULL
+      ) r WHERE g."id" = r."id" AND r.rn > 1`,
+      `ALTER TABLE "guests" ALTER COLUMN "name_key" SET NOT NULL`,
+      `DROP INDEX IF EXISTS "guests_event_id_name_unique_idx"`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "guests_event_id_name_key_unique_idx" ON "guests"("event_id", "name_key")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

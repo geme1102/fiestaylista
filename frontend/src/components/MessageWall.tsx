@@ -48,12 +48,12 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    submittingRef.current = true;
     if (!guestName.trim() || !newMessage.trim()) {
       if (!guestName.trim()) showToast('Debes ingresar tu nombre primero', 'error');
       else showToast('Escribe un mensaje', 'error');
       return;
     }
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       let token = turnstileTokenRef.current;

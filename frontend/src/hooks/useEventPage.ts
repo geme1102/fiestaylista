@@ -9,6 +9,14 @@ import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
 import type { Gift, Photo, EventType } from '../types';
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 interface GuestEvent {
   id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; status?: string; isActive: boolean; createdAt: string;
   eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
@@ -26,7 +34,7 @@ export function useEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState(() => {
-    const fromUrl = toParam ? decodeURIComponent(toParam).replace(/_/g, ' ') : '';
+    const fromUrl = toParam ? safeDecode(toParam).replace(/_/g, ' ') : '';
     if (fromUrl) return fromUrl;
     try { return localStorage.getItem(`guestName:${slug}`) ?? ''; } catch { return ''; }
   });
@@ -51,6 +59,7 @@ export function useEventPage() {
   const sseConnectedRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const cancelPollRef = useRef<(() => void) | null>(null);
+  const startPollingRef = useRef<(() => void) | null>(null);
   const rollbackRef = useRef<Gift[]>([]);
   const { containerRef: turnstileRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
@@ -105,35 +114,39 @@ export function useEventPage() {
     loadEventRef.current?.();
 
     const POLL_FALLBACK = 30000;
+    let initialPollTimer: ReturnType<typeof setTimeout> | undefined;
 
-    let initialPollTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
-      pollTimerRef.current = setInterval(() => {
-        if (!sseConnectedRef.current) {
-          loadEventRef.current?.();
-        }
-      }, POLL_FALLBACK);
-    }, 5000);
-
-    const cancelPoll = () => {
+    const stopPolling = () => {
       if (initialPollTimer) {
         clearTimeout(initialPollTimer);
         initialPollTimer = undefined;
       }
       clearInterval(pollTimerRef.current);
+      pollTimerRef.current = undefined;
     };
-    cancelPollRef.current = cancelPoll;
+
+    const startPolling = () => {
+      if (document.hidden || initialPollTimer || pollTimerRef.current) return;
+      initialPollTimer = setTimeout(() => {
+        initialPollTimer = undefined;
+        pollTimerRef.current = setInterval(() => {
+          if (!sseConnectedRef.current) {
+            loadEventRef.current?.();
+          }
+        }, POLL_FALLBACK);
+      }, 5000);
+    };
+
+    cancelPollRef.current = stopPolling;
+    startPollingRef.current = startPolling;
+    startPolling();
 
     function onVisibilityChange() {
       if (document.hidden) {
-        cancelPoll();
-      } else if (!sseConnectedRef.current) {
+        stopPolling();
+      } else {
         loadEventRef.current?.();
-        clearTimeout(initialPollTimer);
-        initialPollTimer = setTimeout(() => {
-          pollTimerRef.current = setInterval(() => {
-            if (!sseConnectedRef.current) { loadEventRef.current?.(); }
-          }, POLL_FALLBACK);
-        }, 5000);
+        startPolling();
       }
     }
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -141,7 +154,7 @@ export function useEventPage() {
     return () => {
       mountedRef.current = false;
       abortRef.current?.abort();
-      cancelPoll();
+      stopPolling();
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(confettiTimerRef.current);
       clearTimeout(safetyTimerRef.current);
@@ -160,6 +173,9 @@ export function useEventPage() {
     },
     onDisconnected: () => {
       sseConnectedRef.current = false;
+      if (mountedRef.current) {
+        startPollingRef.current?.();
+      }
     },
     onGiftClaimed: (data) => {
       setGifts((prev) => prev.map((g) => {
@@ -182,7 +198,10 @@ export function useEventPage() {
     },
   });
 
+  const claimInFlightRef = useRef(false);
+
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
+    if (claimInFlightRef.current) return;
     if (!event || !guestName.trim()) {
       inputRef.current?.focus();
       inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -192,12 +211,15 @@ export function useEventPage() {
       return;
     }
 
+    claimInFlightRef.current = true;
+
     let token = turnstileTokenRef.current;
     try {
       if (!token) {
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
     } catch (err) {
+      claimInFlightRef.current = false;
       setClaimingId(null);
       showToast(err instanceof Error ? err.message : 'Error de validación', 'error');
       return;
@@ -238,22 +260,27 @@ export function useEventPage() {
       showToast(`¡${giftName} apartado! 🎉`, 'success');
     } catch (err) {
       clearTimeout(safetyTimerRef.current);
-      // Rollback optimistic update
-      if (rollbackRef.current.length > 0) {
-        setGifts(rollbackRef.current);
-        rollbackRef.current = [];
-      }
-      reportError(err, { source: 'useEventPage' });
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('ya ha sido reservado') || msg.toLowerCase().includes('already claimed')) {
+        // El regalo lo apartó otra persona (o el mismo desde otro tab):
+        // recargar el estado real del servidor en vez de hacer rollback a ciegas
+        // (evita el "ghost unclaim" que deja el regalo visualmente libre).
+        loadEvent();
         showToast('Este regalo ya fue apartado por otra persona', 'error');
       } else {
+        // Rollback optimistic update
+        if (rollbackRef.current.length > 0) {
+          setGifts(rollbackRef.current);
+          rollbackRef.current = [];
+        }
+        reportError(err, { source: 'useEventPage' });
         showToast('Error al apartar el regalo. Intenta de nuevo.', 'error');
       }
     } finally {
+      claimInFlightRef.current = false;
       setClaimingId(null);
     }
-  }, [event, guestName]);
+  }, [event, guestName, loadEvent]);
 
   const handleDownload = useCallback(async (url: string) => {
     try {

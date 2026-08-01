@@ -23,8 +23,8 @@ vi.mock('../components/ui/Skeleton', () => ({
   SkeletonText: () => <div data-testid="skeleton-text" />,
   SkeletonCard: () => <div data-testid="skeleton-card" />,
 }));
-vi.mock('../components/admin/GiftManagement', () => ({ default: () => <div data-testid="gift-management" /> }));
-vi.mock('../components/admin/PhotoGallery', () => ({ PhotoGallery: () => <div data-testid="photo-gallery" /> }));
+vi.mock('../components/admin/GiftManagement', () => ({ default: (props: any) => <div data-testid="gift-management" data-disabled={String(props.disabled)} /> }));
+vi.mock('../components/admin/PhotoGallery', () => ({ PhotoGallery: (props: any) => <div data-testid="photo-gallery" data-disabled={String(props.disabled)} /> }));
 vi.mock('../components/admin/GuestsPanel', () => ({ default: () => <div data-testid="guests-panel" /> }));
 vi.mock('../components/admin/MessagesPanel', () => ({ default: () => <div data-testid="messages-panel" /> }));
 vi.mock('../components/ConfirmModal', () => ({ ConfirmModal: () => null }));
@@ -119,5 +119,28 @@ describe('EventAdmin', () => {
         expect.objectContaining({ title: 'Boda Actualizada' }),
       );
     });
+  });
+
+  it('F3: evento congelado bloquea edición (pencil, toggle y paneles disabled)', async () => {
+    mockApiClient.get.mockResolvedValue({
+      event: { id: 'evt-1', title: 'Baby Shower María', eventType: 'BABY_SHOWER', slug: 'baby-maria', isActive: false, frozenAt: '2025-06-01T00:00:00Z', createdAt: '2025-01-01', eventDate: '2025-06-15T15:00:00', eventLocation: 'Salón', eventNote: 'Traer pañales' },
+      gifts: [],
+      photos: [],
+    });
+    renderAdmin();
+    await screen.findAllByText('Baby Shower María', {}, { timeout: 10000 });
+
+    const pencil = screen.getByTestId('edit-event-button') as HTMLButtonElement;
+    expect(pencil.disabled).toBe(true);
+    expect(pencil.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(pencil);
+    expect(document.getElementById('edit-title')).toBeNull();
+
+    const toggle = screen.getByTestId('toggle-event-status') as HTMLButtonElement;
+    expect(toggle.disabled).toBe(true);
+    expect(toggle.getAttribute('aria-disabled')).toBe('true');
+
+    expect(screen.getByTestId('gift-management').getAttribute('data-disabled')).toBe('true');
+    expect(screen.getByTestId('photo-gallery').getAttribute('data-disabled')).toBe('true');
   });
 });

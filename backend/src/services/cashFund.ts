@@ -19,6 +19,8 @@ export async function createOrUpdateCashFund(eventId: string, _userId: string, d
   await ensureEventNotFrozen(eventId);
 
   return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('fund:' || ${eventId}))`);
+
     const existing = await tx
       .select({ id: cashFunds.id })
       .from(cashFunds)
@@ -156,12 +158,15 @@ export async function createPromise(
     throw new ValidationError('El nombre es requerido');
   }
 
+  const nameKey = cleanedName.toLowerCase();
+
   if (amountInCents < 2000) {
     throw new ValidationError('El monto mínimo es $2,000 COP');
   }
 
   const result = await db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${cashFundId} || ':' || ${cleanedName}))`);
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('fund:' || ${cashFundId}))`);
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('name:' || ${nameKey}))`);
 
     const [fund] = await tx
       .select()
@@ -181,25 +186,47 @@ export async function createPromise(
 
     if (!event) throw new ValidationError('El evento ya no está disponible');
 
-    // Idempotencia suave: una promesa pendiente del mismo nombre+monto se reutiliza
+    // Una persona (nombre normalizado) solo puede tener una promesa por fondo:
+    // si existe una promesa pendiente se reutiliza; si fue cancelada se reactiva.
     const [existing] = await tx
-      .select({ id: cashContributions.id })
+      .select({ id: cashContributions.id, status: cashContributions.status, amount: cashContributions.amount })
       .from(cashContributions)
       .where(and(
         eq(cashContributions.cashFundId, cashFundId),
-        eq(cashContributions.contributorName, cleanedName),
-        eq(cashContributions.amount, amountInCents),
-        eq(cashContributions.status, 'promised'),
+        eq(cashContributions.contributorNameKey, nameKey),
       ))
       .limit(1);
 
     if (existing) {
       const [row] = await tx
         .update(cashContributions)
-        .set({ message: message ? sanitizeAndStrip(message) : null })
+        .set({
+          status: 'promised',
+          contributorName: cleanedName,
+          amount: amountInCents,
+          message: message ? sanitizeAndStrip(message) : null,
+        })
         .where(eq(cashContributions.id, existing.id))
         .returning();
-      return { contribution: row, fund };
+
+      if (existing.status !== 'promised') {
+        const [updatedFund] = await tx
+          .update(cashFunds)
+          .set({
+            collectedAmount: sql`${cashFunds.collectedAmount} + ${amountInCents}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(cashFunds.id, cashFundId))
+          .returning();
+        return { contribution: row, fund: updatedFund };
+      }
+
+      const [fundAfter] = await tx
+        .select()
+        .from(cashFunds)
+        .where(eq(cashFunds.id, cashFundId))
+        .limit(1);
+      return { contribution: row, fund: fundAfter };
     }
 
     let [row] = await tx
@@ -207,6 +234,7 @@ export async function createPromise(
       .values({
         cashFundId,
         contributorName: cleanedName,
+        contributorNameKey: nameKey,
         amount: amountInCents,
         message: message ? sanitizeAndStrip(message) : null,
         status: 'promised',
@@ -248,6 +276,8 @@ export async function cancelContribution(
   if (fundMeta) await ensureEventNotFrozen(fundMeta.eventId);
 
   const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('fund:' || ${cashFundId}))`);
+
     const [contribution] = await tx
       .select()
       .from(cashContributions)
@@ -303,6 +333,7 @@ export interface SafeContribution {
 export async function getContributions(
   cashFundId: string,
   params: PaginationParams = {},
+  excludeCancelled = false,
 ): Promise<PaginatedResult<SafeContribution>> {
   const { limit, cursorCondition } = buildPaginationConditions(
     cashContributions.createdAt as unknown as SQL,
@@ -310,9 +341,11 @@ export async function getContributions(
     50,
   );
 
-  const conditions = cursorCondition
-    ? and(eq(cashContributions.cashFundId, cashFundId), cursorCondition)
-    : eq(cashContributions.cashFundId, cashFundId);
+  const conditions = excludeCancelled
+    ? and(eq(cashContributions.cashFundId, cashFundId), ne(cashContributions.status, 'cancelled'), cursorCondition)
+    : cursorCondition
+      ? and(eq(cashContributions.cashFundId, cashFundId), cursorCondition)
+      : eq(cashContributions.cashFundId, cashFundId);
 
   const rows = await db
     .select({

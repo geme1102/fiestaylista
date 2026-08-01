@@ -20,6 +20,7 @@ interface PhotoGalleryProps {
   deletePhotoConfirm: string | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   maxPhotosPerEvent?: number;
+  disabled?: boolean;
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
   onRequestDelete: (photoId: string) => void;
@@ -31,7 +32,7 @@ interface PhotoGalleryProps {
 
 export const PhotoGallery = memo(function PhotoGallery({
   photos, uploading, uploadProgress, uploadPercent, deletingPhoto, deletePhotoConfirm,
-  fileInputRef, maxPhotosPerEvent, onUpload, onDelete, onRequestDelete,
+  fileInputRef, maxPhotosPerEvent, disabled, onUpload, onDelete, onRequestDelete,
   onDeleteConfirmClose, onSelectPreview, selectedPhotoForPreview, onToggleFeatured,
 }: PhotoGalleryProps) {
   const previewRef = useFocusTrap(!!selectedPhotoForPreview);
@@ -55,6 +56,7 @@ export const PhotoGallery = memo(function PhotoGallery({
           onChange={onUpload}
           multiple
           accept="image/*"
+          disabled={disabled}
           className="hidden"
           id="hidden-photo-uploader"
           data-testid="photo-uploader"
@@ -85,7 +87,7 @@ export const PhotoGallery = memo(function PhotoGallery({
 
                 <div className="absolute inset-2.5 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3.5 rounded-xl">
                   <div className="flex gap-2 self-end">
-                    {onToggleFeatured && (
+                    {onToggleFeatured && !disabled && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -98,17 +100,19 @@ export const PhotoGallery = memo(function PhotoGallery({
                         <Star className="w-4 h-4" fill={photo.isFeatured ? 'currentColor' : 'none'} />
                       </button>
                     )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRequestDelete(photo.id);
-                      }}
-                      className="bg-white/90 hover:bg-white text-red-600 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                      title="Eliminar del catálogo"
-                      aria-label="Eliminar foto"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!disabled && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRequestDelete(photo.id);
+                        }}
+                        className="bg-white/90 hover:bg-white text-red-600 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                        title="Eliminar del catálogo"
+                        aria-label="Eliminar foto"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                   <span className="text-xs text-white font-extrabold text-left tracking-wide uppercase bg-black/40 backdrop-blur-md px-2.5 py-1 rounded w-fit">Ampliar</span>
                 </div>
@@ -143,6 +147,18 @@ export const PhotoGallery = memo(function PhotoGallery({
             </span>
             <span className="text-xs text-on-surface-variant font-bold mt-1">
               Actualiza a Pro para subir más fotos.
+            </span>
+          </div>
+        ) : disabled ? (
+          <div className="border-dashed border-2 border-gray-200 bg-gray-50 rounded-[28px] p-8 flex flex-col items-center justify-center text-center opacity-60">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-gray-100/40 flex items-center justify-center mb-3 text-on-surface-variant">
+              <Upload className="w-[22px] h-[22px] stroke-[2.5]" />
+            </div>
+            <span className="text-on-surface-variant font-black text-sm md:text-base tracking-tight">
+              Evento congelado
+            </span>
+            <span className="text-xs text-on-surface-variant font-bold mt-1">
+              La edición está bloqueada hasta reactivar tu plan Pro.
             </span>
           </div>
         ) : (

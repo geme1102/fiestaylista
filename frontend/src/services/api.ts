@@ -289,7 +289,9 @@ export const apiClient = {
 
         xhr.open('POST', url);
         if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        xhr.timeout = REQUEST_TIMEOUT;
+        // Las fotos comprimidas pueden pesar varios MB: 10s es insuficiente en
+        // conexiones móviles lentas (subida de 10MB a 1Mbps toma ~80s).
+        xhr.timeout = 60000;
         xhr.send(formData);
       });
     };

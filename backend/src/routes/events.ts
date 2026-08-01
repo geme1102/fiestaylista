@@ -77,23 +77,23 @@ router.get('/:id', requireAuth, validateUuidParam('id'), asyncHandler(async (req
   res.json({ event: result });
 }));
 
-router.put('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), checkActiveEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/:id', requireAuth, validateUuidParam('id'), requireEventOwnership, checkActiveEventLimit(), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = updateEventSchema.parse(req.body) as UpdateEventData;
   const event = await eventService.updateEvent(req.params.id as string, req.user!.userId, data);
   res.json({ event });
 }));
 
-router.delete('/:id', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:id', requireAuth, validateUuidParam('id'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const result = await eventService.deleteEvent(req.params.id as string, req.user!.userId);
   res.json(result);
 }));
 
-router.post('/:id/complete', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+router.post('/:id/complete', requireAuth, validateUuidParam('id'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const result = await eventService.completeEvent(req.params.id as string, req.user!.userId);
   res.json(result);
 }));
 
-router.post('/:id/reactivate', requireAuth, requireEventOwnership, validateUuidParam('id'), asyncHandler(async (req: AuthRequest, res) => {
+router.post('/:id/reactivate', requireAuth, validateUuidParam('id'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const event = await eventService.reactivateEvent(req.params.id as string, req.user!.userId);
   res.json({ event });
 }));

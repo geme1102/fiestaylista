@@ -703,6 +703,52 @@ describe('Photo Routes', () => {
     expect(res.body.photos).toHaveLength(1);
   });
 
+  it('POST /api/events/:eventId/photos - accepts Cloudinary URLs (allowlist)', async () => {
+    const url = 'https://res.cloudinary.com/demo/image/upload/fiestaylista/photo.jpg';
+    mockPhotoService.addPhoto.mockResolvedValue({ id: 'p-1', url });
+
+    const res = await request(app)
+      .post('/api/events/evt-1/photos')
+      .set(auth)
+      .send({ url });
+
+    expect(res.status).toBe(201);
+    expect(mockPhotoService.addPhoto).toHaveBeenCalledWith('evt-1', url, undefined);
+  });
+
+  it('POST /api/events/:eventId/photos - rejects non-allowlisted URLs', async () => {
+    const res = await request(app)
+      .post('/api/events/evt-1/photos')
+      .set(auth)
+      .send({ url: 'https://cdn.test/photo.jpg' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Cloudinary');
+    expect(mockPhotoService.addPhoto).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/events/:eventId/photos - rejects malformed URLs', async () => {
+    const res = await request(app)
+      .post('/api/events/evt-1/photos')
+      .set(auth)
+      .send({ url: 'not-a-url' });
+
+    expect(res.status).toBe(400);
+    expect(mockPhotoService.addPhoto).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/events/:eventId/photos/guest-upload - accepts Cloudinary URL without auth', async () => {
+    const url = 'https://res.cloudinary.com/demo/image/upload/fiestaylista/guest.jpg';
+    mockPhotoService.addPhoto.mockResolvedValue({ id: 'p-2', url });
+
+    const res = await request(app)
+      .post('/api/events/evt-1/photos/guest-upload')
+      .send({ url });
+
+    expect(res.status).toBe(201);
+    expect(mockPhotoService.addPhoto).toHaveBeenCalledWith('evt-1', url, undefined);
+  });
+
   it('DELETE /api/events/:eventId/photos/:photoId - delete photo', async () => {
     mockPhotoService.deletePhoto.mockResolvedValue({ success: true });
 

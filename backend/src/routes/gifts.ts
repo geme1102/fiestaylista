@@ -54,7 +54,7 @@ router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => 
   res.json({ gifts, hasMore: gifts.length === Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200) });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   const data = createGiftSchema.parse(req.body);
 
@@ -62,7 +62,7 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
   res.status(201).json({ gift });
 }));
 
-router.put('/:giftId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.put('/:giftId', requireAuth, validateUuidParam('eventId'), validateUuidParam('giftId'), requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = updateGiftSchema.parse(req.body);
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
@@ -79,7 +79,7 @@ router.put('/:giftId/claim', contributeLimiter, verifyTurnstile, validateUuidPar
     throw new ValidationError('ID del regalo requerido');
   }
   const { claimedBy } = claimGiftSchema.parse(req.body);
-  const gift = await giftService.claimGift(giftId, claimedBy);
+  const gift = await giftService.claimGift(giftId, claimedBy, eventId);
 
   const data = {
     eventId: eventId || '',
@@ -94,7 +94,7 @@ router.put('/:giftId/claim', contributeLimiter, verifyTurnstile, validateUuidPar
   res.json({ gift });
 }));
 
-router.put('/:giftId/free', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
+router.put('/:giftId/free', requireAuth, validateUuidParam('eventId'), validateUuidParam('giftId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
     throw new ValidationError('ID del regalo requerido');
@@ -103,7 +103,7 @@ router.put('/:giftId/free', requireAuth, requireEventOwnership, validateUuidPara
   res.json({ gift });
 }));
 
-router.delete('/:giftId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:giftId', requireAuth, validateUuidParam('eventId'), validateUuidParam('giftId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) {
     throw new ValidationError('ID del regalo requerido');
@@ -123,7 +123,7 @@ router.put('/:giftId/group-claim', contributeLimiter, verifyTurnstile, validateU
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
   const data = groupClaimSchema.parse(req.body);
-  const result = await giftService.addGroupClaim(giftId, data.claimedBy, data.message);
+  const result = await giftService.addGroupClaim(giftId, data.claimedBy, data.message, eventId);
 
   const claims = await giftService.getGiftClaims(giftId);
 
@@ -147,7 +147,7 @@ router.get('/:giftId/claims', giftLimiter, validateUuidParam('eventId'), validat
   res.json({ claims });
 }));
 
-router.put('/:giftId/toggle-group', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('giftId'), asyncHandler(async (req: AuthRequest, res) => {
+router.put('/:giftId/toggle-group', requireAuth, validateUuidParam('eventId'), validateUuidParam('giftId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const giftId = req.params.giftId as string | undefined;
   if (!giftId) throw new ValidationError('ID del regalo requerido');
 
@@ -164,7 +164,7 @@ router.put('/:giftId/toggle-group', requireAuth, requireEventOwnership, validate
   res.json({ gift });
 }));
 
-router.post('/sse-token', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandler(async (req: AuthRequest, res) => {
+router.post('/sse-token', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

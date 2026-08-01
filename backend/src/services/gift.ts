@@ -119,7 +119,7 @@ export async function updateGift(
   });
 }
 
-export async function claimGift(giftId: string, claimedBy: string) {
+export async function claimGift(giftId: string, claimedBy: string, expectedEventId?: string) {
   const cleanedName = sanitize(claimedBy);
   if (!cleanedName) {
     throw new ValidationError('El nombre es requerido');
@@ -127,15 +127,23 @@ export async function claimGift(giftId: string, claimedBy: string) {
 
   return await db.transaction(async (tx) => {
     const [giftWithEvent] = await tx
-      .select({ eventId: giftsTable.eventId, isClaimed: giftsTable.isClaimed })
+      .select({ eventId: giftsTable.eventId, isClaimed: giftsTable.isClaimed, isGroupGift: giftsTable.isGroupGift })
       .from(giftsTable)
       .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
       .limit(1);
 
     if (!giftWithEvent) throw new NotFoundError('Regalo no encontrado');
 
+    if (expectedEventId && giftWithEvent.eventId !== expectedEventId) {
+      throw new NotFoundError('Regalo no encontrado');
+    }
+
     if (giftWithEvent.isClaimed) {
       throw new ValidationError('Este regalo ya ha sido reservado');
+    }
+
+    if (giftWithEvent.isGroupGift) {
+      throw new ValidationError('Este regalo es grupal — usa la opción de unirse al grupo');
     }
 
     const [event] = await tx
@@ -203,17 +211,21 @@ export async function deleteGift(giftId: string) {
     .limit(1);
   if (giftMeta) await ensureEventNotFrozen(giftMeta.eventId);
 
-  const [gift] = await db
-    .update(giftsTable)
-    .set({ deletedAt: new Date() })
-    .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
-    .returning();
+  return await db.transaction(async (tx) => {
+    await tx.delete(giftClaims).where(eq(giftClaims.giftId, giftId));
 
-  if (!gift) {
-    throw new NotFoundError('Regalo no encontrado');
-  }
+    const [gift] = await tx
+      .update(giftsTable)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(giftsTable.id, giftId), isNull(giftsTable.deletedAt)))
+      .returning();
 
-  return { success: true };
+    if (!gift) {
+      throw new NotFoundError('Regalo no encontrado');
+    }
+
+    return { success: true };
+  });
 }
 
 export async function getEventGifts(eventId: string, params: PaginationParams = {}) {
@@ -236,7 +248,7 @@ export async function getEventGifts(eventId: string, params: PaginationParams = 
   return eventGifts;
 }
 
-export async function addGroupClaim(giftId: string, claimedBy: string, message?: string) {
+export async function addGroupClaim(giftId: string, claimedBy: string, message?: string, expectedEventId?: string) {
   const cleanedName = sanitize(claimedBy);
   if (!cleanedName) throw new ValidationError('El nombre es requerido');
 
@@ -249,6 +261,11 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
       .limit(1);
 
     if (!gift) throw new NotFoundError('Regalo no encontrado');
+
+    if (expectedEventId && gift.eventId !== expectedEventId) {
+      throw new NotFoundError('Regalo no encontrado');
+    }
+
     if (!gift.isGroupGift) throw new ValidationError('Este regalo no es grupal');
     if (gift.isClaimed) throw new ValidationError('Este regalo ya ha sido reservado por un grupo completo');
 
@@ -273,10 +290,18 @@ export async function addGroupClaim(giftId: string, claimedBy: string, message?:
       throw new ValidationError('El evento ha finalizado y ya no acepta regalos');
     }
 
-    const [claim] = await tx
-      .insert(giftClaims)
-      .values({ giftId, claimedBy: cleanedName, message: message ? sanitizeAndStrip(message) : null })
-      .returning();
+    let claim;
+    try {
+      [claim] = await tx
+        .insert(giftClaims)
+        .values({ giftId, claimedBy: cleanedName, message: message ? sanitizeAndStrip(message) : null })
+        .returning();
+    } catch (err) {
+      if ((err as { code?: string }).code === '23505') {
+        throw new ValidationError('Ya te has unido a este regalo grupal');
+      }
+      throw err;
+    }
 
     return { claim };
   });
@@ -320,11 +345,11 @@ export async function toggleGroupGift(giftId: string, isGroupGift: boolean) {
 
     if (isGroupGift) {
       if (gift.claimedBy) {
-        await tx.insert(giftClaims).values({ giftId, claimedBy: gift.claimedBy });
+        await tx.insert(giftClaims).values({ giftId, claimedBy: gift.claimedBy }).onConflictDoNothing();
       }
       const [updated] = await tx
         .update(giftsTable)
-        .set({ isGroupGift: true, claimedBy: null })
+        .set({ isGroupGift: true, claimedBy: null, isClaimed: false })
         .where(eq(giftsTable.id, giftId))
         .returning();
       return updated;

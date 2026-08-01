@@ -13,13 +13,34 @@ import type { AuthRequest } from '../types/index.js';
 import { validateUuidParam } from '../middleware/validateUuid.js';
 import { db } from '../db/index.js';
 import { events, users } from '../db/schema.js';
+import { config } from '../config.js';
 
 const router = Router({ mergeParams: true });
 
+// Allowlist de hosts: en producción SOLO se aceptan URLs de Cloudinary
+// (res.cloudinary.com). En desarrollo también se permiten las subidas locales
+// (BACKEND_URL/uploads) que usan los tests y la máquina del dev.
+function isAllowedPhotoUrl(url: string): boolean {
+  try {
+    const p = new URL(url);
+    if (p.hostname === 'res.cloudinary.com') return true;
+    if (config.NODE_ENV === 'production') return false;
+    let backendHost = '';
+    try { backendHost = new URL(config.BACKEND_URL).hostname; } catch { /* ignore */ }
+    return p.hostname === backendHost || p.hostname === 'localhost';
+  } catch {
+    return false;
+  }
+}
+
+const photoUrlRefinement = (u: string) => {
+  try { const p = new URL(u); return p.protocol === 'https:' || p.protocol === 'http:'; } catch { return false; }
+};
+
 const createPhotoSchema = z.object({
-  url: z.string().url('La URL de la foto es inválida').refine((u) => {
-    try { const p = new URL(u); return p.protocol === 'https:'; } catch { return false; }
-  }, 'La URL debe ser una imagen HTTPS válida'),
+  url: z.string().url('La URL de la foto es inválida')
+    .refine(photoUrlRefinement, 'La URL debe ser una imagen válida')
+    .refine(isAllowedPhotoUrl, 'La URL de la foto debe provenir de Cloudinary'),
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
 
@@ -50,7 +71,7 @@ router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (re
   res.json({ photos: result.photos, hasMore: result.hasMore });
 }));
 
-router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');
@@ -70,9 +91,9 @@ router.post('/', requireAuth, requireEventOwnership, validateUuidParam('eventId'
 }));
 
 const guestPhotoSchema = z.object({
-  url: z.string().url('La URL de la foto es inválida').refine((u) => {
-    try { const p = new URL(u); return p.protocol === 'https:'; } catch { return false; }
-  }, 'La URL debe ser una imagen HTTPS válida'),
+  url: z.string().url('La URL de la foto es inválida')
+    .refine(photoUrlRefinement, 'La URL debe ser una imagen válida')
+    .refine(isAllowedPhotoUrl, 'La URL de la foto debe provenir de Cloudinary'),
   caption: z.string().max(500).optional(),
 });
 
@@ -101,7 +122,7 @@ router.post('/guest-upload', apiLimiter, verifyTurnstile, validateUuidParam('eve
   res.status(201).json({ photo });
 }));
 
-router.delete('/:photoId', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('photoId'), asyncHandler(async (req: AuthRequest, res) => {
+router.delete('/:photoId', requireAuth, validateUuidParam('eventId'), validateUuidParam('photoId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const photoId = req.params.photoId as string | undefined;
   if (!photoId) {
     throw new ValidationError('ID de la foto requerido');
@@ -110,7 +131,7 @@ router.delete('/:photoId', requireAuth, requireEventOwnership, validateUuidParam
   res.json(result);
 }));
 
-router.put('/:photoId/feature', requireAuth, requireEventOwnership, validateUuidParam('eventId'), validateUuidParam('photoId'), asyncHandler(async (req: AuthRequest, res) => {
+router.put('/:photoId/feature', requireAuth, validateUuidParam('eventId'), validateUuidParam('photoId'), requireEventOwnership, asyncHandler(async (req: AuthRequest, res) => {
   const photoId = req.params.photoId as string | undefined;
   if (!photoId) throw new ValidationError('ID de la foto requerido');
   const photo = await photoService.toggleFeaturedPhoto(photoId);
