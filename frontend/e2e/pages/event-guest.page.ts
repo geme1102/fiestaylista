@@ -9,6 +9,9 @@ export class EventGuestPage {
   }
 
   async goto(slug: string) {
+    await this.page.addInitScript((eventSlug) => {
+      try { sessionStorage.setItem(`fy_envelope_${eventSlug}`, 'done'); } catch {}
+    }, slug);
     await this.page.goto(`/e/${slug}`);
   }
 
@@ -29,7 +32,7 @@ export class EventGuestPage {
   }
 
   async claimGift(giftId: string, name: string) {
-    await this.claimNameInput.fill(name);
+    await this.page.fill('#guest-name', name);
     await this.page.locator(`[data-testid="gift-card-${giftId}"] button`).filter({ hasText: 'Regalar este detalle' }).click();
   }
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { User, AuthResponse } from '../types';
 import { login as loginApi, register as registerApi, getMe, logout as logoutApi } from '../services/auth';
 import { setTokens, clearTokens, getAccessToken, tryRefreshToken, apiClient } from '../services/api';
@@ -10,6 +10,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isLoggingOut: boolean;
   login: (email: string, password: string, turnstileToken?: string) => Promise<AuthResponse>;
   register: (email: string, password: string, name: string, turnstileToken?: string) => Promise<AuthResponse>;
   logout: () => void;
@@ -21,8 +22,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const fetchedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -100,15 +103,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    setIsLoggingOut(true);
     logoutApi().catch((err) => {
       reportError(err, { source: 'AuthContext' });
       if (import.meta.env.DEV) console.error('[Auth] Error en logout:', err);
     });
+    navigate('/', { replace: true });
     clearTokens();
     try { document.cookie = 'hasRefresh=; max-age=0; path=/'; } catch {}
     setUser(null);
-    navigate('/');
   }, [navigate]);
+
+  useEffect(() => {
+    if (isLoggingOut && location.pathname === '/') {
+      setIsLoggingOut(false);
+    }
+  }, [isLoggingOut, location.pathname]);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -149,12 +159,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isLoggingOut,
     login,
     register,
     logout,
     refreshUser,
     resendVerification,
-  }), [user, isLoading, login, register, logout, refreshUser, resendVerification]);
+  }), [user, isLoading, isLoggingOut, login, register, logout, refreshUser, resendVerification]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -42,8 +42,8 @@ export const MOCK_CONTRIBUTIONS = [
 ];
 
 export const MOCK_MESSAGES = [
-  { id: 'msg-1', eventId: 'event-1', authorName: 'Ana Pérez', content: '¡Felicidades! Qué emoción', createdAt: new Date().toISOString() },
-  { id: 'msg-2', eventId: 'event-1', authorName: 'Luis Gómez', content: 'Los quiero mucho', createdAt: new Date().toISOString() },
+  { id: 'msg-1', eventId: 'event-1', authorName: 'Ana Pérez', message: '¡Felicidades! Qué emoción', createdAt: new Date().toISOString() },
+  { id: 'msg-2', eventId: 'event-1', authorName: 'Luis Gómez', message: 'Los quiero mucho', createdAt: new Date().toISOString() },
 ];
 
 export const MOCK_GROUP_GIFT = {

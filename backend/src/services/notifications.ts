@@ -104,14 +104,6 @@ export function getClientCount(eventId: string): number {
   return clients.get(eventId)?.size ?? 0;
 }
 
-export function getTotalClientCount(): number {
-  let total = 0;
-  for (const eventClients of clients.values()) {
-    total += eventClients.size;
-  }
-  return total;
-}
-
 export function broadcastToClients(eventId: string, data: Record<string, unknown>): void {
   const eventClients = clients.get(eventId);
   if (!eventClients) return;

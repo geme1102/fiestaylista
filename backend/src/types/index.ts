@@ -1,5 +1,24 @@
 import type { Request } from 'express';
-export type { EventType, Tier, EventStatus, CashContributionStatus, SubscriptionStatus, TierLimits } from '../../../shared/types.js';
+export type {
+  EventType,
+  Tier,
+  EventStatus,
+  CashContributionStatus,
+  SubscriptionStatus,
+  TierLimits,
+  Event,
+  Gift,
+  GiftClaim,
+  Photo,
+  Subscription,
+  ProPayment,
+  AuthResponse,
+  CashFund,
+  CashContribution,
+  Guest,
+  Message,
+  User,
+} from '../../../shared/types.js';
 export { TIER_LIMITS, TIER_ORDER, EVENT_TYPES } from '../../../shared/types.js';
 
 export interface JwtPayload {

@@ -42,6 +42,11 @@ export async function mockAuthApi(page: Page) {
 }
 
 export async function mockAuthenticatedUser(page: Page, user = MOCK_USERS.free) {
+  await page.context().addCookies([
+    { name: 'hasRefresh', value: '1', url: 'http://localhost:5173' },
+    { name: 'hasRefresh', value: '1', url: 'https://localhost:5173' },
+  ]);
+
   await page.route('**/api/auth/refresh', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ accessToken: 'mock-access-token' }) });
   });

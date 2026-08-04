@@ -18,25 +18,25 @@ test.describe('5.3e - Guest Messages', () => {
   test('GM1 - Message wall is visible on event page', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    await expect(page.locator('[data-testid="message-wall"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Muro de Mensajes/ })).toBeVisible();
+    await expect(page.getByText('✍️ Escribe un mensaje para el anfitrión')).toBeVisible();
   });
 
   test('GM2 - Guest can post a message', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    const nameInput = page.locator('[data-testid="message-name-input"]');
-    await nameInput.fill('Invitado Test');
-    const contentInput = page.locator('[data-testid="message-content-input"]');
-    await contentInput.fill('¡Felicidades!');
-    await page.locator('[data-testid="post-message-button"]').click();
+    await page.fill('#guest-name', 'Invitado Test');
+    await page.getByText('✍️ Escribe un mensaje para el anfitrión').click();
+    await page.getByPlaceholder('Escribe tu mensaje...').fill('¡Felicidades!');
+    await page.getByRole('button', { name: 'Publicar mensaje 💬' }).click();
     const toast = await guest.toast.getMessage();
-    expect(toast).toBeTruthy();
+    expect(toast).toContain('Mensaje publicado');
   });
 
   test('GM3 - Messages are displayed on the wall', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    const messages = page.locator('[data-testid="message-item"]');
-    await expect(messages.first()).toBeVisible();
+    await expect(page.getByText('Ana Pérez')).toBeVisible();
+    await expect(page.getByText('¡Felicidades! Qué emoción')).toBeVisible();
   });
 });

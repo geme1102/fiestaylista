@@ -11,8 +11,8 @@ export async function mockPaymentsApi(page: Page) {
   });
 
   await page.route('**/api/subscriptions/cancel', async (route) => {
-    const headers = route.request().headers();
-    const password = headers['x-password'] || '';
+    const body = route.request().postDataJSON?.() || {};
+    const password = body?.password || '';
     if (password === 'wrong') {
       await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'Contraseña incorrecta' }) });
     } else {

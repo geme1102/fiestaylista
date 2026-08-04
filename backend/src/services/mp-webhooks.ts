@@ -4,7 +4,7 @@ import { db } from '../db/index.js';
 import { users, subscriptions, proPayments, emailTracking } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
-import { escapeHtml } from './email.js';
+import { escapeHtml } from '../utils/sanitize.js';
 import * as mercadopagoService from './mercadopago.js';
 import { fetchPaymentInfo, fetchPreapprovalInfo } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';

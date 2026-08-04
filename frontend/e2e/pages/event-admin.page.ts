@@ -23,10 +23,6 @@ export class EventAdminPage {
     return this.page.locator('[data-testid="toggle-event-status"]');
   }
 
-  get boostButton() {
-    return this.page.locator('[data-testid="boost-button"]');
-  }
-
   get shareButton() {
     return this.page.locator('[data-testid="share-event-button"]');
   }
@@ -47,10 +43,6 @@ export class EventAdminPage {
     return this.page.locator('[data-testid="close-edit-modal"]');
   }
 
-  get payBoostButton() {
-    return this.page.locator('[data-testid="pay-boost-button"]');
-  }
-
   async addGift(name: string) {
     await this.giftNameInput.fill(name);
     await this.addGiftButton.click();
@@ -60,9 +52,5 @@ export class EventAdminPage {
     await this.editButton.click();
     await this.page.fill('#edit-title', newTitle);
     await this.saveChangesButton.click();
-  }
-
-  async clickBoost() {
-    await this.boostButton.click();
   }
 }

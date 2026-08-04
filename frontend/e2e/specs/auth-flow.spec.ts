@@ -24,12 +24,19 @@ test.describe('Auth Flow', () => {
     expect(page.url()).toContain('/onboarding');
   });
 
-  test('A2 - Register validaciones de campos vacíos', async ({ page }) => {
+  test('A2 - Register submit deshabilitado hasta completar el formulario', async ({ page }) => {
     const register = new RegisterPage(page);
     await register.goto();
-    await register.clickSubmit();
-    const toastMsg = await register.toast.getMessage();
-    expect(toastMsg).toContain('Completa todos los campos');
+    const submit = page.locator('button[type="submit"]');
+    await expect(submit).toBeDisabled();
+    await register.fillName('Test User');
+    await register.fillEmail('test@example.com');
+    await register.fillPassword('StrongPass1');
+    await expect(submit).toBeDisabled();
+    await register.checkTerms();
+    await expect(submit).toBeDisabled();
+    await register.checkPrivacy();
+    await expect(submit).toBeEnabled();
   });
 
   test('A3 - Register password strength indicator', async ({ page }) => {

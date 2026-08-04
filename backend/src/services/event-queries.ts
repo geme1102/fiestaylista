@@ -3,6 +3,7 @@ import { type PaginationParams, buildPaginationConditions } from '../utils/pagin
 import { db } from '../db/index.js';
 import { events as eventsTable, gifts, photos, cashFunds, giftClaims, users } from '../db/schema.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
+import type { EventType } from '../types/index.js';
 
 export async function getUserEvents(userId: string) {
   const userEvents = await db
@@ -64,11 +65,25 @@ export async function getUserEvents(userId: string) {
   const photoCountMap = new Map(photoCounts.map(p => [p.eventId, p.count]));
   const fundMap = new Map(funds.map(f => [f.eventId, f]));
 
-  return userEvents.map(event => ({
-    ...event,
-    giftCount: giftCountMap.get(event.id) ?? 0,
-    photoCount: photoCountMap.get(event.id) ?? 0,
-    cashFund: fundMap.get(event.id) ?? null,
+  return userEvents.map(e => ({
+    id: e.id,
+    userId: e.userId,
+    title: e.title,
+    eventType: e.eventType as EventType,
+    hostPhone: e.hostPhone ?? undefined,
+    slug: e.slug,
+    status: e.status,
+    isActive: e.isActive,
+    eventDate: e.eventDate ? e.eventDate.toISOString() : null,
+    eventLocation: e.eventLocation,
+    eventNote: e.eventNote,
+    viewCount: e.viewCount,
+    frozenAt: e.frozenAt ? e.frozenAt.toISOString() : null,
+    createdAt: e.createdAt.toISOString(),
+    updatedAt: e.updatedAt.toISOString(),
+    giftCount: giftCountMap.get(e.id) ?? 0,
+    photoCount: photoCountMap.get(e.id) ?? 0,
+    cashFund: fundMap.get(e.id) ?? null,
   }));
 }
 

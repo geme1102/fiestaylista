@@ -18,25 +18,23 @@ test.describe('5.3b - Cash Fund Flow', () => {
   test('CF1 - Cash fund section is visible on event page', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    await expect(page.locator('[data-testid="cash-fund-section"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Lluvia de Sobres' }).first()).toBeVisible();
+    await expect(page.getByText('Seguridad Activa')).toBeVisible();
   });
 
   test('CF2 - Guest can see collected amount', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    await expect(page.locator('[data-testid="collected-amount"]')).toBeVisible();
+    await expect(page.getByText('$ 150.000', { exact: false }).first()).toBeVisible();
   });
 
-  test('CF3 - Contribute button redirects to Mercado Pago', async ({ page }) => {
+  test('CF3 - Guest can register a transfer promise', async ({ page }) => {
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    const contributeBtn = page.locator('[data-testid="contribute-button"]');
-    await contributeBtn.click();
-    const nameInput = page.locator('[data-testid="contributor-name-input"]');
-    await nameInput.fill('Invitado Test');
-    const amountInput = page.locator('[data-testid="contribution-amount-input"]');
-    await amountInput.fill('50000');
-    await page.locator('[data-testid="confirm-contribution-button"]').click();
-    await expect(page).toHaveURL(/mercadopago/);
+    await page.fill('#guest-name', 'Invitado Test');
+    await page.fill('#promise-amount', '50000');
+    await page.getByRole('button', { name: '✅ Ya transferí' }).click();
+    const toastMsg = await guest.toast.getMessage();
+    expect(toastMsg).toContain('Gracias por tu aporte');
   });
 });

@@ -201,10 +201,3 @@ export async function revokeAllUserTokens(userId: string, client: DbClient = db)
     .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
     .where(eq(users.id, userId));
 }
-
-export async function revokeTokenFamily(familyId: string, userId: string): Promise<void> {
-  await db
-    .update(refreshTokens)
-    .set({ revoked: true })
-    .where(and(eq(refreshTokens.familyId, familyId), eq(refreshTokens.userId, userId)));
-}

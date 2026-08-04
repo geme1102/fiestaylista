@@ -501,7 +501,7 @@ export default function EventAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-24 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
+    <main id="main-content" className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-24 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
 
       {/* Ambient glow backgrounds */}
       <div className="absolute top-[-180px] left-[-150px] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-pink-300/30 to-rose-400/20 blur-[130px] pointer-events-none -z-10 animate-pulse duration-[12000ms]" />
@@ -889,6 +889,6 @@ export default function EventAdmin() {
           <span className="font-label-md text-label-md">Cuenta</span>
         </Link>
       </nav>
-    </div>
+    </main>
   );
 }

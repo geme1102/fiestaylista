@@ -6,6 +6,7 @@ import { db } from '../db/index.js';
 import { emailSuppressions } from '../db/schema.js';
 
 import { createModuleLogger } from '../utils/logger.js';
+import { stripHtmlToText, escapeHtml } from '../utils/sanitize.js';
 
 const log = createModuleLogger('Email');
 
@@ -15,22 +16,14 @@ if (config.RESEND_API_KEY) {
   resend = new Resend(config.RESEND_API_KEY);
 }
 
-export function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+export function isEmailConfigured(): boolean {
+  return resend !== null;
 }
 
 const FROM = config.FROM_EMAIL;
 
 function getBaseUrl(): string {
   return config.FRONTEND_URL;
-}
-
-export function isEmailConfigured(): boolean {
-  return resend !== null;
-}
-
-export async function sendRawEmail(options: { from: string; to: string; subject: string; html: string }): Promise<void> {
-  return sendEmail(options);
 }
 
 const FOOTER_END = '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />\n        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>';
@@ -89,7 +82,7 @@ export async function sendEmail(
       to: options.to,
       subject: options.subject,
       html: htmlFinal,
-      text: options.text || stripHtml(options.html),
+      text: options.text || stripHtmlToText(options.html),
       replyTo: 'soporte@fiestaylista.com',
       headers,
     });
@@ -99,22 +92,6 @@ export async function sendEmail(
       `Failed to send email: ${err instanceof Error ? err.message : 'Unknown error'}`,
     );
   }
-}
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<\/li>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/\n\s*\n\s*\n/g, '\n\n')
-    .trim();
 }
 
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {

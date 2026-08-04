@@ -18,7 +18,7 @@ test.describe('Event Admin', () => {
   test('E1 - Cargar admin event muestra título y stats', async ({ page }) => {
     const admin = new EventAdminPage(page);
     await admin.goto('event-1');
-    await expect(page.getByText('Baby Shower de María')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Baby Shower de María' }).first()).toBeVisible();
   });
 
   test('E2 - Agregar regalo personalizado', async ({ page }) => {
@@ -40,13 +40,12 @@ test.describe('Event Admin', () => {
     const admin = new EventAdminPage(page);
     await admin.goto('event-1');
     await admin.editTitle('Nuevo Título');
-    const toastMsg = await admin.toast.getMessage();
-    expect(toastMsg).toContain('actualizados');
+    await expect(page.locator('[data-sonner-toast]').filter({ hasText: 'actualizados' }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('E5 - Ver botón de compartir', async ({ page }) => {
     const admin = new EventAdminPage(page);
     await admin.goto('event-1');
-    await expect(admin.shareButton).toBeVisible();
+    await expect(page.getByRole('button', { name: /Copiar Link/ })).toBeVisible();
   });
 });

@@ -11,7 +11,7 @@ vi.mock('../db/index.js', () => ({
 
 vi.mock('../services/reminder.js', () => ({ processReminders: vi.fn() }));
 vi.mock('../services/emailSequence.js', () => ({ processEmailSequence: vi.fn() }));
-vi.mock('../services/subscription.js', () => ({ expireStaleSubscriptions: vi.fn() }));
+vi.mock('../services/subscription-cron.js', () => ({ expireStaleSubscriptions: vi.fn() }));
 vi.mock('../services/mp-webhooks.js', () => ({ retryFailedWebhooks: vi.fn() }));
 
 import { runWithLock } from '../cron.js';

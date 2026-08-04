@@ -269,7 +269,7 @@ export default function Register() {
                 </label>
               </div>
 
-              <Button variant="primary" fullWidth loading={loading} disabled={!isFormValid}>
+              <Button variant="primary" fullWidth loading={loading} type="submit" disabled={!isFormValid}>
                 {loading ? 'Creando cuenta...' : 'Empezar gratis'}
               </Button>
             </form>

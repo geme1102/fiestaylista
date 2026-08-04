@@ -32,7 +32,11 @@ test.describe('5.3i - Freeze / Purge Lifecycle', () => {
       const admin = new EventAdminPage(page);
       await admin.goto('event-1');
       await admin.toggleStatus.click();
+      await admin.modal.waitForVisible();
+      await admin.modal.confirm();
       await admin.toggleStatus.click();
+      await admin.modal.waitForVisible();
+      await admin.modal.confirm();
       const toast = await admin.toast.getMessage();
       expect(toast).toBeTruthy();
     });
@@ -71,7 +75,7 @@ test.describe('5.3i - Freeze / Purge Lifecycle', () => {
       });
       const guest = new EventGuestPage(page);
       await guest.goto('baby-shower-maria');
-      await expect(page.locator('[data-testid="frozen-banner"]').or(page.getByText(/evento.*pausado/i))).toBeVisible();
+      await expect(page.getByText('Este evento no está disponible')).toBeVisible();
     });
   });
 });

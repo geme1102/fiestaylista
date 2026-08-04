@@ -48,8 +48,8 @@ test.describe('Pricing & Payment', () => {
     await pricing.goto();
     const faqItem = page.locator('[data-testid="faq-item"]').first();
     await faqItem.click();
-    const answer = faqItem.locator('.max-h-96');
-    await expect(answer).toBeVisible();
+    await expect(faqItem).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#faq-answer-0')).toBeVisible();
   });
 
   test('P5 - Checkout Pro con auth redirige a MP', async ({ page }) => {

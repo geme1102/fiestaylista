@@ -5,14 +5,7 @@ import { reportError } from '../../lib/reportError';
 import { showToast } from '../../hooks/useToast';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { Skeleton } from '../ui/Skeleton';
-
-
-interface Message {
-  id: string;
-  authorName: string;
-  message: string;
-  createdAt: string;
-}
+import type { Message } from '../../types';
 
 interface MessagesPanelProps {
   eventId: string;

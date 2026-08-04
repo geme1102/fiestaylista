@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isLoggingOut } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -12,7 +12,7 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     const params = new URLSearchParams({ redirect: location.pathname + location.search });
-    return <Navigate to={`/login?${params}`} replace />;
+    return <Navigate to={isLoggingOut ? '/' : `/login?${params}`} replace />;
   }
 
   return <Outlet />;

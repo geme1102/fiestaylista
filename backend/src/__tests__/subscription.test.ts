@@ -63,12 +63,14 @@ vi.mock('../services/mercadopago.js', () => mockMp);
 import {
   cancelSubscription,
   getCurrentSubscription,
-  expireStaleSubscriptions,
   createOrUpdateSubscription,
   reconcileSubscriptionOnLogin,
-  retryPendingCancellations,
   updateSubscriptionStatus,
 } from '../services/subscription.js';
+import {
+  expireStaleSubscriptions,
+  retryPendingCancellations,
+} from '../services/subscription-cron.js';
 
 const mockSub = {
   id: 'sub-1',

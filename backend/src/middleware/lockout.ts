@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { auditLogs } from '../db/schema.js';
 import { createHash } from 'node:crypto';
@@ -45,24 +45,6 @@ export async function isLocked(userId: string): Promise<boolean> {
 
   const lockoutEnds = new Date(lastAttempt.createdAt.getTime() + LOCKOUT_MINUTES * 60 * 1000);
   return Date.now() < lockoutEnds.getTime();
-}
-
-export async function getLockoutRemaining(userId: string): Promise<number> {
-  const [lastAttempt] = await db
-    .select({ createdAt: auditLogs.createdAt })
-    .from(auditLogs)
-    .where(and(
-      eq(auditLogs.userId, userId),
-      eq(auditLogs.action, 'auth.login.failed'),
-    ))
-    .orderBy(desc(auditLogs.createdAt))
-    .limit(1);
-
-  if (!lastAttempt) return 0;
-
-  const lockoutEnds = new Date(lastAttempt.createdAt.getTime() + LOCKOUT_MINUTES * 60 * 1000);
-  const remaining = Math.ceil((lockoutEnds.getTime() - Date.now()) / 1000);
-  return remaining > 0 ? remaining : 0;
 }
 
 export async function isIpThrottled(ipAddress: string): Promise<boolean> {
@@ -117,30 +99,6 @@ export async function isEmailLocked(email: string): Promise<boolean> {
       sql`${auditLogs.createdAt} >= ${windowStart.toISOString()}::timestamptz`
     ));
   return (r[0]?.count ?? 0) >= MAX_EMAIL_FAILED_ATTEMPTS;
-}
-
-/**
- * Get remaining lockout time for email in seconds
- */
-export async function getEmailLockoutRemaining(email: string): Promise<number> {
-  const hashed = emailHash(email);
-  const windowStart = new Date(Date.now() - EMAIL_LOCKOUT_MINUTES * 60 * 1000);
-  const r = await db
-    .select({ createdAt: auditLogs.createdAt })
-    .from(auditLogs)
-    .where(and(
-      eq(auditLogs.action, 'auth.login.failed.email'),
-      eq(auditLogs.resourceId, hashed),
-      sql`${auditLogs.createdAt} >= ${windowStart.toISOString()}::timestamptz`
-    ))
-    .orderBy(asc(auditLogs.createdAt))
-    .offset(MAX_EMAIL_FAILED_ATTEMPTS - 1)
-    .limit(1);
-
-  if (r.length === 0) return 0;
-  const lockoutEnds = new Date(r[0].createdAt.getTime() + EMAIL_LOCKOUT_MINUTES * 60 * 1000);
-  const remaining = Math.ceil((lockoutEnds.getTime() - Date.now()) / 1000);
-  return Math.max(0, remaining);
 }
 
 /**

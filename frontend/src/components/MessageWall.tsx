@@ -6,12 +6,7 @@ import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from '../hooks/useTurnstile';
 import { Button } from '../components/ui/Button';
 
-interface Message {
-  id: string;
-  authorName: string;
-  message: string;
-  createdAt: string;
-}
+import type { Message } from '../types';
 
 interface MessageWallProps {
   eventId: string;

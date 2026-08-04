@@ -27,6 +27,8 @@ export const MOCK_USERS = {
     name: 'Test User',
     tier: 'free' as const,
     emailVerified: true,
+    onboardingCompleted: true,
+    welcomeTutorialCompleted: true,
     createdAt: new Date().toISOString(),
   },
   pro: {
@@ -35,6 +37,8 @@ export const MOCK_USERS = {
     name: 'Pro User',
     tier: 'pro' as const,
     emailVerified: true,
+    onboardingCompleted: true,
+    welcomeTutorialCompleted: true,
     createdAt: new Date().toISOString(),
   },
   unverified: {

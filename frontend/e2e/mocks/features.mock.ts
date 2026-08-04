@@ -6,12 +6,12 @@ export async function mockCashFundApi(page: Page) {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cashFund: { id: 'cf-1', eventId: 'event-1', collectedAmount: 0, isActive: true, bankName: 'Bancolombia', bankPhone: '3001234567' } }) });
   });
 
-  await page.route('**/api/cash/*/contributions', async (route) => {
-    if (route.request().method() === 'POST') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ redirectUrl: 'https://mercadopago.com.co/pay/test' }) });
-    } else {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ contributions: [MOCK_CONTRIBUTIONS[0]], nextCursor: null }) });
-    }
+  await page.route('**/api/cash-fund/promise', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ contribution: MOCK_CONTRIBUTIONS[0], cashFund: { id: 'cf-1', eventId: 'event-1', collectedAmount: 200000, isActive: true, bankName: 'Bancolombia' } }) });
+  });
+
+  await page.route('**/api/cash-fund/*/contributions', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ contributions: [MOCK_CONTRIBUTIONS[0]], nextCursor: null }) });
   });
 
   await page.route('**/api/cash/contributions/*/cancel', async (route) => {
@@ -20,12 +20,6 @@ export async function mockCashFundApi(page: Page) {
 
   await page.route('**/api/events/*/cash-fund', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cashFund: { id: 'cf-1', eventId: 'event-1', collectedAmount: 150000, isActive: true, bankName: 'Bancolombia' } }) });
-  });
-}
-
-export async function mockBoostApi(page: Page) {
-  await page.route('**/api/events/*/boost', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ url: 'https://mercadopago.com.co/boost/test' }) });
   });
 }
 
@@ -40,6 +34,10 @@ export async function mockMessagesApi(page: Page) {
 }
 
 export async function mockPhotoUploadApi(page: Page) {
+  await page.route('**/api/events/*/photos/guest-upload', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ photo: MOCK_PHOTOS[0] }) });
+  });
+
   await page.route('**/api/events/*/photos', async (route) => {
     if (route.request().method() === 'POST') {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ photo: MOCK_PHOTOS[0] }) });
@@ -73,16 +71,13 @@ export async function mockEventLifecycleApi(page: Page) {
   await page.route('**/api/events/*/complete', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { ...MOCK_EVENT, status: 'completed' } }) });
   });
-
-  await page.route('**/api/events/*/purge', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
-  });
 }
 
 export async function mockGroupGiftApi(page: Page) {
   await page.route('**/api/events/*/gifts/*/group-claim', async (route) => {
-    if (route.request().method() === 'POST') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ claim: { id: 'gc-1', giftId: 'gift-3', contributorName: 'Invitado', amount: 50000 } }) });
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON() as { claimedBy?: string } | null;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ claim: { id: 'gc-1', giftId: 'gift-3', claimedBy: body?.claimedBy ?? 'Invitado', createdAt: new Date().toISOString() } }) });
     } else {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ claims: [] }) });
     }

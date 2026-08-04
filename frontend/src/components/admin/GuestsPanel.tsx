@@ -2,18 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../services/api';
 import { Skeleton } from '../ui/Skeleton';
-
-interface Guest {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  isConfirmed: boolean;
-  companions: number;
-  dietaryRestrictions: string | null;
-  message: string | null;
-  createdAt: string;
-}
+import type { Guest } from '../../types';
 
 interface GuestsPanelProps {
   eventId: string;

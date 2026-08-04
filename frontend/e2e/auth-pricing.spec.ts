@@ -29,24 +29,33 @@ test.describe('Register Page', () => {
   });
 
   test('validates required fields on submit', async ({ page }) => {
-    await page.getByRole('button', { name: 'Empezar gratis' }).click();
-    await expect(page.getByText('Completa todos los campos')).toBeVisible({ timeout: 5000 });
+    const submit = page.getByRole('button', { name: 'Empezar gratis' });
+    await expect(submit).toBeDisabled();
+    await page.locator('#name').fill('Test User');
+    await page.locator('#email').fill('test@example.com');
+    await expect(submit).toBeDisabled();
+    await page.locator('#password').fill('StrongPass1');
+    await expect(submit).toBeDisabled();
   });
 
   test('validates password requirements', async ({ page }) => {
+    const submit = page.getByRole('button', { name: 'Empezar gratis' });
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('short');
-    await page.getByRole('button', { name: 'Empezar gratis' }).click();
-    await expect(page.getByText('La contraseña debe tener al menos 8 caracteres')).toBeVisible({ timeout: 5000 });
+    await expect(submit).toBeDisabled();
   });
 
   test('requires terms and privacy acceptance', async ({ page }) => {
+    const submit = page.getByRole('button', { name: 'Empezar gratis' });
     await page.locator('#name').fill('Test User');
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('StrongPass1');
-    await page.getByRole('button', { name: 'Empezar gratis' }).click();
-    await expect(page.getByText('Debes aceptar los términos y la política de privacidad')).toBeVisible({ timeout: 5000 });
+    await expect(submit).toBeDisabled();
+    await page.locator('#accept-terms').check();
+    await expect(submit).toBeDisabled();
+    await page.locator('#accept-privacy').check();
+    await expect(submit).toBeEnabled();
   });
 
   test('has link to login page', async ({ page }) => {
@@ -72,8 +81,12 @@ test.describe('Login Page', () => {
   });
 
   test('validates empty fields on submit', async ({ page }) => {
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
-    await expect(page.getByText('Completa todos los campos')).toBeVisible({ timeout: 5000 });
+    const submit = page.getByRole('button', { name: 'Iniciar Sesión' });
+    await expect(submit).toBeDisabled();
+    await page.locator('#email').fill('test@example.com');
+    await expect(submit).toBeDisabled();
+    await page.locator('#password').fill('password123');
+    await expect(submit).toBeEnabled();
   });
 
   test('has link to register page', async ({ page }) => {
@@ -97,8 +110,8 @@ test.describe('Pricing Page', () => {
 
   test('shows plan options', async ({ page }) => {
     await expect(page.getByText('Elige el plan perfecto')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Empezar Gratis' })).toBeVisible();
-    await expect(page.getByText('Actualizar a Pro')).toBeVisible();
+    await expect(page.getByTestId('cta-free')).toBeVisible();
+    await expect(page.getByTestId('cta-pro')).toBeVisible();
   });
 
   test('shows yearly discount toggle', async ({ page }) => {
@@ -107,12 +120,12 @@ test.describe('Pricing Page', () => {
   });
 
   test('Empezar Gratis redirects to register when not authenticated', async ({ page }) => {
-    await page.getByRole('button', { name: 'Empezar Gratis' }).click();
+    await page.getByTestId('cta-free').click();
     await expect(page).toHaveURL(/\/register\?plan=free/);
   });
 
   test('Actualizar a Pro redirects to register when not authenticated', async ({ page }) => {
-    await page.getByText('Actualizar a Pro').click();
+    await page.getByTestId('cta-pro').click();
     await expect(page).toHaveURL(/\/register\?plan=pro/);
   });
 
@@ -121,13 +134,13 @@ test.describe('Pricing Page', () => {
   });
 
   test('shows Pro Plus plan card with 3 events', async ({ page }) => {
-    await expect(page.getByText('Pro Plus')).toBeVisible();
+    await expect(page.getByText('Pro Plus', { exact: true })).toBeVisible();
     await expect(page.getByText('3 eventos')).toBeVisible();
     await expect(page.getByText('$99.900')).toBeVisible();
   });
 
   test('Actualizar a Pro Plus redirects to register when not authenticated', async ({ page }) => {
-    await page.getByText('Actualizar a Pro Plus').click();
+    await page.getByTestId('cta-pro-plus').click();
     await expect(page).toHaveURL(/\/register\?plan=pro_plus/);
   });
 });

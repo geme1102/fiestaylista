@@ -35,7 +35,8 @@ test.describe('5.3f - Incognito / Private Browsing', () => {
     });
     const guest = new EventGuestPage(page);
     await guest.goto('baby-shower-maria');
-    const nameInput = page.locator('#claim-name');
+    await page.getByRole('button', { name: 'Saltar animación' }).click().catch(() => {});
+    const nameInput = page.locator('#guest-name');
     await nameInput.fill('Invitado Incognito');
     await page.locator('[data-testid^="gift-card-"] button').first().click();
     await expect(page.locator('[data-testid="success-modal"]')).toBeVisible({ timeout: 5000 });

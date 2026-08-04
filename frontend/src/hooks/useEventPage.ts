@@ -7,7 +7,7 @@ import { reportError } from '../lib/reportError';
 import { useTurnstile, waitForTurnstile } from './useTurnstile';
 import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
-import type { Gift, Photo, EventType } from '../types';
+import type { Gift, Photo, Event } from '../types';
 
 function safeDecode(value: string): string {
   try {
@@ -17,17 +17,11 @@ function safeDecode(value: string): string {
   }
 }
 
-interface GuestEvent {
-  id: string; title: string; eventType: EventType; slug: string; hostPhone?: string; status?: string; isActive: boolean; createdAt: string;
-  eventDate?: string | null; eventLocation?: string | null; eventNote?: string | null;
-  ownerTier?: string;
-}
-
 export function useEventPage() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const toParam = searchParams.get('to');
-  const [event, setEvent] = useState<GuestEvent | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +84,7 @@ export function useEventPage() {
       setGifts(data.gifts || []);
       setPhotos(data.photos || []);
     } catch (err) {
+      if (controller.signal.aborted) return;
       reportError(err, { source: 'useEventPage' });
       if (!mountedRef.current) return;
       let msg = err instanceof Error ? err.message : 'Evento no encontrado';

@@ -18,8 +18,8 @@ test.describe('Account Management', () => {
   test('C1 - Ver perfil con información del usuario', async ({ page }) => {
     const account = new AccountPage(page);
     await account.goto();
-    await expect(page.getByText('Mi Cuenta')).toBeVisible();
-    await expect(page.getByText('Test User')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mi Cuenta' })).toBeVisible();
+    await expect(page.locator('#main-content').getByText('Test User')).toBeVisible();
   });
 
   test('C3 - Cancelar suscripción requiere contraseña', async ({ page }) => {
@@ -29,8 +29,7 @@ test.describe('Account Management', () => {
     await expect(account.cancelDialog).toBeVisible();
     await account.fillCancelPassword('wrong');
     await account.confirmCancel();
-    const toastMsg = await account.toast.getMessage();
-    expect(toastMsg).toContain('Contraseña incorrecta');
+    await expect(page.locator('[data-sonner-toast]').filter({ hasText: 'Contraseña incorrecta' }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('C4 - Descargar datos ARCO', async ({ page }) => {

@@ -22,7 +22,7 @@ test.describe('5.3d - Tier Gating', () => {
     test('TG1 - Free user sees upgrade prompt in dashboard', async ({ page }) => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
-      await expect(page.getByText(/plan/i).or(page.getByText(/Pro/i))).toBeVisible();
+      await expect(page.getByText(/Plan Gratis$/)).toBeVisible();
     });
 
     test('TG2 - Free user sees event count within limits', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('5.3d - Tier Gating', () => {
     test('TG3 - Pro user sees premium badge', async ({ page }) => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
-      await expect(page.locator('[data-testid="pro-badge"]')).toBeVisible();
+      await expect(page.getByText(/Plan Pro$/)).toBeVisible();
     });
   });
 
@@ -64,13 +64,12 @@ test.describe('5.3d - Tier Gating', () => {
         if (route.request().method() === 'POST') {
           await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'Has alcanzado el límite de eventos en tu plan free' }) });
         } else {
-          await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ events: MOCK_EVENTS_LIST }) });
+          await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ events: [] }) });
         }
       });
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
-      await dashboard.clickNewEvent();
-      await dashboard.createEvent('BABY_SHOWER', 'Otro Evento');
+      await dashboard.createEvent('baby_shower', 'Otro Evento');
       const toast = await dashboard.toast.getMessage();
       expect(toast).toContain('límite');
     });

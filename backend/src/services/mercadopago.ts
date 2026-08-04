@@ -10,13 +10,6 @@ if (config.MERCADO_PAGO_ACCESS_TOKEN) {
   client = new MercadoPagoConfig({ accessToken: config.MERCADO_PAGO_ACCESS_TOKEN });
 }
 
-export function mpNotificationUrl(): string {
-  const base = config.BACKEND_URL
-    .replace(/\/+$/, '')
-    .replace(/^([a-zA-Z]+:\/\/)?/, (_, proto) => proto || 'https://');
-  return `${base}/api/webhooks/mercadopago`;
-}
-
 export function serializeError(error: unknown): Error {
   if (error instanceof Error) return error;
   if (typeof error === 'object' && error !== null) {

@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { consentRecords } from '../db/schema.js';
 import type { Request } from 'express';
@@ -24,12 +23,4 @@ export async function recordConsent(input: ConsentInput) {
     })
     .returning();
   return record;
-}
-
-export async function getConsentHistory(userId: string) {
-  return db
-    .select()
-    .from(consentRecords)
-    .where(eq(consentRecords.userId, userId))
-    .orderBy(consentRecords.createdAt);
 }

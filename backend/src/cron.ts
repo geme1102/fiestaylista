@@ -3,7 +3,7 @@ import { db } from './db/index.js';
 import { failedWebhooks, refreshTokens, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
-import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations } from './services/subscription.js';
+import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations } from './services/subscription-cron.js';
 import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import * as mercadopagoService from './services/mercadopago.js';
