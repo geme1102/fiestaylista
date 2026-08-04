@@ -87,8 +87,8 @@ router.post('/events/:eventId/messages', messageLimiter, verifyTurnstile, valida
 
   emitMessagePosted({
     eventId,
-    authorName: data.authorName,
-    messagePreview: data.message.slice(0, 80),
+    authorName: sanitize(data.authorName),
+    messagePreview: sanitizeAndStrip(data.message).slice(0, 80),
     timestamp: msg.createdAt?.toISOString() ?? new Date().toISOString(),
   });
 

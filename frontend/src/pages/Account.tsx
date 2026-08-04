@@ -557,6 +557,7 @@ export default function Account() {
               type="password"
               value={cancelPassword}
               onChange={(e) => setCancelPassword(e.target.value)}
+              maxLength={64}
               placeholder="Tu contraseña"
               autoComplete="current-password"
               enterKeyHint="go"
@@ -597,6 +598,7 @@ export default function Account() {
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
+                maxLength={18}
                 placeholder="ELIMINAR MI CUENTA"
                 autoComplete="off"
                 className="w-full px-4 py-3 border border-outline-variant rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
@@ -607,6 +609,7 @@ export default function Account() {
               type="password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
+              maxLength={64}
               placeholder="Tu contraseña"
               autoComplete="current-password"
               enterKeyHint="go"

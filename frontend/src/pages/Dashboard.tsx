@@ -622,7 +622,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           placeholder="Ej: Boda de María y Juan"
           autoComplete="off"
           autoFocus
-          maxLength={100}
+          maxLength={200}
         />
         {titleError && <p className="text-xs text-error mt-1.5 font-medium">{titleError}</p>}
       </div>
@@ -680,6 +680,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
               type="text"
               value={formData.eventLocation}
               onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
+              maxLength={200}
               autoComplete="street-address"
               inputMode="text"
               enterKeyHint="next"
@@ -695,6 +696,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
               id="eventNote"
               value={formData.eventNote}
               onChange={(e) => setFormData({ ...formData, eventNote: e.target.value })}
+              maxLength={1000}
               className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
               placeholder="Ej: No se aceptan regalos envueltos"
               rows={2}

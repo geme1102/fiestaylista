@@ -104,6 +104,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                maxLength={1000}
                 placeholder="Escribe tu mensaje..."
                 className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"
                 rows={3}

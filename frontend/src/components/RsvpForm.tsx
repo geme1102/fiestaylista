@@ -126,6 +126,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   id="rsvp-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  maxLength={500}
                   className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"
                   placeholder="¡Felicidades! Nos vemos allí 🎉"
                   rows={2}

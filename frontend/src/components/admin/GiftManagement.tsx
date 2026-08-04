@@ -75,6 +75,7 @@ export default memo(function GiftManagement({
             type="text"
             placeholder={atLimit ? `Límite alcanzado (${maxGiftsPerEvent} regalos)` : 'Nombre del regalo (Ej: Juego de Sábanas)...'}
             value={newGiftName}
+            maxLength={200}
             disabled={atLimit}
             onChange={(e) => { onNewGiftNameChange(e.target.value); onShowSuggestionsChange(true); }}
             onKeyDown={(e) => { if (e.key === 'Escape') onShowSuggestionsChange(false); }}

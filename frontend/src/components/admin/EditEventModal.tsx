@@ -63,6 +63,7 @@ export default function EditEventModal({
             type="text"
             value={titleDraft}
             onChange={(e) => onTitleChange(e.target.value)}
+            maxLength={200}
             className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold"
             autoComplete="off"
             enterKeyHint="next"
@@ -104,6 +105,7 @@ export default function EditEventModal({
             type="text"
             value={locationDraft}
             onChange={(e) => onLocationChange(e.target.value)}
+            maxLength={200}
             className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-bold text-gray-700"
             placeholder="Ej: Salón de eventos, Ciudad"
             autoComplete="street-address"
@@ -119,6 +121,7 @@ export default function EditEventModal({
             value={noteDraft}
             onChange={(e) => onNoteChange(e.target.value)}
             rows={3}
+            maxLength={1000}
             className="w-full border border-gray-200 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 bg-white font-semibold text-gray-700 resize-none"
             placeholder="Ej: No se aceptan regalos envueltos"
           />

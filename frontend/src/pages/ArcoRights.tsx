@@ -296,6 +296,7 @@ export default function ArcoRights() {
                         value={formDetails}
                         onChange={(e) => setFormDetails(e.target.value)}
                         rows={4}
+                        maxLength={2000}
                         className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary outline-none resize-none"
                         placeholder={content.form.placeholder}
                         required

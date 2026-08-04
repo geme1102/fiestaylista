@@ -156,6 +156,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
             type="text"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
+            maxLength={500}
             placeholder="¿Qué quieres contar de esta foto? (opcional)"
             className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />

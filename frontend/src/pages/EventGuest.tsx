@@ -347,6 +347,7 @@ export default function EventGuest() {
                   type="text"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
+                  maxLength={100}
                   placeholder="Escribe tu nombre"
                   autoComplete="name"
                   inputMode="text"

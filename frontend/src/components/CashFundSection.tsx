@@ -416,6 +416,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                maxLength={20}
                 placeholder="Número de teléfono"
                 autoComplete="tel"
                 inputMode="tel"
@@ -540,6 +541,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        maxLength={500}
         placeholder="Mensaje (opcional)"
         autoCapitalize="sentences"
         enterKeyHint="go"

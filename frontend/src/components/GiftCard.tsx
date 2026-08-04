@@ -262,6 +262,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 type="text"
                 value={claimName}
                 onChange={(e) => setClaimName(e.target.value)}
+                maxLength={100}
                 placeholder="Tu nombre"
                 autoComplete="name"
                 inputMode="text"
@@ -276,6 +277,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                 type="text"
                 value={claimMessage}
                 onChange={(e) => setClaimMessage(e.target.value)}
+                maxLength={500}
                 placeholder="Mensaje (opcional)"
                 autoCapitalize="sentences"
                 enterKeyHint="go"
