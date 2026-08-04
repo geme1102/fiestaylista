@@ -153,7 +153,7 @@ export default function ResetPassword() {
                     { check: /[A-Z]/.test(password), label: 'Una mayúscula' },
                     { check: /[0-9]/.test(password), label: 'Un número' },
                   ].map((req) => (
-                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : 'text-on-surface-variant/50'}`}>
+                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : 'text-on-surface-variant/80'}`}>
                       <span className={`material-symbols-outlined text-sm ${req.check ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                         {req.check ? 'check_circle' : 'radio_button_unchecked'}
                       </span>

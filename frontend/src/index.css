@@ -891,6 +891,43 @@ input[type="datetime-local"], select, textarea {
   padding-top: calc(0px + env(safe-area-inset-top, 0px));
 }
 
+/* Header fijo de 4rem que suma el notch: el padding-top del safe-area
+   se añade a la altura total (antes h-16 + pt-safe aplastaba el contenido
+   en iPhones con notch, dejando solo ~17px internos). */
+.h-safe {
+  height: calc(4rem + constant(safe-area-inset-top, 0px));
+  height: calc(4rem + env(safe-area-inset-top, 0px));
+  padding-top: constant(safe-area-inset-top, 0px);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Offsets para elementos sticky que deben quedar justo debajo del header
+   con notch (top-16 fijo quedaba tapado por el header extendido). */
+.top-header-safe {
+  top: calc(4rem + constant(safe-area-inset-top, 0px));
+  top: calc(4rem + env(safe-area-inset-top, 0px));
+}
+
+.pt-header-safe {
+  padding-top: calc(4rem + constant(safe-area-inset-top, 0px));
+  padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+}
+
+/* Bottom nav de 5rem que suma la gesture bar: igual que .h-safe pero
+   con padding-bottom del safe-area inferior. */
+.h-bottom-safe {
+  height: calc(5rem + constant(safe-area-inset-bottom, 0px));
+  height: calc(5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: constant(safe-area-inset-bottom, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Compensación inferior para contenido bajo un bottom nav con gesture bar. */
+.pb-bottom-nav {
+  padding-bottom: calc(5rem + constant(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
 .pl-safe {
   padding-left: calc(0px + constant(safe-area-inset-left, 0px));
   padding-left: calc(0px + env(safe-area-inset-left, 0px));

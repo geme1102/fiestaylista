@@ -10,7 +10,7 @@ const VARIANTS: Record<BadgeVariant, string> = {
   secondary: 'bg-secondary/10 text-secondary border-secondary/20',
   success: 'bg-emerald-50 text-emerald-600 border-emerald-200',
   neutral: 'bg-surface-container-high text-on-surface-variant border-outline-variant',
-  locked: 'bg-surface-container-low text-on-surface-variant/50 border-outline-variant grayscale',
+  locked: 'bg-surface-container-low text-on-surface-variant/80 border-outline-variant grayscale',
 };
 
 export const Badge = memo(function Badge({

@@ -351,7 +351,7 @@ export default function ArcoRights() {
                             }`}>
                               {req.status}
                             </span>
-                            <p className="text-xs text-surface-variant mt-1">
+                            <p className="text-xs text-on-surface-variant mt-1">
                               {new Date(req.createdAt).toLocaleDateString()}
                             </p>
                           </div>

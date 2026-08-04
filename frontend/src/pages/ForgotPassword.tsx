@@ -91,7 +91,7 @@ export default function ForgotPassword() {
                 Si existe una cuenta con <strong className="text-on-surface-variant">{email}</strong>,
                 recibirás un enlace para restablecer tu contraseña en unos minutos.
               </p>
-              <p className="text-xs text-on-surface-variant/60 mb-6">
+              <p className="text-xs text-on-surface-variant/80 mb-6">
                 ¿No lo encuentras? Revisa tu carpeta de spam o correo no deseado.
               </p>
               <div className="flex flex-col gap-3">

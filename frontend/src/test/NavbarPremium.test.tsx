@@ -60,10 +60,10 @@ describe('NavbarPremium', () => {
     expect(screen.getByTestId('navbar')).toBeTruthy();
   });
 
-  it('starts with h-16 fixed height', () => {
+  it('uses safe-area height that sums the notch (h-safe)', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, logout: vi.fn() });
     renderNavbar();
 
-    expect(screen.getByTestId('navbar').className).toContain('h-16');
+    expect(screen.getByTestId('navbar').className).toContain('h-safe');
   });
 });

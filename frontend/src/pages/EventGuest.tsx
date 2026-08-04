@@ -39,8 +39,8 @@ function EmptyGiftState() {
         🎁
       </div>
       <p className="text-on-surface-variant font-medium text-lg">La lista de regalos se está preparando</p>
-      <p className="text-surface-variant text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
-      <p className="text-surface-variant text-xs mt-4">Mientras tanto, comparte este evento con quien pueda querer apartar algo ✨</p>
+      <p className="text-on-surface-variant text-sm mt-1">¡Vuelve pronto para elegir el regalo perfecto!</p>
+      <p className="text-on-surface-variant text-xs mt-4">Mientras tanto, comparte este evento con quien pueda querer apartar algo ✨</p>
     </motion.div>
   );
 }
@@ -123,7 +123,7 @@ export default function EventGuest() {
   if (loading) {
     return (
       <div role="status" aria-live="polite" className="min-h-screen bg-surface">
-        <div className="pt-16 w-full overflow-hidden relative">
+        <div className="pt-header-safe w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
             <Skeleton className="w-24 h-24 rounded-full mb-6" />
@@ -215,7 +215,7 @@ export default function EventGuest() {
         </script>
       </Helmet>
 
-      <main className={`min-h-screen bg-surface transition-all duration-300 pb-20 ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <main className={`min-h-screen bg-surface transition-all duration-300 pb-bottom-nav ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         <Suspense fallback={null}><ConfettiCanvas ref={confettiRef} /></Suspense>
 
         {showEnvelope && event && (
@@ -227,7 +227,7 @@ export default function EventGuest() {
           />
         )}
 
-        <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-16 pt-safe">
+        <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-safe">
           <div className="flex items-center gap-3">
             <Link to="/" className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</Link>
           </div>
@@ -246,7 +246,7 @@ export default function EventGuest() {
         {/* Turnstile (invisible) */}
         <div ref={turnstileRef} aria-hidden="true" className="absolute -z-10 opacity-0 pointer-events-none" />
 
-        <section className="pt-16 w-full overflow-hidden relative">
+        <section className="pt-header-safe w-full overflow-hidden relative">
           <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.primary}20` }} />
           <div className="absolute top-1/4 right-0 w-72 h-72 rounded-full blur-[100px] pointer-events-none translate-x-1/3 transition-colors duration-700"                 style={{ background: `${THEME_COLORS[event.eventType]?.light}` }} />
           <div className="absolute bottom-1/3 left-10 w-96 h-96 rounded-full blur-[120px] pointer-events-none transition-colors duration-700" style={{ background: `${THEME_COLORS[event.eventType]?.light}` }} />
@@ -403,7 +403,7 @@ export default function EventGuest() {
                 </span>
               </h2>
               {gifts.length > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-surface-variant">
+                <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span>{claimedGifts.length} apartados</span>
                 </div>
@@ -413,7 +413,7 @@ export default function EventGuest() {
             {gifts.length === 0 && <EmptyGiftState />}
 
             {categories.length > 1 && (
-              <div ref={filterBarRef} className="sticky top-16 z-30 -mx-4 px-4 py-2 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
+              <div ref={filterBarRef} className="sticky top-header-safe z-30 -mx-4 px-4 py-2 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 mb-4 overflow-x-auto scrollbar-hide">
                 <div className="flex gap-2 w-max">
                   <button
                     onClick={() => setCategoryFilter(null)}
@@ -528,7 +528,7 @@ export default function EventGuest() {
             </SectionErrorBoundary>
 
             {photos.length === 0 ? (
-              <div className="text-center py-8 text-on-surface-variant/60">
+              <div className="text-center py-8 text-on-surface-variant/80">
                 <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>photo_library</span>
                 <p className="font-medium text-sm">No hay fotos aún</p>
                 {(event.ownerTier ?? 'free') === 'free' ? (
@@ -597,7 +597,7 @@ export default function EventGuest() {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-20 px-4 pb-safe">
+        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-bottom-safe px-4">
           <Link to="/" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>

@@ -131,7 +131,7 @@ export function WelcomeModal({ open, hasEvents, onCreateEvent, onClose }: Welcom
       <div className="flex items-center justify-between mt-8 pt-4 border-t border-outline-variant/20">
         <button
           onClick={handleSkip}
-          className="text-xs font-semibold text-on-surface-variant/50 hover:text-on-surface-variant transition-colors px-2 py-2 min-h-[44px]"
+          className="text-xs font-semibold text-on-surface-variant/80 hover:text-on-surface-variant transition-colors px-2 py-2 min-h-[44px]"
         >
           Saltar introducción
         </button>

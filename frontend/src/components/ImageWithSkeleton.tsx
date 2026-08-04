@@ -39,7 +39,7 @@ const ImageWithSkeleton = memo(function ImageWithSkeleton({ src, alt, className,
             <span className="material-symbols-outlined text-error/40 text-4xl">broken_image</span>
           </div>
           <div className="text-center px-4">
-            <span className="font-label-md text-label-md text-on-surface-variant/60">No se pudo cargar</span>
+            <span className="font-label-md text-label-md text-on-surface-variant/80">No se pudo cargar</span>
           </div>
         </div>
       ) : (

@@ -151,7 +151,7 @@ export default function Register() {
                   Inicia Sesión
                 </Link>
               </p>
-              <p className="text-xs text-on-surface-variant/60 mt-2">Sin tarjeta de crédito. En 2 minutos tendrás tu lista lista.</p>
+              <p className="text-xs text-on-surface-variant/80 mt-2">Sin tarjeta de crédito. En 2 minutos tendrás tu lista lista.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="relative backdrop-blur-md bg-surface/70 border border-white/20 rounded-2xl p-8 space-y-5 shadow-sm">
@@ -223,7 +223,7 @@ export default function Register() {
                     { check: /[A-Z]/.test(password), label: 'Una mayúscula' },
                     { check: /[0-9]/.test(password), label: 'Un número' },
                   ].map((req) => (
-                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : password ? 'text-on-surface-variant/50' : 'text-on-surface-variant/50'}`}>
+                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : password ? 'text-on-surface-variant/80' : 'text-on-surface-variant/80'}`}>
                       <span className={`material-symbols-outlined text-sm ${req.check ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                         {req.check ? 'check_circle' : 'radio_button_unchecked'}
                       </span>

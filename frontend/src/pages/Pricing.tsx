@@ -344,7 +344,7 @@ export default function Pricing() {
                           {plan.price === 0 ? '' : yearly && plan.tier !== 'pro_plus' ? '/año' : '/mes'}
                         </span>
                         {yearly && plan.tier === 'pro_plus' && (
-                          <div className="font-caption text-caption text-on-surface-variant/60 mt-1">(solo plan mensual)</div>
+                          <div className="font-caption text-caption text-on-surface-variant/80 mt-1">(solo plan mensual)</div>
                         )}
                       </div>
                       <ul className="space-y-4 mb-8 text-left w-full">

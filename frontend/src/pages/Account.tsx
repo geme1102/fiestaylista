@@ -501,7 +501,7 @@ export default function Account() {
       ) : (
         <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
           <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
-          <div className="text-center py-8 text-on-surface-variant/60">
+          <div className="text-center py-8 text-on-surface-variant/80">
             <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
             <p className="font-medium text-sm">No hay pagos registrados aún</p>
             <p className="text-xs mt-1">Cuando realices tu primera compra, aparecerá aquí.</p>

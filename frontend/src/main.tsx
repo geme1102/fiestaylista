@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { MotionConfig } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import * as Sentry from '@sentry/react';
 import { AuthProvider } from './contexts/AuthContext';
@@ -74,6 +75,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ErrorBoundary>
           <AuthProvider>
+            <MotionConfig reducedMotion="user">
               <App />
               <CookieBanner />
               <Toaster
@@ -85,7 +87,8 @@ createRoot(document.getElementById('root')!).render(
                 }}
                 data-testid="toaster"
               />
-            </AuthProvider>
+            </MotionConfig>
+          </AuthProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </HelmetProvider>

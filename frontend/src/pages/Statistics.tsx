@@ -41,7 +41,7 @@ export default function Statistics() {
           <span className="material-symbols-outlined text-3xl text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
         </div>
         <h2 className="text-xl font-bold text-on-surface mb-2">Estadísticas exclusivas para Plan Pro y Pro Plus</h2>
-        <p className="text-sm text-on-surface-variant/70 mb-6 max-w-sm">
+        <p className="text-sm text-on-surface-variant/80 mb-6 max-w-sm">
           Actualiza a Pro o Pro Plus para acceder a gráficas, métricas y análisis detallados de tus eventos.
         </p>
         <Link
@@ -69,7 +69,7 @@ export default function Statistics() {
           <span className="material-symbols-outlined text-3xl text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>error_outline</span>
         </div>
         <h2 className="text-xl font-bold text-on-surface mb-2">Error al cargar estadísticas</h2>
-        <p className="text-sm text-on-surface-variant/70 mb-6 max-w-sm">
+        <p className="text-sm text-on-surface-variant/80 mb-6 max-w-sm">
           {error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'}
         </p>
         <button
@@ -94,7 +94,7 @@ export default function Statistics() {
         <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit tracking-tight">
           Estadísticas
         </h1>
-        <p className="text-sm text-on-surface-variant/70 mt-1">
+        <p className="text-sm text-on-surface-variant/80 mt-1">
           Panel de análisis y métricas de tus eventos — {user?.name}
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function Statistics() {
           </div>
           <div>
             <p className="text-xl md:text-2xl font-bold text-on-surface">{totalEvents}</p>
-            <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">Eventos</p>
+            <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">Eventos</p>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export default function Statistics() {
           </div>
           <div>
             <p className="text-xl md:text-2xl font-bold text-on-surface">{totalGifts}</p>
-            <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">Regalos</p>
+            <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">Regalos</p>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function Statistics() {
           </div>
           <div>
             <p className="text-xl md:text-2xl font-bold text-on-surface">{totalViews}</p>
-            <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">Visitas totales</p>
+            <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">Visitas totales</p>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export default function Statistics() {
           </div>
           <div className="min-w-0">
             <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{formatCOP(totalRaised)}</p>
-            <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">Recaudado</p>
+            <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">Recaudado</p>
           </div>
         </div>
       </div>

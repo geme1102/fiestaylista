@@ -215,7 +215,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               {promisedTotal > 0 && (
                 <p className="text-xs text-on-surface-variant pt-1">
                   <span className="font-semibold">+ {formatCOP(promisedTotal)} prometido</span>
-                  <span className="text-on-surface-variant/70"> (aportes por confirmar)</span>
+                  <span className="text-on-surface-variant/80"> (aportes por confirmar)</span>
                 </p>
               )}
             </div>
@@ -394,7 +394,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
       </button>
       {show && (
         <div className="mt-4 space-y-3">
-          <p className="text-xs text-on-surface-variant/70">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
+          <p className="text-xs text-on-surface-variant/80">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="bank-type" className="sr-only">Tipo de cuenta</label>
@@ -604,7 +604,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-secondary">account_balance</span>
         <div>
-          <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
+          <p className="text-xs text-on-surface-variant/80 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
           <p className="font-bold text-on-surface">
             {bankType === 'nequi' && 'Nequi'}
             {bankType === 'daviplata' && 'Daviplata'}
@@ -616,7 +616,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-secondary">smartphone</span>
         <div>
-          <p className="text-xs text-on-surface-variant/70 font-semibold uppercase tracking-wide">Número</p>
+          <p className="text-xs text-on-surface-variant/80 font-semibold uppercase tracking-wide">Número</p>
           <p className="font-bold text-on-surface text-lg tracking-wider">{displayPhone}</p>
         </div>
         {isMasked && !revealedPhone ? (

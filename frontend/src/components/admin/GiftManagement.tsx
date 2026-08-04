@@ -55,7 +55,7 @@ export default memo(function GiftManagement({
             <h3 className="text-xl font-bold text-on-surface tracking-tight">
               Lista de Deseos de Regalos
             </h3>
-            <span className="text-xs text-on-surface-variant/70 font-semibold">{gifts.length}{maxGiftsPerEvent ? ` / ${maxGiftsPerEvent}` : ''} — Tus invitados elegirán los regalos directo de esta lista</span>
+            <span className="text-xs text-on-surface-variant/80 font-semibold">{gifts.length}{maxGiftsPerEvent ? ` / ${maxGiftsPerEvent}` : ''} — Tus invitados elegirán los regalos directo de esta lista</span>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default memo(function GiftManagement({
       {gifts.length === 0 ? (
         <div className="bg-surface-container-low/60 border border-outline-variant/30 rounded-3xl p-12 text-center">
           <p className="text-on-surface font-extrabold text-base">No hay regalos de deseos</p>
-          <p className="text-on-surface-variant/70 text-xs mt-1 font-medium">Agrega tu primer regalo usando el formulario de arriba.</p>
+          <p className="text-on-surface-variant/80 text-xs mt-1 font-medium">Agrega tu primer regalo usando el formulario de arriba.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

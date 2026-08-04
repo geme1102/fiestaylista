@@ -154,7 +154,7 @@ export default function VerifyEmail() {
             <p className="text-sm text-on-surface-variant mb-6">
               Ahora puedes crear eventos, compartir listas de regalos y recibir aportes de tus invitados.
             </p>
-            <p className="text-xs text-on-surface-variant/60 mb-4">
+            <p className="text-xs text-on-surface-variant/80 mb-4">
               Serás redirigido al Dashboard en {redirectCountdown} segundos...
             </p>
             <button

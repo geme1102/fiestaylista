@@ -286,13 +286,13 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit tracking-tight">
-            Mis Eventos <span className="text-on-surface-variant/50 font-normal text-xl sm:text-2xl">({eventCount})</span>
+            Mis Eventos <span className="text-on-surface-variant/80 font-normal text-xl sm:text-2xl">({eventCount})</span>
           </h1>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={user?.tier === 'free' ? 'neutral' : user?.tier === 'pro_plus' ? 'gold' : 'primary'} size="sm" icon={user?.tier === 'free' ? 'redeem' : 'auto_awesome'}>
               {user?.tier === 'free' ? 'Plan Gratis' : user?.tier === 'pro_plus' ? 'Pro Plus' : 'Plan Pro'}
             </Badge>
-            <span className="text-sm text-on-surface-variant/70">
+            <span className="text-sm text-on-surface-variant/80">
               Tus celebraciones, todas en un solo lugar.
             </span>
           </div>
@@ -343,8 +343,8 @@ export default function Dashboard() {
               </div>
               <div className="min-w-0">
                 <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{stat.value}</p>
-                <p className="text-xs text-on-surface-variant/70 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
-                <p className="text-xs text-on-surface-variant/70 mt-0.5">{stat.subtitle}</p>
+                <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
+                <p className="text-xs text-on-surface-variant/80 mt-0.5">{stat.subtitle}</p>
               </div>
             </div>
           ))}
@@ -358,7 +358,7 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-3xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>celebration</span>
             </div>
             <h2 className="text-2xl font-bold text-on-surface font-outfit tracking-tight">¿Qué evento quieres crear?</h2>
-            <p className="text-sm text-on-surface-variant/70 mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
+            <p className="text-sm text-on-surface-variant/80 mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
               {ONBOARDING_TYPES.map((type) => (
@@ -415,7 +415,7 @@ export default function Dashboard() {
 
                       <div className="space-y-3 mb-5">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-on-surface-variant/70 font-medium">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? <span className="ml-2 pl-2 border-l border-outline-variant/20">{event.photoCount} fotos</span> : ''}</span>
+                          <span className="text-on-surface-variant/80 font-medium">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? <span className="ml-2 pl-2 border-l border-outline-variant/20">{event.photoCount} fotos</span> : ''}</span>
                           <span className="font-bold text-sm" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full h-2.5 bg-surface-container-highest rounded-full overflow-hidden shadow-inner">
@@ -500,7 +500,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-bold text-on-surface font-outfit">Crear nuevo evento</h2>
           <button
             onClick={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-surface-variant hover:text-on-surface-variant rounded-full hover:bg-surface-container-high transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors"
             aria-label="Cerrar modal"
           >
             <span className="material-symbols-outlined">close</span>
@@ -608,7 +608,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 
       <div>
         <label htmlFor="title" className="block text-sm font-bold text-on-surface-variant mb-2">
-          Nombre del evento <span className="text-xs text-on-surface-variant/50">{formData.title.length}/100</span>
+          Nombre del evento <span className="text-xs text-on-surface-variant/80">{formData.title.length}/100</span>
         </label>
         <input
           id="title"

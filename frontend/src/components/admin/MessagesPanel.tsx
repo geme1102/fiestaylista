@@ -100,7 +100,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
       </div>
 
       {messages.length === 0 ? (
-        <div className="text-center py-6 text-sm text-on-surface-variant/60">
+        <div className="text-center py-6 text-sm text-on-surface-variant/80">
           <p className="mb-1">Todavía no hay mensajes</p>
           <p className="text-xs">Los invitados pueden escribir mensajes desde su vista del evento</p>
         </div>
@@ -113,7 +113,7 @@ export default function MessagesPanel({ eventId, refreshKey }: MessagesPanelProp
                   <span className="text-[10px] font-bold text-primary">{msg.authorName.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="text-xs font-bold text-on-surface">{msg.authorName}</span>
-                <span className="text-[10px] text-on-surface-variant/50 ml-auto mr-2">
+                <span className="text-[10px] text-on-surface-variant/80 ml-auto mr-2">
                   {new Date(msg.createdAt).toLocaleDateString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <button

@@ -206,7 +206,7 @@ export default function Onboarding() {
               autoCapitalize="words"
               enterKeyHint="done"
               onKeyDown={(e) => e.key === 'Enter' && handleFinish()}
-              className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-surface-variant transition-colors outline-none mb-8"
+              className="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-center font-display-lg text-headline-lg py-4 placeholder:text-on-surface-variant/50 transition-colors outline-none mb-8"
             />
 
             <textarea

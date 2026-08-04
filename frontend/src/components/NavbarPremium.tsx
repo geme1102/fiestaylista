@@ -20,7 +20,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
   return (
     <header
       data-testid="navbar"
-      className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 h-16 pt-safe ${
+      className={`sticky top-0 w-full z-50 crystal-nav border-b border-white/20 transition-all duration-300 h-safe ${
         scrolled ? 'shadow-md' : ''
       }`}
     >

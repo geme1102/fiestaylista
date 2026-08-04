@@ -476,7 +476,7 @@ export default function EventAdmin() {
             ⚠️
           </div>
           <p className="text-on-surface-variant font-semibold mb-2">Error al cargar el evento</p>
-          <p className="text-sm text-on-surface-variant/60 mb-6 max-w-md mx-auto">Revisa tu conexión e intenta de nuevo.</p>
+          <p className="text-sm text-on-surface-variant/80 mb-6 max-w-md mx-auto">Revisa tu conexión e intenta de nuevo.</p>
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => { setLoadError(false); setLoading(true); loadEvent(); }}

@@ -125,7 +125,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
           ))}
         </div>
       ) : messages.length === 0 ? (
-        <div className="text-center py-8 text-sm text-on-surface-variant/60">
+        <div className="text-center py-8 text-sm text-on-surface-variant/80">
           <p>Sé el primero en dejar un mensaje ✨</p>
         </div>
       ) : (
@@ -142,7 +142,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
                   <span className="text-[11px] font-bold text-primary">{msg.authorName.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="text-sm font-bold text-on-surface">{msg.authorName}</span>
-                <span className="text-[10px] text-on-surface-variant/50 ml-auto">
+                <span className="text-[10px] text-on-surface-variant/80 ml-auto">
                   {new Date(msg.createdAt).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}
                 </span>
               </div>

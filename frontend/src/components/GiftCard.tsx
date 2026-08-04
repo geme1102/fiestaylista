@@ -177,7 +177,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           <h4 className="text-base sm:text-lg font-extrabold text-on-surface mt-2 tracking-tight group-hover:text-primary transition-colors capitalize">
             {gift.name}
           </h4>
-          <p className="text-on-surface-variant/70 text-xs font-semibold leading-normal mt-0.5">
+          <p className="text-on-surface-variant/80 text-xs font-semibold leading-normal mt-0.5">
             Set de regalo ideal para {category.label.toLowerCase()}.
           </p>
         </div>
@@ -229,7 +229,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       {/* Group Gift: Claims list */}
       {isGroupGift && claims.length > 0 && (
         <div className="mt-4 space-y-1.5">
-          <p className="text-[11px] font-bold text-on-surface-variant/60 uppercase tracking-wider flex items-center gap-1">
+          <p className="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider flex items-center gap-1">
             <span className="material-symbols-outlined text-sm">group</span>
             {claims.length} {claims.length === 1 ? 'persona' : 'personas'} participan
           </p>
