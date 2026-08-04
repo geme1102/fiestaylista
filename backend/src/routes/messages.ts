@@ -40,7 +40,8 @@ router.get('/events/:eventId/messages', validateUuidParam('eventId'), asyncHandl
   if (!event) throw new NotFoundError('Evento no encontrado o inactivo');
 
   const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200);
-  const cursor = typeof req.query.cursor === 'string' ? new Date(req.query.cursor) : null;
+  const cursorRaw = typeof req.query.cursor === 'string' ? req.query.cursor : null;
+  const cursor = cursorRaw && !Number.isNaN(Date.parse(cursorRaw)) ? new Date(cursorRaw) : null;
 
   const conditions: (ReturnType<typeof eq> | ReturnType<typeof lt> | SQL)[] = [eq(messages.eventId, eventId)];
   if (cursor) {

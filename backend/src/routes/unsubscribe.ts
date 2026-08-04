@@ -1,13 +1,27 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { db } from '../db/index.js';
 import { emailSuppressions } from '../db/schema.js';
 import { config } from '../config.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { createLimiter } from '../middleware/rateLimit.js';
 
 const log = createModuleLogger('Unsubscribe');
 const router = Router();
+
+const unsubscribeLimiter = createLimiter({ prefix: 'unsubscribe', max: 10, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
+
+function safeHmacEqual(received: string, expected: string): boolean {
+  try {
+    const a = Buffer.from(received, 'hex');
+    const b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || a.length === 0) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
 
 function recoverEmailFromToken(token: string): string | null {
   try {
@@ -15,15 +29,15 @@ function recoverEmailFromToken(token: string): string | null {
     if (parts.length !== 2) return null;
     const [hmacFragment, emailB64] = parts;
     const email = Buffer.from(emailB64, 'base64url').toString('utf-8');
-    const expectedHmac = createHmac('sha256', email).update(config.JWT_SECRET).digest('hex').slice(0, 16);
-    if (hmacFragment !== expectedHmac) return null;
+    const expectedHmac = createHmac('sha256', email).update(config.JWT_SECRET).digest('hex');
+    if (!safeHmacEqual(hmacFragment, expectedHmac)) return null;
     return email;
   } catch {
     return null;
   }
 }
 
-router.get('/unsubscribe', (req: Request, res: Response) => {
+router.get('/unsubscribe', unsubscribeLimiter, (req: Request, res: Response) => {
   const token = typeof req.query.token === 'string' ? req.query.token : null;
   if (token) {
     const email = recoverEmailFromToken(token);
@@ -60,7 +74,7 @@ router.get('/unsubscribe', (req: Request, res: Response) => {
   `);
 });
 
-router.post('/unsubscribe', async (req: Request, res: Response) => {
+router.post('/unsubscribe', unsubscribeLimiter, async (req: Request, res: Response) => {
   const token = typeof req.query.token === 'string' ? req.query.token : null;
   if (!token) {
     // Sin token: ignorar (no se puede identificar el email)

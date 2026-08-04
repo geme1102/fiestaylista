@@ -39,7 +39,8 @@ function verifySvixSignature(req: Request, rawBody: string): { valid: boolean; e
   }
 
   const signedContent = `${svixId}.${svixTimestamp}.${rawBody}`;
-  const expectedSig = createHmac('sha256', Buffer.from(secret.split('_')[1] || secret, 'base64'))
+  const rawSecret = secret.startsWith('whsec_') ? secret.slice('whsec_'.length) : secret;
+  const expectedSig = createHmac('sha256', Buffer.from(rawSecret, 'base64'))
     .update(signedContent)
     .digest('base64');
 

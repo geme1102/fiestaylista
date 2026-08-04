@@ -6,7 +6,22 @@ const isDev = config.NODE_ENV !== 'production';
 export const logger = pino({
   level: isDev ? 'debug' : 'info',
   redact: {
-    paths: ['password', '*token', '*secret', '*key', '*apiKey', '*accessToken', 'authorization', 'cookie', 'set-cookie', 'payerEmail', 'hostPhone', 'bankPhone'],
+    paths: [
+      'password', '*.password', '*.*.password',
+      'token', '*.token', '*.*.token',
+      'refreshToken', '*.refreshToken', '*.*.refreshToken',
+      'accessToken', '*.accessToken', '*.*.accessToken',
+      'resetToken', '*.resetToken', '*.*.resetToken',
+      'secret', '*.secret', '*.*.secret',
+      'key', '*.key', '*.*.key',
+      'apiKey', '*.apiKey', '*.*.apiKey',
+      'authorization', 'cookie', 'set-cookie',
+      'email', '*.email', '*.*.email',
+      'to', '*.to', '*.*.to',
+      'payerEmail', '*.payerEmail', '*.*.payerEmail',
+      'hostPhone', '*.hostPhone', '*.*.hostPhone',
+      'bankPhone', '*.bankPhone', '*.*.bankPhone',
+    ],
     censor: '[REDACTED]',
   },
   ...(isDev

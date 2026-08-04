@@ -5,11 +5,11 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
-import { apiLimiter, webhookLimiter } from './middleware/rateLimit.js';
+import { apiLimiter, webhookLimiter, createLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/error.js';
 import { cloudflareIP } from './middleware/cloudflare.js';
-import { isCloudflareIP, isPrivateOrLocal } from './middleware/cloudflare.js';
+import { isCloudflareIP } from './middleware/cloudflare.js';
 import type { AppRequest } from './types/index.js';
 import * as Sentry from '@sentry/node';
 import { initLoaders, isSentryEnabled, checkDatabase, checkCloudinary, checkMercadoPago, checkResend } from './loaders/index.js';
@@ -37,17 +37,17 @@ export function createApp() {
   const app = express();
 
   app.use(compression({ threshold: 512, level: 6 }));
-  // trust proxy function: only trust immediate hop if it's a known Cloudflare IP
-  // This prevents X-Forwarded-For spoofing when client sends fake headers
-  app.set('trust proxy', (ip: string) => isCloudflareIP(ip) || !isPrivateOrLocal(ip));
+  // trust proxy: solo confiar saltos provenientes de IPs de Cloudflare.
+  // Como el dominio no está proxyado (Cloudflare solo provee Turnstile), el
+  // socket en producción es la IP pública directa del cliente: confiar en toda
+  // la cadena X-Forwarded-For permitiría spoofear req.ip y anular los
+  // rate limiters keyed-by-IP.
+  app.set('trust proxy', (ip: string) => isCloudflareIP(ip));
 
   // HTTP→HTTPS redirect en producción (defense-in-depth; Railway termina TLS)
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (config.NODE_ENV === 'production' && req.protocol === 'http' && req.path !== '/health') {
-      const safeHost = req.hostname && req.hostname !== 'unknown'
-        ? req.hostname
-        : new URL(config.BACKEND_URL).hostname;
-      res.redirect(301, `https://${safeHost}${req.originalUrl}`);
+      res.redirect(301, `https://${new URL(config.BACKEND_URL).hostname}${req.originalUrl}`);
       return;
     }
     next();
@@ -126,10 +126,10 @@ export function createApp() {
   app.use('/api/webhooks', webhookLimiter, webhooksRouter);
   app.use('/api/webhooks', webhookLimiter, resendWebhookRouter);
 
-  app.post('/api/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json'], limit: '64kb' }), (req, res) => {
+  app.post('/api/csp-report', createLimiter({ prefix: 'csp', max: 10, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }), express.json({ type: ['application/csp-report', 'application/reports+json'], limit: '64kb' }), (req, res) => {
     const report = req.body?.['csp-report'] ?? req.body;
     if (config.NODE_ENV !== 'test' && report) {
-      console.warn('[CSP]', report?.['violated-directive'] ?? 'unknown', report?.['blocked-uri'] ?? '');
+      console.warn('[CSP]', String(report?.['violated-directive'] ?? 'unknown').slice(0, 120), String(report?.['blocked-uri'] ?? '').slice(0, 200));
     }
     res.status(204).end();
   });

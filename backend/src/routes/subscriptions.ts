@@ -27,17 +27,30 @@ const PLAN_IDS: Record<string, Record<string, string>> = {
   pro_plus: { month: config.PRO_PLUS_MONTHLY_PLAN_ID },
 };
 
+const FRONTEND_ORIGIN = (() => {
+  try { return new URL(config.FRONTEND_URL); } catch { return null; }
+})();
+
+function isFrontendUrl(u: string): boolean {
+  if (!FRONTEND_ORIGIN) return false;
+  try {
+    return new URL(u).hostname === FRONTEND_ORIGIN.hostname;
+  } catch {
+    return false;
+  }
+}
+
 const checkoutSchema = z.object({
   tier: z.enum(['pro', 'pro_plus'], {
     errorMap: () => ({ message: 'Plan inválido. Debe ser pro o pro_plus' }),
   }),
   interval: z.enum(['month', 'year']).default('month'),
   successUrl: z.string().url('URL de éxito inválida').optional().refine(
-    u => !u || u.startsWith(config.FRONTEND_URL),
+    u => !u || isFrontendUrl(u),
     { message: 'URL de éxito debe ser del dominio de la aplicación' },
   ),
   cancelUrl: z.string().url('URL de cancelación inválida').optional().refine(
-    u => !u || u.startsWith(config.FRONTEND_URL),
+    u => !u || isFrontendUrl(u),
     { message: 'URL de cancelación debe ser del dominio de la aplicación' },
   ),
 });

@@ -14,7 +14,7 @@ function keyGenerator(req: AuthRequest): string {
   return userId ? `user:${userId}:${ip}` : `ip:${ip}`;
 }
 
-function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string }) {
+export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string }) {
   const baseKeyGenerator = opts.keyGenerator ?? keyGenerator;
   return rateLimit({
     store: new PostgresStore(),

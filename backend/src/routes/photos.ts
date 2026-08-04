@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { eq, and, isNull } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { apiLimiter } from '../middleware/rateLimit.js';
+import { apiLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as photoService from '../services/photo.js';
 import { emitPhotoUploaded } from '../services/notifications.js';
@@ -97,7 +97,7 @@ const guestPhotoSchema = z.object({
   caption: z.string().max(500).optional(),
 });
 
-router.post('/guest-upload', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
+router.post('/guest-upload', guestUploadLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandlerWithValidation(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 

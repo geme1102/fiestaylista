@@ -41,9 +41,21 @@ async function readFileHeader(filePath: string): Promise<Buffer> {
   }
 }
 
+const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'mif1', 'msf1'];
+
+function isHeicBuffer(buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  const boxType = buffer.toString('ascii', 4, 8);
+  if (boxType !== 'ftyp') return false;
+  const majorBrand = buffer.toString('ascii', 8, 12);
+  return HEIC_BRANDS.includes(majorBrand);
+}
+
 function validateMagicBytes(buffer: Buffer, mimeType: string): { valid: boolean; detectedMime: string | null } {
   if (mimeType === 'image/heic' || mimeType === 'image/heif') {
-    return { valid: true, detectedMime: mimeType };
+    return isHeicBuffer(buffer)
+      ? { valid: true, detectedMime: 'image/heic' }
+      : { valid: false, detectedMime: null };
   }
 
   for (const entry of MAGIC_BYTES) {

@@ -92,11 +92,15 @@ export function useSSE({
       if (cancelledRef.current) return;
 
       try {
+        const tokenParam = `token=${encodeURIComponent(token)}`;
         if (sseUrl) {
-          es = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
+          // Defensa en profundidad: solo aceptar protocolo https (o http en dev local)
+          const parsed = new URL(sseUrl);
+          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('URL SSE inválida');
+          es = new EventSource(`${sseUrl}?${tokenParam}`);
         } else {
           const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
-          es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?token=${encodeURIComponent(token)}`);
+          es = new EventSource(`${baseUrl}/api/events/${eventId}/gifts/subscribe?${tokenParam}`);
         }
       } catch (err) {
         reportError(err, { source: 'useSSE-EventSource' });

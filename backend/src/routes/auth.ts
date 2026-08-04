@@ -183,6 +183,12 @@ router.patch('/welcome', requireAuth, apiLimiter, asyncHandler(async (req: AuthR
 }));
 
 router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+  // CSRF defense: exige header custom (los POST cross-site de navegadores no
+  // pueden enviarlo sin pasar por CORS preflight, y el allowlist no lo incluye)
+  if (req.headers['x-logout-request'] !== 'true') {
+    res.status(400).json({ error: 'Header de logout requerido' });
+    return;
+  }
   const isProduction = config.NODE_ENV === 'production';
   const sameSite = resolveSameSite(req);
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', {

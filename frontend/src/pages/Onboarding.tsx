@@ -8,11 +8,19 @@ import { type EventType } from '../types';
 import { showToast } from '../hooks/useToast';
 
 const STORAGE_KEY = 'fy_onboarding_wizard';
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
 function loadSavedState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    // Descartar drafts viejos (>24h) para no persistir datos del evento
+    if (typeof parsed?.savedAt === 'number' && Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {}
   return null;
 }
@@ -54,7 +62,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, eventType, title, eventNote }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, eventType, title, eventNote, savedAt: Date.now() }));
     } catch {}
   }, [step, eventType, title, eventNote]);
 

@@ -27,11 +27,13 @@ describe('ShareButtons', () => {
 
     expect(open).toHaveBeenCalledWith(
       expect.stringContaining('https://wa.me/?text='),
-      '_blank'
+      '_blank',
+      'noopener'
     );
     expect(open).toHaveBeenCalledWith(
       expect.stringContaining(encodeURIComponent('https://fiestaylista.com/e/mi-evento')),
-      '_blank'
+      '_blank',
+      'noopener'
     );
   });
 

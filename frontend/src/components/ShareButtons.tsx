@@ -48,7 +48,7 @@ const ShareButtons = memo(function ShareButtons({ slug, title, hostName, eventTy
       <button
         onClick={() => {
           onShared?.();
-          window.open(whatsappUrl, '_blank');
+          window.open(whatsappUrl, '_blank', 'noopener');
         }}
         className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#22c55e] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#22c55e]/20"
       >

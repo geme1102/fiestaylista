@@ -32,14 +32,26 @@ export default function WebviewBanner() {
   const appName = browser ? browserLabel[browser] ?? 'el navegador actual' : 'el navegador actual';
 
   const handleOpen = () => {
+    // Limpia query params sensibles (tokens de verify/reset) antes de
+    // copiar al portapapeles o abrir en el navegador externo
     const currentUrl = window.location.href;
+    let cleanUrl = currentUrl;
+    try {
+      const url = new URL(currentUrl);
+      for (const key of ['token', 'reset_token', 'verification_token', 'message']) {
+        if (url.searchParams.has(key)) url.searchParams.delete(key);
+      }
+      cleanUrl = url.toString();
+    } catch {
+      /* URL inválida — usar la original */
+    }
     try {
       sessionStorage.setItem(DISMISS_KEY, '1');
     } catch {
       /* noop */
     }
-    navigator.clipboard?.writeText(currentUrl).catch(() => {});
-    window.location.href = `${hint.href}${currentUrl}`;
+    navigator.clipboard?.writeText(cleanUrl).catch(() => {});
+    window.location.href = `${hint.href}${cleanUrl}`;
   };
 
   const handleDismiss = () => {

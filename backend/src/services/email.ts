@@ -71,7 +71,7 @@ export async function sendEmail(
     const headers: Record<string, string> = {};
     if (allowsUnsubscribe) {
       const emailB64 = Buffer.from(options.to).toString('base64url');
-      const hmac = createHmac('sha256', options.to).update(config.JWT_SECRET).digest('hex').slice(0, 16);
+      const hmac = createHmac('sha256', options.to).update(config.JWT_SECRET).digest('hex');
       const token = `${hmac}.${emailB64}`;
       headers['List-Unsubscribe'] = `${config.FRONTEND_URL}/unsubscribe?token=${token}`;
       headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';

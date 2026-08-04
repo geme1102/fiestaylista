@@ -133,6 +133,7 @@ vi.mock('../middleware/auth.js', () => ({
 vi.mock('../middleware/rateLimit.js', () => {
   const noop = (_req: Request, _res: Response, next: NextFunction) => next();
   return {
+    createLimiter: () => noop,
     authLimiter: noop,
     refreshLimiter: noop,
     resetLimiter: noop,
@@ -471,6 +472,7 @@ describe('Auth Routes', () => {
 
     const res = await request(app)
       .post('/api/auth/logout')
+      .set('X-Logout-Request', 'true')
       .set('Authorization', 'Bearer token');
 
     expect(res.status).toBe(200);
@@ -479,10 +481,17 @@ describe('Auth Routes', () => {
   });
 
   it('POST /api/auth/logout - works without token', async () => {
-    const res = await request(app).post('/api/auth/logout');
+    const res = await request(app).post('/api/auth/logout').set('X-Logout-Request', 'true');
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(mockAuthService.revokeAllUserTokens).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/auth/logout - rechaza sin header CSRF', async () => {
+    const res = await request(app).post('/api/auth/logout');
+
+    expect(res.status).toBe(400);
     expect(mockAuthService.revokeAllUserTokens).not.toHaveBeenCalled();
   });
 

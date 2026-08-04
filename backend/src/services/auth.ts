@@ -67,7 +67,7 @@ export async function register(
       .limit(1);
 
     if (existing) {
-      throw new ConflictError('El correo electrónico ya está registrado');
+      throw new ConflictError('No se pudo completar el registro. Intenta de nuevo más tarde');
     }
 
     const [newUser] = await tx

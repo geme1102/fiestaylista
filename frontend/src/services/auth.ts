@@ -10,7 +10,7 @@ export function login(email: string, password: string, turnstileToken?: string):
 }
 
 export function logout(): Promise<{ success: boolean }> {
-  return apiClient.post<{ success: boolean }>('/api/auth/logout', undefined, { skipAuthRedirect: true });
+  return apiClient.post<{ success: boolean }>('/api/auth/logout', undefined, { skipAuthRedirect: true, headers: { 'X-Logout-Request': 'true' } });
 }
 
 export function getMe(): Promise<{ user: User | null; isGuest?: boolean }> {

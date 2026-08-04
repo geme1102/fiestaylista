@@ -30,7 +30,8 @@ router.get('/public/stats', publicStatsLimiter, cacheControl(300), asyncHandler(
 
 router.get('/public/events', publicStatsLimiter, cacheControl(300), asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
-  const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : null;
+  const cursorRaw = typeof req.query.cursor === 'string' ? req.query.cursor : null;
+  const cursor = cursorRaw && !Number.isNaN(Date.parse(cursorRaw)) ? cursorRaw : null;
 
   const conditions: SQL[] = [
     sql`${events.isActive} = true`,

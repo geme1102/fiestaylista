@@ -26,13 +26,17 @@ window.addEventListener('unhandledrejection', (event) => {
     if (isThirdParty) return;
   }
 
-  console.warn('[global] Unhandled rejection:', reason);
+  if (import.meta.env.DEV) {
+    console.warn('[global] Unhandled rejection:', reason);
+  }
   toast.error('Ocurrió un error inesperado. Recarga la página si el problema persiste.');
 });
 
 window.onerror = (_message, _source, _lineno, _colno, error) => {
   if (!error) return;
-  console.warn('[global] Unhandled error:', error);
+  if (import.meta.env.DEV) {
+    console.warn('[global] Unhandled error:', error);
+  }
   toast.error('Ocurrió un error inesperado. Recarga la página si el problema persiste.');
 };
 

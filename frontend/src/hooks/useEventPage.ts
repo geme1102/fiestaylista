@@ -30,7 +30,7 @@ export function useEventPage() {
   const [guestName, setGuestName] = useState(() => {
     const fromUrl = toParam ? safeDecode(toParam).replace(/_/g, ' ') : '';
     if (fromUrl) return fromUrl;
-    try { return localStorage.getItem(`guestName:${slug}`) ?? ''; } catch { return ''; }
+    try { return sessionStorage.getItem(`guestName:${slug}`) ?? ''; } catch { return ''; }
   });
   const [shaking, setShaking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -64,7 +64,7 @@ export function useEventPage() {
 
   useLayoutEffect(() => {
     if (guestName && slugRef.current) {
-      try { localStorage.setItem(`guestName:${slugRef.current}`, guestName); } catch {}
+      try { sessionStorage.setItem(`guestName:${slugRef.current}`, guestName); } catch {}
     }
   }, [guestName]);
 
@@ -303,7 +303,7 @@ export function useEventPage() {
       try {
         const safe = new URL(url);
         if (safe.protocol === 'https:' || safe.protocol === 'http:') {
-          window.open(url, '_blank');
+          window.open(url, '_blank', 'noopener');
         }
       } catch {
         /* invalid URL — ignore */
