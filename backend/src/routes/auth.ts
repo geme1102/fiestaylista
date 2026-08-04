@@ -44,7 +44,7 @@ function setRefreshCookie(req: Request, res: Response, refreshToken: string): vo
     httpOnly: true,
     secure: isProduction,
     sameSite,
-    path: '/api/auth/refresh',
+    path: '/api/auth',
     maxAge: REFRESH_MAX_AGE,
   });
   res.cookie('hasRefresh', '1', {
@@ -186,7 +186,7 @@ router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRe
   const isProduction = config.NODE_ENV === 'production';
   const sameSite = resolveSameSite(req);
   res.clearCookie(isProduction ? '__Secure-refreshToken' : 'refreshToken', {
-    path: '/api/auth/refresh',
+    path: '/api/auth',
     secure: isProduction,
     sameSite,
   });

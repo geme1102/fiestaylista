@@ -177,11 +177,18 @@ router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next:
 
 router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (config.TURNSTILE_SECRET_KEY) {
-      const token = typeof req.query.turnstileToken === 'string' ? req.query.turnstileToken : undefined;
-      if (token) {
-        await verifyTurnstileToken(token, req.ip);
+    if (!config.TURNSTILE_SECRET_KEY) {
+      if (config.NODE_ENV !== 'production' && config.FRONTEND_URL?.includes('localhost')) {
+        // Bypass de Turnstile solo en entornos no productivos locales
+      } else {
+        throw new ValidationError('Turnstile no está configurado');
       }
+    } else {
+      const token = typeof req.headers['x-turnstile-token'] === 'string' ? req.headers['x-turnstile-token'] : undefined;
+      if (!token) {
+        throw new ValidationError('Token de seguridad requerido');
+      }
+      await verifyTurnstileToken(token, req.ip);
     }
   } catch (err) {
     return next(err);
@@ -205,6 +212,10 @@ router.post('/guest-upload', guestUploadLimiter, async (req: Request, res: Respo
       const eventId = req.body?.eventId;
       if (typeof eventId !== 'string' || !eventId) {
         throw new ValidationError('ID del evento requerido');
+      }
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_RE.test(eventId)) {
+        throw new ValidationError('ID del evento inválido');
       }
 
       const [evt] = await db

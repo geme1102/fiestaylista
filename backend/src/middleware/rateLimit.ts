@@ -57,6 +57,8 @@ export const webhookLimiter = createLimiter({ prefix: 'webhook', max: config.WEB
 
 export const publicStatsLimiter = createLimiter({ prefix: 'public-stats', max: 10, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
+export const phoneRevealLimiter = createLimiter({ prefix: 'phone-reveal', max: 5, message: 'Demasiadas solicitudes del teléfono. Intenta de nuevo en un minuto.' });
+
 export const rsvpLimiter = createLimiter({ prefix: 'rsvp', max: 5, message: 'Demasiados RSVP. Intenta de nuevo en un minuto.' });
 
 export const createEventLimiter = createLimiter({ prefix: 'create-event', max: 10, message: 'Demasiados eventos creados. Intenta de nuevo en un minuto.' });

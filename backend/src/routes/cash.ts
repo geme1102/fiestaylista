@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { eq, and, isNull } from 'drizzle-orm';
 
-import { contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
+import { contributeLimiter, phoneRevealLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as cashFundService from '../services/cashFund.js';
 import { getPromisedAmount } from '../services/cashFund.js';
@@ -130,9 +130,9 @@ router.post('/events/:eventId/cash-fund/:cashFundId/contributions/:contributionI
   }),
 );
 
-// apiLimiter: el reveal-phone expone el teléfono real (no enmascarado) con solo
-// Turnstile — el limiter actúa como fallback si el token se evade o se reutiliza.
-router.post('/events/:eventId/cash-fund/reveal-phone', apiLimiter, validateUuidParam('eventId'), verifyTurnstile, asyncHandler(async (req, res) => {
+// phoneRevealLimiter: el reveal-phone expone el teléfono real (no enmascarado) con solo
+// Turnstile — limiter dedicado bajo (5/min) como barrera de PII.
+router.post('/events/:eventId/cash-fund/reveal-phone', phoneRevealLimiter, validateUuidParam('eventId'), verifyTurnstile, asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) throw new ValidationError('ID del evento requerido');
 

@@ -74,6 +74,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
       const res = await fetch(uploadUrl, {
         method: 'POST',
+        headers: token ? { 'x-turnstile-token': token } : undefined,
         body: formData,
         signal: controller.signal,
       });
