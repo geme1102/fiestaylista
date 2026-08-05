@@ -115,6 +115,20 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **H12**: 200ms delay entre llamadas MP API en `reconcileStuckSubscriptions`
 - **H13**: Webhook limiter default 300→600
 
+### Fase 5 — Eliminación de cuenta (UX)
+- `POST /delete-account` responde tras el borrado DB + cancelación MP (<2s) — antes esperaba el cleanup inline de Cloudinary (30-50s) contra el timeout del cliente de 10s → falsos errores "eliminación fallida"
+- Tabla `pending_cloudinary_deletes` (sin FK, sobrevive al DELETE users) + migración `pending_cloudinary_deletes_table`: los public_ids se encolan ahí y el cron `retryPendingCloudinaryDeletes` (lock `retry-pending-cloudinary-deletes`, backoff exponencial) los borra en background — mismo patrón que C2
+
+### Fase 6 — Defensa bot
+- `createLimiter` acepta `windowMs` configurable (default 60s, resto de limiters intactos)
+- Limiters de seguridad en ventana de 15 min alineada con `lockout.ts` (`WINDOW_MINUTES`): `authLimiter` 10, `resetLimiter` 5, `strictFallbackLimiter` 5 — antes 60s fijos = 300 intentos/hora por IP vs umbral de lockout de 20/15min
+
+### Fase 7 — Bajas (unsubscribe/email)
+- Correos críticos (`verification`, `password_reset`) ignoran `email_suppressions` — antes un email con bounce/complaint/baja no podía verificar su cuenta ni recuperar su contraseña (atrapado fuera)
+- Footer de baja y header `List-Unsubscribe` apuntan al HTML del backend (`BACKEND_URL/unsubscribe`) con token one-click por destinatario — antes apuntaban al SPA sin ruta `/unsubscribe` (fallback → NotFound: la baja por email no funcionaba)
+- `POST /unsubscribe` responde HTML de confirmación (los clientes RFC 8058 solo requieren el 200 OK)
+- Lógica HMAC del token compartida en `utils/unsubscribeToken.ts` (`createUnsubscribeToken`/`recoverEmailFromToken`) — estaba duplicada en `email.ts` y `unsubscribe.ts`
+
 ### Counters
-- Backend: 231 tests (antes 215) | typecheck 0 errors | lint 0 errors
+- Backend: 341 tests (antes 231) | typecheck 0 errors | lint 0 errors
 - Frontend: 340 tests | typecheck 0 errors | lint 0 errors
