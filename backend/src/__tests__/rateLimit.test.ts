@@ -4,6 +4,16 @@ vi.mock('express-rate-limit', () => ({
   default: vi.fn(),
 }));
 
+// El config real hace process.exit(1) en CI si falta DATABASE_URL — se mockea
+// con solo los campos que usa el middleware de rate limit.
+vi.mock('../config.js', () => ({
+  config: {
+    API_RATE_LIMIT: 100,
+    PAYMENT_RATE_LIMIT: 10,
+    WEBHOOK_RATE_LIMIT: 600,
+  },
+}));
+
 vi.mock('../middleware/rateLimitStore.js', () => ({
   PostgresStore: vi.fn(),
 }));
