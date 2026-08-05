@@ -1,9 +1,9 @@
 import { Resend } from 'resend';
 import { eq } from 'drizzle-orm';
-import { createHmac } from 'node:crypto';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
 import { emailSuppressions } from '../db/schema.js';
+import { createUnsubscribeToken } from '../utils/unsubscribeToken.js';
 
 import { createModuleLogger } from '../utils/logger.js';
 import { stripHtmlToText, escapeHtml } from '../utils/sanitize.js';
@@ -28,17 +28,25 @@ function getBaseUrl(): string {
 
 const FOOTER_END = '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />\n        <p style="color:#9ca3af;font-size:12px;text-align:center">— El equipo de Fiesta y Lista</p>';
 
-const UNSUBSCRIBE_FOOTER = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+// F7: el link del footer lleva el token one-click del destinatario (antes
+// apuntaba a /unsubscribe sin token: el usuario aterrizaba en la página sin
+// token y no podía darse de baja desde el correo). Apunta al HTML del BACKEND
+// (el frontend SPA no tiene ruta /unsubscribe — caería en el 404).
+function buildUnsubscribeFooter(email: string): string {
+  const token = createUnsubscribeToken(email);
+  const url = `${config.BACKEND_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
+  return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">
           <tr>
             <td style="text-align:center;color:#9ca3af;font-size:12px">
               <p style="margin:0 0 8px">— El equipo de Fiesta y Lista</p>
               <p style="margin:0">
-                <a href="${config.FRONTEND_URL}/unsubscribe" style="color:#9ca3af;text-decoration:underline">Cancelar suscripción</a>
+                <a href="${url}" style="color:#9ca3af;text-decoration:underline">Cancelar suscripción</a>
               </p>
             </td>
           </tr>
         </table>`;
+}
 
 function emailTypeAllowsUnsubscribe(type: string): boolean {
   const transactional = ['verification', 'password_reset'];
@@ -52,28 +60,33 @@ export async function sendEmail(
     throw new Error('Email service not configured: RESEND_API_KEY is missing');
   }
 
-  const [suppressed] = await db
-    .select({ id: emailSuppressions.id })
-    .from(emailSuppressions)
-    .where(eq(emailSuppressions.email, options.to))
-    .limit(1);
-  if (suppressed) {
-    log.info({ to: options.to }, 'Email suprimido — no enviado (bounce/complaint previo)');
-    return;
+  const allowsUnsubscribe = options.emailType ? emailTypeAllowsUnsubscribe(options.emailType) : false;
+
+  // F7: la supresión (bounce/complaint/one-click) solo aplica a correos
+  // no-críticos. verification y password_reset SIEMPRE se envían — antes un
+  // email suprimido no podía verificar su cuenta ni recuperar su contraseña
+  // (atrapado fuera de su cuenta para siempre).
+  if (allowsUnsubscribe) {
+    const [suppressed] = await db
+      .select({ id: emailSuppressions.id })
+      .from(emailSuppressions)
+      .where(eq(emailSuppressions.email, options.to))
+      .limit(1);
+    if (suppressed) {
+      log.info({ to: options.to }, 'Email suprimido — no enviado (bounce/complaint/unsubscribe previo)');
+      return;
+    }
   }
 
   try {
-    const allowsUnsubscribe = options.emailType ? emailTypeAllowsUnsubscribe(options.emailType) : false;
     const htmlFinal = allowsUnsubscribe
-      ? options.html.replace(FOOTER_END, UNSUBSCRIBE_FOOTER)
+      ? options.html.replace(FOOTER_END, buildUnsubscribeFooter(options.to))
       : options.html;
 
     const headers: Record<string, string> = {};
     if (allowsUnsubscribe) {
-      const emailB64 = Buffer.from(options.to).toString('base64url');
-      const hmac = createHmac('sha256', options.to).update(config.JWT_SECRET).digest('hex');
-      const token = `${hmac}.${emailB64}`;
-      headers['List-Unsubscribe'] = `${config.FRONTEND_URL}/unsubscribe?token=${token}`;
+      const token = createUnsubscribeToken(options.to);
+      headers['List-Unsubscribe'] = `${config.BACKEND_URL}/unsubscribe?token=${token}`;
       headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
     }
 
