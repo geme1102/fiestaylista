@@ -14,11 +14,11 @@ function keyGenerator(req: AuthRequest): string {
   return userId ? `user:${userId}:${ip}` : `ip:${ip}`;
 }
 
-export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string }) {
+export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string; windowMs?: number }) {
   const baseKeyGenerator = opts.keyGenerator ?? keyGenerator;
   return rateLimit({
     store: new PostgresStore(),
-    windowMs: 60 * 1000,
+    windowMs: opts.windowMs ?? 60 * 1000,
     max: opts.max,
     standardHeaders: true,
     legacyHeaders: false,
@@ -27,7 +27,12 @@ export function createLimiter(opts: { prefix: string; max: number; message: stri
   });
 }
 
-export const authLimiter = createLimiter({ prefix: 'auth', max: 5, message: 'Demasiados intentos. Intenta de nuevo en un minuto.' });
+// F6 (auditoría): los limiters de seguridad usan ventana de 15 min, alineada
+// con el lockout de lockout.ts (WINDOW_MINUTES = 15) — antes todos usaban la
+// ventana fija de 60s (300 intentos/hora por IP vs umbral de lockout de 20).
+const AUTH_WINDOW_MS = 15 * 60 * 1000;
+
+export const authLimiter = createLimiter({ prefix: 'auth', max: 10, windowMs: AUTH_WINDOW_MS, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const apiLimiter = createLimiter({ prefix: 'api', max: config.API_RATE_LIMIT, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
@@ -35,7 +40,7 @@ export const uploadLimiter = createLimiter({ prefix: 'upload', max: 10, message:
 
 export const guestUploadLimiter = createLimiter({ prefix: 'guest-upload', max: 10, message: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' });
 
-export const resetLimiter = createLimiter({ prefix: 'reset', max: 3, message: 'Demasiados intentos. Intenta de nuevo en un minuto.' });
+export const resetLimiter = createLimiter({ prefix: 'reset', max: 5, windowMs: AUTH_WINDOW_MS, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const giftLimiter = createLimiter({ prefix: 'gift', max: 30, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
@@ -68,4 +73,4 @@ const strictKeyGenerator = (req: AuthRequest) => {
   return `turnstile-fallback:${ip}`;
 };
 
-export const strictFallbackLimiter = createLimiter({ prefix: 'strict', max: 3, keyGenerator: strictKeyGenerator, message: 'Demasiados intentos sin verificación de seguridad. Intenta de nuevo en un minuto.' });
+export const strictFallbackLimiter = createLimiter({ prefix: 'strict', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: strictKeyGenerator, message: 'Demasiados intentos sin verificación de seguridad. Intenta de nuevo en 15 minutos.' });
