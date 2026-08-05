@@ -3,7 +3,7 @@ import { db } from './db/index.js';
 import { failedWebhooks, refreshTokens, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
-import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations, retryPendingMpCancellations } from './services/subscription-cron.js';
+import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations, retryPendingMpCancellations, retryPendingCloudinaryDeletes } from './services/subscription-cron.js';
 import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import * as mercadopagoService from './services/mercadopago.js';
@@ -231,6 +231,21 @@ export function startCronJobs(): void {
     });
   };
 
+  // F5: borrar assets de Cloudinary encolados durante la eliminación de cuentas
+  // (el endpoint ya no espera el cleanup inline: timeout del cliente de 10s).
+  const retryCloudinaryDeleteJob = async () => {
+    await runWithLock('retry-pending-cloudinary-deletes', async () => {
+      try {
+        const resolved = await retryPendingCloudinaryDeletes();
+        if (resolved > 0) {
+          log.info(`Borrados Cloudinary pendientes resueltos: ${resolved}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error reintentando borrados Cloudinary pendientes:');
+      }
+    });
+  };
+
   const cleanupExpiredWebhooks = async () => {
     try {
       const result = await db
@@ -322,6 +337,7 @@ export function startCronJobs(): void {
   cancelRetryInterval = setInterval(() => {
     retryPendingCancelJob().catch((err) => log.error({ err }, 'retryPendingCancelJob falló'));
     retryPendingMpCancelJob().catch((err) => log.error({ err }, 'retryPendingMpCancelJob falló'));
+    retryCloudinaryDeleteJob().catch((err) => log.error({ err }, 'retryCloudinaryDeleteJob falló'));
   }, CANCEL_RETRY_MS);
 
   log.info('Jobs iniciados correctamente');

@@ -1,6 +1,6 @@
 import { eq, and, lte, inArray, sql, isNull, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events, photos, emailTracking, pendingMpCancellations } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, photos, emailTracking, pendingMpCancellations, pendingCloudinaryDeletes } from '../db/schema.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
@@ -98,6 +98,51 @@ export async function retryPendingMpCancellations(): Promise<number> {
 
   if (pending.length > 0) {
     log.info({ total: pending.length, resolved }, 'Cancelaciones MP pendientes procesadas');
+  }
+  return resolved;
+}
+
+// F5: borrar assets de Cloudinary encolados durante la eliminación de una
+// cuenta. La ruta respondía en 30-50s haciendo el cleanup inline (timeout del
+// cliente de 10s → falsos errores), así que ahora la intención vive en
+// pending_cloudinary_deletes (sin FK a users, sobrevive al DELETE). Se procesa
+// con el mismo backoff exponencial que retryPendingMpCancellations.
+export async function retryPendingCloudinaryDeletes(): Promise<number> {
+  const pending = await db
+    .select()
+    .from(pendingCloudinaryDeletes)
+    .where(sql`${pendingCloudinaryDeletes.nextRetryAt} IS NULL OR ${pendingCloudinaryDeletes.nextRetryAt} <= NOW()`)
+    .limit(20);
+
+  let resolved = 0;
+  for (const pendingDelete of pending) {
+    try {
+      const deleted = await destroyWithRetry(pendingDelete.publicId);
+      if (deleted) {
+        await db
+          .delete(pendingCloudinaryDeletes)
+          .where(eq(pendingCloudinaryDeletes.id, pendingDelete.id));
+        resolved++;
+      } else {
+        throw new Error('Cloudinary no confirmó el borrado');
+      }
+    } catch (err) {
+      const backoffMinutes = Math.pow(2, Math.min(pendingDelete.attempts + 1, 6));
+      await db
+        .update(pendingCloudinaryDeletes)
+        .set({
+          attempts: pendingDelete.attempts + 1,
+          lastAttemptAt: new Date(),
+          nextRetryAt: new Date(Date.now() + backoffMinutes * 60 * 1000),
+        })
+        .where(eq(pendingCloudinaryDeletes.id, pendingDelete.id));
+      log.warn({ err, userId: pendingDelete.userId, publicId: pendingDelete.publicId }, 'Borrado Cloudinary pendiente falló — se intentará de nuevo');
+    }
+    await new Promise(resolve => setImmediate(resolve));
+  }
+
+  if (pending.length > 0) {
+    log.info({ total: pending.length, resolved }, 'Borrados Cloudinary pendientes procesados');
   }
   return resolved;
 }

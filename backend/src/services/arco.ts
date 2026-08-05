@@ -1,8 +1,8 @@
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens, pendingMpCancellations } from '../db/schema.js';
+import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens, pendingMpCancellations, pendingCloudinaryDeletes } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
-import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
+import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
 import { cancelPreapproval, searchPreapprovalsByRefAll, retryable } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
@@ -156,16 +156,21 @@ export async function deleteUserAccount(userId: string) {
     }
   }
 
-  // 3) Cloudinary best-effort (huérfanos posibles, aceptado)
-  const CONCURRENCY = 5;
-  for (let i = 0; i < cloudinaryDeletes.length; i += CONCURRENCY) {
-    const batch = cloudinaryDeletes.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(
-      batch.map(publicId => destroyWithRetry(publicId)),
-    );
-    const failed = results.filter(r => !r).length;
-    if (failed > 0) {
-      log.error({ failed, total: batch.length, userId }, 'Error eliminando imágenes de Cloudinary: algunos assets pueden quedar huérfanos');
+  // 3) Cloudinary en BACKGROUND con reintento persistente: F5 — el borrado
+  //    inline hacía que el endpoint respondiera en 30-50s (timeout del cliente
+  //    de 10s → falsos errores de "eliminación fallida"). Ahora los public_ids
+  //    se encolan en pending_cloudinary_deletes y el cron
+  //    retryPendingCloudinaryDeletes los borra con backoff. Best-effort: si el
+  //    insert falla quedan huérfanos (aceptado, mismo compromiso que antes).
+  if (cloudinaryDeletes.length > 0) {
+    try {
+      await db
+        .insert(pendingCloudinaryDeletes)
+        .values(cloudinaryDeletes.map(publicId => ({ userId, publicId })))
+        .onConflictDoNothing();
+      log.info({ count: cloudinaryDeletes.length, userId }, 'Borrados de Cloudinary encolados para procesamiento en background');
+    } catch (err) {
+      log.error({ err, count: cloudinaryDeletes.length, userId }, 'Error encolando borrados de Cloudinary — algunos assets pueden quedar huérfanos');
     }
   }
 }

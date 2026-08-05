@@ -762,6 +762,26 @@ export const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE INDEX IF NOT EXISTS "pending_mp_cancellations_next_retry_at_idx" ON "pending_mp_cancellations"("next_retry_at")`,
     ],
   },
+  // F5 (auditoría): borrados de Cloudinary pendientes de cuentas eliminadas.
+  // El endpoint de eliminación respondía en 30-50s haciendo el cleanup inline
+  // (timeout del cliente de 10s → falsos errores). Ahora la ruta responde tras
+  // el borrado de DB y la cancelación MP, y encola aquí los public_ids; el cron
+  // retryPendingCloudinaryDeletes los borra con reintentos (backoff).
+  {
+    name: 'pending_cloudinary_deletes_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "pending_cloudinary_deletes" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL,
+        "public_id" text NOT NULL UNIQUE,
+        "attempts" integer NOT NULL DEFAULT 0,
+        "last_attempt_at" timestamptz,
+        "next_retry_at" timestamptz,
+        "created_at" timestamptz NOT NULL DEFAULT now()
+      )`,
+      `CREATE INDEX IF NOT EXISTS "pending_cloudinary_deletes_next_retry_at_idx" ON "pending_cloudinary_deletes"("next_retry_at")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

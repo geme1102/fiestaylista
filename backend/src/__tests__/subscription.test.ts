@@ -51,6 +51,7 @@ vi.mock('../db/schema.js', () => ({
   users: {},
   events: {},
   pendingMpCancellations: {},
+  pendingCloudinaryDeletes: {},
 }));
 
 const mockMp = vi.hoisted(() => ({
@@ -60,6 +61,16 @@ const mockMp = vi.hoisted(() => ({
 }));
 
 vi.mock('../services/mercadopago.js', () => mockMp);
+
+// F5: solo el destroy de Cloudinary se mockea; las funciones puras (URL parsing)
+// siguen siendo las reales para no alterar los tests existentes de purge.
+vi.mock('../utils/cloudinary.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../utils/cloudinary.js')>();
+  return {
+    ...actual,
+    destroyWithRetry: vi.fn().mockResolvedValue(true),
+  };
+});
 
 import {
   cancelSubscription,
@@ -72,6 +83,7 @@ import {
   expireStaleSubscriptions,
   retryPendingCancellations,
   retryPendingMpCancellations,
+  retryPendingCloudinaryDeletes,
 } from '../services/subscription-cron.js';
 
 const mockSub = {
@@ -672,6 +684,90 @@ describe('retryPendingMpCancellations', () => {
     expect(upd.where).toHaveBeenCalled();
     const setArgs = upd.set.mock.calls[0][0] as any;
     expect(setArgs.nextRetryAt.getTime()).toBeGreaterThan(Date.now() + 7 * 60 * 1000);
+  });
+});
+
+describe('retryPendingCloudinaryDeletes', () => {
+  const pendingDelete = {
+    id: 'pd-1',
+    userId: 'user-1',
+    publicId: 'fiestaylista/events/photo-1',
+    attempts: 0,
+    lastAttemptAt: null,
+    nextRetryAt: null,
+    createdAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    const { destroyWithRetry } = await import('../utils/cloudinary.js');
+    vi.mocked(destroyWithRetry).mockResolvedValue(true);
+  });
+
+  it('F5: borra en Cloudinary y elimina la fila pendiente cuando el destroy tiene éxito', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([pendingDelete]),
+        }),
+      }),
+    } as any);
+    const del = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(db.delete).mockReturnValue({ where: del } as any);
+    const { destroyWithRetry } = await import('../utils/cloudinary.js');
+
+    const count = await retryPendingCloudinaryDeletes();
+
+    expect(count).toBe(1);
+    expect(destroyWithRetry).toHaveBeenCalledWith('fiestaylista/events/photo-1');
+    expect(del).toHaveBeenCalled();
+  });
+
+  it('F5: si Cloudinary no confirma el borrado (false), NO borra la fila y programa backoff', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([{ ...pendingDelete, attempts: 2 }]),
+        }),
+      }),
+    } as any);
+    const del = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(db.delete).mockReturnValue({ where: del } as any);
+    const upd = mockUpdateChain();
+    vi.mocked(db.update).mockImplementation(upd.update);
+    const { destroyWithRetry } = await import('../utils/cloudinary.js');
+    vi.mocked(destroyWithRetry).mockResolvedValue(false);
+
+    const count = await retryPendingCloudinaryDeletes();
+
+    expect(count).toBe(0);
+    expect(del).not.toHaveBeenCalled();
+    expect(upd.set).toHaveBeenCalledWith(expect.objectContaining({ attempts: 3 }));
+    const setArgs = upd.set.mock.calls[0][0] as any;
+    expect(setArgs.nextRetryAt.getTime()).toBeGreaterThan(Date.now() + 7 * 60 * 1000);
+  });
+
+  it('F5: si el destroy lanza, incrementa attempts y programa backoff (reintento persistente)', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([pendingDelete]),
+        }),
+      }),
+    } as any);
+    const upd = mockUpdateChain();
+    vi.mocked(db.update).mockImplementation(upd.update);
+    const { destroyWithRetry } = await import('../utils/cloudinary.js');
+    vi.mocked(destroyWithRetry).mockRejectedValueOnce(new Error('Cloudinary down'));
+
+    const count = await retryPendingCloudinaryDeletes();
+
+    expect(count).toBe(0);
+    expect(upd.set).toHaveBeenCalledWith(expect.objectContaining({ attempts: 1 }));
+    expect(upd.where).toHaveBeenCalled();
   });
 });
 

@@ -183,6 +183,20 @@ export const pendingMpCancellations = pgTable('pending_mp_cancellations', {
   nextRetryAtIdx: index('pending_mp_cancellations_next_retry_at_idx').on(table.nextRetryAt),
 }));
 
+export const pendingCloudinaryDeletes = pgTable('pending_cloudinary_deletes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Sin FK a users: la fila debe sobrevivir a la eliminación de la cuenta
+  // (el DELETE users se ejecuta antes de encolar el borrado de Cloudinary).
+  userId: uuid('user_id').notNull(),
+  publicId: text('public_id').notNull().unique(),
+  attempts: integer('attempts').notNull().default(0),
+  lastAttemptAt: timestamp('last_attempt_at', { mode: 'date', withTimezone: true }),
+  nextRetryAt: timestamp('next_retry_at', { mode: 'date', withTimezone: true }),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  nextRetryAtIdx: index('pending_cloudinary_deletes_next_retry_at_idx').on(table.nextRetryAt),
+}));
+
 export const platformFees = pgTable('platform_fees', {
   id: uuid('id').defaultRandom().primaryKey(),
   contributionId: uuid('contribution_id').notNull().references(() => cashContributions.id, { onDelete: 'cascade' }),

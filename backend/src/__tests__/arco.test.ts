@@ -23,6 +23,7 @@ vi.mock('../db/schema.js', () => ({
   arcoRequests: {},
   refreshTokens: {},
   pendingMpCancellations: {},
+  pendingCloudinaryDeletes: {},
 }));
 
 vi.mock('../utils/errors.js', () => ({
@@ -177,21 +178,49 @@ describe('deleteUserAccount', () => {
     expect(onConflictDoNothing).toHaveBeenCalled();
   });
 
-  it('C2: la eliminación de DB y el borrado de Cloudinary siguen funcionando con fotos', async () => {
+  it('F5: los borrados de Cloudinary se encolan en pending_cloudinary_deletes (ya no inline)', async () => {
     const { destroyWithRetry } = await import('../utils/cloudinary.js');
+    await mockDbSequence(
+      [mockUser],
+      [sub('active', 'PA-A')],
+      [{ id: 'event-1' }],
+      [
+        { url: 'https://res.cloudinary.com/x/image/upload/v1/events/photo-1.jpg' },
+        { url: 'https://res.cloudinary.com/x/image/upload/v1/events/photo-2.jpg' },
+      ],
+    );
+    const tx = await mockTransaction();
+    await mockMpCancelAll();
+    const { db } = await awaitImportDb();
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn(() => ({ onConflictDoNothing }));
+    vi.mocked(db.insert).mockReturnValue({ values } as any);
+
+    await deleteUserAccount('user-1');
+
+    expect(tx.delete).toHaveBeenCalledTimes(2);
+    expect(destroyWithRetry).not.toHaveBeenCalled();
+    expect(db.insert).toHaveBeenCalledTimes(1);
+    expect(values).toHaveBeenCalledWith([
+      { userId: 'user-1', publicId: 'photo-1' },
+      { userId: 'user-1', publicId: 'photo-2' },
+    ]);
+    expect(onConflictDoNothing).toHaveBeenCalled();
+  });
+
+  it('F5: si el encolado de Cloudinary falla, la eliminación no se rompe (best-effort)', async () => {
     await mockDbSequence(
       [mockUser],
       [sub('active', 'PA-A')],
       [{ id: 'event-1' }],
       [{ url: 'https://res.cloudinary.com/x/image/upload/v1/events/photo-1.jpg' }],
     );
-    const tx = await mockTransaction();
+    await mockTransaction();
     await mockMpCancelAll();
+    const { db } = await awaitImportDb();
+    vi.mocked(db.insert).mockRejectedValueOnce(new Error('DB down'));
 
-    await deleteUserAccount('user-1');
-
-    expect(tx.delete).toHaveBeenCalledTimes(2);
-    expect(destroyWithRetry).toHaveBeenCalledWith('photo-1');
+    await expect(deleteUserAccount('user-1')).resolves.toBeUndefined();
   });
 
   it('lanza NotFoundError si el usuario no existe', async () => {
