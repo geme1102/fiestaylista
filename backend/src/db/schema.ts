@@ -168,6 +168,21 @@ export const failedWebhooks = pgTable('failed_webhooks', {
   nextRetryAtIdx: index('failed_webhooks_next_retry_at_idx').on(table.nextRetryAt),
 }));
 
+export const pendingMpCancellations = pgTable('pending_mp_cancellations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Sin FK a users: la fila debe sobrevivir a la eliminación de la cuenta
+  // (el DELETE users borra subscriptions por cascade y la intención de
+  // cancelación en MP no puede vivir en esa tabla).
+  userId: uuid('user_id').notNull(),
+  mpSubscriptionId: text('mp_subscription_id').notNull().unique(),
+  attempts: integer('attempts').notNull().default(0),
+  lastAttemptAt: timestamp('last_attempt_at', { mode: 'date', withTimezone: true }),
+  nextRetryAt: timestamp('next_retry_at', { mode: 'date', withTimezone: true }),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  nextRetryAtIdx: index('pending_mp_cancellations_next_retry_at_idx').on(table.nextRetryAt),
+}));
+
 export const platformFees = pgTable('platform_fees', {
   id: uuid('id').defaultRandom().primaryKey(),
   contributionId: uuid('contribution_id').notNull().references(() => cashContributions.id, { onDelete: 'cascade' }),

@@ -12,6 +12,28 @@ import { TIER_ORDER } from '../types/index.js';
 
 const log = createModuleLogger('MP');
 
+// C1: compara antigüedad de dos preapprovals en MP (por date_created) para
+// distinguir un pago/webhook del preapproval REEMPLAZADO (ignorar) de uno de
+// una COMPRA NUEVA (upgrade/recompra — procesar). Devuelve true si candidateId
+// se creó DESPUÉS que baselineId; null si no se pudo determinar (comportamiento
+// conservador: el caller ignora, como el guard original).
+async function isPreapprovalNewer(candidateId: string, baselineId: string): Promise<boolean | null> {
+  try {
+    const [candidate, baseline] = await Promise.all([
+      fetchPreapprovalInfo(candidateId),
+      fetchPreapprovalInfo(baselineId),
+    ]);
+    if (!candidate.dateCreated || !baseline.dateCreated) return null;
+    const candidateTime = new Date(candidate.dateCreated).getTime();
+    const baselineTime = new Date(baseline.dateCreated).getTime();
+    if (Number.isNaN(candidateTime) || Number.isNaN(baselineTime)) return null;
+    return candidateTime > baselineTime;
+  } catch (err) {
+    log.warn({ err, candidateId, baselineId }, 'No se pudo comparar antigüedad de preapprovals');
+    return null;
+  }
+}
+
 export async function handleProPayment(paymentId: string, userId: string, interval: string, tier: 'pro' | 'pro_plus', newPreapprovalId?: string | null): Promise<void> {
   const periodDays = interval === 'year' ? 365 : 30;
   const isProPlus = tier === 'pro_plus';
@@ -66,12 +88,19 @@ export async function handleProPayment(paymentId: string, userId: string, interv
     const existingId = currentSub[0]?.mpSubscriptionId ?? null;
     const existingStatus = currentSub[0]?.status ?? null;
 
-    // C1 (pago): este pago pertenece a un preapproval REEMPLAZADO por una compra
-    // nueva — no es la fuente de verdad. Ignorarlo evita degradar el tier activo
-    // y que el bloque de abajo cancele el preapproval NUEVO (la compra actual).
+    // C1 (pago): distinguir el pago de un preapproval REEMPLAZADO (ignorar) del
+    // pago de una COMPRA NUEVA más reciente (upgrade/recompra — procesar). La
+    // fuente de verdad es el preapproval MÁS NUEVO por date_created: antes se
+    // ignoraba CUALQUIER id distinto del activo, por lo que un upgrade con sub
+    // activa quedaba sin registrar, el tier nunca subía y MP cobraba ambos
+    // preapprovals para siempre.
     if (existingStatus === 'active' && existingId && existingId !== effectivePreapprovalId) {
-      log.info({ userId, paymentId, current: existingId, incoming: effectivePreapprovalId }, 'Ignorando pago de preapproval reemplazado');
-      return;
+      const incomingIsNewer = await isPreapprovalNewer(effectivePreapprovalId, existingId);
+      if (incomingIsNewer !== true) {
+        log.info({ userId, paymentId, current: existingId, incoming: effectivePreapprovalId }, 'Ignorando pago de preapproval reemplazado');
+        return;
+      }
+      log.info({ userId, paymentId, current: existingId, incoming: effectivePreapprovalId }, 'Pago de preapproval más nuevo que el activo — procesando upgrade/recompra');
     }
 
     // A3 (pago): un pago de un tier menor al activo no debe degradar la sub.
@@ -298,6 +327,9 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
   const periodDays = detectedInterval === 'year' ? 365 : 30;
 
   if (info.status === 'active') {
+    // C1: preapproval reemplazado por una compra más reciente (upgrade) — se
+    // cancela en MP tras procesar el webhook.
+    let replacedMpSubscriptionId: string | null = null;
     const currentSub = await subscriptionService.getCurrentSubscription(userId!);
 
     if (currentSub && currentSub.status === 'canceled') {
@@ -306,20 +338,30 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
     }
 
     if (currentSub && currentSub.status === 'active') {
-      // C1: webhook de un preapproval REEMPLAZADO (compra nueva) — no es la fuente de verdad.
+      // C1: distinguir el webhook de un preapproval REEMPLAZADO (ignorar) del de
+      // una COMPRA NUEVA más reciente (upgrade — procesar y cancelar el viejo).
+      // La fuente de verdad es el preapproval MÁS NUEVO por date_created.
       if (currentSub.mpSubscriptionId !== preapprovalId) {
-        log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook de preapproval reemplazado');
+        const replacedId = currentSub.mpSubscriptionId;
+        if (!replacedId) return;
+        const incomingIsNewer = await isPreapprovalNewer(preapprovalId, replacedId);
+        if (incomingIsNewer !== true) {
+          log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Ignorando webhook de preapproval reemplazado');
+          return;
+        }
+        replacedMpSubscriptionId = replacedId;
+        log.info({ userId, preapprovalId, current: currentSub.mpSubscriptionId }, 'Webhook active de preapproval más nuevo que el activo — procesando reemplazo');
+      } else {
+        // A3: un webhook tardío de un tier menor no debe degradar el tier activo.
+        const currentTierLevel = TIER_ORDER[currentSub.tier as keyof typeof TIER_ORDER] ?? 0;
+        const detectedLevel = TIER_ORDER[detectedTier!] ?? 0;
+        if (detectedLevel < currentTierLevel) {
+          log.info({ userId, preapprovalId, detectedTier, currentTier: currentSub.tier }, 'Ignorando webhook de tier menor al activo');
+          return;
+        }
+        log.info({ preapprovalId, userId }, 'Preapproval ya procesado, ignorando webhook duplicado');
         return;
       }
-      // A3: un webhook tardío de un tier menor no debe degradar el tier activo.
-      const currentTierLevel = TIER_ORDER[currentSub.tier as keyof typeof TIER_ORDER] ?? 0;
-      const detectedLevel = TIER_ORDER[detectedTier!] ?? 0;
-      if (detectedLevel < currentTierLevel) {
-        log.info({ userId, preapprovalId, detectedTier, currentTier: currentSub.tier }, 'Ignorando webhook de tier menor al activo');
-        return;
-      }
-      log.info({ preapprovalId, userId }, 'Preapproval ya procesado, ignorando webhook duplicado');
-      return;
     }
 
     const currentPeriodEnd = info.nextChargeDate
@@ -340,6 +382,21 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
         currentPeriodEnd,
       }, tx as unknown as typeof db);
     });
+
+    // C1: el preapproval reemplazado quedó huérfano y seguiría cobrando en MP —
+    // cancelarlo post-transacción, best-effort (mismo patrón que handleProPayment).
+    if (replacedMpSubscriptionId) {
+      try {
+        await mercadopagoService.retryable(
+          () => mercadopagoService.cancelPreapproval(replacedMpSubscriptionId!),
+          3,
+          10000,
+        );
+        log.info({ oldMpSubscriptionId: replacedMpSubscriptionId, userId, to: detectedTier }, 'Preapproval reemplazado cancelado por webhook active');
+      } catch (err) {
+        log.warn({ err, userId }, 'Error no crítico cancelando preapproval reemplazado por webhook active');
+      }
+    }
   } else if (info.status === 'authorized') {
     // MEDIUM-2: un authorized tardío NO debe sobreescribir una suscripción
     // activa (antes degradaba a pending_approval y el usuario perdía el servicio

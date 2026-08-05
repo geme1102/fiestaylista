@@ -1,6 +1,6 @@
 import { eq, and, lte, inArray, sql, isNull, desc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { subscriptions as subsTable, users, events, photos, emailTracking } from '../db/schema.js';
+import { subscriptions as subsTable, users, events, photos, emailTracking, pendingMpCancellations } from '../db/schema.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
 import { sendFreezeEmail, sendPurgeWarningEmail } from './email.js';
 import { config } from '../config.js';
@@ -53,6 +53,53 @@ export async function retryPendingCancellations(): Promise<number> {
 
 function retryableCancelPreapproval(preapprovalId: string): Promise<void> {
   return retryable(() => cancelPreapproval(preapprovalId), 3, 10000);
+}
+
+// C2: reintentar la cancelación en MP de preapprovals registrados tras la
+// eliminación de una cuenta. La fila de subscriptions se borra por cascade del
+// DELETE users, así que la intención vive en pending_mp_cancellations (sin FK).
+// Solo cancela si MP confirma que el preapproval sigue cobrando; si el intento
+// falla, el backoff exponencial lo reintenta en la siguiente corrida.
+export async function retryPendingMpCancellations(): Promise<number> {
+  const pending = await db
+    .select()
+    .from(pendingMpCancellations)
+    .where(sql`${pendingMpCancellations.nextRetryAt} IS NULL OR ${pendingMpCancellations.nextRetryAt} <= NOW()`)
+    .limit(20);
+
+  let resolved = 0;
+  for (const pendingCancel of pending) {
+    try {
+      const mpInfo = await fetchPreapprovalInfo(pendingCancel.mpSubscriptionId);
+      const stillCharging = mpInfo.status === 'active' || mpInfo.status === 'authorized' || mpInfo.status === 'pending' || mpInfo.status === 'past_due';
+      if (stillCharging) {
+        await retryableCancelPreapproval(pendingCancel.mpSubscriptionId);
+      } else {
+        log.info({ userId: pendingCancel.userId, mpSubscriptionId: pendingCancel.mpSubscriptionId, status: mpInfo.status }, 'Preapproval ya no está cobrando — cancelación pendiente resuelta');
+      }
+      await db
+        .delete(pendingMpCancellations)
+        .where(eq(pendingMpCancellations.id, pendingCancel.id));
+      resolved++;
+    } catch (err) {
+      const backoffMinutes = Math.pow(2, Math.min(pendingCancel.attempts + 1, 6));
+      await db
+        .update(pendingMpCancellations)
+        .set({
+          attempts: pendingCancel.attempts + 1,
+          lastAttemptAt: new Date(),
+          nextRetryAt: new Date(Date.now() + backoffMinutes * 60 * 1000),
+        })
+        .where(eq(pendingMpCancellations.id, pendingCancel.id));
+      log.warn({ err, userId: pendingCancel.userId, mpSubscriptionId: pendingCancel.mpSubscriptionId }, 'Reintento de cancelación MP pendiente falló — se intentará de nuevo');
+    }
+    await new Promise(resolve => setImmediate(resolve));
+  }
+
+  if (pending.length > 0) {
+    log.info({ total: pending.length, resolved }, 'Cancelaciones MP pendientes procesadas');
+  }
+  return resolved;
 }
 
 export async function expireStaleSubscriptions(): Promise<number> {

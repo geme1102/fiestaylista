@@ -1,9 +1,9 @@
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens } from '../db/schema.js';
+import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens, pendingMpCancellations } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl, destroyWithRetry } from '../utils/cloudinary.js';
-import { cancelPreapproval } from './mercadopago.js';
+import { cancelPreapproval, searchPreapprovalsByRefAll, retryable } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('ARCO');
@@ -82,11 +82,33 @@ export async function deleteUserAccount(userId: string) {
     .limit(1);
   if (!user) throw new NotFoundError('Usuario no encontrado');
 
-  const [activeSubscription] = await db
-    .select({ id: subscriptions.id, mpSubscriptionId: subscriptions.mpSubscriptionId })
+  // C2: recoger TODOS los preapprovals que puedan seguir cobrando (active,
+  // past_due, pending_approval, o cancelación MP aún pendiente) — antes solo se
+  // cancelaba la sub 'active': past_due/pending_approval seguían cobrando para
+  // siempre tras eliminar la cuenta.
+  const userSubs = await db
+    .select({ mpSubscriptionId: subscriptions.mpSubscriptionId, status: subscriptions.status, cancelRequestedAt: subscriptions.cancelRequestedAt })
     .from(subscriptions)
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
-    .limit(1);
+    .where(eq(subscriptions.userId, userId));
+
+  const mpSubscriptionIdsToCancel = new Set<string>();
+  for (const sub of userSubs) {
+    // canceled sin intención pendiente = MP ya confirmó la cancelación
+    if (sub.status === 'canceled' && !sub.cancelRequestedAt) continue;
+    if (sub.status === 'incomplete') continue;
+    if (sub.mpSubscriptionId) mpSubscriptionIdsToCancel.add(sub.mpSubscriptionId);
+  }
+
+  // C2 fallback: preapprovals no vinculados a la sub (ref desactualizada,
+  // creados antes de guardar mpSubscriptionId, u huérfanos) — buscarlos en MP
+  // por external_reference en TODOS los estados para no dejar ninguno cobrando.
+  const tiers = ['pro', 'pro_plus'] as const;
+  const intervals = ['month', 'year'] as const;
+  const refs = tiers.flatMap(t => intervals.map(i => `${t}_${userId}_${i}`));
+  const foundByRef = await Promise.all(refs.map(ref => searchPreapprovalsByRefAll(ref)));
+  for (const found of foundByRef.flat()) {
+    if (found.id) mpSubscriptionIdsToCancel.add(found.id);
+  }
 
   // D5: recolectar assets externos ANTES del borrado en DB
   const userEvents = await db
@@ -116,13 +138,21 @@ export async function deleteUserAccount(userId: string) {
     await tx.delete(users).where(eq(users.id, userId));
   });
 
-  // 2) Cancelación MP best-effort (no bloquea la eliminación)
-  if (activeSubscription?.mpSubscriptionId) {
+  // 2) Cancelación MP best-effort con reintento persistente (no bloquea la
+  //    eliminación). Si un intento falla, la intención se registra en
+  //    pending_mp_cancellations y el cron retryPendingMpCancellations la
+  //    reintenta (con backoff) hasta que MP confirme la cancelación.
+  for (const mpId of mpSubscriptionIdsToCancel) {
     try {
-      await cancelPreapproval(activeSubscription.mpSubscriptionId);
-      log.info(`Subscripción MP cancelada: ${activeSubscription.mpSubscriptionId}`);
+      await retryable(() => cancelPreapproval(mpId), 3, 10000);
+      log.info({ mpSubscriptionId: mpId, userId }, 'Preapproval cancelado en MP');
     } catch (err) {
-      log.error({ err }, 'Error cancelando subscripción MP:');
+      log.error({ err, mpSubscriptionId: mpId, userId }, 'Error cancelando preapproval en MP — queda pendiente de reintento');
+      try {
+        await db.insert(pendingMpCancellations).values({ userId, mpSubscriptionId: mpId }).onConflictDoNothing();
+      } catch (insertErr) {
+        log.error({ err: insertErr, mpSubscriptionId: mpId }, 'Error registrando cancelación MP pendiente');
+      }
     }
   }
 

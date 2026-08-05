@@ -3,7 +3,7 @@ import { db } from './db/index.js';
 import { failedWebhooks, refreshTokens, subscriptions } from './db/schema.js';
 import { processReminders } from './services/reminder.js';
 import { processEmailSequence } from './services/emailSequence.js';
-import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations } from './services/subscription-cron.js';
+import { expireStaleSubscriptions, purgeExpiredData, sendPurgeWarnings, retryPendingCancellations, retryPendingMpCancellations } from './services/subscription-cron.js';
 import { reconcileCashFunds } from './services/cashFund.js';
 import * as mpWebhooks from './services/mp-webhooks.js';
 import * as mercadopagoService from './services/mercadopago.js';
@@ -216,6 +216,21 @@ export function startCronJobs(): void {
     });
   };
 
+  // C2: reintentar cancelaciones MP pendientes de cuentas ELIMINADAS — la
+  // intención vive en pending_mp_cancellations porque la sub se borra por cascade.
+  const retryPendingMpCancelJob = async () => {
+    await runWithLock('retry-pending-mp-cancellations', async () => {
+      try {
+        const resolved = await retryPendingMpCancellations();
+        if (resolved > 0) {
+          log.info(`Cancelaciones MP pendientes resueltas: ${resolved}`);
+        }
+      } catch (error) {
+        log.error({ error }, 'Error reintentando cancelaciones MP pendientes:');
+      }
+    });
+  };
+
   const cleanupExpiredWebhooks = async () => {
     try {
       const result = await db
@@ -277,6 +292,7 @@ export function startCronJobs(): void {
   runDaily().catch((err) => log.error({ err }, 'runDaily falló'));
   reconcileCashFundsJob().catch((err) => log.error({ err }, 'reconcileCashFundsJob falló'));
   retryPendingCancelJob().catch((err) => log.error({ err }, 'retryPendingCancelJob falló'));
+  retryPendingMpCancelJob().catch((err) => log.error({ err }, 'retryPendingMpCancelJob falló'));
 
   const WEBHOOK_RETRY_MS = 60 * 1000;
 
@@ -305,6 +321,7 @@ export function startCronJobs(): void {
 
   cancelRetryInterval = setInterval(() => {
     retryPendingCancelJob().catch((err) => log.error({ err }, 'retryPendingCancelJob falló'));
+    retryPendingMpCancelJob().catch((err) => log.error({ err }, 'retryPendingMpCancelJob falló'));
   }, CANCEL_RETRY_MS);
 
   log.info('Jobs iniciados correctamente');

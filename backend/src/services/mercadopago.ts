@@ -203,6 +203,27 @@ export async function searchPreapprovalsByRef(externalReference: string): Promis
   }
 }
 
+export async function searchPreapprovalsByRefAll(externalReference: string): Promise<Array<{ id: string; status: string }>> {
+  if (!client) return [];
+
+  try {
+    const result = await retryable(async (opts) => {
+      const url = `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(externalReference)}&limit=50`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${config.MERCADO_PAGO_ACCESS_TOKEN}` },
+        signal: opts.signal,
+      });
+      if (!res.ok) throw new Error(`MP API error: ${res.status}`);
+      return res.json() as Promise<{ results: Array<{ id: string; status: string }> }>;
+    });
+
+    return result?.results ?? [];
+  } catch (err) {
+    log.error({ err }, 'Error searching preapprovals by ref (todos los estados):');
+    return [];
+  }
+}
+
 export async function cancelPreapproval(preapprovalId: string): Promise<void> {
   if (!client) {
     throw new Error('Mercado Pago no está configurado');

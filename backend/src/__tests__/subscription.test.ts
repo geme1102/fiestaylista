@@ -50,6 +50,7 @@ vi.mock('../db/schema.js', () => ({
   subscriptions: {},
   users: {},
   events: {},
+  pendingMpCancellations: {},
 }));
 
 const mockMp = vi.hoisted(() => ({
@@ -70,6 +71,7 @@ import {
 import {
   expireStaleSubscriptions,
   retryPendingCancellations,
+  retryPendingMpCancellations,
 } from '../services/subscription-cron.js';
 
 const mockSub = {
@@ -589,6 +591,87 @@ describe('retryPendingCancellations', () => {
 
     expect(count).toBe(0);
     expect(upd.set).not.toHaveBeenCalled();
+  });
+});
+
+describe('retryPendingMpCancellations', () => {
+  const pendingCancel = {
+    id: 'pc-1',
+    userId: 'user-1',
+    mpSubscriptionId: 'mp-orphan',
+    attempts: 0,
+    lastAttemptAt: null,
+    nextRetryAt: null,
+    createdAt: new Date(),
+  };
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({ status: 'active' });
+    mockMp.cancelPreapproval.mockResolvedValue(undefined);
+    mockMp.retryable.mockImplementation(async (fn: any) => fn({}));
+  });
+
+  it('C2: cancela en MP y borra la fila cuando el preapproval sigue cobrando', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([pendingCancel]),
+        }),
+      }),
+    } as any);
+    const del = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(db.delete).mockReturnValue({ where: del } as any);
+
+    const count = await retryPendingMpCancellations();
+
+    expect(count).toBe(1);
+    expect(mockMp.fetchPreapprovalInfo).toHaveBeenCalledWith('mp-orphan');
+    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('mp-orphan');
+    expect(del).toHaveBeenCalled();
+  });
+
+  it('C2: no llama a MP si el preapproval ya no cobra; igual borra la fila', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([pendingCancel]),
+        }),
+      }),
+    } as any);
+    const del = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(db.delete).mockReturnValue({ where: del } as any);
+    mockMp.fetchPreapprovalInfo.mockResolvedValue({ status: 'cancelled' });
+
+    const count = await retryPendingMpCancellations();
+
+    expect(count).toBe(1);
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
+    expect(del).toHaveBeenCalled();
+  });
+
+  it('C2: si MP falla, incrementa attempts y programa el backoff (reintento persistente)', async () => {
+    const { db } = await import('../db/index.js');
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([{ ...pendingCancel, attempts: 2 }]),
+        }),
+      }),
+    } as any);
+    const upd = mockUpdateChain();
+    vi.mocked(db.update).mockImplementation(upd.update);
+    mockMp.cancelPreapproval.mockRejectedValueOnce(new Error('MP down'));
+
+    const count = await retryPendingMpCancellations();
+
+    expect(count).toBe(0);
+    expect(upd.set).toHaveBeenCalledWith(expect.objectContaining({ attempts: 3 }));
+    expect(upd.where).toHaveBeenCalled();
+    const setArgs = upd.set.mock.calls[0][0] as any;
+    expect(setArgs.nextRetryAt.getTime()).toBeGreaterThan(Date.now() + 7 * 60 * 1000);
   });
 });
 

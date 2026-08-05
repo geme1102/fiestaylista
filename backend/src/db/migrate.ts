@@ -734,6 +734,25 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE UNIQUE INDEX IF NOT EXISTS "guests_event_id_name_key_unique_idx" ON "guests"("event_id", "name_key")`,
     ],
   },
+  // C2 (auditoría): cancelaciones MP pendientes que sobreviven a la eliminación
+  // de cuenta — la fila de subscriptions se borra por cascade del DELETE users,
+  // así que la intención de cancelar el preapproval en MP vive aquí. El cron
+  // retryPendingMpCancellations la reintenta hasta resolver.
+  {
+    name: 'pending_mp_cancellations_table',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "pending_mp_cancellations" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" uuid NOT NULL,
+        "mp_subscription_id" text NOT NULL UNIQUE,
+        "attempts" integer NOT NULL DEFAULT 0,
+        "last_attempt_at" timestamptz,
+        "next_retry_at" timestamptz,
+        "created_at" timestamptz NOT NULL DEFAULT now()
+      )`,
+      `CREATE INDEX IF NOT EXISTS "pending_mp_cancellations_next_retry_at_idx" ON "pending_mp_cancellations"("next_retry_at")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

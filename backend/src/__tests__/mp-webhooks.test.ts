@@ -168,8 +168,46 @@ describe('handleProPayment', () => {
     // del preapproval VIEJO (PA-OLD) — antes degradaba a pro y cancelaba PA-NEW.
     const tx = makePaymentTx({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' });
     vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+    mockMp.fetchPreapprovalInfo.mockImplementation((id: string) => {
+      if (id === 'PA-NEW') return Promise.resolve({ id, status: 'active', dateCreated: '2026-08-05T00:00:00Z' });
+      return Promise.resolve({ id, status: 'active', dateCreated: '2026-07-01T00:00:00Z' });
+    });
 
     await handleProPayment('pay-6', 'user-1', 'month', 'pro', 'PA-OLD');
+
+    expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
+  });
+
+  it('C1 (pago): procesa un pago del preapproval MÁS NUEVO con sub activa (upgrade) — actualiza tier y cancela el viejo', async () => {
+    const { db } = await import('../db/index.js');
+    // BUG real: sub activa pro apuntando a PA-OLD (viejo); el usuario upgradea a
+    // pro_plus y llega el pago del preapproval NUEVO (PA-NEW, creado después).
+    // Antes se ignoraba → tier nunca subía y MP cobraba ambos preapprovals.
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-OLD', tier: 'pro', status: 'active' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+    mockMp.fetchPreapprovalInfo.mockImplementation((id: string) => {
+      if (id === 'PA-NEW') return Promise.resolve({ id, status: 'active', dateCreated: '2026-08-05T00:00:00Z' });
+      return Promise.resolve({ id, status: 'active', dateCreated: '2026-07-01T00:00:00Z' });
+    });
+
+    await handleProPayment('pay-upgrade', 'user-1', 'month', 'pro_plus', 'PA-NEW');
+
+    expect(mockSubsService.createOrUpdateSubscription).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' }),
+      expect.anything(),
+    );
+    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-OLD');
+  });
+
+  it('C1 (pago): ignora de forma conservadora si no se puede comparar antigüedad (MP caído)', async () => {
+    const { db } = await import('../db/index.js');
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+    mockMp.fetchPreapprovalInfo.mockRejectedValue(new Error('MP down'));
+
+    await handleProPayment('pay-indet', 'user-1', 'month', 'pro', 'PA-OLD');
 
     expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
     expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
@@ -215,13 +253,40 @@ describe('handleSubscriptionNotification', () => {
     expect(mockSubsService.cancelSubscription).toHaveBeenCalledWith('user-1');
   });
 
-  it('C1: ignora webhook active de un preapproval reemplazado', async () => {
-    mockMp.fetchPreapprovalInfo.mockResolvedValue(basePreapproval);
+  it('C1: ignora webhook active de un preapproval reemplazado (entrante MÁS VIEJO que el actual)', async () => {
+    mockMp.fetchPreapprovalInfo.mockImplementation((id: string) => {
+      if (id === 'PA-NEW') return Promise.resolve({ ...basePreapproval, dateCreated: '2026-08-05T00:00:00Z' });
+      return Promise.resolve({ ...basePreapproval, dateCreated: '2026-07-01T00:00:00Z' });
+    });
     mockSubsService.getCurrentSubscription.mockResolvedValue({ mpSubscriptionId: 'PA-NEW', tier: 'pro', status: 'active' });
 
     await handleSubscriptionNotification('PA-OLD');
 
     expect(mockSubsService.createOrUpdateSubscription).not.toHaveBeenCalled();
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
+  });
+
+  it('C1: procesa el webhook active de un preapproval MÁS NUEVO con sub activa (upgrade) — actualiza y cancela el viejo', async () => {
+    const { db } = await import('../db/index.js');
+    // BUG real: sub activa pro apuntando a PA-OLD; webhook active de PA-NEW
+    // (pro_plus, creado después) — antes se ignoraba y el upgrade quedaba a medias
+    // con ambos preapprovals cobrando en MP.
+    mockMp.fetchPreapprovalInfo.mockImplementation((id: string) => {
+      if (id === 'PA-NEW') return Promise.resolve({ ...basePreapproval, externalReference: 'pro_plus_user-1_month', transactionAmount: 14900, dateCreated: '2026-08-05T00:00:00Z' });
+      return Promise.resolve({ ...basePreapproval, externalReference: 'pro_user-1_month', dateCreated: '2026-07-01T00:00:00Z' });
+    });
+    mockSubsService.getCurrentSubscription.mockResolvedValue({ mpSubscriptionId: 'PA-OLD', tier: 'pro', status: 'active' });
+    const tx: any = { execute: vi.fn().mockResolvedValue(undefined) };
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+
+    await handleSubscriptionNotification('PA-NEW');
+
+    expect(mockSubsService.createOrUpdateSubscription).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ mpSubscriptionId: 'PA-NEW', tier: 'pro_plus', status: 'active' }),
+      expect.anything(),
+    );
+    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-OLD');
   });
 
   it('A3: ignora webhook active de un tier menor al activo', async () => {
