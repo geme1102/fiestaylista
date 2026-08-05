@@ -180,7 +180,7 @@ router.post('/sse-token', requireAuth, validateUuidParam('eventId'), requireEven
   const sseToken = jwt.sign(
     { eventId, scope: 'sse', userId: req.user!.userId },
     config.JWT_SECRET,
-    { expiresIn: '2m' },
+    { expiresIn: `${SSE_TOKEN_TTL_S}s` },
   );
   res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
@@ -203,14 +203,21 @@ router.post('/public-sse-token', apiLimiter, verifyTurnstile, validateUuidParam(
   const sseToken = jwt.sign(
     { eventId, scope: 'sse', type: 'guest' },
     config.JWT_SECRET,
-    { expiresIn: '2m' },
+    { expiresIn: `${SSE_TOKEN_TTL_S}s` },
   );
   res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
 const SSE_MAX_PER_IP = 3;
-const SSE_CONNECTION_TIMEOUT_MS = 4 * 60 * 1000;
+// F4: el token SSE expira a los 2 min y la conexión DEBE cortarse exactamente
+// al expirar (enviando 'reconnect' para que el cliente renueve token). Antes
+// el timeout era de 4 min: entre el minuto 2 y el 4 la conexión seguía viva
+// con un token ya expirado y los eventos seguían fluyendo a una conexión que
+// ya no era válida (ni revocable al expirar). Misma constante que expiresIn
+// de /sse-token y /public-sse-token para que nunca se desincronicen.
+export const SSE_TOKEN_TTL_S = 120;
+export const SSE_CONNECTION_TIMEOUT_MS = SSE_TOKEN_TTL_S * 1000;
 const SSE_KEEPALIVE_MS = 15000;
 
 router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {

@@ -44,7 +44,7 @@ vi.mock('../utils/asyncHandler.js', () => ({
 vi.mock('../utils/errors.js', () => ({}));
 vi.mock('../types/index.js', () => ({}));
 
-import { createGiftSchema, updateGiftSchema } from '../routes/gifts.js';
+import { createGiftSchema, updateGiftSchema, SSE_TOKEN_TTL_S, SSE_CONNECTION_TIMEOUT_MS } from '../routes/gifts.js';
 
 describe('Gifts - Create Validation', () => {
   it('accepts valid gift name', () => {
@@ -83,5 +83,19 @@ describe('Gifts - Update Validation', () => {
   it('accepts empty update', () => {
     const result = updateGiftSchema.parse({});
     expect(Object.keys(result)).toHaveLength(0);
+  });
+});
+
+describe('Gifts - SSE token lifecycle', () => {
+  it('F4: el timeout de conexión SSE es exactamente el TTL del token (2 min)', () => {
+    expect(SSE_TOKEN_TTL_S).toBe(120);
+    expect(SSE_CONNECTION_TIMEOUT_MS).toBe(SSE_TOKEN_TTL_S * 1000);
+  });
+
+  it('F4: el token SSE emitido con el TTL derivado expira a los 120s', async () => {
+    const jwt = await import('jsonwebtoken');
+    const token = jwt.sign({ eventId: 'ev-1', scope: 'sse' }, 'test', { expiresIn: `${SSE_TOKEN_TTL_S}s` });
+    const decoded = jwt.decode(token) as { exp: number; iat: number };
+    expect(decoded.exp - decoded.iat).toBe(120);
   });
 });
