@@ -175,7 +175,7 @@ export function startCronJobs(): void {
           try {
             if (webhook.topic === 'payment') {
               await mpWebhooks.handlePaymentNotification(webhook.resourceId);
-            } else if (webhook.topic === 'preapproval' || webhook.topic === 'subscription') {
+            } else if (webhook.topic === 'preapproval' || webhook.topic === 'subscription' || webhook.topic === 'subscription_preapproval') {
               await mpWebhooks.handleSubscriptionNotification(webhook.resourceId);
             }
 

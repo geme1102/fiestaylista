@@ -1043,6 +1043,10 @@ describe('ARCO Routes', () => {
 });
 
 describe('Webhook Routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('POST /api/webhooks/mercadopago - rejects unsigned requests', async () => {
     mockMpWebhooks.handlePaymentNotification.mockResolvedValue({ received: true });
 
@@ -1076,6 +1080,86 @@ describe('Webhook Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.received).toBe(true);
     expect(mockMpWebhooks.handlePaymentNotification).toHaveBeenCalledWith(dataId);
+
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = original;
+  });
+
+  it('F3: acepta firma con ?id= (formato nuevo sin data.id) y dispatches', async () => {
+    const secret = 'test-webhook-secret';
+    const original = (config as any).MERCADO_PAGO_WEBHOOK_SECRET;
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = secret;
+
+    const id = 'pay-789';
+    const requestId = 'req-abc';
+    const ts = Math.floor(Date.now() / 1000);
+    const manifest = `id:${id};request-id:${requestId};ts:${ts};`;
+    const hash = createHmac('sha256', secret).update(manifest).digest('hex');
+    const signature = `ts=${ts},v1=${hash}`;
+
+    mockMpWebhooks.handlePaymentNotification.mockResolvedValue(undefined);
+
+    const res = await request(app)
+      .post('/api/webhooks/mercadopago')
+      .query({ id, topic: 'payment' })
+      .set('x-signature', signature)
+      .set('x-request-id', requestId);
+
+    expect(res.status).toBe(200);
+    expect(mockMpWebhooks.handlePaymentNotification).toHaveBeenCalledWith(id);
+
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = original;
+  });
+
+  it('F3: dispatches a handleSubscriptionNotification cuando MP envía ?type=preapproval (sin topic)', async () => {
+    const secret = 'test-webhook-secret';
+    const original = (config as any).MERCADO_PAGO_WEBHOOK_SECRET;
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = secret;
+
+    const id = 'pa-123';
+    const requestId = 'req-789';
+    const ts = Math.floor(Date.now() / 1000);
+    const manifest = `id:${id};request-id:${requestId};ts:${ts};`;
+    const hash = createHmac('sha256', secret).update(manifest).digest('hex');
+    const signature = `ts=${ts},v1=${hash}`;
+
+    mockMpWebhooks.handleSubscriptionNotification.mockResolvedValue(undefined);
+
+    const res = await request(app)
+      .post('/api/webhooks/mercadopago')
+      .query({ type: 'preapproval', id })
+      .set('x-signature', signature)
+      .set('x-request-id', requestId);
+
+    expect(res.status).toBe(200);
+    expect(mockMpWebhooks.handleSubscriptionNotification).toHaveBeenCalledWith(id);
+    expect(mockMpWebhooks.handlePaymentNotification).not.toHaveBeenCalled();
+
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = original;
+  });
+
+  it('F3: dispatches a handleSubscriptionNotification para ?type=subscription_preapproval (topic real de MP)', async () => {
+    const secret = 'test-webhook-secret';
+    const original = (config as any).MERCADO_PAGO_WEBHOOK_SECRET;
+    (config as any).MERCADO_PAGO_WEBHOOK_SECRET = secret;
+
+    const id = 'pa-456';
+    const requestId = 'req-xyz';
+    const ts = Math.floor(Date.now() / 1000);
+    const manifest = `id:${id};request-id:${requestId};ts:${ts};`;
+    const hash = createHmac('sha256', secret).update(manifest).digest('hex');
+    const signature = `ts=${ts},v1=${hash}`;
+
+    mockMpWebhooks.handleSubscriptionNotification.mockResolvedValue(undefined);
+
+    const res = await request(app)
+      .post('/api/webhooks/mercadopago')
+      .query({ type: 'subscription_preapproval', id })
+      .set('x-signature', signature)
+      .set('x-request-id', requestId);
+
+    expect(res.status).toBe(200);
+    expect(mockMpWebhooks.handleSubscriptionNotification).toHaveBeenCalledWith(id);
+    expect(mockMpWebhooks.handlePaymentNotification).not.toHaveBeenCalled();
 
     (config as any).MERCADO_PAGO_WEBHOOK_SECRET = original;
   });

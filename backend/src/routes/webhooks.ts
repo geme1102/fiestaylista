@@ -20,12 +20,14 @@ function verifyMpSignature(req: Request): boolean {
   const secret = config.MERCADO_PAGO_WEBHOOK_SECRET;
   if (!secret) return false;
 
-  // Extraer data.id del raw query string (Express/qs parsea data.id como anidado)
+  // Extraer data.id del raw query string (Express/qs parsea data.id como anidado).
+  // F3: el formato nuevo de MP envía `?id=...` (con `?type=`) en vez de
+  // `?data.id=...` — el valor firmado es el mismo (`id:<valor>` en el manifest).
   let dataId: string | undefined;
   const qIndex = req.url?.indexOf('?');
   if (qIndex !== undefined && qIndex !== -1) {
     const searchParams = new URLSearchParams(req.url!.slice(qIndex + 1));
-    dataId = searchParams.get('data.id') || undefined;
+    dataId = searchParams.get('data.id') || searchParams.get('id') || undefined;
   }
 
   try {
@@ -68,8 +70,12 @@ function verifyMpSignature(req: Request): boolean {
 }
 
 function extractTopicId(req: Request): { topic?: string; id?: string } {
+  // F3: MP envía el tipo de notificación como `topic` O `type` (formato nuevo)
+  // según el tipo de suscripción del webhook — antes se ignoraban las
+  // notificaciones que solo traían `?type=`.
+  const topic = (req.query.topic as string) || (req.query.type as string);
   return {
-    topic: req.query.topic as string,
+    topic,
     id: (req.query.id as string) || (req.query['data.id'] as string),
   };
 }
@@ -99,8 +105,13 @@ router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => 
     try {
       if (topic === 'payment') {
         await mpWebhooks.handlePaymentNotification(id);
-      } else if (topic === 'preapproval' || topic === 'subscription') {
+      } else if (topic === 'preapproval' || topic === 'subscription' || topic === 'subscription_preapproval') {
+        // F3: subscription_preapproval es el topic REAL que MP usa en su
+        // integración actual de suscripciones — antes se ignoraba en silencio
+        // (ni siquiera entraba a failedWebhooks, el webhook se perdía).
         await mpWebhooks.handleSubscriptionNotification(id);
+      } else {
+        log.info({ topic, id }, 'Topic de notificación no soportado, ignorando');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
