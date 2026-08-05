@@ -6,12 +6,21 @@ const log = createModuleLogger('Migrations');
 // Mapeo explícito: cada migración tiene un nombre estable y una o más sentencias SQL.
 // Los nombres DEBEN coincidir con los ya registrados en la tabla migration_journal
 // de producción para mantener retrocompatibilidad.
-interface MigrationEntry {
+export interface MigrationEntry {
   name: string;
   statements: string[];
 }
 
-const COLUMN_MIGRATIONS: MigrationEntry[] = [
+// F2: solo los errores "already exists" son idempotentes (los statements usan
+// IF NOT EXISTS). Antes el runner absorbía también "duplicate key value violates
+// unique constraint" (CREATE UNIQUE INDEX con filas duplicadas), que es un
+// fallo REAL que dejaba la migración sin registrar y el índice sin crear, en
+// silencio — la migración se reintentaba en cada arranque sin avisar.
+export function isIdempotentError(err: unknown): boolean {
+  return err instanceof Error && /already exists/i.test(err.message);
+}
+
+export const COLUMN_MIGRATIONS: MigrationEntry[] = [
   {
     name: 'photos_deleted_at',
     statements: [
@@ -695,7 +704,7 @@ const COLUMN_MIGRATIONS: MigrationEntry[] = [
         WHERE "contributor_name_key" IS NOT NULL
       )
       UPDATE "cash_contributions" c
-      SET "status" = 'cancelled', "updated_at" = now()
+      SET "status" = 'cancelled'
       FROM ranked r
       WHERE c."id" = r."id" AND r.rn > 1 AND c."status" = 'promised'`,
       `WITH ranked AS (
@@ -837,7 +846,7 @@ export async function runMigrations(): Promise<void> {
       try {
         await sql.unsafe(statement);
       } catch (err) {
-        const isAlreadyExists = err instanceof Error && /already exists|duplicate/i.test(err.message);
+        const isAlreadyExists = isIdempotentError(err);
         if (!isAlreadyExists) {
           log.warn({ migration: migration.name, err }, 'Sentencia falló — saltando');
           allOk = false;
