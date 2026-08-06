@@ -155,4 +155,40 @@ describe('Login page', () => {
     expect(screen.getByTestId('navbar-premium')).toBeInTheDocument();
     expect(screen.getByTestId('auth-bottom-nav')).toBeInTheDocument();
   });
+
+  it('no se queda atascado tras un submit con campos vacíos (B3)', async () => {
+    renderLogin();
+    submitForm();
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith('Completa todos los campos', 'error');
+    });
+
+    // Segundo submit vacío: antes quedaba muerto porque submittingRef
+    // se seteaba ANTES de la validación y el early-return no lo limpiaba.
+    submitForm();
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('sigue funcionando después de un submit inválido (B3)', async () => {
+    mockLogin.mockResolvedValue({ user: { id: '1', emailVerified: true }, accessToken: 'tok' });
+    mockTurnstileToken.mockReturnValue('tok-123');
+
+    renderLogin();
+    submitForm();
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith('Completa todos los campos', 'error');
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('tu@correo.com'), { target: { value: 'user@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'MyPass1' } });
+    submitForm();
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('user@test.com', 'MyPass1', 'tok-123');
+    });
+  });
 });

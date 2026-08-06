@@ -68,6 +68,18 @@ describe('GiftManagement', () => {
     expect(chip!.hasAttribute('disabled')).toBe(true);
   });
 
+  it('muestra "Ver más" y llama onLoadMoreGifts (B10)', () => {
+    const onLoadMoreGifts = vi.fn();
+    render(<GiftManagement {...defaultProps} giftsHasMore={true} loadingMoreGifts={false} onLoadMoreGifts={onLoadMoreGifts} />);
+    fireEvent.click(screen.getByText('Ver más regalos'));
+    expect(onLoadMoreGifts).toHaveBeenCalled();
+  });
+
+  it('oculta "Ver más" cuando no hay más páginas (B10)', () => {
+    render(<GiftManagement {...defaultProps} giftsHasMore={false} onLoadMoreGifts={vi.fn()} />);
+    expect(screen.queryByText('Ver más regalos')).not.toBeInTheDocument();
+  });
+
   it('disables add button when input empty', () => {
     render(<GiftManagement {...defaultProps} newGiftName="" />);
     expect(screen.getByTestId('add-gift-button').hasAttribute('disabled')).toBe(true);

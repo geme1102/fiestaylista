@@ -443,8 +443,26 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
 }
 
 function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund: () => void; guestName?: string }) {
-  const [amount, setAmount] = useState('');
-  const [message, setMessage] = useState('');
+  // B8: draft del aporte (monto + mensaje) sobrevive a recargas; se limpia al
+  // registrarse el aporte.
+  const DRAFT_KEY = `fy_promise_draft:${fundId}`;
+  const [draft] = useState<{ amount: string; message: string }>(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            amount: typeof parsed.amount === 'string' ? parsed.amount : '',
+            message: typeof parsed.message === 'string' ? parsed.message : '',
+          };
+        }
+      }
+    } catch {}
+    return { amount: '', message: '' };
+  });
+  const [amount, setAmount] = useState(draft.amount);
+  const [message, setMessage] = useState(draft.message);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
@@ -483,6 +501,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
       });
       setDone(true);
       resetTurnstile();
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
       showToast('¡Gracias por tu aporte! 💛 El anfitrión lo recibirá directo.', 'success');
       loadFund();
     } catch (err) {
@@ -525,7 +544,11 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
             id="promise-amount"
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAmount(value);
+              try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ amount: value, message })); } catch {}
+            }}
             placeholder="Monto"
             className="w-full pl-7 rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-[border-color,box-shadow]"
             inputMode="numeric"
@@ -540,7 +563,11 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
         id="promise-message"
         type="text"
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => {
+          const value = e.target.value;
+          setMessage(value);
+          try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ amount, message: value })); } catch {}
+        }}
         maxLength={500}
         placeholder="Mensaje (opcional)"
         autoCapitalize="sentences"

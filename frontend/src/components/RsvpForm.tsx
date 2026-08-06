@@ -13,8 +13,26 @@ interface RsvpFormProps {
 
 export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
   const storageKey = `rsvp_confirmed:${eventId}`;
-  const [companions, setCompanions] = useState(0);
-  const [message, setMessage] = useState('');
+  // B8: draft de acompañantes + mensaje sobrevive a recargas (un RSVP medio
+  // escrito no se pierde). Se limpia al confirmar.
+  const DRAFT_KEY = `fy_rsvp_draft:${eventId}`;
+  const [draft] = useState<{ companions: number; message: string }>(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            companions: typeof parsed.companions === 'number' ? parsed.companions : 0,
+            message: typeof parsed.message === 'string' ? parsed.message : '',
+          };
+        }
+      }
+    } catch {}
+    return { companions: 0, message: '' };
+  });
+  const [companions, setCompanions] = useState(draft.companions);
+  const [message, setMessage] = useState(draft.message);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(() => {
     try { return localStorage.getItem(storageKey) === 'true'; } catch { return false; }
@@ -53,6 +71,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
       setShowForm(false);
       resetTurnstile();
       try { localStorage.setItem(storageKey, 'true'); } catch {}
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
     } catch (err) {
       reportError(err, { source: 'RsvpForm' });
       setError(err instanceof Error ? err.message : 'Error al confirmar asistencia');
@@ -111,7 +130,11 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   min={0}
                   max={10}
                   value={companions}
-                  onChange={(e) => setCompanions(Number(e.target.value))}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setCompanions(value);
+                    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ companions: value, message })); } catch {}
+                  }}
                   className="w-full accent-primary"
                 />
                 <div className="flex justify-between text-xs text-on-surface-variant/80 mt-1">
@@ -125,7 +148,11 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                 <textarea
                   id="rsvp-message"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setMessage(value);
+                    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ companions, message: value })); } catch {}
+                  }}
                   maxLength={500}
                   className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"
                   placeholder="¡Felicidades! Nos vemos allí 🎉"

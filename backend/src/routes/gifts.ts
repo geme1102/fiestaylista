@@ -220,7 +220,10 @@ export const SSE_TOKEN_TTL_S = 120;
 export const SSE_CONNECTION_TIMEOUT_MS = SSE_TOKEN_TTL_S * 1000;
 const SSE_KEEPALIVE_MS = 15000;
 
-router.get('/subscribe', apiLimiter, asyncHandler(async (req: Request, res: Response) => {
+// B5: sin apiLimiter a nivel de ruta — ya corre el global en `app.use('/api',
+// apiLimiter)`: duplicarlo contaba cada conexión SSE dos veces contra la misma
+// cuota y acercaba el límite global al doble de rápido.
+router.get('/subscribe', asyncHandler(async (req: Request, res: Response) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     sendError(res, 400, 'ID del evento requerido');

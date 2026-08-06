@@ -185,4 +185,43 @@ describe('Register page', () => {
     expect(screen.getByTestId('navbar-premium')).toBeInTheDocument();
     expect(screen.getByTestId('auth-bottom-nav')).toBeInTheDocument();
   });
+
+  it('no se queda atascado tras un submit con campos vacíos (B3)', async () => {
+    renderRegister();
+    submitForm();
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith('Completa todos los campos', 'error');
+    });
+
+    // Segundo submit vacío: antes quedaba muerto porque submittingRef
+    // se seteaba ANTES de las validaciones y los early-returns no lo limpiaban.
+    submitForm();
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('sigue funcionando después de un submit inválido (B3)', async () => {
+    mockRegister.mockResolvedValue({ user: { id: '1' }, accessToken: 'tok', refreshToken: '' });
+    mockTurnstileToken.mockReturnValue('tok');
+
+    renderRegister();
+    submitForm();
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith('Completa todos los campos', 'error');
+    });
+
+    fillName('Test User');
+    fillEmail('test@test.com');
+    fillPassword('Abcdefgh1');
+    checkTerms();
+    checkPrivacy();
+    submitForm();
+
+    await waitFor(() => {
+      expect(mockRegister).toHaveBeenCalledWith('test@test.com', 'Abcdefgh1', 'Test User', 'tok');
+    });
+  });
 });

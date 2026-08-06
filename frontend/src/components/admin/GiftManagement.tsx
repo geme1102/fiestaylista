@@ -15,6 +15,9 @@ interface GiftManagementProps {
   filteredSuggestions: string[];
   maxGiftsPerEvent?: number;
   disabled?: boolean;
+  giftsHasMore?: boolean;
+  loadingMoreGifts?: boolean;
+  onLoadMoreGifts?: () => void;
   onAddGift: () => Promise<void>;
   onFreeGift: (giftId: string) => Promise<void>;
   onDeleteGift: (giftId: string) => Promise<void>;
@@ -26,7 +29,8 @@ interface GiftManagementProps {
 export default memo(function GiftManagement({
   gifts, addingGift, freeingGiftId, deletingGiftId,
   newGiftName, showSuggestions, suggestions, filteredSuggestions,
-  maxGiftsPerEvent, disabled, onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
+  maxGiftsPerEvent, disabled, giftsHasMore, loadingMoreGifts, onLoadMoreGifts,
+  onAddGift, onFreeGift, onDeleteGift, onAddSuggestion,
   onNewGiftNameChange, onShowSuggestionsChange,
 }: GiftManagementProps) {
   const [addedGifts, setAddedGifts] = useState<Set<string>>(new Set());
@@ -183,6 +187,20 @@ export default memo(function GiftManagement({
             />
           ))}
         </div>
+      )}
+
+      {giftsHasMore && onLoadMoreGifts && (
+        <button
+          onClick={onLoadMoreGifts}
+          disabled={loadingMoreGifts}
+          className="mt-6 w-full py-3.5 min-h-[48px] rounded-2xl border border-primary/30 bg-primary-fixed/20 text-primary font-bold text-sm hover:bg-primary-fixed/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {loadingMoreGifts ? (
+            <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          ) : (
+            'Ver más regalos'
+          )}
+        </button>
       )}
     </section>
   );

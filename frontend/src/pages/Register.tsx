@@ -58,8 +58,9 @@ export default function Register() {
     e.preventDefault();
 
     if (submittingRef.current) return;
-    submittingRef.current = true;
 
+    // B3: validaciones ANTES de setear el flag — un early-return con el flag
+    // activo dejaba el formulario permanentemente muerto (Enter con campos vacíos).
     if (!name || !email || !password) {
       showToast('Completa todos los campos', 'error');
       return;
@@ -81,6 +82,7 @@ export default function Register() {
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
 
     try {

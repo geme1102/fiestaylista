@@ -136,32 +136,38 @@ export async function getEvent(eventId: string, userId: string, giftParams: Pagi
     ? and(eq(photos.eventId, eventId), isNull(photos.deletedAt), photoCursor)
     : and(eq(photos.eventId, eventId), isNull(photos.deletedAt));
 
-  const [eventGifts, eventPhotos, allClaims] = await Promise.all([
-    db
-      .select()
-      .from(gifts)
-      .where(giftConditions)
-      .orderBy(desc(gifts.createdAt))
-      .limit(giftLimit),
+  // B9: los claims se cargan SOLO de los gifts de la página actual (IN de ids).
+  // Antes se cargaban TODOS los claims del evento (innerJoin sin limit): con
+  // muchos regalos apartados, /api/events/:id volvía lento y pesado
+  // innecesariamente. Los claims de páginas siguientes se cargan con su cursor.
+  const eventGifts = await db
+    .select()
+    .from(gifts)
+    .where(giftConditions)
+    .orderBy(desc(gifts.createdAt))
+    .limit(giftLimit);
+
+  const [eventPhotos, claimRows] = await Promise.all([
     db
       .select()
       .from(photos)
       .where(photoConditions)
       .orderBy(desc(photos.createdAt))
       .limit(photoLimit),
-    db
-      .select()
-      .from(giftClaims)
-      .innerJoin(gifts, eq(giftClaims.giftId, gifts.id))
-      .where(and(eq(gifts.eventId, eventId), isNull(gifts.deletedAt)))
-      .orderBy(giftClaims.createdAt),
+    eventGifts.length > 0
+      ? db
+          .select()
+          .from(giftClaims)
+          .where(inArray(giftClaims.giftId, eventGifts.map(g => g.id)))
+          .orderBy(giftClaims.createdAt)
+      : Promise.resolve([] as typeof giftClaims.$inferSelect[]),
   ]);
 
   const claimsByGiftId = new Map<string, Array<{ id: string; giftId: string; claimedBy: string; message: string | null; createdAt: Date }>>();
-  for (const row of allClaims) {
-    const id = row.gift_claims.giftId;
+  for (const row of claimRows) {
+    const id = row.giftId;
     if (!claimsByGiftId.has(id)) claimsByGiftId.set(id, []);
-    claimsByGiftId.get(id)!.push(row.gift_claims);
+    claimsByGiftId.get(id)!.push(row);
   }
 
   return {

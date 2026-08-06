@@ -10,6 +10,13 @@ import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('SubscriptionCron');
 
+// B6: cede el event loop entre emails (cada uno puede tardar hasta
+// EMAIL_SEND_TIMEOUT_MS) — sin esto, un lote grande de congelaciones/purgas
+// bloquea el server entero (mismo helper que cron.ts).
+function yieldToEventLoop(): Promise<void> {
+  return new Promise(resolve => setImmediate(resolve));
+}
+
 // H2: reintentar la cancelación en MP de suscripciones con intención de
 // cancelación pendiente (cancel_requested_at seteado). Corre en cron con lock.
 export async function retryPendingCancellations(): Promise<number> {
@@ -329,7 +336,9 @@ export async function sendPurgeWarnings(): Promise<number> {
   }
 
   let warned = 0;
-  for (const { userId } of toWarn) {
+  for (let i = 0; i < toWarn.length; i++) {
+    const { userId } = toWarn[i];
+    if (i % 5 === 4) await yieldToEventLoop();
     try {
       const user = userMap.get(userId);
       if (user?.email) {
@@ -406,7 +415,11 @@ async function batchFreezeEvents(userIds: string[], txClient?: typeof db) {
     .from(users)
     .where(inArray(users.id, userIds));
 
-  for (const user of userRows) {
+  // B6: ceder el event loop cada 5 emails — `sendFreezeEmail` puede tardar
+  // hasta EMAIL_SEND_TIMEOUT_MS; sin yield, un lote grande congela el server.
+  for (let i = 0; i < userRows.length; i++) {
+    const user = userRows[i];
+    if (i % 5 === 4) await yieldToEventLoop();
     if (user?.email) {
       // D1: dedupe por email_tracking — el email de congelación solo se envía
       // una vez por usuario (mismo patrón que sendPurgeWarnings).

@@ -346,6 +346,20 @@ describe('Health', () => {
     expect(res.body.checks).toBeDefined();
   });
 
+  it('GET /api/health/ready returns 503 JSON if a check throws (B4)', async () => {
+    const loaders = await import('../loaders/index.js');
+    const spy = vi.spyOn(loaders as unknown as { checkDatabase: () => Promise<unknown> }, 'checkDatabase')
+      .mockRejectedValueOnce(new Error('db exploded'));
+    try {
+      const res = await request(app).get('/api/health/ready');
+      expect(res.status).toBe(503);
+      expect(res.body.status).toBe('unhealthy');
+      expect(res.body.error).toBe('db exploded');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('GET /health returns ok', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);

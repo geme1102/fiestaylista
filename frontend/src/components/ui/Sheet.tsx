@@ -37,7 +37,7 @@ export default function Sheet({ open, onClose, children, ariaLabel, className = 
             animate={shouldReduceMotion ? { opacity: 1 } : { y: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { y: '100%' }}
             transition={shouldReduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 28, stiffness: 300 }}
-            className={`relative w-full bg-surface rounded-t-[32px] sm:rounded-3xl shadow-2xl max-h-[90dvh] overflow-y-auto sm:max-w-lg ${className}`}
+            className={`relative w-full bg-surface rounded-t-[32px] sm:rounded-3xl shadow-2xl max-h-[90dvh] overflow-y-auto sm:max-w-lg ${className} pb-safe-lg`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-1.5 bg-on-surface-variant/20 rounded-full mx-auto mt-3 mb-2 sm:hidden" />

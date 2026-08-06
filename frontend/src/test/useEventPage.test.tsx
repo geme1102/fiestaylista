@@ -5,13 +5,14 @@ import { MemoryRouter } from 'react-router-dom';
 const mockGetEventBySlug = vi.hoisted(() => vi.fn());
 const mockApiClientPut = vi.hoisted(() => vi.fn());
 const mockApiClientPost = vi.hoisted(() => vi.fn());
+const mockApiClientGet = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockTurnstileToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | null>(() => null));
 const mockGetGiftCategory = vi.hoisted(() => vi.fn((_name: string) => ({ label: 'Regalo', color: 'bg-blue-500' })));
 const mockUseSSE = vi.hoisted(() => vi.fn());
 
 vi.mock('../services/events', () => ({ getEventBySlug: mockGetEventBySlug }));
-vi.mock('../services/api', () => ({ apiClient: { put: mockApiClientPut, post: mockApiClientPost, get: vi.fn() } }));
+vi.mock('../services/api', () => ({ apiClient: { put: mockApiClientPut, post: mockApiClientPost, get: mockApiClientGet } }));
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
 vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), reset: vi.fn() }) }));
 vi.mock('../data/giftEmojis', () => ({ getGiftCategory: mockGetGiftCategory }));
@@ -231,5 +232,87 @@ describe('useEventPage', () => {
       expect(result.current.availableGifts).toHaveLength(1);
     });
     expect(result.current.filteredGifts).toEqual(result.current.availableGifts);
+  });
+
+  it('muestra "hasMore" cuando la primera página llega al tope (B10)', async () => {
+    const manyGifts = Array.from({ length: 50 }, (_, i) => ({
+      id: `g-${i}`,
+      name: `Regalo ${i}`,
+      isClaimed: false,
+      createdAt: new Date(2025, 0, 1, 0, 0, i).toISOString(),
+    }));
+    mockGetEventBySlug.mockResolvedValue({ event: testEvent, gifts: manyGifts, photos: [] });
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.gifts).toHaveLength(50);
+    });
+    expect(result.current.giftsHasMore).toBe(true);
+    expect(result.current.photosHasMore).toBe(false);
+  });
+
+  it('carga más regalos con cursor y los anexa sin duplicados (B10)', async () => {
+    const manyGifts = Array.from({ length: 50 }, (_, i) => ({
+      id: `g-${i}`,
+      name: `Regalo ${i}`,
+      isClaimed: false,
+      createdAt: new Date(2025, 0, 1, 0, 0, i).toISOString(),
+    }));
+    mockGetEventBySlug.mockResolvedValue({ event: testEvent, gifts: manyGifts, photos: [] });
+    mockApiClientGet.mockResolvedValue({
+      gifts: [
+        { id: 'g-49', name: 'Regalo duplicado', isClaimed: false, createdAt: manyGifts[49].createdAt },
+        { id: 'g-50', name: 'Regalo extra', isClaimed: false, createdAt: new Date(2024, 11, 31).toISOString() },
+      ],
+      hasMore: true,
+    });
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.gifts).toHaveLength(50);
+    });
+
+    await act(async () => {
+      await result.current.loadMoreGifts();
+    });
+
+    expect(mockApiClientGet).toHaveBeenCalledWith(
+      '/api/events/evt-1/gifts',
+      expect.objectContaining({
+        params: expect.objectContaining({ limit: '50', cursor: expect.any(String) }),
+      }),
+    );
+    // el regalo duplicado (mismo id) se descarta
+    expect(result.current.gifts).toHaveLength(51);
+    expect(result.current.gifts[50].id).toBe('g-50');
+    expect(result.current.giftsHasMore).toBe(true);
+    expect(result.current.loadingMoreGifts).toBe(false);
+  });
+
+  it('carga más fotos con cursor (B10)', async () => {
+    const manyPhotos = Array.from({ length: 15 }, (_, i) => ({
+      id: `p-${i}`,
+      url: `https://cdn.test/${i}.jpg`,
+      uploadedBy: 'Ana',
+      createdAt: new Date(2025, 0, 1, 0, 0, i).toISOString(),
+    }));
+    mockGetEventBySlug.mockResolvedValue({ event: testEvent, gifts: [], photos: manyPhotos });
+    mockApiClientGet.mockResolvedValue({ photos: [{ id: 'p-15', url: 'https://cdn.test/15.jpg', uploadedBy: 'Luis', createdAt: new Date(2024, 11, 31).toISOString() }], hasMore: false });
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.photos).toHaveLength(15);
+    });
+    expect(result.current.photosHasMore).toBe(true);
+
+    await act(async () => {
+      await result.current.loadMorePhotos();
+    });
+
+    expect(result.current.photos).toHaveLength(16);
+    expect(result.current.photosHasMore).toBe(false);
   });
 });

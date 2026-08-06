@@ -38,14 +38,16 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    submittingRef.current = true;
-    if (loading) return;
 
+    // B3: validaciones ANTES de setear el flag — un early-return con el flag
+    // activo dejaba el formulario permanentemente muerto (Enter con campos vacíos).
+    if (loading) return;
     if (!email || !password) {
       showToast('Completa todos los campos', 'error');
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     setButtonStatus('loading');
 

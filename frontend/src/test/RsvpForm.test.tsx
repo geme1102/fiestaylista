@@ -66,4 +66,33 @@ describe('RsvpForm', () => {
       expect(screen.getByText('Error de conexión')).toBeInTheDocument();
     });
   });
+
+  it('restaura el draft de mensaje y acompañantes guardado (B8)', () => {
+    localStorage.setItem('fy_rsvp_draft:event-1', JSON.stringify({ companions: 3, message: 'Llevo la torta' }));
+
+    render(<RsvpForm eventId="event-1" eventTitle="Mi Fiesta" guestName="Maria" />);
+    fireEvent.click(screen.getByText(/¿Vienes\?/));
+
+    expect(screen.getByLabelText(/Acompañantes/)).toHaveValue('3');
+    expect(screen.getByLabelText(/Mensaje para el anfitrión/)).toHaveValue('Llevo la torta');
+  });
+
+  it('guarda el draft al escribir y lo limpia al confirmar (B8)', async () => {
+    render(<RsvpForm eventId="event-1" eventTitle="Mi Fiesta" guestName="Maria" />);
+    fireEvent.click(screen.getByText(/¿Vienes\?/));
+
+    const messageInput = screen.getByLabelText(/Mensaje para el anfitrión/);
+    fireEvent.change(messageInput, { target: { value: 'Nos vemos!' } });
+
+    expect(JSON.parse(localStorage.getItem('fy_rsvp_draft:event-1')!)).toEqual({
+      companions: 0,
+      message: 'Nos vemos!',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /confirmar asistencia/i }));
+
+    await waitFor(() => {
+      expect(localStorage.getItem('fy_rsvp_draft:event-1')).toBeNull();
+    });
+  });
 });

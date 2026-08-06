@@ -24,6 +24,13 @@ export function useEventPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  // B10: paginación incremental — getEventBySlug trae max 50 regalos / 15 fotos
+  // sin "hasMore"; el botón aparece cuando la lista llegó al tope y la respuesta
+  // del listado paginado (que sí devuelve hasMore) refina el estado.
+  const [giftsHasMore, setGiftsHasMore] = useState(false);
+  const [photosHasMore, setPhotosHasMore] = useState(false);
+  const [loadingMoreGifts, setLoadingMoreGifts] = useState(false);
+  const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -83,6 +90,8 @@ export function useEventPage() {
       setEvent(data.event);
       setGifts(data.gifts || []);
       setPhotos(data.photos || []);
+      setGiftsHasMore((data.gifts || []).length >= 50);
+      setPhotosHasMore((data.photos || []).length >= 15);
     } catch (err) {
       if (controller.signal.aborted) return;
       reportError(err, { source: 'useEventPage' });
@@ -314,6 +323,55 @@ export function useEventPage() {
   const availableGifts = useMemo(() => gifts.filter((g) => !g.isClaimed), [gifts]);
   const claimedGifts = useMemo(() => gifts.filter((g) => g.isClaimed), [gifts]);
 
+  // B10: cursor = createdAt del último regalo/foto cargado (el listado ordena
+  // por createdAt DESC y el backend compara con `<`). Dedupe por id por si
+  // hay timestamps idénticos entre páginas.
+  const loadMoreGifts = useCallback(async () => {
+    if (!event || gifts.length === 0 || loadingMoreGifts) return;
+    setLoadingMoreGifts(true);
+    try {
+      const last = gifts[gifts.length - 1];
+      const cursor = new Date(last.createdAt).toISOString();
+      const res = await apiClient.get<{ gifts: Gift[]; hasMore: boolean }>(`/api/events/${event.id}/gifts`, {
+        params: { limit: '50', cursor },
+        skipAuthRedirect: true,
+      });
+      setGifts((prev) => {
+        const ids = new Set(prev.map((g) => g.id));
+        return [...prev, ...(res.gifts || []).filter((g) => !ids.has(g.id))];
+      });
+      setGiftsHasMore(res.hasMore);
+    } catch (err) {
+      reportError(err, { source: 'useEventPage' });
+      showToast('Error al cargar más regalos', 'error');
+    } finally {
+      setLoadingMoreGifts(false);
+    }
+  }, [event, gifts, loadingMoreGifts]);
+
+  const loadMorePhotos = useCallback(async () => {
+    if (!event || photos.length === 0 || loadingMorePhotos) return;
+    setLoadingMorePhotos(true);
+    try {
+      const last = photos[photos.length - 1];
+      const cursor = new Date(last.createdAt).toISOString();
+      const res = await apiClient.get<{ photos: Photo[]; hasMore: boolean }>(`/api/events/${event.id}/photos`, {
+        params: { limit: '50', cursor },
+        skipAuthRedirect: true,
+      });
+      setPhotos((prev) => {
+        const ids = new Set(prev.map((p) => p.id));
+        return [...prev, ...(res.photos || []).filter((p) => !ids.has(p.id))];
+      });
+      setPhotosHasMore(res.hasMore);
+    } catch (err) {
+      reportError(err, { source: 'useEventPage' });
+      showToast('Error al cargar más fotos', 'error');
+    } finally {
+      setLoadingMorePhotos(false);
+    }
+  }, [event, photos, loadingMorePhotos]);
+
   const categories = useMemo(() => {
     const seen = new Set<string>();
     const cats: { label: string; color: string }[] = [];
@@ -350,6 +408,8 @@ export function useEventPage() {
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
     handleClaim, handleDownload,
+    giftsHasMore, photosHasMore, loadingMoreGifts, loadingMorePhotos,
+    loadMoreGifts, loadMorePhotos,
     reloadEvent: loadEvent,
   };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CashFundSection from '../components/CashFundSection';
 
 const mockGetCashFund = vi.hoisted(() => vi.fn());
@@ -18,6 +18,11 @@ vi.mock('../hooks/useToast', () => ({
   showToast: mockShowToast,
 }));
 
+vi.mock('../hooks/useTurnstile', () => ({
+  useTurnstile: () => ({ containerRef: { current: null }, token: 'tok-1', reset: vi.fn() }),
+  waitForTurnstile: vi.fn(() => 'tok-1'),
+}));
+
 vi.mock('../utils/format', () => ({
   formatCOP: (v: number) => `$${v.toLocaleString('es-CO')} COP`,
 }));
@@ -30,6 +35,7 @@ const activeFund = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   mockGetCashFund.mockResolvedValue({ cashFund: activeFund, promisedTotal: 0 });
   mockGetContributions.mockResolvedValue({ contributions: [] });
 });
@@ -110,6 +116,42 @@ describe('CashFundSection', () => {
     await waitFor(() => {
       expect(screen.getByText('Nequi')).toBeInTheDocument();
       expect(screen.getByText('3001234567')).toBeInTheDocument();
+    });
+  });
+
+  it('restaura el draft del aporte guardado (B8)', async () => {
+    localStorage.setItem('fy_promise_draft:fund-1', JSON.stringify({ amount: '50000', message: 'Con cariño' }));
+
+    render(<CashFundSection eventId="event-1" isOwner={false} guestName="Maria" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Ya transferiste? Regístralo aquí')).toBeInTheDocument();
+    });
+    expect(screen.getByPlaceholderText('Monto')).toHaveValue(50000);
+    expect(screen.getByPlaceholderText('Mensaje (opcional)')).toHaveValue('Con cariño');
+  });
+
+  it('guarda el draft al escribir y lo limpia al registrar el aporte (B8)', async () => {
+    mockCreatePromise.mockResolvedValue({});
+
+    render(<CashFundSection eventId="event-1" isOwner={false} guestName="Maria" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Ya transferiste? Regístralo aquí')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('Monto'), { target: { value: '25000' } });
+    fireEvent.change(screen.getByPlaceholderText('Mensaje (opcional)'), { target: { value: 'Saludos' } });
+
+    expect(JSON.parse(localStorage.getItem('fy_promise_draft:fund-1')!)).toEqual({
+      amount: '25000',
+      message: 'Saludos',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /ya transfer/i }));
+
+    await waitFor(() => {
+      expect(localStorage.getItem('fy_promise_draft:fund-1')).toBeNull();
     });
   });
 });

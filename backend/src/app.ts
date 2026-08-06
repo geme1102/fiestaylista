@@ -123,8 +123,11 @@ export function createApp() {
 
   app.use(cookieParser());
 
-  app.use('/api/webhooks', webhookLimiter, webhooksRouter);
-  app.use('/api/webhooks', webhookLimiter, resendWebhookRouter);
+  // B5: un solo mount con el limiter — antes había dos `app.use('/api/webhooks',
+  // webhookLimiter, ...)`: una petición que no matcheaba el primer router pasaba
+  // por webhookLimiter DOS veces (misma instancia singleton) y contaba el doble
+  // contra la cuota.
+  app.use('/api/webhooks', webhookLimiter, webhooksRouter, resendWebhookRouter);
 
   app.post('/api/csp-report', createLimiter({ prefix: 'csp', max: 10, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }), express.json({ type: ['application/csp-report', 'application/reports+json'], limit: '64kb' }), (req, res) => {
     const report = req.body?.['csp-report'] ?? req.body;
@@ -147,12 +150,23 @@ export function createApp() {
   });
 
   app.get('/api/health/ready', async (_req, res) => {
-    const checks = {
-      database: await checkDatabase(),
-      mercadopago: checkMercadoPago(),
-      cloudinary: checkCloudinary(),
-      resend: checkResend(),
-    };
+    // B4: try/catch defensivo — si un check lanza (p.ej. la conexión DB muere a
+    // mitad de camino), antes el handler rechazaba sin responder y el healthcheck
+    // de Railway se colgaba hasta el timeout del deploy.
+    let checks: Record<string, { status: string; configured?: boolean; latency?: number }> | null = null;
+    try {
+      checks = {
+        database: await checkDatabase(),
+        mercadopago: checkMercadoPago(),
+        cloudinary: checkCloudinary(),
+        resend: checkResend(),
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn('[HEALTH]', 'Health check lanzó una excepción:', message);
+      res.status(503).json({ status: 'unhealthy', checks: { database: { status: 'error' } }, error: message });
+      return;
+    }
 
     const overall = checks.database.status === 'error'
       ? 'unhealthy'

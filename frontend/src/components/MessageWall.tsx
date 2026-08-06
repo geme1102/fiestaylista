@@ -14,10 +14,15 @@ interface MessageWallProps {
 }
 
 export default function MessageWall({ eventId, guestName }: MessageWallProps) {
+  // B8: el borrador del mensaje sobrevive a recargas/navegación — un invitado
+  // que escribió un mensaje largo no lo pierde si se va a ver la galería.
+  const DRAFT_KEY = `fy_msg_draft:${eventId}`;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState(() => {
+    try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
+  });
   const [submitting, setSubmitting] = useState(false);
   const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
@@ -62,6 +67,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
       });
       setMessages((prev) => [res.message, ...prev]);
       setNewMessage('');
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setShowForm(false);
       resetTurnstile();
       showToast('Mensaje publicado 💬', 'success');
@@ -103,7 +109,11 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
               <textarea
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setNewMessage(value);
+                  try { localStorage.setItem(DRAFT_KEY, value); } catch {}
+                }}
                 maxLength={1000}
                 placeholder="Escribe tu mensaje..."
                 className="w-full rounded-xl border border-outline-variant bg-surface text-on-surface px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] resize-none"

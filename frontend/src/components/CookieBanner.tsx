@@ -113,7 +113,7 @@ export default function CookieBanner() {
       {/* COOKIE BANNER */}
       {!showConfig && (
         <div
-          className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-fit max-w-4xl z-[60] ${
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-fit max-w-4xl z-[60] mb-safe ${
             leaving ? 'opacity-0 translate-y-4' : 'animate-fade-in'
           } transition-all duration-400`}
           id="cookie-banner"

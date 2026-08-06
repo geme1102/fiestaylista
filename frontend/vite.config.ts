@@ -45,11 +45,14 @@ export default defineConfig({
             // también los GETs autenticados (/api/events, /api/events/:id,
             // /api/account, /api/stats...) en la caché compartida del origen:
             // el siguiente usuario del dispositivo veía los datos del anterior.
+            // B1: NetworkFirst SOLO sirve caché si la red falla (timeout 5s),
+            // pero el estado de regalos (disponible/apartado) se acota a 10 min
+            // para no ofrecer un regalo ya apartado en modo offline.
             urlPattern: /^https?:\/\/.*\/api\/events\/(slug\/[^/?#]+|[^/?#]+\/(gifts|photos|messages))([?#].*)?$/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+              expiration: { maxEntries: 50, maxAgeSeconds: 10 * 60 },
               networkTimeoutSeconds: 5,
             },
           },

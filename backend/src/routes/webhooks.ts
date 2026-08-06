@@ -132,7 +132,12 @@ router.post('/mercadopago', asyncHandler(async (req: Request, res: Response) => 
     }
   };
 
-  processWebhook();
+  // B4: .catch defensivo — el body completo ya va en try/catch, pero si algo
+  // lanzara fuera (p.ej. en la evaluación de argumentos), una promesa colgada
+  // sería un unhandled rejection en Node (crash según flags).
+  processWebhook().catch((err) => {
+    log.error({ err }, 'Error no capturado procesando webhook en background:');
+  });
 }));
 
 export default router;

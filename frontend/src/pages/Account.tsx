@@ -545,11 +545,11 @@ export default function Account() {
           role="dialog"
           aria-modal="true"
           aria-label="Cancelar suscripción"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 overflow-y-auto"
           onKeyDown={(e) => { if (e.key === 'Escape') { setShowCancelConfirm(false); setCancelPassword(''); } }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowCancelConfirm(false); setCancelPassword(''); } }}
         >
-          <div ref={cancelDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div ref={cancelDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4 m-auto">
             <h3 className="font-semibold text-lg text-on-surface">Cancelar Suscripción</h3>
             <p className="text-sm text-on-surface-variant">Ingresa tu contraseña para confirmar la cancelación. Perderás acceso a funciones Pro al final del período actual.</p>
             <input
@@ -582,11 +582,11 @@ export default function Account() {
           role="dialog"
           aria-modal="true"
           aria-label="Eliminar cuenta"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 overflow-y-auto"
           onKeyDown={(e) => { if (e.key === 'Escape') { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); } }}
         >
-          <div ref={deleteDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+          <div ref={deleteDialogRef} className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4 m-auto">
             <h3 className="font-semibold text-lg text-red-600">Eliminar Cuenta</h3>
             <p className="text-sm text-on-surface-variant">Esta acción eliminará permanentemente tu cuenta, eventos y todos los datos asociados. No se puede deshacer.</p>
             <div>

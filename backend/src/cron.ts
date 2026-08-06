@@ -113,7 +113,11 @@ export function startCronJobs(): void {
           .where(and(
             sql`${subscriptions.status} IN ('pending_approval', 'incomplete')`,
             sql`${subscriptions.createdAt} < NOW() - INTERVAL '1 hour'`,
-          ));
+          ))
+          // B9: tope por corrida — sin LIMIT, una cola grande de suscripciones
+          // atascadas se procesaba entera de golpe (llamadas MP + emails)
+          // bloqueando el cron y golpeando el rate limit de MP.
+          .limit(100);
 
         for (let i = 0; i < stuck.length; i++) {
           const sub = stuck[i];

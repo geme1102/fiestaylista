@@ -57,6 +57,8 @@ export default function EventGuest() {
     eventDateFormatted, eventTimeFormatted,
     turnstileRef,
     handleClaim, handleDownload, reloadEvent,
+    giftsHasMore, photosHasMore, loadingMoreGifts, loadingMorePhotos,
+    loadMoreGifts, loadMorePhotos,
   } = useEventPage();
 
   const [showEnvelope, setShowEnvelope] = useState(false);
@@ -464,6 +466,20 @@ export default function EventGuest() {
             </AnimatePresence>
             </SectionErrorBoundary>
 
+            {giftsHasMore && (
+              <button
+                onClick={loadMoreGifts}
+                disabled={loadingMoreGifts}
+                className="mt-6 w-full py-3.5 min-h-[48px] rounded-2xl border border-primary/30 bg-primary-fixed/20 text-primary font-bold text-sm hover:bg-primary-fixed/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loadingMoreGifts ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                ) : (
+                  'Ver más regalos'
+                )}
+              </button>
+            )}
+
             {claimedGifts.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -563,6 +579,19 @@ export default function EventGuest() {
                   </motion.div>
                 ))}
               </div>
+            )}
+            {photosHasMore && (
+              <button
+                onClick={loadMorePhotos}
+                disabled={loadingMorePhotos}
+                className="mt-4 w-full py-3.5 min-h-[48px] rounded-2xl border border-primary/30 bg-primary-fixed/20 text-primary font-bold text-sm hover:bg-primary-fixed/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loadingMorePhotos ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                ) : (
+                  'Ver más fotos'
+                )}
+              </button>
             )}
           </motion.div>
 

@@ -68,6 +68,9 @@ export default function EventAdmin() {
   const [event, setEvent] = useState<AdminEvent | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  // B10: paginación incremental de regalos (getEvent trae max 50; Pro hasta 100).
+  const [giftsHasMore, setGiftsHasMore] = useState(false);
+  const [loadingMoreGifts, setLoadingMoreGifts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -163,6 +166,28 @@ export default function EventAdmin() {
     });
   }, [refreshUser]);
 
+  const handleLoadMoreGifts = useCallback(async () => {
+    if (!id || gifts.length === 0 || loadingMoreGifts) return;
+    setLoadingMoreGifts(true);
+    try {
+      const last = gifts[gifts.length - 1];
+      const cursor = new Date(last.createdAt).toISOString();
+      const res = await apiClient.get<{ gifts: Gift[]; hasMore: boolean }>(`/api/events/${id}/gifts`, {
+        params: { limit: '50', cursor },
+      });
+      setGifts((prev) => {
+        const ids = new Set(prev.map((g) => g.id));
+        return [...prev, ...(res.gifts || []).filter((g) => !ids.has(g.id))];
+      });
+      setGiftsHasMore(res.hasMore);
+    } catch (err) {
+      reportError(err, { source: 'EventAdmin' });
+      showToast('Error al cargar más regalos', 'error');
+    } finally {
+      setLoadingMoreGifts(false);
+    }
+  }, [id, gifts, loadingMoreGifts]);
+
   const loadEvent = useCallback(async () => {
     try {
       if (!id) return;
@@ -179,6 +204,9 @@ export default function EventAdmin() {
       setNoteDraft(ev.eventNote ?? '');
       setGifts(ev.gifts || []);
       setPhotos(ev.photos || []);
+      // B10: getEvent trae max 50 regalos; Pro/Pro+ permiten hasta 100 —
+      // el botón "Ver más" aparece solo si la página llegó al tope.
+      setGiftsHasMore((ev.gifts || []).length >= 50);
       if (fundRes.cashFund) setCashFund(fundRes.cashFund);
     } catch (err) {
       reportError(err, { source: 'EventAdmin' });
@@ -501,7 +529,7 @@ export default function EventAdmin() {
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-24 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
+    <main id="main-content" className="min-h-screen bg-surface text-on-surface font-sans antialiased pb-bottom-nav relative overflow-hidden selection:bg-primary/20 selection:text-primary">
 
       {/* Ambient glow backgrounds */}
       <div className="absolute top-[-180px] left-[-150px] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-pink-300/30 to-rose-400/20 blur-[130px] pointer-events-none -z-10 animate-pulse duration-[12000ms]" />
@@ -794,6 +822,9 @@ export default function EventAdmin() {
             onAddSuggestion={handleAddSuggestion}
             onNewGiftNameChange={setNewGiftName}
             onShowSuggestionsChange={setShowSuggestions}
+            giftsHasMore={giftsHasMore}
+            loadingMoreGifts={loadingMoreGifts}
+            onLoadMoreGifts={handleLoadMoreGifts}
           />
         </Suspense>
         </SectionErrorBoundary>

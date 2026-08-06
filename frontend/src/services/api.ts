@@ -117,10 +117,22 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         const refreshed = await tryRefreshToken();
         if (refreshed) {
           headers['Authorization'] = `Bearer ${accessToken}`;
+          // B2: el retry usa un AbortController NUEVO con su propio timeout.
+          // Reusar `controller.signal` del request original abortaba el retry
+          // al expirar el timeout del primer intento (el refresh consume tiempo
+          // del mismo reloj) → falso "La solicitud tardó demasiado" en redes lentas.
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), timeout);
+          const onParentAbortRetry = options?.signal
+            ? () => retryController.abort()
+            : null;
+          if (options?.signal && onParentAbortRetry) {
+            options.signal.addEventListener('abort', onParentAbortRetry, { once: true });
+          }
           const retryInit: RequestInit = {
             method,
             headers: { ...headers },
-            signal: controller.signal,
+            signal: retryController.signal,
             credentials: 'include',
           };
           if (body instanceof FormData) {
@@ -136,6 +148,11 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
             }
             reportError(error, { source: 'api' });
             throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
+          } finally {
+            clearTimeout(retryTimeoutId);
+            if (options?.signal && onParentAbortRetry) {
+              options.signal.removeEventListener('abort', onParentAbortRetry);
+            }
           }
         } else {
           clearTokens();

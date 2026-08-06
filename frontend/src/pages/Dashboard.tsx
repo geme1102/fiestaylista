@@ -97,11 +97,16 @@ export default function Dashboard() {
     const MAX_ATTEMPTS = 30;
     let attempts = 0;
     let timeout: ReturnType<typeof setTimeout>;
+    // B7: flag mounted — el cleanup solo corta el siguiente setTimeout, pero un
+    // `await refreshUser()` en vuelo podía completarse tras el unmount y hacer
+    // setState + encolar más polls (setState en componente desmontado).
+    let mounted = true;
 
     const poll = async () => {
       attempts++;
       try {
         await refreshUser();
+        if (!mounted) return;
         if (tierRef.current === 'pro' || tierRef.current === 'pro_plus') {
           setPollingPayment(false);
           showToast(`🎉 ¡Bienvenido a ${tierRef.current === 'pro_plus' ? 'Pro Plus' : 'Pro'}! Ahora tienes acceso a todas las funciones premium.`, 'success');
@@ -116,12 +121,16 @@ export default function Dashboard() {
       } catch (err) {
         reportError(err, { source: 'Dashboard' });
       }
+      if (!mounted) return;
       timeout = setTimeout(poll, 2000);
     };
 
     timeout = setTimeout(poll, 2000);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
   }, [location.search, refreshUser, queryClient]);
 
   useEffect(() => {
