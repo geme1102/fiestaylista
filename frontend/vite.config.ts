@@ -40,7 +40,12 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\/api\/(?!auth\/|subscriptions\/|events\/[^/]+\/messages|events\/[^/]+\/guests|events\/[^/]+\/cash-fund|cash-fund\/)(?!.*\/subscribe).*/i,
+            // A3: whitelist de endpoints PÚBLICOS por diseño (página pública
+            // por slug, regalos/fotos/mensajes de invitado). Antes se cacheaban
+            // también los GETs autenticados (/api/events, /api/events/:id,
+            // /api/account, /api/stats...) en la caché compartida del origen:
+            // el siguiente usuario del dispositivo veía los datos del anterior.
+            urlPattern: /^https?:\/\/.*\/api\/events\/(slug\/[^/?#]+|[^/?#]+\/(gifts|photos|messages))([?#].*)?$/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

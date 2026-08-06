@@ -238,6 +238,15 @@ export const apiClient = {
     const doUpload = (token: string | null, retriesLeft: number): Promise<T> => {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        // A4: onerror puede dispararse tras subirse el body completo (se perdió
+        // solo la respuesta). Reintentar en ese caso duplica la foto en el
+        // server (el POST ya se commiteó). Solo se reintenta si el body nunca
+        // llegó completo.
+        let uploadCompleted = false;
+
+        xhr.upload.onload = () => {
+          uploadCompleted = true;
+        };
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -277,7 +286,10 @@ export const apiClient = {
         };
 
         xhr.onerror = async () => {
-          if (retriesLeft > 0) {
+          // A4: solo reintentar si el server nunca recibió el body completo —
+          // si ya se subió, el POST pudo haberse commiteado y el reintento
+          // crearía una foto duplicada.
+          if (retriesLeft > 0 && !uploadCompleted) {
             await delay(Math.min(1000 * Math.pow(2, MAX_RETRIES - retriesLeft), 4000));
             resolve(doUpload(token, retriesLeft - 1));
             return;

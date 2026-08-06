@@ -17,6 +17,7 @@ export interface CreateEventData {
   eventDate?: string;
   eventLocation?: string;
   eventNote?: string;
+  idempotencyKey?: string;
 }
 
 export interface UpdateEventData {
@@ -43,6 +44,23 @@ export async function ensureEventNotFrozen(eventId: string): Promise<void> {
 export async function createEvent(userId: string, data: CreateEventData) {
   return await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+
+    // A5: idempotencia — si el cliente reintenta con la misma key (respuesta
+    // perdida en móvil), devolver el evento ya creado en vez de duplicarlo.
+    // Va ANTES del chequeo de límite de eventos: el reintento de un usuario en
+    // su cupo máximo no debe fallar por límite, sino devolver el evento.
+    if (data.idempotencyKey) {
+      const [existing] = await tx
+        .select()
+        .from(eventsTable)
+        .where(and(
+          eq(eventsTable.userId, userId),
+          eq(eventsTable.idempotencyKey, data.idempotencyKey),
+          isNull(eventsTable.deletedAt),
+        ))
+        .limit(1);
+      if (existing) return existing;
+    }
 
     const [user] = await tx
       .select({ tier: users.tier })
@@ -96,11 +114,27 @@ export async function createEvent(userId: string, data: CreateEventData) {
           eventDate: data.eventDate ? new Date(data.eventDate) : null,
           eventLocation: data.eventLocation || null,
           eventNote: data.eventNote || null,
+          idempotencyKey: data.idempotencyKey || null,
           slug,
         })
         .returning();
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
+        // A5: si el unique de idempotency se dispara (carrera exótica pese al
+        // advisory lock), devolver el evento existente en vez de fallar.
+        const constraint = (err as { constraint?: string }).constraint;
+        if (constraint === 'events_user_id_idempotency_key_unique' && data.idempotencyKey) {
+          const [existing] = await tx
+            .select()
+            .from(eventsTable)
+            .where(and(
+              eq(eventsTable.userId, userId),
+              eq(eventsTable.idempotencyKey, data.idempotencyKey),
+              isNull(eventsTable.deletedAt),
+            ))
+            .limit(1);
+          if (existing) return existing;
+        }
         throw new ValidationError('Ya existe un evento con ese nombre o slug. Intenta con otro título.');
       }
       throw err;

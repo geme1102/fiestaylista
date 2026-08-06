@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, boolean, timestamp, integer, index, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
-import { isNull, relations, sql } from 'drizzle-orm';
+import { isNull, isNotNull, relations, sql } from 'drizzle-orm';
 
 export const eventStatusEnum = pgEnum('event_status', ['active', 'completed', 'paused']);
 export const contributionStatusEnum = pgEnum('contribution_status', ['promised', 'paid', 'cancelled']);
@@ -43,6 +43,7 @@ export const events = pgTable('events', {
   eventLocation: text('event_location'),
   eventNote: text('event_note'),
   frozenAt: timestamp('frozen_at', { mode: 'date', withTimezone: true }),
+  idempotencyKey: uuid('idempotency_key'),
   viewCount: integer('view_count').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true }).defaultNow().notNull(),
@@ -52,6 +53,9 @@ export const events = pgTable('events', {
   deletedAtIdx: index('events_deleted_at_idx').on(table.deletedAt),
   userIdIsActiveDeletedAtIdx: index('events_user_id_is_active_deleted_at_idx').on(table.userId, table.isActive, table.deletedAt),
   slugUniqueActiveIdx: uniqueIndex('events_slug_unique').on(table.slug).where(isNull(table.deletedAt)),
+  idempotencyKeyUniqueIdx: uniqueIndex('events_user_id_idempotency_key_unique')
+    .on(table.userId, table.idempotencyKey)
+    .where(sql`${isNull(table.deletedAt)} AND ${isNotNull(table.idempotencyKey)}`),
 }));
 
 export const gifts = pgTable('gifts', {

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
+import type { AddressInfo } from 'node:net';
+
+// Guardado en módulo: otros tests sobrescriben global.fetch (Turnstile)
+const realFetch = globalThis.fetch;
 
 vi.mock('../config.js', () => ({
   config: {
@@ -55,6 +59,7 @@ vi.mock('cloudinary', async () => {
           }, 0);
           return stream;
         }),
+        destroy: vi.fn().mockResolvedValue({ result: 'ok' }),
       },
     },
   };
@@ -186,5 +191,52 @@ describe('POST /api/upload/guest-upload', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Turnstile no está configurado');
+  });
+
+  it('A4: aborta el stream y destruye el asset parcial si Cloudinary no responde en 25s', async () => {
+    // Solo fake de setTimeout: supertest/superagent son lazy (no inician el
+    // request hasta el await) y usan setImmediate/nextTick reales — así que
+    // aquí usamos fetch (arranca inmediatamente) y un server real.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      // Otros tests de este archivo sobrescriben global.fetch (Turnstile) —
+      // restaurar el fetch real para poder hacer la petición HTTP.
+      global.fetch = realFetch;
+      const { v2: cloudinary } = await import('cloudinary');
+      const { PassThrough } = await import('node:stream');
+      const uploader = cloudinary.uploader as any;
+      let capturedStream: { destroyed: boolean } | null = null;
+
+      uploader.upload_stream.mockImplementation(() => {
+        const stream = new PassThrough();
+        capturedStream = stream;
+        stream.on('data', () => {});
+        // nunca llama al callback: Cloudinary "colgado"
+        return stream;
+      });
+
+      const server = makeApp().listen(0);
+      const port = (server.address() as AddressInfo).port;
+
+      const promise = fetch(`http://127.0.0.1:${port}/api/upload/guest-upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: '123e4567-e89b-12d3-a456-426614174000' }),
+      });
+
+      await vi.advanceTimersByTimeAsync(60_000);
+
+      const res = await promise;
+      const body = (await res.json()) as { error?: string };
+      server.close();
+
+      expect(res.status).toBe(500);
+      expect(body.error).toContain('timed out after 25s');
+      expect(capturedStream).not.toBeNull();
+      expect(capturedStream!.destroyed).toBe(true);
+      expect(uploader.destroy).toHaveBeenCalledWith(expect.stringContaining('fiestaylista/'));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

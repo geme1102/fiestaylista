@@ -94,7 +94,15 @@ async function cleanupFile(filePath: string): Promise<void> {
   try { await unlink(filePath); } catch { /* ignore cleanup errors */ }
 }
 
-function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
+// A4: handle para abortar una subida en curso — el stream se destruye (corta
+// la escritura a Cloudinary) y el public_id queda disponible para un destroy
+// best-effort del asset parcial.
+interface UploadAbortHandle {
+  stream: { destroy(): void } | null;
+  publicId: string;
+}
+
+function cloudinaryUpload(filePath: string, mimeType: string, abortHandle?: UploadAbortHandle): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!config.CLOUDINARY_CLOUD_NAME) {
       if (config.NODE_ENV === 'production') {
@@ -111,9 +119,16 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
       return;
     }
 
+    // A4: public_id explícito para poder destruir el asset si el timeout
+    // aborta la subida (antes el id era auto-generado por Cloudinary y un
+    // upload interrumpido quedaba huérfano para siempre).
+    const publicId = `${UPLOAD_FOLDER}/${randomUUID()}`;
+    if (abortHandle) abortHandle.publicId = publicId;
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: UPLOAD_FOLDER,
+        public_id: publicId,
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto', flags: 'strip_exif' }],
       },
@@ -123,6 +138,7 @@ function cloudinaryUpload(filePath: string, mimeType: string): Promise<string> {
         else reject(new Error('Cloudinary devolvió una respuesta vacía'));
       },
     );
+    if (abortHandle) abortHandle.stream = uploadStream;
     createReadStream(filePath).pipe(uploadStream);
   });
 }
@@ -143,13 +159,27 @@ async function uploadWithRetry(filePath: string, mimeType: string, maxRetries = 
 }
 
 async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): Promise<string> {
-  let timer: ReturnType<typeof setTimeout>;
-  return Promise.race([
-    cloudinaryUpload(filePath, mimeType),
-    new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error('Cloudinary upload timed out after 25s')), 25000);
-    }),
-  ]).finally(() => clearTimeout(timer!));
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const abortHandle: UploadAbortHandle = { stream: null, publicId: '' };
+  try {
+    return await Promise.race([
+      cloudinaryUpload(filePath, mimeType, abortHandle),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          // A4: al vencer el timeout, abortar el stream (deja de escribir en
+          // Cloudinary) y destruir best-effort el asset parcial — antes el
+          // upload seguía corriendo en background y la foto quedaba huérfana.
+          abortHandle.stream?.destroy();
+          if (abortHandle.publicId) {
+            cloudinary.uploader.destroy(abortHandle.publicId).catch(() => {});
+          }
+          reject(new Error('Cloudinary upload timed out after 25s'));
+        }, 25000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 router.post('/', requireAuth, uploadLimiter, (req: Request, res: Response, next: NextFunction) => {

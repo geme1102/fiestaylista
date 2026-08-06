@@ -7,10 +7,24 @@ interface CreateEventData {
   eventType: string;
   hostPhone?: string;
   eventNote?: string;
+  idempotencyKey?: string;
 }
 
 export function createEvent(data: CreateEventData): Promise<{ event: Event }> {
   return apiClient.post<{ event: Event }>('/api/events', data);
+}
+
+// A5: key de idempotencia por intento de creación. El llamador decide su
+// ciclo de vida: generarla una vez por visita/modal y reusarla en los
+// reintentos para que el server devuelva el mismo evento en vez de duplicar.
+export function newIdempotencyKey(): string {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  // Fallback UUID v4 (entornos sin crypto.randomUUID, p.ej. tests antiguos)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 export function addPhoto(eventId: string, url: string, caption?: string): Promise<{ photo: Photo }> {

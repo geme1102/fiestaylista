@@ -20,6 +20,7 @@ import { WelcomeModal } from '../components/WelcomeModal';
 import Sheet from '../components/ui/Sheet';
 import SectionErrorBoundary from '../components/SectionErrorBoundary';
 import SubscriptionBanners from '../components/dashboard/SubscriptionBanners';
+import { newIdempotencyKey } from '../services/events';
 
 const ONBOARDING_TYPES: EventType[] = ['BABY_SHOWER', 'WEDDING', 'BIRTHDAY', 'BAPTISM', 'COMMUNION', 'HOUSE_WARMING', 'OTHER'];
 
@@ -47,6 +48,9 @@ export default function Dashboard() {
 
   const tierRef = useRef(user?.tier);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A5: key de idempotencia por apertura del modal — reintentos con la misma
+  // key devuelven el mismo evento; se regenera al cerrar el modal.
+  const createIdempotencyKeyRef = useRef<string | null>(null);
   const submittingRef = useRef(false);
   useEffect(() => { tierRef.current = user?.tier; }, [user?.tier]);
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
@@ -196,6 +200,7 @@ export default function Dashboard() {
       showToast('La creación está tomando más de lo esperado. Intenta de nuevo.', 'error');
     }, 15000);
     try {
+      createIdempotencyKeyRef.current ??= newIdempotencyKey();
       const cleanedData = {
         title: formData.title.trim(),
         eventType: formData.eventType,
@@ -203,12 +208,14 @@ export default function Dashboard() {
         eventDate: formData.eventDate ? new Date(formData.eventDate).toISOString() : undefined,
         eventLocation: formData.eventLocation || undefined,
         eventNote: formData.eventNote || undefined,
+        idempotencyKey: createIdempotencyKeyRef.current,
       };
       const res = await apiClient.post<{ event: Event & { id: string } }>('/api/events', cleanedData);
       clearTimeout(safetyTimerRef.current!);
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowCreateModal(false);
       setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' });
+      createIdempotencyKeyRef.current = null;
       navigate(`/event/${res.event.id}`);
     } catch (err) {
       clearTimeout(safetyTimerRef.current!);
@@ -492,14 +499,14 @@ export default function Dashboard() {
 
       <Sheet
         open={showCreateModal}
-        onClose={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
+        onClose={() => { setShowCreateModal(false); createIdempotencyKeyRef.current = null; setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
         ariaLabel="Crear nuevo evento"
         className="p-8 pb-safe-lg"
       >
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-xl font-bold text-on-surface font-outfit">Crear nuevo evento</h2>
           <button
-            onClick={() => { setShowCreateModal(false); setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
+            onClick={() => { setShowCreateModal(false); createIdempotencyKeyRef.current = null; setFormData({ title: '', eventType: 'BABY_SHOWER', hostPhone: '', eventDate: '', eventLocation: '', eventNote: '' }); }}
             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors"
             aria-label="Cerrar modal"
           >

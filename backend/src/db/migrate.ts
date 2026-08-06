@@ -782,6 +782,17 @@ export const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE INDEX IF NOT EXISTS "pending_cloudinary_deletes_next_retry_at_idx" ON "pending_cloudinary_deletes"("next_retry_at")`,
     ],
   },
+  // A5: idempotencia de POST /api/events — el cliente genera una key por
+  // intento y la reenvía en reintentos (respuesta perdida en móvil). El
+  // índice unique (user_id, idempotency_key) activo devuelve el evento ya
+  // creado en vez de duplicarlo.
+  {
+    name: 'events_idempotency_key',
+    statements: [
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "idempotency_key" uuid`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "events_user_id_idempotency_key_unique" ON "events"("user_id", "idempotency_key") WHERE "idempotency_key" IS NOT NULL AND "deleted_at" IS NULL`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

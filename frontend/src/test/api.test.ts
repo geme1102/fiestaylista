@@ -290,7 +290,7 @@ describe('tryRefreshToken', () => {
 describe('uploadWithProgress (XHR)', () => {
   function mockXhr() {
     const xhr = {
-      upload: { onprogress: null as ((e: ProgressEvent) => void) | null },
+      upload: { onprogress: null as ((e: ProgressEvent) => void) | null, onload: null as (() => void) | null },
       onload: null as (() => void) | null,
       onerror: null as (() => void) | null,
       onabort: null as (() => void) | null,
@@ -341,6 +341,23 @@ describe('uploadWithProgress (XHR)', () => {
 
     await expect(promise).rejects.toThrow('Error de conexión');
     vi.useRealTimers();
+  });
+
+  // A4: si el body ya se subió completo, onerror NO debe reintentar — el POST
+  // pudo haberse commiteado en el server y solo perderse la respuesta; el
+  // reintento duplicaría la foto.
+  it('A4: does not retry on XHR error when the upload body already completed', async () => {
+    const xhr = mockXhr();
+    xhr.status = 0;
+    xhr.responseText = '';
+    const promise = apiClient.uploadWithProgress('/api/upload', new FormData(), vi.fn());
+
+    // El body se subió completo (upload.onload) pero la respuesta se perdió
+    xhr.upload.onload!();
+    xhr.onerror!();
+
+    await expect(promise).rejects.toThrow('Error de conexión');
+    expect(xhr.send).toHaveBeenCalledTimes(1);
   });
 
   // Fase 6: upload es POST no idempotente — no reintentar en 5xx (el server

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { reportError } from '../lib/reportError';
-import { createEvent } from '../services/events';
+import { createEvent, newIdempotencyKey } from '../services/events';
 import { type EventType } from '../types';
 import { showToast } from '../hooks/useToast';
 
@@ -54,6 +54,9 @@ export default function Onboarding() {
   // A3: guard de doble submit — Enter repetido disparaba createEvent varias veces
   // (el estado `creating` es asíncrono; un ref corta el camino inmediatamente).
   const creatingRef = useRef(false);
+  // A5: key de idempotencia por visita — si el request falla por red y el
+  // usuario reintenta, el server devuelve el mismo evento en vez de duplicar.
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   // Derivar icon/label desde eventType (H-8: sync persistido)
   const eventTypeInfo = getEventTypeInfo(eventType);
@@ -82,7 +85,13 @@ export default function Onboarding() {
     creatingRef.current = true;
     setCreating(true);
     try {
-      await createEvent({ title: title.trim(), eventType, eventNote: eventNote.trim() || undefined });
+      idempotencyKeyRef.current ??= newIdempotencyKey();
+      await createEvent({
+        title: title.trim(),
+        eventType,
+        eventNote: eventNote.trim() || undefined,
+        idempotencyKey: idempotencyKeyRef.current,
+      });
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       navigate('/dashboard');
     } catch (err) {

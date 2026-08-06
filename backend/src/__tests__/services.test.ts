@@ -265,6 +265,51 @@ describe('Event Service', () => {
       await expect(createEvent('u1', { title: 'Mi Boda', eventType: 'WEDDING' }))
         .rejects.toThrow('límite de 1 eventos activos en tu plan free');
     });
+
+    it('A5: devuelve el evento existente si la misma idempotencyKey ya creó uno (sin duplicar)', async () => {
+      const { db } = await import('../db/index.js');
+      const { createEvent } = await import('../services/event.js');
+      const existing = { id: 'e1', title: 'Mi Boda', slug: 'mi-boda', eventType: 'WEDDING', userId: 'u1' };
+      const tx = queryMock([[existing]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      const result = await createEvent('u1', {
+        title: 'Mi Boda',
+        eventType: 'WEDDING',
+        idempotencyKey: 'e3b0c442-98fc-1c14-9afc-4cfc6daf0a01',
+      });
+      expect(result).toEqual(existing);
+      expect(tx.insert).not.toHaveBeenCalled();
+    });
+
+    it('A5: el reintento con key existente pasa por alto el límite de eventos', async () => {
+      const { db } = await import('../db/index.js');
+      const { createEvent } = await import('../services/event.js');
+      const existing = { id: 'e1', title: 'Mi Boda', slug: 'mi-boda', eventType: 'WEDDING', userId: 'u1' };
+      const tx = queryMock([[existing]]);
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      // El usuario está en su cupo máximo (1/1), pero el reintento con la misma
+      // key debe devolver el evento, no fallar por límite.
+      const result = await createEvent('u1', {
+        title: 'Mi Boda',
+        eventType: 'WEDDING',
+        idempotencyKey: 'e3b0c442-98fc-1c14-9afc-4cfc6daf0a01',
+      });
+      expect(result.id).toBe('e1');
+    });
+
+    it('A5: sin evento previo, crea el evento y persiste la idempotencyKey en el insert', async () => {
+      const { db } = await import('../db/index.js');
+      const { createEvent } = await import('../services/event.js');
+      const mockEvent = { id: 'e1', title: 'Mi Boda', slug: 'mi-boda', eventType: 'WEDDING', userId: 'u1' };
+      const tx = queryMock([[], [{ tier: 'free' }], [{ count: 0 }]]);
+      tx._insertResult = [mockEvent];
+      vi.mocked(db.transaction).mockImplementation((cb: any) => cb(tx));
+      const key = 'e3b0c442-98fc-1c14-9afc-4cfc6daf0a01';
+      const result = await createEvent('u1', { title: 'Mi Boda', eventType: 'WEDDING', idempotencyKey: key });
+      expect(result.slug).toBe('mi-boda');
+      const valuesArg = (tx.insert as any).mock.results[0].value.values.mock.calls[0][0];
+      expect(valuesArg.idempotencyKey).toBe(key);
+    });
   });
 });
 

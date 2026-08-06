@@ -111,6 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate('/', { replace: true });
     clearTokens();
     try { document.cookie = 'hasRefresh=; max-age=0; path=/'; } catch {}
+    // A3: limpiar la caché de API del SW — aunque el regex de runtimeCaching ya
+    // solo cachea endpoints públicos, esto garantiza que nada del usuario
+    // anterior sobreviva al logout en un dispositivo compartido.
+    try {
+      if ('caches' in window) {
+        caches.delete('api-cache').catch(() => {});
+      }
+    } catch {}
     setUser(null);
   }, [navigate]);
 

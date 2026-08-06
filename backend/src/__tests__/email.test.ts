@@ -102,3 +102,46 @@ describe('unsubscribeToken', () => {
     expect(recoverEmailFromToken(createUnsubscribeToken('a@b.com').slice(0, -2))).toBeNull();
   });
 });
+
+describe('sendEmail — timeout (A1)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('A1: rechaza en ≤15s si Resend no responde (no cuelga el cron ni el pool)', async () => {
+    vi.useFakeTimers();
+    try {
+      await mockSuppressionQuery([]);
+      // Resend que nunca resuelve ni rechaza
+      mockResendSend.mockReturnValue(new Promise(() => {}));
+
+      const promise = sendReminderEmail('user@test.com', 'Mi Evento', 'mi-evento', 3);
+      // Adjuntar el handler ANTES de avanzar los timers para no dejar la
+      // promesa rechazada sin handler (vitest lo marca como unhandled).
+      const assertion = expect(promise).rejects.toThrow('tardó demasiado en responder');
+      await vi.advanceTimersByTimeAsync(15_001);
+
+      await assertion;
+      expect(mockResendSend).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('A1: con respuesta normal dentro del plazo, el email se envía sin error', async () => {
+    await mockSuppressionQuery([]);
+    mockResendSend.mockResolvedValue({ id: 'email-ok' });
+
+    await expect(sendReminderEmail('user@test.com', 'Mi Evento', 'mi-evento', 3)).resolves.toBeUndefined();
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+  });
+
+  it('A1: un error de Resend se propaga como antes (sin tragarse el fallo)', async () => {
+    await mockSuppressionQuery([]);
+    mockResendSend.mockRejectedValue(new Error('rate limit exceeded'));
+
+    await expect(sendReminderEmail('user@test.com', 'Mi Evento', 'mi-evento', 3)).rejects.toThrow(
+      'rate limit exceeded',
+    );
+  });
+});

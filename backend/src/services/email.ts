@@ -10,6 +10,11 @@ import { stripHtmlToText, escapeHtml } from '../utils/sanitize.js';
 
 const log = createModuleLogger('Email');
 
+// A1: Resend sin timeout podía colgar para siempre el cron que envía correos
+// (runWithLock ejecuta fn() dentro de una transacción: un hang retiene la
+// conexión del pool y el advisory lock durante todo el job).
+export const EMAIL_SEND_TIMEOUT_MS = 15_000;
+
 let resend: Resend | null = null;
 
 if (config.RESEND_API_KEY) {
@@ -90,7 +95,7 @@ export async function sendEmail(
       headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
     }
 
-    await resend.emails.send({
+    await sendEmailWithTimeout({
       from: options.from,
       to: options.to,
       subject: options.subject,
@@ -104,6 +109,33 @@ export async function sendEmail(
     throw new Error(
       `Failed to send email: ${err instanceof Error ? err.message : 'Unknown error'}`,
     );
+  }
+}
+
+// A1: Promise.race con timeout — si Resend no responde en 15s, el fallo se
+// propaga (y el caller puede reintentar/fallar sin colgar la conexión).
+async function sendEmailWithTimeout(payload: {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  replyTo: string;
+  headers: Record<string, string>;
+}): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      resend!.emails.send(payload),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('El servicio de correo tardó demasiado en responder. Intenta de nuevo.')),
+          EMAIL_SEND_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -8,7 +8,10 @@ const mockCreateEvent = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockUseAuth() }));
-vi.mock('../services/events', () => ({ createEvent: mockCreateEvent }));
+vi.mock('../services/events', () => ({
+  createEvent: mockCreateEvent,
+  newIdempotencyKey: () => 'e3b0c442-98fc-1c14-9afc-4cfc6daf0a01',
+}));
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');

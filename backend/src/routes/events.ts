@@ -30,6 +30,7 @@ const createEventSchema = z.object({
   eventDate: z.string().datetime({ offset: true }).optional(),
   eventLocation: z.string().max(200).optional().transform(v => sanitizeAndStrip(v || '')),
   eventNote: z.string().max(1000).optional().transform(v => sanitizeAndStrip(v || '')),
+  idempotencyKey: z.string().uuid('idempotencyKey inválido').optional(),
 });
 
 const updateEventSchema = z.object({
