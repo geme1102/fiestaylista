@@ -129,6 +129,27 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - `POST /unsubscribe` responde HTML de confirmación (los clientes RFC 8058 solo requieren el 200 OK)
 - Lógica HMAC del token compartida en `utils/unsubscribeToken.ts` (`createUnsubscribeToken`/`recoverEmailFromToken`) — estaba duplicada en `email.ts` y `unsubscribe.ts`
 
+## Auditoría Forense — Fase A (Críticos, Ago 2026)
+
+- **A1**: `EMAIL_SEND_TIMEOUT_MS = 15_000` + `sendEmailWithTimeout` con `Promise.race` — un envío colgado de Resend ya no retiene el pool (~5 conexiones) ni el advisory lock del cron diario dentro de la transacción de `runWithLock`
+- **A3**: SW api-cache restringido a whitelist pública (slug/gifts/photos/messages) + `caches.delete('api-cache')` en logout — antes se cacheaban GETs autenticados (fuga entre sesiones en dispositivo compartido)
+- **A4**: subidas de fotos sin duplicados — el frontend no reintenta un upload cuyo body ya se subió completo (`xhr.upload.onload`); el backend aborta el stream de Cloudinary al vencer el timeout (25s) y destruye el asset parcial (`UploadAbortHandle {stream, publicId}`, `public_id` explícito)
+- **A5**: idempotencia en `POST /api/events` — columna `idempotency_key` (uuid) + índice único parcial `(user_id, key)`; el reintento (ej. doble clic en modal de crear) devuelve el evento existente en vez de duplicarlo; lookup por key ANTES del chequeo de límite de eventos; catch 23505 con constraint `events_user_id_idempotency_key_unique`
+
+## Auditoría Forense — Fase B (Medios, Ago 2026)
+
+- **B3**: validaciones de Login/Register corren ANTES de `submittingRef.current = true` — un submit inválido ya no deja el formulario bloqueado para siempre
+- **B2**: el retry tras 401/refresh de `api.ts` usa un AbortController nuevo — el original ya estaba abortado, así que el reintento era imposible
+- **B4**: `/api/health/ready` con try/catch → 503 `{status:'unhealthy', error}`; `processWebhook().catch()` defensivo en webhooks.ts
+- **B5**: un solo mount `app.use('/api/webhooks', webhookLimiter, webhooksRouter, resendWebhookRouter)`; `/subscribe` sin apiLimiter local (el global ya cubría)
+- **B6**: `yieldToEventLoop` (setImmediate, de cron.ts) en loops de `sendFreezeEmail`/`sendPurgeWarningEmail` — no bloquean el event loop en batches grandes
+- **B9**: `getEvent` consulta los claims SOLO de los gifts de la página vía `inArray(giftClaims.giftId, ids)` (antes innerJoin global: 1 claim de otra página traía la página completa); `reconcileStuckSubscriptions` con `.limit(100)`
+- **B8**: drafts en localStorage con persistencia en onChange y limpieza al confirmar: `fy_msg_draft:${eventId}` (MessageWall), `fy_rsvp_draft:${eventId}` (RsvpForm), `fy_promise_draft:${fundId}` (PromiseForm)
+- **B7**: el polling de pago de Dashboard respeta el unmount (flag `mounted`; no setState ni encola tras salir)
+- **B13**: safe-areas iOS en Sheet (`pb-safe-lg`), PhotoSlideshow (`pt-safe pb-safe`), CookieBanner (`mb-safe`), EventAdmin (`pb-bottom-nav`), dialogs de Account (`overflow-y-auto` + `m-auto`)
+- **B10**: paginación incremental — estados `giftsHasMore`/`photosHasMore` (límites `>= 50` gifts, `>= 15` fotos); `loadMoreGifts`/`loadMorePhotos` con cursor `createdAt.toISOString()` del último ítem, dedupe por id, `skipAuthRedirect: true`; botones "Ver más" en EventGuest y GiftManagement. Heurístico porque `getEventBySlug` no devuelve hasMore. Photos admin sin load-more (máx 20 fotos en pro)
+- **B1**: maxAge del SW api-cache 1h → 10 min (estado de regalos disponible/apartado menos obsoleto en offline)
+
 ### Counters
-- Backend: 341 tests (antes 231) | typecheck 0 errors | lint 0 errors
-- Frontend: 340 tests | typecheck 0 errors | lint 0 errors
+- Backend: 353 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
+- Frontend: 373 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
