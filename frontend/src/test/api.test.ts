@@ -390,6 +390,19 @@ describe('uploadWithProgress (XHR)', () => {
     expect(onProgress).toHaveBeenCalledWith(50);
   });
 
+  // C: un 2xx sin cuerpo JSON no es un upload válido — antes resolvía
+  // undefined tipado como T y los callers reventaban con TypeError genérico.
+  it('C: rejects on 2xx with non-JSON body', async () => {
+    const xhr = mockXhr();
+    xhr.responseText = '';
+    xhr.status = 200;
+
+    const promise = apiClient.uploadWithProgress('/api/upload', new FormData(), vi.fn());
+    xhr.onload!();
+
+    await expect(promise).rejects.toThrow('El servidor respondió sin confirmar la subida');
+  });
+
   it('rejects on XHR abort', async () => {
     const xhr = mockXhr();
     xhr.responseText = '';

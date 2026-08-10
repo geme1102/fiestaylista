@@ -87,9 +87,10 @@ export const EventReadyBar = memo(function EventReadyBar({
 
       <div className="relative h-3 bg-surface-container-high rounded-full overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percent}%` }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: percent / 100 }}
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+          style={{ transformOrigin: 'left' }}
           className={cn(
             'h-full rounded-full relative',
             isComplete

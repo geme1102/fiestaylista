@@ -21,7 +21,7 @@ export default function NotFound() {
       }}
     >
       {/* Brand Nav */}
-      <nav className="absolute top-0 w-full flex items-center justify-center h-20 px-container-margin z-50">
+      <nav className="absolute top-0 w-full flex items-center justify-center h-20 pt-safe px-container-margin z-50">
         <span className="font-headline-md text-headline-md text-primary tracking-tight">Fiesta y Lista</span>
       </nav>
 

@@ -1,6 +1,6 @@
 export type EventType = 'BABY_SHOWER' | 'WEDDING' | 'BIRTHDAY' | 'BAPTISM' | 'COMMUNION' | 'OTHER' | 'HOUSE_WARMING';
 export type Tier = 'free' | 'pro' | 'pro_plus';
-export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'pending_approval';
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'pending_approval' | 'expired';
 export type EventStatus = 'active' | 'completed' | 'paused';
 export type CashContributionStatus = 'promised' | 'paid' | 'cancelled';
 

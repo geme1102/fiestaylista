@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockPreApprovalCreate = vi.fn();
 const mockPreferenceCreate = vi.fn();
@@ -175,7 +175,15 @@ describe('createPreApproval', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('creates a preapproval and returns init point and id', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [] }),
+    }));
     mockPreApprovalCreate.mockResolvedValueOnce({
       init_point: 'https://mercadopago.com.co/checkout/pre-1',
       id: 'pre-1',
@@ -203,6 +211,52 @@ describe('createPreApproval', () => {
       },
       requestOptions: { timeout: expect.any(Number) },
     });
+  });
+
+  it('reutiliza un preapproval existente no cancelado (C4)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [{ id: 'pre-existente', status: 'authorized' }] }),
+    }));
+    mockPreApprovalGet.mockResolvedValueOnce({
+      id: 'pre-existente',
+      init_point: 'https://mercadopago.com.co/checkout/pre-existente',
+    });
+
+    const result = await import('../services/mercadopago.js').then(m => m.createPreApproval({
+      planId: 'plan-1',
+      payerEmail: 'test@test.com',
+      externalReference: 'pro_user-1_month',
+      successUrl: 'https://app.com/success',
+      cancelUrl: 'https://app.com/cancel',
+      reason: 'Fiesta y Lista Pro Mensual',
+    }));
+
+    expect(result.preapprovalId).toBe('pre-existente');
+    expect(mockPreApprovalCreate).not.toHaveBeenCalled();
+  });
+
+  it('crea uno nuevo cuando el existente está cancelado (C4)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [{ id: 'pre-cancelado', status: 'cancelled' }] }),
+    }));
+    mockPreApprovalCreate.mockResolvedValueOnce({
+      init_point: 'https://mercadopago.com.co/checkout/pre-nuevo',
+      id: 'pre-nuevo',
+    });
+
+    const result = await import('../services/mercadopago.js').then(m => m.createPreApproval({
+      planId: 'plan-1',
+      payerEmail: 'test@test.com',
+      externalReference: 'pro_user-1_month',
+      successUrl: 'https://app.com/success',
+      cancelUrl: 'https://app.com/cancel',
+      reason: 'Fiesta y Lista Pro Mensual',
+    }));
+
+    expect(result.preapprovalId).toBe('pre-nuevo');
+    expect(mockPreApprovalCreate).toHaveBeenCalledTimes(1);
   });
 });
 

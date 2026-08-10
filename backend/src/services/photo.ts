@@ -74,6 +74,9 @@ export async function addPhoto(eventId: string, url: string, caption?: string) {
 
         const photoCount = Number(countResult?.count ?? 0);
         if (photoCount >= limits.maxPhotosPerEvent) {
+          if (limits.maxPhotosPerEvent === 0) {
+            throw new ValidationError('Tu plan no incluye fotos. Mejora tu plan para subir fotos al evento.');
+          }
           throw new ValidationError(`Has alcanzado el límite de ${limits.maxPhotosPerEvent} fotos por evento en tu plan ${tier}`);
         }
       }

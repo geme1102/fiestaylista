@@ -243,9 +243,10 @@ export async function getEventGifts(eventId: string, params: PaginationParams = 
     .from(giftsTable)
     .where(conditions)
     .orderBy(desc(giftsTable.createdAt))
-    .limit(limit);
+    .limit(limit + 1);
 
-  return eventGifts;
+  const hasMore = eventGifts.length > limit;
+  return { gifts: hasMore ? eventGifts.slice(0, limit) : eventGifts, hasMore };
 }
 
 export async function addGroupClaim(giftId: string, claimedBy: string, message?: string, expectedEventId?: string) {

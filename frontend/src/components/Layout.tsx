@@ -118,9 +118,11 @@ const Layout = memo(function Layout() {
           <AnimatePresence>
             {mobileOpen && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ scaleY: 0, opacity: 0 }}
+                animate={{ scaleY: 1, opacity: 1 }}
+                exit={{ scaleY: 0, opacity: 0 }}
+                style={{ transformOrigin: 'top' }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="md:hidden border-t border-outline/20 overflow-hidden"
               >
                 <div className="py-3 space-y-1">

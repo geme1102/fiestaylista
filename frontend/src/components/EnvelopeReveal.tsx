@@ -96,11 +96,10 @@ export function EnvelopeReveal({
             animate={{
               scale: envelopeBlur > 0 ? 0.88 : 1,
               opacity: envelopeOpacity,
-              filter: `blur(${envelopeBlur}px)`,
             }}
             transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
             className="relative w-[290px] sm:w-[320px]"
-            style={{ minHeight: 400 }}
+            style={{ minHeight: 400, filter: envelopeBlur > 0 ? 'blur(12px)' : undefined }}
           >
             {/* Envelope scene with 3D perspective */}
             <div className="perspective-[1200px]">

@@ -275,7 +275,13 @@ export const apiClient = {
 
         xhr.onload = async () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(undefined as T); }
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch {
+              // C: un 2xx sin cuerpo JSON no es un upload válido — resolver
+              // undefined tipado como T reventaba a los callers con TypeError.
+              reject(new Error('El servidor respondió sin confirmar la subida. Intenta de nuevo.'));
+            }
             return;
           }
 

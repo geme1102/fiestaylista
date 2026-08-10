@@ -643,11 +643,20 @@ describe('Gift Routes', () => {
   });
 
   it('GET /api/events/:eventId/gifts - list gifts', async () => {
-    mockGiftService.getEventGifts.mockResolvedValue([{ id: 'g-1', name: 'Gift', isClaimed: false, category: 'otro', order: 0 }]);
+    mockGiftService.getEventGifts.mockResolvedValue({ gifts: [{ id: 'g-1', name: 'Gift', isClaimed: false, category: 'otro', order: 0 }], hasMore: false });
 
     const res = await request(app).get('/api/events/evt-1/gifts');
     expect(res.status).toBe(200);
     expect(res.body.gifts).toHaveLength(1);
+    expect(res.body.hasMore).toBe(false);
+  });
+
+  it('GET /api/events/:eventId/gifts - hasMore real del servicio (C1)', async () => {
+    mockGiftService.getEventGifts.mockResolvedValue({ gifts: [], hasMore: true });
+
+    const res = await request(app).get('/api/events/evt-1/gifts');
+    expect(res.status).toBe(200);
+    expect(res.body.hasMore).toBe(true);
   });
 
   it('POST /api/events/:eventId/gifts - add gift', async () => {

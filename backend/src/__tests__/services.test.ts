@@ -383,11 +383,23 @@ describe('Gift Service', () => {
   });
 
   describe('getEventGifts', () => {
-    it('returns gifts', async () => {
+    it('returns gifts (C1)', async () => {
       const { db } = await import('../db/index.js');
       const { getEventGifts } = await import('../services/gift.js');
       vi.mocked(db.select).mockReturnValue(queryMock([[{ id: 'g1', name: 'Gift' }]]));
-      expect(await getEventGifts('e1')).toHaveLength(1);
+      const result = await getEventGifts('e1');
+      expect(result.gifts).toHaveLength(1);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('marca hasMore cuando hay más de limit filas (C1)', async () => {
+      const { db } = await import('../db/index.js');
+      const { getEventGifts } = await import('../services/gift.js');
+      const rows = Array.from({ length: 51 }, (_, i) => ({ id: `g${i}`, name: `Gift ${i}` }));
+      vi.mocked(db.select).mockReturnValue(queryMock([rows]));
+      const result = await getEventGifts('e1', { limit: 50 });
+      expect(result.gifts).toHaveLength(50);
+      expect(result.hasMore).toBe(true);
     });
   });
 

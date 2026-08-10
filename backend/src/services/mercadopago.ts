@@ -159,6 +159,21 @@ export async function createPreApproval(opts: {
   }
 
   const preapproval = new PreApproval(client);
+
+  // C4: idempotencia por external_reference — si un create anterior resolvió
+  // del lado de MP pero el timeout/reintento (retryable) lo repitió, hay un
+  // segundo preapproval a medias. Reutilizar el existente no cancelado en vez
+  // de crear otro: el POST /create-checkout deja de duplicar preapprovals.
+  const existing = await searchPreapprovalsByRefAll(opts.externalReference);
+  const reusable = existing.find((p) => p.status !== 'cancelled');
+  if (reusable) {
+    const info = await retryable((rop) => preapproval.get({ id: reusable.id, requestOptions: { timeout: rop.timeout } }));
+    return {
+      initPoint: info.init_point ?? '',
+      preapprovalId: info.id ?? reusable.id,
+    };
+  }
+
   const result = await retryable((rop) => preapproval.create({
     body: {
       preapproval_plan_id: opts.planId,

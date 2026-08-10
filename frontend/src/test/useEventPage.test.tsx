@@ -8,13 +8,17 @@ const mockApiClientPost = vi.hoisted(() => vi.fn());
 const mockApiClientGet = vi.hoisted(() => vi.fn());
 const mockShowToast = vi.hoisted(() => vi.fn());
 const mockTurnstileToken = vi.hoisted(() => vi.fn<(...args: any[]) => string | null>(() => null));
+const mockWaitForTurnstile = vi.hoisted(() => vi.fn<(...args: any[]) => Promise<string | null>>(async () => 'tok-1'));
 const mockGetGiftCategory = vi.hoisted(() => vi.fn((_name: string) => ({ label: 'Regalo', color: 'bg-blue-500' })));
 const mockUseSSE = vi.hoisted(() => vi.fn());
 
 vi.mock('../services/events', () => ({ getEventBySlug: mockGetEventBySlug }));
 vi.mock('../services/api', () => ({ apiClient: { put: mockApiClientPut, post: mockApiClientPost, get: mockApiClientGet } }));
 vi.mock('../hooks/useToast', () => ({ showToast: mockShowToast }));
-vi.mock('../hooks/useTurnstile', () => ({ useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), reset: vi.fn() }) }));
+vi.mock('../hooks/useTurnstile', () => ({
+  useTurnstile: () => ({ containerRef: { current: null }, token: mockTurnstileToken(), reset: vi.fn() }),
+  waitForTurnstile: mockWaitForTurnstile,
+}));
 vi.mock('../data/giftEmojis', () => ({ getGiftCategory: mockGetGiftCategory }));
 vi.mock('../hooks/useSSE', () => ({ useSSE: mockUseSSE }));
 
@@ -210,6 +214,23 @@ describe('useEventPage', () => {
     await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
 
     expect(mockShowToast).toHaveBeenCalledWith('Error al apartar el regalo. Intenta de nuevo.', 'error');
+  });
+
+  it('handleClaim: toast amigable si el token de turnstile nunca llega (C)', async () => {
+    mockTurnstileToken.mockReturnValue(null);
+    mockWaitForTurnstile.mockResolvedValue(null);
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setGuestName('Test'); });
+    await act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
+
+    expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('verificación de seguridad'), 'error');
+    expect(mockApiClientPut).not.toHaveBeenCalled();
   });
 
   it('filters gifts by category', async () => {

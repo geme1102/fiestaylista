@@ -11,6 +11,7 @@ const HEARTBEAT_TIMEOUT = 120000;
 let unlistenFn: (() => Promise<void>) | null = null;
 let healthTimer: ReturnType<typeof setInterval> | null = null;
 let heartbeatSenderTimer: ReturnType<typeof setInterval> | null = null;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let lastHeartbeat = 0;
 
 export async function startSSEListener(): Promise<void> {
@@ -34,7 +35,11 @@ export async function startSSEListener(): Promise<void> {
     startHealthCheck();
   } catch (err) {
     log.error({ err }, 'Error iniciando SSE pub/sub listener — reintentando en 10s...');
-    setTimeout(() => startSSEListener(), 10000);
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      startSSEListener();
+    }, 10000);
   }
 }
 
@@ -57,6 +62,7 @@ function startHealthCheck(): void {
 
 async function restartSSEListener(): Promise<void> {
   cleanupHealthCheck();
+  if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
   const oldUnlisten = unlistenFn;
   unlistenFn = null;
   await startSSEListener();
@@ -71,6 +77,7 @@ function cleanupHealthCheck(): void {
 
 export async function stopSSEListener(): Promise<void> {
   cleanupHealthCheck();
+  if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
   if (heartbeatSenderTimer) { clearInterval(heartbeatSenderTimer); heartbeatSenderTimer = null; }
   if (unlistenFn) {
     try { await unlistenFn(); } catch (err) { log.error({ err }, 'Error deteniendo SSE pub/sub listener'); }

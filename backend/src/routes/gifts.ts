@@ -47,11 +47,11 @@ router.get('/', giftLimiter, validateUuidParam('eventId'), (_req, res, next) => 
   if (!event || !event.isActive) {
     throw new NotFoundError('Evento no encontrado');
   }
-  const gifts = await giftService.getEventGifts(eventId, {
+  const result = await giftService.getEventGifts(eventId, {
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     cursor: req.query.cursor as string | undefined,
   });
-  res.json({ gifts, hasMore: gifts.length === Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 200) });
+  res.json({ gifts: result.gifts, hasMore: result.hasMore });
 }));
 
 router.post('/', requireAuth, validateUuidParam('eventId'), requireEventOwnership, asyncHandlerWithValidation(async (req: AuthRequest, res) => {

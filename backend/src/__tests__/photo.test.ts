@@ -103,7 +103,7 @@ describe('addPhoto', () => {
       .mockResolvedValue([]);
 
     await expect(addPhoto('evt-1', 'https://example.com/photo.jpg')).rejects.toThrow(
-      'Has alcanzado el límite de 0 fotos por evento en tu plan free',
+      'Tu plan no incluye fotos. Mejora tu plan para subir fotos al evento.',
     );
   });
 

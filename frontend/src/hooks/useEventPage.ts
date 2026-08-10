@@ -184,9 +184,9 @@ export function useEventPage() {
     onGiftClaimed: (data) => {
       setGifts((prev) => prev.map((g) => {
         if (g.id !== data.giftId) return g;
-        const updated = { ...g, isClaimed: true, claimedBy: data.claimedBy };
+        const updated: Gift = { ...g, isClaimed: true, claimedBy: data.claimedBy };
         if (data.claims) {
-          (updated as any).claims = data.claims;
+          updated.claims = data.claims.map((c) => ({ id: c.id, giftId: g.id, claimedBy: c.claimedBy, createdAt: '' }));
         }
         return updated;
       }));
@@ -226,6 +226,15 @@ export function useEventPage() {
       claimInFlightRef.current = false;
       setClaimingId(null);
       showToast(err instanceof Error ? err.message : 'Error de validación', 'error');
+      return;
+    }
+
+    // C: si el token no llegó (turnstile no respondió a tiempo), no enviar la
+    // request: el backend la rechazaría con 400 y el mensaje genérico.
+    if (!token) {
+      claimInFlightRef.current = false;
+      setClaimingId(null);
+      showToast('La verificación de seguridad sigue pendiente. Intenta de nuevo en unos segundos.', 'error');
       return;
     }
 

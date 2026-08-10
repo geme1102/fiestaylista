@@ -250,17 +250,17 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
 
             {/* Badges */}
             <div className="grid grid-cols-3 gap-2 mt-6 w-full">
-              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
+              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30 min-w-0">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">account_balance</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Transferencia Directa</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center leading-tight break-words">Transferencia Directa</span>
               </div>
-              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
+              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30 min-w-0">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">verified_user</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">100% Confiable</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center leading-tight break-words">100% Confiable</span>
               </div>
-              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30">
+              <div className="flex flex-col items-center p-2 rounded-xl bg-white/20 border border-white/30 min-w-0">
                 <span className="material-symbols-outlined text-secondary text-lg mb-1">savings</span>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center">Para el Anfitrión</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase text-center leading-tight break-words">Para el Anfitrión</span>
               </div>
             </div>
           </div>

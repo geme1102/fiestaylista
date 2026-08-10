@@ -168,9 +168,10 @@ export default function Statistics() {
                     </div>
                     <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
                       <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${viewPct}%` }}
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: viewPct / 100 }}
                         transition={{ duration: 0.8, ease: 'easeOut' }}
+                        style={{ transformOrigin: 'left' }}
                         className="h-full rounded-full bg-gradient-to-r from-primary to-primary-container"
                       />
                     </div>
@@ -183,9 +184,10 @@ export default function Statistics() {
                       </div>
                       <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
                         <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${giftPct}%` }}
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: giftPct / 100 }}
                           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                          style={{ transformOrigin: 'left' }}
                           className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600"
                         />
                       </div>
