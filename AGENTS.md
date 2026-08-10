@@ -150,6 +150,22 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **B10**: paginación incremental — estados `giftsHasMore`/`photosHasMore` (límites `>= 50` gifts, `>= 15` fotos); `loadMoreGifts`/`loadMorePhotos` con cursor `createdAt.toISOString()` del último ítem, dedupe por id, `skipAuthRedirect: true`; botones "Ver más" en EventGuest y GiftManagement. Heurístico porque `getEventBySlug` no devuelve hasMore. Photos admin sin load-more (máx 20 fotos en pro)
 - **B1**: maxAge del SW api-cache 1h → 10 min (estado de regalos disponible/apartado menos obsoleto en offline)
 
+## Auditoría Forense — Fase C (Menores, Ago 2026)
+
+- **C1**: `GET /gifts` con hasMore real — `getEventGifts` trae `limit+1` y deriva `hasMore` (patrón de `photo.ts`); antes era heurístico (`gifts.length === limit`) y devolvía `true` con exactamente `limit` filas sin más
+- **C2**: mensaje dedicado para tier free al subir fotos ("Tu plan no incluye fotos") — antes "Has alcanzado el límite de 0 fotos" era confuso (también aplica a `/guest-upload` que no pre-chequea tier)
+- **C3**: `'expired'` agregado al union `SubscriptionStatus` de shared (el CHECK de la DB `0018` ya lo permitía — drift tipo/DB cerrado)
+- **C4**: `createPreApproval` idempotente por `external_reference` — busca preapprovals existentes no cancelados ANTES de crear; un retry de `retryable` tras timeout parcial ya no duplica preapprovals en MP
+- **C5**: `uploadWithProgress` rechaza 2xx sin cuerpo JSON ("El servidor respondió sin confirmar la subida") — antes resolvía `undefined as T` y los callers reventaban con TypeError
+- **C6**: `useEventPage` sin `as any` — el update optimista de claims mapea el payload SSE (id/claimedBy) al tipo `GiftClaim` de shared
+- **C7**: `handleClaim` valida que el token de Turnstile llegó (toast "verificación de seguridad sigue pendiente") — antes enviaba `token ?? undefined` a `verifyTurnstile` obligatorio → 400 con mensaje genérico
+- **C8**: `NotFound` con `pt-safe` en la nav absoluta (PWA standalone con notch)
+- **C9**: barras de progreso animan `scaleX` con `transformOrigin: 'left'` (Statistics, EventReadyBar) — antes `width` → layout/reflow por frame
+- **C10**: `EnvelopeReveal` aplica el blur estático vía style (fade out por opacity) — antes animaba `filter` por frame (repaint costoso en Android gama baja)
+- **C11**: menú móvil del Layout con `scaleY` + `origin-top` — antes `height: 'auto'` (animación de layout)
+- **C12**: badges del CashFund con `min-w-0` + `break-words` (sin desborde en 320px)
+- **C13**: `restartSSEListener` limpia el retry timer pendiente (`retryTimer`) antes de reconectar — evita listeners apilados si un restart coincide con un reintento programado
+
 ### Counters
-- Backend: 353 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
-- Frontend: 373 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
+- Backend: 357 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
+- Frontend: 375 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
