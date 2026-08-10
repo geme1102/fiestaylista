@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { createHmac } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
@@ -362,6 +362,40 @@ describe('Health', () => {
 
   it('GET /health returns ok', async () => {
     const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+  });
+});
+
+describe('HTTP→HTTPS redirect (A2)', () => {
+  const originalEnv = config.NODE_ENV;
+
+  beforeAll(() => {
+    (config as { NODE_ENV: string }).NODE_ENV = 'production';
+  });
+
+  afterAll(() => {
+    (config as { NODE_ENV: string }).NODE_ENV = originalEnv;
+  });
+
+  it('no redirige sin header x-forwarded-proto (healthchecks internos de Railway)', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.status).not.toBe(301);
+  });
+
+  it('redirige 301 a https cuando el edge reporta x-forwarded-proto: http', async () => {
+    const res = await request(app).get('/api/events').set('x-forwarded-proto', 'http');
+    expect(res.status).toBe(301);
+    expect(res.headers.location).toMatch(/^https:\/\/[^/]+\/api\/events$/);
+  });
+
+  it('no redirige cuando el edge reporta x-forwarded-proto: https', async () => {
+    const res = await request(app).get('/api/events').set('x-forwarded-proto', 'https');
+    expect(res.status).not.toBe(301);
+  });
+
+  it('/health sigue excluido incluso con x-forwarded-proto: http', async () => {
+    const res = await request(app).get('/health').set('x-forwarded-proto', 'http');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
   });

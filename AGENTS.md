@@ -132,6 +132,7 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 ## Auditoría Forense — Fase A (Críticos, Ago 2026)
 
 - **A1**: `EMAIL_SEND_TIMEOUT_MS = 15_000` + `sendEmailWithTimeout` con `Promise.race` — un envío colgado de Resend ya no retiene el pool (~5 conexiones) ni el advisory lock del cron diario dentro de la transacción de `runWithLock`
+- **A2**: el redirect HTTP→HTTPS lee `x-forwarded-proto` del header directamente, NO `req.protocol` — Express solo deriva `req.protocol` de `x-forwarded-proto` cuando el socket es "trusted" y el proxy de Railway no está en la whitelist de Cloudflare (`trust proxy` = `isCloudflareIP`), así que en producción `req.protocol` siempre era `'http'` → todo request (salvo `/health`) recibía 301 a la misma URL https → bucle infinito; el healthcheck pasaba (excluido) y el deploy no lo detectaba. Ahora solo se redirige cuando el propio edge reporta `x-forwarded-proto: http`; sin header (healthchecks internos de Railway) no se redirige. Un spoof del header solo fuerza la propia petición a https (inofensivo). NO usar `trust proxy: true` (rompe rate limiters keyed-by-IP)
 - **A3**: SW api-cache restringido a whitelist pública (slug/gifts/photos/messages) + `caches.delete('api-cache')` en logout — antes se cacheaban GETs autenticados (fuga entre sesiones en dispositivo compartido)
 - **A4**: subidas de fotos sin duplicados — el frontend no reintenta un upload cuyo body ya se subió completo (`xhr.upload.onload`); el backend aborta el stream de Cloudinary al vencer el timeout (25s) y destruye el asset parcial (`UploadAbortHandle {stream, publicId}`, `public_id` explícito)
 - **A5**: idempotencia en `POST /api/events` — columna `idempotency_key` (uuid) + índice único parcial `(user_id, key)`; el reintento (ej. doble clic en modal de crear) devuelve el evento existente en vez de duplicarlo; lookup por key ANTES del chequeo de límite de eventos; catch 23505 con constraint `events_user_id_idempotency_key_unique`
@@ -167,5 +168,5 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **C13**: `restartSSEListener` limpia el retry timer pendiente (`retryTimer`) antes de reconectar — evita listeners apilados si un restart coincide con un reintento programado
 
 ### Counters
-- Backend: 357 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
+- Backend: 361 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
 - Frontend: 375 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)

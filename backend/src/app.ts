@@ -44,11 +44,21 @@ export function createApp() {
   // rate limiters keyed-by-IP.
   app.set('trust proxy', (ip: string) => isCloudflareIP(ip));
 
-  // HTTP→HTTPS redirect en producción (defense-in-depth; Railway termina TLS)
+  // HTTP→HTTPS redirect en producción (defense-in-depth; Railway termina TLS).
+  // NO usar req.protocol: Express solo deriva x-forwarded-proto cuando el socket
+  // es "trusted" y el proxy de Railway no está en la whitelist de Cloudflare →
+  // req.protocol siempre sería 'http' y todo request (salvo /health) recibiría
+  // 301 a la misma URL https → bucle infinito (A2). Se lee el header del edge
+  // directamente: solo se redirige cuando el propio proxy reporta que el cliente
+  // vino por HTTP. Un spoof de este header solo forzaría la propia petición a
+  // https (inofensivo). Sin header (healthchecks internos de Railway) → no redirect.
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (config.NODE_ENV === 'production' && req.protocol === 'http' && req.path !== '/health') {
-      res.redirect(301, `https://${new URL(config.BACKEND_URL).hostname}${req.originalUrl}`);
-      return;
+    if (config.NODE_ENV === 'production' && req.path !== '/health') {
+      const forwardedProto = req.headers['x-forwarded-proto'];
+      if (forwardedProto === 'http') {
+        res.redirect(301, `https://${new URL(config.BACKEND_URL).hostname}${req.originalUrl}`);
+        return;
+      }
     }
     next();
   });
