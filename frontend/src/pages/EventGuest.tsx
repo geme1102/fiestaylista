@@ -57,6 +57,7 @@ export default function EventGuest() {
     eventDateFormatted, eventTimeFormatted,
     turnstileRef,
     handleClaim, handleDownload, reloadEvent,
+    messagesRefreshKey, cashRefreshKey,
     giftsHasMore, photosHasMore, loadingMoreGifts, loadingMorePhotos,
     loadMoreGifts, loadMorePhotos,
   } = useEventPage();
@@ -601,7 +602,7 @@ export default function EventGuest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
           >
-            <SectionErrorBoundary sectionName="MessageWall"><MessageWall eventId={event.id} guestName={guestName} /></SectionErrorBoundary>
+            <SectionErrorBoundary sectionName="MessageWall"><MessageWall eventId={event.id} guestName={guestName} refreshKey={messagesRefreshKey} /></SectionErrorBoundary>
           </motion.div>
 
           {event.status !== 'completed' && (
@@ -611,7 +612,7 @@ export default function EventGuest() {
             transition={{ duration: 0.5, delay: 0.45 }}
           >
             <SectionErrorBoundary sectionName="CashFundSection">
-            <Suspense fallback={<Skeleton className="h-40 rounded-3xl" />}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} /></Suspense>
+            <Suspense fallback={<Skeleton className="h-40 rounded-3xl" />}><CashFundSection eventId={event.id} isOwner={false} easyRead={easyReadMode} guestName={guestName} refreshKey={cashRefreshKey} /></Suspense>
             </SectionErrorBoundary>
           </motion.div>
           )}

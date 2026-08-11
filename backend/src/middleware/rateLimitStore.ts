@@ -69,8 +69,11 @@ export class PostgresStore implements Store {
       );
       return { totalHits: rows[0].points, resetTime: new Date(rows[0].expires_at) };
     } catch (err) {
-      log.error({ err, key }, 'Rate limit store increment falló — permitiendo request');
-      return { totalHits: 0, resetTime: undefined };
+      // D2-A3: fail-open REAL — devolver totalHits: 0 hacía que express-rate-limit
+      // lanzara ERR_ERL_INVALID_HITS (500 por request). Al lanzar aquí, el limiter
+      // con passOnStoreError: true deja pasar el request.
+      log.error({ err, key }, 'Rate limit store increment falló — permitiendo request (passOnStoreError)');
+      throw err;
     }
   }
 

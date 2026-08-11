@@ -5,7 +5,6 @@ import { config } from '../config.js';
 import { UnauthorizedError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
-import { applyRLSContext } from './rls.js';
 import type { AuthRequest, JwtPayload } from '../types/index.js';
 
 // Tokens SSE (EventSource) se firman con JWT_SECRET pero deben servir ÚNICAMENTE
@@ -60,7 +59,9 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
       email: decoded.email,
     };
 
-    await applyRLSContext(decoded.userId);
+    // D2-A1: RLS no está habilitado (migración 0015 es legacy y PgBouncer
+    // descarta los SET de sesión) — antes aquí corrían 2 round-trips extra
+    // por request autenticado sin efecto alguno.
 
     next();
   } catch (error) {
@@ -113,7 +114,6 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
         userId: decoded.userId,
         email: decoded.email,
       };
-      await applyRLSContext(decoded.userId);
     }
 
     next();

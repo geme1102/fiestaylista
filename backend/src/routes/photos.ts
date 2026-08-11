@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { eq, and, isNull } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { apiLimiter, guestUploadLimiter } from '../middleware/rateLimit.js';
+import { guestUploadLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import * as photoService from '../services/photo.js';
 import { emitPhotoUploaded } from '../services/notifications.js';
@@ -44,7 +44,8 @@ const createPhotoSchema = z.object({
   caption: z.string().max(500, 'El pie de foto es demasiado largo').optional(),
 });
 
-router.get('/', apiLimiter, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
+// D2-A2: sin apiLimiter a nivel de ruta — ya corre el global en app.use('/api').
+router.get('/', validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string | undefined;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

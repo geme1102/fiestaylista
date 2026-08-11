@@ -336,4 +336,76 @@ describe('useEventPage', () => {
     expect(result.current.photos).toHaveLength(16);
     expect(result.current.photosHasMore).toBe(false);
   });
+
+  it('D2-A5: onMessagePosted NO recarga el payload (solo bump de key)', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+    mockGetEventBySlug.mockClear();
+
+    const sseCallbacks = mockUseSSE.mock.calls[0][0];
+    const keyBefore = result.current.messagesRefreshKey;
+    act(() => {
+      sseCallbacks.onMessagePosted({});
+    });
+
+    expect(result.current.messagesRefreshKey).toBe(keyBefore + 1);
+    expect(mockGetEventBySlug).not.toHaveBeenCalled();
+  });
+
+  it('D2-A5: onCashContribution NO recarga el payload (solo bump de key)', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+    mockGetEventBySlug.mockClear();
+
+    const sseCallbacks = mockUseSSE.mock.calls[0][0];
+    const keyBefore = result.current.cashRefreshKey;
+    act(() => {
+      sseCallbacks.onCashContribution({});
+    });
+
+    expect(result.current.cashRefreshKey).toBe(keyBefore + 1);
+    expect(mockGetEventBySlug).not.toHaveBeenCalled();
+  });
+
+  it('D2-A5: onPhotoUploaded inserta la foto sin recargar el payload', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.photos).toHaveLength(1);
+    });
+    mockGetEventBySlug.mockClear();
+
+    const sseCallbacks = mockUseSSE.mock.calls[0][0];
+    act(() => {
+      sseCallbacks.onPhotoUploaded({ photoUrl: 'https://cdn.test/nueva.jpg', uploadedBy: 'Luis' });
+    });
+
+    expect(result.current.photos).toHaveLength(2);
+    expect(result.current.photos[0].url).toBe('https://cdn.test/nueva.jpg');
+    expect(mockGetEventBySlug).not.toHaveBeenCalled();
+  });
+
+  it('D2-A5: onPhotoUploaded dedupe por url (SSE repetido)', async () => {
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.photos).toHaveLength(1);
+    });
+
+    const sseCallbacks = mockUseSSE.mock.calls[0][0];
+    act(() => {
+      sseCallbacks.onPhotoUploaded({ photoUrl: 'https://cdn.test/dup.jpg', uploadedBy: 'Luis' });
+    });
+    act(() => {
+      sseCallbacks.onPhotoUploaded({ photoUrl: 'https://cdn.test/dup.jpg', uploadedBy: 'Luis' });
+    });
+
+    expect(result.current.photos.filter((p) => p.url === 'https://cdn.test/dup.jpg')).toHaveLength(1);
+  });
 });

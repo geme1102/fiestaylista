@@ -14,6 +14,12 @@ import { config } from '../config.js';
 
 const log = createModuleLogger('Auth');
 
+// D2-A4: cost 11 en vez de 12 — bcryptjs corre en el event loop (JS puro, sin
+// threadpool) y 250-500ms de CPU por login/register saturaban el proceso en
+// picos. Cost 11 es ~50% más rápido y sigue siendo fuerte con lockout + rate
+// limiting activos. Los hashes viejos (cost 12) se verifican sin problema.
+export const BCRYPT_COST = 11;
+
 interface UserResponse {
   id: string;
   email: string;
@@ -25,7 +31,7 @@ interface UserResponse {
   createdAt: Date;
 }
 
-const DUMMY_HASH = bcrypt.hashSync('dummy', 12);
+const DUMMY_HASH = bcrypt.hashSync('dummy', BCRYPT_COST);
 
 function toUserResponse(user: typeof users.$inferSelect): UserResponse {
   return {
@@ -52,7 +58,7 @@ export async function register(
     throw new ValidationError('Este dominio de correo no está disponible para registro');
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
   const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   let user: typeof users.$inferSelect = null!;
@@ -458,7 +464,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
     throw new ValidationError('Token de restablecimiento expirado');
   }
 
-  const passwordHash = await bcrypt.hash(newPassword, 12);
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);
 
   // D6: password + revocación de tokens en una sola transacción — si la
   // revocación falla, el cambio de password también se revierte (antes las

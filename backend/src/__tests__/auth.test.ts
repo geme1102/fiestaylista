@@ -104,3 +104,10 @@ describe('Auth - Login Validation', () => {
     ).toThrow();
   });
 });
+
+describe('D2-A4 - BCRYPT_COST', () => {
+  it('usa cost 11 para hashing de contraseñas (bcryptjs corre en el event loop)', async () => {
+    const { BCRYPT_COST } = await import('../services/auth.js');
+    expect(BCRYPT_COST).toBe(11);
+  });
+});

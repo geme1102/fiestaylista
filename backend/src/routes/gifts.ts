@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { eq, and, isNull } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { requireEventOwnership } from '../middleware/ownership.js';
-import { giftLimiter, contributeLimiter, apiLimiter } from '../middleware/rateLimit.js';
+import { giftLimiter, contributeLimiter } from '../middleware/rateLimit.js';
 import * as giftService from '../services/gift.js';
 import { asyncHandler, asyncHandlerWithValidation } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/response.js';
@@ -185,7 +185,8 @@ router.post('/sse-token', requireAuth, validateUuidParam('eventId'), requireEven
   res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
-router.post('/public-sse-token', apiLimiter, verifyTurnstile, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
+// D2-A2: sin apiLimiter a nivel de ruta — ya corre el global en app.use('/api').
+router.post('/public-sse-token', verifyTurnstile, validateUuidParam('eventId'), asyncHandler(async (req, res) => {
   const eventId = req.params.eventId as string;
   if (!eventId) {
     throw new ValidationError('ID del evento requerido');

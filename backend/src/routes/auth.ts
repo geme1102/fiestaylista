@@ -5,7 +5,7 @@ import { hashToken } from '../services/auth-tokens.js';
 import { refreshTokens } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { authLimiter, refreshLimiter, resetLimiter, apiLimiter } from '../middleware/rateLimit.js';
+import { authLimiter, refreshLimiter, resetLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile, verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as authService from '../services/auth.js';
@@ -172,17 +172,18 @@ router.post('/reset-password', verifyTurnstile, resetLimiter, asyncHandlerWithVa
   res.json({ success: true });
 }));
 
-router.patch('/onboarding', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+// D2-A2: sin apiLimiter a nivel de ruta — ya corre el global en app.use('/api').
+router.patch('/onboarding', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   await authService.markOnboardingCompleted(req.user!.userId);
   res.json({ success: true });
 }));
 
-router.patch('/welcome', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+router.patch('/welcome', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   await authService.markWelcomeCompleted(req.user!.userId);
   res.json({ success: true });
 }));
 
-router.post('/logout', optionalAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+router.post('/logout', optionalAuth, asyncHandler(async (req: AuthRequest, res) => {
   // CSRF defense: exige header custom (los POST cross-site de navegadores no
   // pueden enviarlo sin pasar por CORS preflight, y el allowlist no lo incluye)
   if (req.headers['x-logout-request'] !== 'true') {

@@ -22,6 +22,10 @@ export function createLimiter(opts: { prefix: string; max: number; message: stri
     max: opts.max,
     standardHeaders: true,
     legacyHeaders: false,
+    // D2-A3: si el store lanza (Neon caído, pool saturado), dejar pasar el
+    // request en vez de devolver 500 — el rate limiting es defensa, no un
+    // punto único de fallo.
+    passOnStoreError: true,
     keyGenerator: (req) => `${opts.prefix}:${baseKeyGenerator(req)}`,
     message: msg(opts.message),
   });

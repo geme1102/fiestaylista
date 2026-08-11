@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 vi.mock('express-rate-limit', () => ({
   default: vi.fn(),
@@ -53,5 +56,22 @@ describe('createLimiter', () => {
   it('F6: strictFallbackLimiter usa ventana de 15 min', () => {
     expect(optsFor('strict')?.windowMs).toBe(15 * 60 * 1000);
     expect(optsFor('strict')?.max).toBe(5);
+  });
+
+  it('D2-A3: usa passOnStoreError: true (fail-open real ante fallo del store)', () => {
+    const call = vi.mocked(rateLimit).mock.calls.find((c) => (c[0] as { passOnStoreError?: boolean }).passOnStoreError === true);
+    expect(call, 'ningún limiter usa passOnStoreError').toBeDefined();
+  });
+});
+
+describe('D2-A2 - apiLimiter sin duplicación a nivel de ruta', () => {
+  it('ninguna ruta monta apiLimiter local (el global de app.use("/api") ya cubre)', () => {
+    const routesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../routes');
+    const files = ['photos.ts', 'gifts.ts', 'subscriptions.ts', 'auth.ts'];
+    for (const f of files) {
+      const src = fs.readFileSync(path.join(routesDir, f), 'utf8');
+      const withLimiter = src.split('\n').filter((l) => l.includes('router.') && l.includes('apiLimiter'));
+      expect(withLimiter, `${f} todavía monta apiLimiter local`).toEqual([]);
+    }
   });
 });

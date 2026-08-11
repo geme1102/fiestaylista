@@ -11,9 +11,12 @@ import type { Message } from '../types';
 interface MessageWallProps {
   eventId: string;
   guestName: string;
+  // D2-A5: el padre (useEventPage) lo incrementa al recibir SSE message:posted —
+  // el muro re-fetchea solo /messages sin recargar el payload del evento.
+  refreshKey?: number;
 }
 
-export default function MessageWall({ eventId, guestName }: MessageWallProps) {
+export default function MessageWall({ eventId, guestName, refreshKey = 0 }: MessageWallProps) {
   // B8: el borrador del mensaje sobrevive a recargas/navegación — un invitado
   // que escribió un mensaje largo no lo pierde si se va a ver la galería.
   const DRAFT_KEY = `fy_msg_draft:${eventId}`;
@@ -43,7 +46,7 @@ export default function MessageWall({ eventId, guestName }: MessageWallProps) {
       }
     })();
     return () => { cancelled = true; };
-  }, [eventId]);
+  }, [eventId, refreshKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

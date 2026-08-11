@@ -79,13 +79,10 @@ describe('PostgresStore', () => {
       expect(result.resetTime).toBeInstanceOf(Date);
     });
 
-    it('returns safe defaults on error', async () => {
+    it('D2-A3: lanza en error de DB para que passOnStoreError del limiter deje pasar', async () => {
       mockUnsafe.mockRejectedValue(new Error('DB error'));
 
-      const result = await store.increment('ip:127.0.0.1');
-
-      expect(result.totalHits).toBe(0);
-      expect(result.resetTime).toBeUndefined();
+      await expect(store.increment('ip:127.0.0.1')).rejects.toThrow('DB error');
     });
   });
 

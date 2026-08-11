@@ -31,6 +31,11 @@ export function useEventPage() {
   const [photosHasMore, setPhotosHasMore] = useState(false);
   const [loadingMoreGifts, setLoadingMoreGifts] = useState(false);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
+  // D2-A5: SSE incremental — un mensaje/aporte ya no recarga TODO el payload
+  // (evento + 50 regalos + 15 fotos) en todos los clientes; cada sección
+  // re-fetchea SOLO su endpoint vía estos keys.
+  const [messagesRefreshKey, setMessagesRefreshKey] = useState(0);
+  const [cashRefreshKey, setCashRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -192,13 +197,29 @@ export function useEventPage() {
       }));
     },
     onCashContribution: () => {
-      loadEvent();
+      // D2-A5: CashFundSection re-fetchea solo su endpoint (getCashFund +
+      // contribuciones), no el payload completo del evento.
+      setCashRefreshKey((k) => k + 1);
     },
     onMessagePosted: () => {
-      loadEvent();
+      // D2-A5: MessageWall re-fetchea solo /messages (antes loadEvent()
+      // recargaba evento+regalos+fotos y ni siquiera actualizaba el muro).
+      setMessagesRefreshKey((k) => k + 1);
     },
-    onPhotoUploaded: () => {
-      loadEvent();
+    onPhotoUploaded: (data) => {
+      // D2-A5: inserción incremental — la foto llega con su URL del SSE, sin
+      // recargar el payload completo.
+      if (!data.photoUrl) return;
+      setPhotos((prev) => {
+        if (prev.some((p) => p.url === data.photoUrl)) return prev;
+        return [{
+          id: `sse-${Date.now()}`,
+          eventId: event?.id ?? '',
+          url: data.photoUrl,
+          caption: '',
+          createdAt: new Date().toISOString(),
+        }, ...prev];
+      });
     },
   });
 
@@ -414,6 +435,7 @@ export function useEventPage() {
     categoryFilter, setCategoryFilter,
     inputRef, filterBarRef,
     turnstileRef,
+    messagesRefreshKey, cashRefreshKey,
     availableGifts, claimedGifts, categories, filteredGifts,
     eventDateFormatted, eventTimeFormatted,
     handleClaim, handleDownload,
