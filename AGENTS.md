@@ -167,6 +167,34 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **C12**: badges del CashFund con `min-w-0` + `break-words` (sin desborde en 320px)
 - **C13**: `restartSSEListener` limpia el retry timer pendiente (`retryTimer`) antes de reconectar — evita listeners apilados si un restart coincide con un reintento programado
 
+## Auditoría Forense — Fase D (Performance/Estabilidad, Ago 2026)
+
+### D1 (Críticos)
+- **D1-C1**: compression ya NO bufferiza SSE — filter en `app.ts` excluye `text/event-stream` (y rutas que terminan en `/subscribe`); con brotli + 16KB de buffer el stream quedaba embolbado sin `flush` y los clientes no recibían eventos en vivo hasta llenar el buffer (o nunca). Test con `node:http` directo (supertest bufferiza la conexión abierta y hace timeout).
+- **D1-C2**: splash intro saltado en rutas `/e/*` (`isGuestRoute`) — el loop viral entra directo al evento; el resto de rutas conserva el splash.
+- **D1-C3**: Turnstile bajo demanda — `useTurnstile({ enabled = true })`: sin widget ni polling de 200ms si está deshabilitado. `GiftCard` solo activa Turnstile al abrir el form de claim grupal (antes ~30 widgets/pollers por evento).
+
+### D2 (Altos)
+- **D2-A1**: RLS legacy eliminado — `applyRLSContext` borrado de `requireAuth`/`optionalAuth` (+ archivo `rls.ts`); la migración 0015 es referencia y PgBouncer descarta los `SET app.*` de sesión. Ahorra 2 round-trips por request autenticado. Se conserva el SELECT de `tokenVersion`.
+- **D2-A2**: `apiLimiter` removido de 6 rutas (photos GET, gifts `/public-sse-token`, subscriptions `/sync`, auth onboarding/welcome/logout) — se montaba 2 veces (global `app.ts` + local) → doble upsert en `rate_limits` y cupo a la mitad. Test estructural en `rateLimit.test.ts` (escanea rutas).
+- **D2-A3**: fail-open REAL del rate limit — `PostgresStore.increment` lanza ante error de DB y `createLimiter` usa `passOnStoreError: true`; antes devolvía `totalHits: 0` → `ERR_ERL_INVALID_HITS` → 500. Si el store está caído, se deja pasar (defensa, no punto único de fallo).
+- **D2-A4**: `BCRYPT_COST = 11` (era 12) — ~50% más rápido, hashes viejos siguen verificando. Exportado de `services/auth.ts` para tests.
+- **D2-A5**: SSE incremental — `useEventPage` ya NO llama `loadEvent()` (evento+50 regalos+15 fotos) por cada evento SSE: `onMessagePosted` bump `messagesRefreshKey` (MessageWall re-fetchea solo `/messages`), `onCashContribution` bump `cashRefreshKey` (CashFundSection re-fetchea solo su fund), `onPhotoUploaded` inserta la foto optimista con dedupe por url.
+
+### D3 (Medios)
+- **D3-M1**: delete-account encola TODAS las cancelaciones MP en `pending_mp_cancellations` (insert ~ms) y el cron `retryPendingMpCancellations` las procesa con backoff — antes cancelaba en línea con `retryable` 3x10s por preapproval en serie: el endpoint superaba el timeout de 10s del cliente y el usuario veía "eliminación fallida" aunque la cuenta YA estaba borrada.
+- **D3-M2**: cron con lock POR JOB — `runDaily` usa `reminders`/`email-sequence`/`expire-subscriptions`/`purge-expired`/`purge-warnings` (antes un lock único `'daily'` retenía los 6 jobs del día si uno se colgaba).
+- **D3-M3**: índices compuestos `(fk, created_at)` para paginación por cursor: `gifts_event_id_created_at_idx`, `photos_event_id_created_at_idx`, `cash_contributions_fund_created_at_idx` (schema + migración `pagination_created_at_indexes`).
+- **D3-M4**: `entity.too.large` → 413 `{error, errorId}` en `errorHandler` (antes 500 genérico; el reintento era inútil).
+- **D3-M5**: race del logout — un 401 de una request en vuelo durante el logout disparaba `auth:session-expired` → toast falso "Sesión expirada" + redirección a /login. `isLoggingOutRef` corta el handler; se resetea en login/register (no por pathname — la race correría antes que el 401 tardío).
+- **D3-M6**: `createPreApproval` re-busca `external_reference` ANTES DE CADA intento del `retryable` (antes solo antes del primero): un timeout parcial del intento N creaba duplicado en el intento N+1.
+- **D3-M7**: scavenger SSE — el ping YA NO refresca `lastActivity` (antes el ping cada 15s mantenía vivos los sockets half-open para siempre: memoria + IP nunca liberada). Ahora los muertos se detectan por `socket.readableEnded/destroyed` (cierre inmediato) y `lastActivity` solo refleja actividad real (broadcast).
+- **D3-M8**: `/sync` de suscripciones paralelizado — 5 `searchPaymentsByRef` en serie (~1.5-2.5s+) → `Promise.allSettled`, procesando resultados en el orden original (pro month → year → pro_plus).
+- **D3-M9**: Material Symbols subsetado con `text=` en request PROPIA (~700KB → ~20-30KB). El parámetro `text=` aplica a TODAS las families de la request — por eso se separó de Outfit/Plus Jakarta/Playfair (mezclarlas las rompería). **Si se agrega un icono nuevo, actualizar la lista `text=` en `index.html`** (hay comentario ahí).
+
+### D4 (Bajos — documentados, NO ejecutados)
+- Auditoría completa: 4 agentes READ-ONLY. Los hallazgos bajos (mensajes de log tipados, validación de email en verify, etc.) quedaron documentados en la sesión sin cambios.
+
 ### Counters
-- Backend: 361 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
-- Frontend: 375 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
+- Backend: 375 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
+- Frontend: 386 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
