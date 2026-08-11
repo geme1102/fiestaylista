@@ -45,6 +45,15 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return;
   }
 
+  // D3-M4: payload JSON > límite (1mb) — body-parser lanza PayloadTooLargeError
+  // (type entity.too.large, status 413); antes caía al 500 genérico, el cliente
+  // no distinguía su error y el reintento era inútil (el body excede el límite).
+  if (err instanceof Error && (err as { type?: string }).type === 'entity.too.large') {
+    logError(err, errorId, req);
+    res.status(413).json({ error: 'La solicitud excede el límite de tamaño permitido', errorId });
+    return;
+  }
+
   logError(err, errorId, req);
 
   const errMsg = err instanceof Error ? err.message : 'Error desconocido';

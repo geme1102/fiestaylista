@@ -29,6 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchedRef = useRef(false);
   const mountedRef = useRef(true);
+  // D3-M5: si un 401 llega MIENTRAS el logout está en curso, no se muestra el
+  // toast "Sesión expirada" ni se redirige a /login (el logout ya navega a /).
+  const isLoggingOutRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -75,6 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handler = () => {
       clearTokens();
       setUser(null);
+      // D3-M5: el logout ya está en curso — el 401 que disparó este evento es
+      // de una request abortada/fallida por el propio logout, no una expiración
+      // real de sesión. Toast y redirección serían falsos.
+      if (isLoggingOutRef.current) return;
       showToast('Sesión expirada. Serás redirigido al inicio de sesión.', 'error');
       navigate('/login', { replace: true });
     };
@@ -83,6 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const login = useCallback(async (email: string, password: string, turnstileToken?: string) => {
+    // D3-M5: nueva sesión activa — el 401 post-logout ya no se enmascara.
+    isLoggingOutRef.current = false;
     const res = await loginApi(email, password, turnstileToken);
     if (!res.accessToken || !res.user) {
       throw new Error('Respuesta inválida del servidor. Intenta de nuevo más tarde.');
@@ -93,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string, turnstileToken?: string) => {
+    isLoggingOutRef.current = false;
     const res = await registerApi(email, password, name, turnstileToken);
     if (!res.accessToken || !res.user) {
       throw new Error('Respuesta inválida del servidor al registrarse. Intenta de nuevo.');
@@ -103,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    isLoggingOutRef.current = true;
     setIsLoggingOut(true);
     logoutApi().catch((err) => {
       reportError(err, { source: 'AuthContext' });

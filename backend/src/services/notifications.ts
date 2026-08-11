@@ -218,7 +218,27 @@ export function startSSEScavenger(): void {
       for (const client of eventClients) {
         // Retry buffered messages
         retryBuffered(client);
-        // Detect half-open connections
+        // D3-M7: el ping YA NO refresca lastActivity — antes cada ping (15s)
+        // renovaba la actividad del cliente, así que un socket half-open (el
+        // peer cerró pero write() no lanza) nunca envejecía por encima del
+        // timeout y la conexión muerta vivía para siempre (memoria + IP nunca
+        // liberada). Ahora lastActivity solo refleja actividad REAL (broadcast).
+        // Para los muertos reales se detecta el half-open por el socket
+        // subyacente (FIN recibido / destroyed) y se cierran de inmediato.
+        const socket = (client as unknown as { socket?: { readableEnded?: boolean; destroyed?: boolean } })?.socket;
+        const halfOpen = !!socket && (socket.readableEnded === true || socket.destroyed === true);
+        if (halfOpen) {
+          try {
+            client.end();
+          } catch (err) {
+            log.warn({ err }, 'Error cerrando conexión SSE half-open');
+          }
+          decrementClientIp(client);
+          eventClients.delete(client);
+          deliveryBuffer.delete(client);
+          clientActivity.delete(client);
+          continue;
+        }
         const lastActive = clientActivity.get(client);
         if (lastActive === undefined || (now - lastActive) > SSE_HALF_OPEN_TIMEOUT_MS) {
           try {
@@ -232,10 +252,9 @@ export function startSSEScavenger(): void {
           clientActivity.delete(client);
           continue;
         }
-        // Ping to detect dead connections
+        // Ping to detect dead connections (write failures — sin touch)
         try {
           client.write(':ping\n\n');
-          touchClient(client);
         } catch (err) {
           log.warn({ err }, 'Error en ping SSE — eliminando cliente');
           decrementClientIp(client);

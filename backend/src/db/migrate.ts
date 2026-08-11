@@ -793,6 +793,20 @@ export const COLUMN_MIGRATIONS: MigrationEntry[] = [
       `CREATE UNIQUE INDEX IF NOT EXISTS "events_user_id_idempotency_key_unique" ON "events"("user_id", "idempotency_key") WHERE "idempotency_key" IS NOT NULL AND "deleted_at" IS NULL`,
     ],
   },
+  // D3-M3: índices compuestos (fk, created_at) para la paginación por cursor
+  // con ORDER BY created_at DESC — antes el plan usaba el índice por fk sola y
+  // ordenaba con un Sort en memoria (o seq scan en eventos grandes), y con el
+  // cursor (WHERE created_at < X) la condición extra no podía usar el índice.
+  // Cubren gifts (B10 loadMoreGifts), photos (B10 loadMorePhotos) y
+  // cash_contributions (lista de aportes).
+  {
+    name: 'pagination_created_at_indexes',
+    statements: [
+      `CREATE INDEX IF NOT EXISTS "gifts_event_id_created_at_idx" ON "gifts"("event_id", "created_at")`,
+      `CREATE INDEX IF NOT EXISTS "photos_event_id_created_at_idx" ON "photos"("event_id", "created_at")`,
+      `CREATE INDEX IF NOT EXISTS "cash_contributions_fund_created_at_idx" ON "cash_contributions"("cash_fund_id", "created_at")`,
+    ],
+  },
 ];
 
 // 0015: Convert all timestamp → timestamptz for consistent UTC storage.

@@ -54,54 +54,46 @@ export function startCronJobs(): void {
   const DAILY_MS = 24 * 60 * 60 * 1000;
 
   const runDaily = async () => {
-    await runWithLock('daily', async () => {
-      try {
-        const result = await processReminders();
-        if (result.processed > 0) {
-          log.info(`Recordatorios: ${result.reminded}/${result.processed} eventos procesados`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error en recordatorios:');
+    // D3-M2: un lock por JOB (antes un único lock 'daily' cubría los 6): si un
+    // job tarda o se cuelga (MP, emails), ya no retiene el lock de los demás
+    // durante todo el día — cada uno puede correr en otra instancia por
+    // separado. runWithLock captura los lanzamientos (log + Sentry).
+    await runWithLock('reminders', async () => {
+      const result = await processReminders();
+      if (result.processed > 0) {
+        log.info(`Recordatorios: ${result.reminded}/${result.processed} eventos procesados`);
       }
-
-      try {
-        const result = await processEmailSequence();
-        if (result.processed > 0) {
-          log.info(`Email sequence: ${result.processed} emails enviados`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error en email sequence:');
-      }
-
-      try {
-        const expired = await expireStaleSubscriptions();
-        if (expired > 0) {
-          log.info(`Suscripciones expiradas: ${expired}`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error expirando suscripciones:');
-      }
-
-      try {
-        const purged = await purgeExpiredData();
-        if (purged > 0) {
-          log.info(`Usuarios purgados: ${purged}`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error purgando datos expirados:');
-      }
-
-      try {
-        const warned = await sendPurgeWarnings();
-        if (warned > 0) {
-          log.info(`Warnings de purga enviados: ${warned}`);
-        }
-      } catch (error) {
-        log.error({ error }, 'Error enviando warnings de purga:');
-      }
-
-      await reconcileStuckSubscriptions();
     });
+
+    await runWithLock('email-sequence', async () => {
+      const result = await processEmailSequence();
+      if (result.processed > 0) {
+        log.info(`Email sequence: ${result.processed} emails enviados`);
+      }
+    });
+
+    await runWithLock('expire-subscriptions', async () => {
+      const expired = await expireStaleSubscriptions();
+      if (expired > 0) {
+        log.info(`Suscripciones expiradas: ${expired}`);
+      }
+    });
+
+    await runWithLock('purge-expired', async () => {
+      const purged = await purgeExpiredData();
+      if (purged > 0) {
+        log.info(`Usuarios purgados: ${purged}`);
+      }
+    });
+
+    await runWithLock('purge-warnings', async () => {
+      const warned = await sendPurgeWarnings();
+      if (warned > 0) {
+        log.info(`Warnings de purga enviados: ${warned}`);
+      }
+    });
+
+    await reconcileStuckSubscriptions();
   };
 
   const reconcileStuckSubscriptions = async () => {

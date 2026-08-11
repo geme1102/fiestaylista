@@ -174,22 +174,40 @@ export async function createPreApproval(opts: {
     };
   }
 
-  const result = await retryable((rop) => preapproval.create({
-    body: {
-      preapproval_plan_id: opts.planId,
-      payer_email: opts.payerEmail,
-      external_reference: opts.externalReference,
-      back_url: opts.successUrl,
-      status: 'pending',
-      reason: opts.reason,
-    },
-    requestOptions: { timeout: rop.timeout },
-  }));
+  const result = await retryable(async (rop) => {
+    // D3-M6: la re-búsqueda corre ANTES DE CADA intento (no solo antes del
+    // primero): si el intento anterior creó el preapproval en MP pero la
+    // respuesta se perdió (timeout parcial), este intento reutiliza el
+    // existente en vez de crear un duplicado.
+    const reExisting = await searchPreapprovalsByRefAll(opts.externalReference);
+    const reReusable = reExisting.find((p) => p.status !== 'cancelled');
+    if (reReusable) {
+      const info = await preapproval.get({ id: reReusable.id, requestOptions: { timeout: rop.timeout } });
+      return {
+        initPoint: info.init_point ?? '',
+        preapprovalId: info.id ?? reReusable.id,
+      };
+    }
 
-  return {
-    initPoint: result.init_point ?? '',
-    preapprovalId: result.id ?? '',
-  };
+    const created = await preapproval.create({
+      body: {
+        preapproval_plan_id: opts.planId,
+        payer_email: opts.payerEmail,
+        external_reference: opts.externalReference,
+        back_url: opts.successUrl,
+        status: 'pending',
+        reason: opts.reason,
+      },
+      requestOptions: { timeout: rop.timeout },
+    });
+
+    return {
+      initPoint: created.init_point ?? '',
+      preapprovalId: created.id ?? '',
+    };
+  });
+
+  return result;
 }
 
 export async function searchPreapprovalsByRef(externalReference: string): Promise<{ id: string; status: string } | null> {

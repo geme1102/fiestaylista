@@ -115,35 +115,49 @@ beforeEach(async () => {
 });
 
 describe('deleteUserAccount', () => {
-  it('C2: cancela preapprovals de subs active, past_due y pending_approval (no solo active)', async () => {
+  it('D3-M1: encola en pending_mp_cancellations los preapprovals de subs active, past_due y pending_approval (sin cancelar en línea)', async () => {
     await mockDbSequence([mockUser], [
       sub('active', 'PA-ACTIVE'),
       sub('past_due', 'PA-PAST'),
       sub('pending_approval', 'PA-PENDING'),
     ]);
     await mockTransaction();
+    const { db } = await awaitImportDb();
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn(() => ({ onConflictDoNothing }));
+    vi.mocked(db.insert).mockReturnValue({ values } as any);
 
     await deleteUserAccount('user-1');
 
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-ACTIVE');
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-PAST');
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-PENDING');
+    expect(values).toHaveBeenCalledWith([
+      { userId: 'user-1', mpSubscriptionId: 'PA-ACTIVE' },
+      { userId: 'user-1', mpSubscriptionId: 'PA-PAST' },
+      { userId: 'user-1', mpSubscriptionId: 'PA-PENDING' },
+    ]);
+    expect(onConflictDoNothing).toHaveBeenCalled();
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
   });
 
-  it('C2: no cancela subs canceled sin cancelación MP pendiente (ya resueltas)', async () => {
+  it('D3-M1: no encola subs canceled sin cancelación MP pendiente (ya resueltas)', async () => {
     await mockDbSequence([mockUser], [
       sub('canceled', 'PA-DONE', null),
       sub('canceled', 'PA-PENDING-MP', new Date()),
     ]);
     await mockTransaction();
+    const { db } = await awaitImportDb();
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn(() => ({ onConflictDoNothing }));
+    vi.mocked(db.insert).mockReturnValue({ values } as any);
 
     await deleteUserAccount('user-1');
 
+    expect(values).toHaveBeenCalledWith([
+      { userId: 'user-1', mpSubscriptionId: 'PA-PENDING-MP' },
+    ]);
     expect(mockMp.cancelPreapproval).not.toHaveBeenCalledWith('PA-DONE');
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-PENDING-MP');
   });
 
-  it('C2: busca preapprovals huérfanos por external_reference en todos los estados y los cancela', async () => {
+  it('C2: busca preapprovals huérfanos por external_reference en todos los estados y los encola', async () => {
     mockMp.searchPreapprovalsByRefAll.mockImplementation((ref: string) => {
       if (ref === 'pro_user-1_month') return Promise.resolve([{ id: 'PA-HUERFANO', status: 'active' }]);
       if (ref === 'pro_plus_user-1_year') return Promise.resolve([{ id: 'PA-ORPHAN2', status: 'pending' }]);
@@ -151,6 +165,10 @@ describe('deleteUserAccount', () => {
     });
     await mockDbSequence([mockUser], []);
     await mockTransaction();
+    const { db } = await awaitImportDb();
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn(() => ({ onConflictDoNothing }));
+    vi.mocked(db.insert).mockReturnValue({ values } as any);
 
     await deleteUserAccount('user-1');
 
@@ -158,24 +176,20 @@ describe('deleteUserAccount', () => {
     expect(mockMp.searchPreapprovalsByRefAll).toHaveBeenCalledWith('pro_user-1_year');
     expect(mockMp.searchPreapprovalsByRefAll).toHaveBeenCalledWith('pro_plus_user-1_month');
     expect(mockMp.searchPreapprovalsByRefAll).toHaveBeenCalledWith('pro_plus_user-1_year');
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-HUERFANO');
-    expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-ORPHAN2');
+    expect(values).toHaveBeenCalledWith([
+      { userId: 'user-1', mpSubscriptionId: 'PA-HUERFANO' },
+      { userId: 'user-1', mpSubscriptionId: 'PA-ORPHAN2' },
+    ]);
+    expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
   });
 
-  it('C2: si cancelar falla, registra la intención en pending_mp_cancellations para reintento persistente', async () => {
-    await mockDbSequence([mockUser], [sub('active', 'PA-FALLING')]);
+  it('D3-M1: si el encolado de MP falla, la eliminación no se rompe (best-effort)', async () => {
+    await mockDbSequence([mockUser], [sub('active', 'PA-A')]);
     await mockTransaction();
     const { db } = await awaitImportDb();
-    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
-    const values = vi.fn(() => ({ onConflictDoNothing }));
-    vi.mocked(db.insert).mockReturnValue({ values } as any);
-    mockMp.cancelPreapproval.mockRejectedValueOnce(new Error('MP down'));
+    vi.mocked(db.insert).mockRejectedValueOnce(new Error('DB down'));
 
-    await deleteUserAccount('user-1');
-
-    expect(db.insert).toHaveBeenCalled();
-    expect(values).toHaveBeenCalledWith({ userId: 'user-1', mpSubscriptionId: 'PA-FALLING' });
-    expect(onConflictDoNothing).toHaveBeenCalled();
+    await expect(deleteUserAccount('user-1')).resolves.toBeUndefined();
   });
 
   it('F5: los borrados de Cloudinary se encolan en pending_cloudinary_deletes (ya no inline)', async () => {
@@ -190,7 +204,6 @@ describe('deleteUserAccount', () => {
       ],
     );
     const tx = await mockTransaction();
-    await mockMpCancelAll();
     const { db } = await awaitImportDb();
     const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
     const values = vi.fn(() => ({ onConflictDoNothing }));
@@ -200,7 +213,7 @@ describe('deleteUserAccount', () => {
 
     expect(tx.delete).toHaveBeenCalledTimes(2);
     expect(destroyWithRetry).not.toHaveBeenCalled();
-    expect(db.insert).toHaveBeenCalledTimes(1);
+    expect(db.insert).toHaveBeenCalledTimes(2);
     expect(values).toHaveBeenCalledWith([
       { userId: 'user-1', publicId: 'photo-1' },
       { userId: 'user-1', publicId: 'photo-2' },
@@ -216,8 +229,8 @@ describe('deleteUserAccount', () => {
       [{ url: 'https://res.cloudinary.com/x/image/upload/v1/events/photo-1.jpg' }],
     );
     await mockTransaction();
-    await mockMpCancelAll();
     const { db } = await awaitImportDb();
+    vi.mocked(db.insert).mockResolvedValueOnce({ values: vi.fn(() => ({ onConflictDoNothing: vi.fn().mockResolvedValue(undefined) })) } as any);
     vi.mocked(db.insert).mockRejectedValueOnce(new Error('DB down'));
 
     await expect(deleteUserAccount('user-1')).resolves.toBeUndefined();
@@ -230,7 +243,3 @@ describe('deleteUserAccount', () => {
     expect(mockMp.cancelPreapproval).not.toHaveBeenCalled();
   });
 });
-
-async function mockMpCancelAll() {
-  mockMp.cancelPreapproval.mockResolvedValue(undefined);
-}

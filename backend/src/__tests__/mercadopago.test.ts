@@ -258,6 +258,40 @@ describe('createPreApproval', () => {
     expect(result.preapprovalId).toBe('pre-nuevo');
     expect(mockPreApprovalCreate).toHaveBeenCalledTimes(1);
   });
+
+  it('D3-M6: tras un timeout parcial del create, el reintento reutiliza el preapproval ya creado (sin duplicar)', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ results: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ results: [] }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ results: [{ id: 'pre-retry', status: 'pending' }] }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    mockPreApprovalCreate.mockRejectedValueOnce(new Error('timeout'));
+    mockPreApprovalGet.mockResolvedValueOnce({
+      id: 'pre-retry',
+      init_point: 'https://mercadopago.com.co/checkout/pre-retry',
+    });
+
+    const result = await import('../services/mercadopago.js').then(m => m.createPreApproval({
+      planId: 'plan-1',
+      payerEmail: 'test@test.com',
+      externalReference: 'pro_user-1_month',
+      successUrl: 'https://app.com/success',
+      cancelUrl: 'https://app.com/cancel',
+      reason: 'Fiesta y Lista Pro Mensual',
+    }));
+
+    expect(result.preapprovalId).toBe('pre-retry');
+    expect(mockPreApprovalCreate).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('fetchPreapprovalInfo', () => {

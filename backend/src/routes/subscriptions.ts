@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
-import { paymentLimiter, cancelLimiter, apiLimiter } from '../middleware/rateLimit.js';
+import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
 import { verifyTurnstile } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
@@ -99,7 +99,8 @@ router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, as
   res.json({ url: result.initPoint });
 }));
 
-router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthRequest, res) => {
+// D2-A2: sin apiLimiter a nivel de ruta — ya corre el global en app.use('/api').
+router.post('/sync', requireAuth, asyncHandler(async (req: AuthRequest, res) => {
   const userId = req.user!.userId;
 
   const sub = await subscriptionService.getCurrentSubscription(userId);
@@ -180,42 +181,55 @@ router.post('/sync', requireAuth, apiLimiter, asyncHandler(async (req: AuthReque
   // No local record found — search Mercado Pago directly (webhook recovery)
   const intervals = ['month', 'year'] as const;
   const tiers = ['pro', 'pro_plus'] as const;
+  // D3-M8: búsquedas MP en PARALELO (Promise.allSettled) — antes eran 5
+  // llamadas seriales a la API de MP (~200-500ms c/u + reintentos): /sync
+  // tardaba 1.5-2.5s incluso cuando el pago existía. El procesamiento de cada
+  // resultado se mantiene en el orden original (pro month → year → pro_plus),
+  // que preserva el "primer match gana" previo.
+  const refs: Array<{ tier: (typeof tiers)[number]; ref: string }> = [];
   for (const tier of tiers) {
     for (const interval of intervals) {
       if (tier === 'pro_plus' && interval === 'year') continue;
-      const ref = `${tier}_${userId}_${interval}`;
-      try {
-        const mpPayment = await mercadopagoService.searchPaymentsByRef(ref);
-        if (!mpPayment) continue;
-        await mpWebhooks.handlePaymentNotification(mpPayment.id);
-        const [newPayment] = await db
-          .select()
-          .from(proPayments)
-          .where(and(
-            eq(proPayments.userId, userId),
-            eq(proPayments.mpPaymentId, mpPayment.id),
-          ))
-          .limit(1);
-        if (newPayment && newPayment.status !== 'refunded') {
-          const periodDays = newPayment.interval === 'year' ? 365 : 30;
-          const periodStart = newPayment.createdAt ?? new Date();
-          const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
-          if (periodEnd <= new Date()) continue;
-          await subscriptionService.createOrUpdateSubscription(userId, {
-            // M2: el webhook recovery (handlePaymentNotification) ya registró el
-            // preapproval correcto — conservar el id existente, nunca sobrescribir con null.
-            mpSubscriptionId: sub?.mpSubscriptionId ?? null,
-            tier: newPayment.tier as 'pro' | 'pro_plus',
-            status: 'active',
-            currentPeriodStart: periodStart,
-            currentPeriodEnd: periodEnd,
-          });
-          res.json({ tier: newPayment.tier, synced: true, message: 'Suscripción activada desde Mercado Pago' });
-          return;
-        }
-      } catch (err) {
-        log.error({ err, ref }, 'Error buscando pago en MP durante sync:');
-      }
+      refs.push({ tier, ref: `${tier}_${userId}_${interval}` });
+    }
+  }
+  const settled = await Promise.allSettled(
+    refs.map(({ ref }) => mercadopagoService.searchPaymentsByRef(ref)),
+  );
+  for (let i = 0; i < refs.length; i++) {
+    const { ref } = refs[i];
+    const outcome = settled[i];
+    if (outcome.status !== 'fulfilled') {
+      log.error({ err: outcome.reason, ref }, 'Error buscando pago en MP durante sync:');
+      continue;
+    }
+    const mpPayment = outcome.value;
+    if (!mpPayment) continue;
+    await mpWebhooks.handlePaymentNotification(mpPayment.id);
+    const [newPayment] = await db
+      .select()
+      .from(proPayments)
+      .where(and(
+        eq(proPayments.userId, userId),
+        eq(proPayments.mpPaymentId, mpPayment.id),
+      ))
+      .limit(1);
+    if (newPayment && newPayment.status !== 'refunded') {
+      const periodDays = newPayment.interval === 'year' ? 365 : 30;
+      const periodStart = newPayment.createdAt ?? new Date();
+      const periodEnd = new Date(periodStart.getTime() + periodDays * 24 * 60 * 60 * 1000);
+      if (periodEnd <= new Date()) continue;
+      await subscriptionService.createOrUpdateSubscription(userId, {
+        // M2: el webhook recovery (handlePaymentNotification) ya registró el
+        // preapproval correcto — conservar el id existente, nunca sobrescribir con null.
+        mpSubscriptionId: sub?.mpSubscriptionId ?? null,
+        tier: newPayment.tier as 'pro' | 'pro_plus',
+        status: 'active',
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+      });
+      res.json({ tier: newPayment.tier, synced: true, message: 'Suscripción activada desde Mercado Pago' });
+      return;
     }
   }
 

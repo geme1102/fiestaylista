@@ -3,7 +3,7 @@ import { db } from '../db/index.js';
 import { users, events, gifts, photos, cashFunds, cashContributions, subscriptions, consentRecords, arcoRequests, refreshTokens, pendingMpCancellations, pendingCloudinaryDeletes } from '../db/schema.js';
 import { NotFoundError } from '../utils/errors.js';
 import { getPublicIdFromUrl, isOwnCloudinaryUrl } from '../utils/cloudinary.js';
-import { cancelPreapproval, searchPreapprovalsByRefAll, retryable } from './mercadopago.js';
+import { searchPreapprovalsByRefAll } from './mercadopago.js';
 import { createModuleLogger } from '../utils/logger.js';
 
 const log = createModuleLogger('ARCO');
@@ -138,21 +138,22 @@ export async function deleteUserAccount(userId: string) {
     await tx.delete(users).where(eq(users.id, userId));
   });
 
-  // 2) Cancelación MP best-effort con reintento persistente (no bloquea la
-  //    eliminación). Si un intento falla, la intención se registra en
-  //    pending_mp_cancellations y el cron retryPendingMpCancellations la
-  //    reintenta (con backoff) hasta que MP confirme la cancelación.
-  for (const mpId of mpSubscriptionIdsToCancel) {
+  // D3-M1: NO cancelar en línea — cada cancelación con retryable 3x10s puede
+  // tardar ~40s (más si MP está lento o caído) y el loop es en serie: con varios
+  // preapprovals el endpoint superaba el timeout del cliente (10s) y el usuario
+  // veía "eliminación fallida" aunque la cuenta YA estaba borrada. Ahora todo
+  // se encola en pending_mp_cancellations (insert barato, ~ms) y el cron
+  // retryPendingMpCancellations cancela en background con backoff exponencial,
+  // verificando que el preapproval siga cobrando antes de cancelar.
+  if (mpSubscriptionIdsToCancel.size > 0) {
     try {
-      await retryable(() => cancelPreapproval(mpId), 3, 10000);
-      log.info({ mpSubscriptionId: mpId, userId }, 'Preapproval cancelado en MP');
+      await db
+        .insert(pendingMpCancellations)
+        .values([...mpSubscriptionIdsToCancel].map(mpId => ({ userId, mpSubscriptionId: mpId })))
+        .onConflictDoNothing();
+      log.info({ count: mpSubscriptionIdsToCancel.size, userId }, 'Cancelaciones MP encoladas para procesamiento en background');
     } catch (err) {
-      log.error({ err, mpSubscriptionId: mpId, userId }, 'Error cancelando preapproval en MP — queda pendiente de reintento');
-      try {
-        await db.insert(pendingMpCancellations).values({ userId, mpSubscriptionId: mpId }).onConflictDoNothing();
-      } catch (insertErr) {
-        log.error({ err: insertErr, mpSubscriptionId: mpId }, 'Error registrando cancelación MP pendiente');
-      }
+      log.error({ err, count: mpSubscriptionIdsToCancel.size, userId }, 'Error encolando cancelaciones MP — preapprovals pueden seguir cobrando');
     }
   }
 

@@ -70,6 +70,7 @@ export const gifts = pgTable('gifts', {
 }, (table) => ({
   eventIdDeletedAtIdx: index('gifts_event_id_deleted_at_idx').on(table.eventId, table.deletedAt),
   eventIdUnclaimedIdx: index('gifts_event_id_unclaimed_idx').on(table.eventId).where(sql`${table.isClaimed} = false`),
+  eventIdCreatedAtIdx: index('gifts_event_id_created_at_idx').on(table.eventId, table.createdAt),
   eventIdNameUnique: uniqueIndex('gifts_event_id_name_unique').on(table.eventId, table.name).where(isNull(table.deletedAt)),
 }));
 
@@ -94,6 +95,7 @@ export const photos = pgTable('photos', {
   deletedAt: timestamp('deleted_at', { mode: 'date', withTimezone: true }),
 }, (table) => ({
   eventIdIdx: index('photos_event_id_idx').on(table.eventId),
+  eventIdCreatedAtIdx: index('photos_event_id_created_at_idx').on(table.eventId, table.createdAt),
 }));
 
 export const subscriptions = pgTable('subscriptions', {
@@ -141,6 +143,7 @@ export const cashContributions = pgTable('cash_contributions', {
 }, (table) => ({
   cashFundIdIdx: index('cash_contributions_cash_fund_id_idx').on(table.cashFundId),
   statusCreatedAtIdx: index('cash_contributions_status_created_at_idx').on(table.status, table.createdAt),
+  fundCreatedAtIdx: index('cash_contributions_fund_created_at_idx').on(table.cashFundId, table.createdAt),
   fundNameKeyUnique: uniqueIndex('cash_contributions_fund_name_key_unique').on(table.cashFundId, table.contributorNameKey),
 }));
 

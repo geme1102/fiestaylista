@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 
 const mockLoginApi = vi.hoisted(() => vi.fn());
 const mockRegisterApi = vi.hoisted(() => vi.fn());
@@ -33,9 +33,11 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
 function TestConsumer({ onReady: _onReady }: { onReady: (ctx: ReturnType<typeof useAuth>) => void }) {
   const ctx = useAuth();
+  const { pathname } = useLocation();
   return (
     <div>
       <span data-testid="user">{ctx.user?.name ?? 'null'}</span>
+      <span data-testid="pathname">{pathname}</span>
       <span data-testid="isAuthenticated">{String(ctx.isAuthenticated)}</span>
       <span data-testid="isLoading">{String(ctx.isLoading)}</span>
       <button data-testid="login" onClick={() => ctx.login('a@b.com', '12345678')}>Login</button>
@@ -186,6 +188,46 @@ describe('AuthContext', () => {
       expect(mockClearTokens).toHaveBeenCalled();
     });
     expect(screen.getByTestId('user').textContent).toBe('null');
+  });
+
+  it('D3-M5: un 401 que llega durante el logout no muestra toast de sesión expirada ni redirige a /login', async () => {
+    mockGetAccessToken.mockReturnValue('tok-1');
+    mockGetMe.mockResolvedValue({ user: testUser, isGuest: false });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toBe('Ana');
+    });
+
+    fireEvent.click(screen.getByTestId('logout'));
+    await waitFor(() => {
+      expect(mockClearTokens).toHaveBeenCalled();
+    });
+
+    window.dispatchEvent(new Event('auth:session-expired'));
+
+    expect(mockShowToast).not.toHaveBeenCalledWith('Sesión expirada. Serás redirigido al inicio de sesión.', 'error');
+    expect(screen.getByTestId('pathname').textContent).toBe('/');
+    expect(screen.getByTestId('user').textContent).toBe('null');
+  });
+
+  it('D3-M5: un 401 fuera del logout SÍ muestra el toast de sesión expirada', async () => {
+    mockGetAccessToken.mockReturnValue('tok-1');
+    mockGetMe.mockResolvedValue({ user: testUser, isGuest: false });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toBe('Ana');
+    });
+
+    window.dispatchEvent(new Event('auth:session-expired'));
+
+    expect(mockShowToast).toHaveBeenCalledWith('Sesión expirada. Serás redirigido al inicio de sesión.', 'error');
+    await waitFor(() => {
+      expect(screen.getByTestId('pathname').textContent).toBe('/login');
+    });
   });
 
   it('refreshUser updates user on success', async () => {
