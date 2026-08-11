@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import request from 'supertest';
 import { createHmac } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
@@ -303,10 +305,15 @@ const mockNotifications = vi.hoisted(() => ({
   emitGiftClaimed: vi.fn(),
   emitPhotoUploaded: vi.fn(),
   emitMessagePosted: vi.fn(),
+  emitCashContribution: vi.fn(),
   subscribeClient: vi.fn(),
   unsubscribeClient: vi.fn(),
-  getClientCount: vi.fn(),
+  getClientCount: vi.fn(() => 0),
+  incrementClientIp: vi.fn(),
+  decrementClientIp: vi.fn(),
+  getClientIpCount: vi.fn(() => 0),
   startSSEScavenger: vi.fn(),
+  stopSSEScavenger: vi.fn(),
 }));
 
 vi.mock('../services/notifications.js', () => mockNotifications);
@@ -398,6 +405,58 @@ describe('HTTP→HTTPS redirect (A2)', () => {
     const res = await request(app).get('/health').set('x-forwarded-proto', 'http');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
+  });
+});
+
+describe('Compression excluye SSE (D1-C1)', () => {
+  it('GET /api/events/:id/gifts/subscribe no comprime con Accept-Encoding: gzip', async () => {
+    const jwt = await import('jsonwebtoken');
+    const token = jwt.sign({ eventId: 'evt-1', scope: 'sse' }, config.JWT_SECRET, { expiresIn: '120s' });
+    // La conexión SSE nunca se cierra (stream de 120s): validar headers crudos con
+    // node:http y destruir la conexión en cuanto llegan.
+    const server = app.listen(0);
+    const { port } = server.address() as AddressInfo;
+    await new Promise<void>((resolve, reject) => {
+      const req = http.request({
+        host: '127.0.0.1',
+        port,
+        path: `/api/events/evt-1/gifts/subscribe?token=${encodeURIComponent(token)}`,
+        headers: { 'Accept-Encoding': 'gzip' },
+      }, (res) => {
+        try {
+          expect(res.statusCode).toBe(200);
+          expect(res.headers['content-encoding']).toBeUndefined();
+          res.destroy();
+          server.close();
+          resolve();
+        } catch (err) {
+          server.close();
+          reject(err);
+        }
+      });
+      req.on('error', (err) => {
+        server.close();
+        reject(err);
+      });
+      req.end();
+    });
+  });
+
+  it('las respuestas JSON grandes SÍ comprimen (el filter solo excluye SSE)', async () => {
+    mockEventService.getUserEvents.mockResolvedValue(
+      Array.from({ length: 50 }, (_, i) => ({
+        id: `evt-${i}`,
+        title: `Evento ${i} — título lo bastante largo para superar el threshold de 512 bytes de compression`,
+        eventType: 'BABY_SHOWER',
+        status: 'active',
+      })),
+    );
+    const res = await request(app)
+      .get('/api/events')
+      .set('Authorization', 'Bearer test-token')
+      .set('Accept-Encoding', 'gzip');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-encoding']).toBe('gzip');
   });
 });
 
@@ -1227,5 +1286,15 @@ describe('404', () => {
     const res = await request(app).get('/api/nonexistent');
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Ruta no encontrada');
+  });
+});
+
+describe('Payload demasiado grande (D3-M4)', () => {
+  it('responde 413 con errorId cuando el body JSON supera el límite de 1mb', async () => {
+    const bigBody = { data: 'x'.repeat(1024 * 1024 + 10) };
+    const res = await request(app).post('/api/events').send(bigBody);
+    expect(res.status).toBe(413);
+    expect(res.body.error).toBe('La solicitud excede el límite de tamaño permitido');
+    expect(typeof res.body.errorId).toBe('string');
   });
 });

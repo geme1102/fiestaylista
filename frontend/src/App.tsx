@@ -168,8 +168,11 @@ export default function App() {
     setSplashDone(true);
   }, []);
   const location = useLocation();
+  // D1-C2: el splash de marca NO bloquea el loop viral — los invitados que llegan
+  // al link público /e/slug ven la página del evento al instante (primeras visitas).
+  const isGuestRoute = location.pathname.startsWith('/e/');
 
-  if (!splashDone) {
+  if (!splashDone && !isGuestRoute) {
     return <SplashIntro onComplete={handleSplashDone} />;
   }
 

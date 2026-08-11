@@ -36,7 +36,19 @@ export function createApp() {
 
   const app = express();
 
-  app.use(compression({ threshold: 512, level: 6 }));
+  // compression: excluir SSE del filtro. compressible('text/event-stream') es
+  // true y sin Content-Length el threshold no aplica → gzip/brotli bufferizaba
+  // los eventos real-time hasta 16KB o el cierre de conexión a los 120s (D1-C1).
+  app.use(compression({
+    threshold: 512,
+    level: 6,
+    filter: (req, res) => {
+      if (req.headers.accept?.includes('text/event-stream') || req.path.endsWith('/subscribe')) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }));
   // trust proxy: solo confiar saltos provenientes de IPs de Cloudflare.
   // Como el dominio no está proxyado (Cloudflare solo provee Turnstile), el
   // socket en producción es la IP pública directa del cliente: confiar en toda

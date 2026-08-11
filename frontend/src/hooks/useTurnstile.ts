@@ -33,7 +33,7 @@ export async function waitForTurnstile(
   return null;
 }
 
-export function useTurnstile() {
+export function useTurnstile({ enabled = true }: { enabled?: boolean } = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -66,6 +66,10 @@ export function useTurnstile() {
   }, []);
 
   useEffect(() => {
+    // D1-C3: render bajo demanda — si `enabled` es false no se crea el widget
+    // ni se arranca el polling (páginas con muchas GiftCards no multiplican
+    // iframes de Turnstile ni intervals de 200ms por card).
+    if (!enabled) return;
     if (!SITE_KEY) {
       setReady(true);
       return;
@@ -117,7 +121,7 @@ export function useTurnstile() {
         window.turnstile.remove(widgetId.current);
       }
     };
-  }, [buildErrorMessage]);
+  }, [enabled, buildErrorMessage]);
 
   const reset = useCallback(() => {
     setToken(null);
