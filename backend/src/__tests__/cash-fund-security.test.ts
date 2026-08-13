@@ -14,6 +14,10 @@ vi.mock('../db/index.js', () => ({
     update: vi.fn(),
     delete: vi.fn(),
   },
+  sql: {
+    listen: vi.fn(),
+    notify: vi.fn(),
+  },
 }));
 
 vi.mock('../db/schema.js', () => ({

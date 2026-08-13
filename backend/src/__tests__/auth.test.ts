@@ -1,5 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { z } from 'zod';
+
+vi.mock('../config.js', () => ({
+  config: {
+    JWT_SECRET: 'test-secret-at-least-32-chars',
+    JWT_REFRESH_SECRET: 'test-refresh-secret-at-least-32-chars',
+    FRONTEND_URL: 'http://localhost:5173',
+  },
+}));
+
+vi.mock('../db/index.js', () => ({
+  db: {},
+  sql: {},
+}));
 
 const registerSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),

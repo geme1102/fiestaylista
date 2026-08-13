@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Response } from 'express';
 
-vi.mock('./sse-pubsub.js', () => ({
+vi.mock('../config.js', () => ({
+  config: {},
+}));
+
+vi.mock('../db/index.js', () => ({
+  db: {},
+  sql: {},
+}));
+
+vi.mock('../services/sse-pubsub.js', () => ({
   notifyEvent: vi.fn(),
 }));
 
