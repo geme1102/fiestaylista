@@ -50,6 +50,10 @@ const sql = postgres(databaseUrl, {
   idle_timeout: 30,
   max_lifetime: 60 * 30,
   prepare: false,
+  // Los NOTICEs (42P07 "already exists") de las guardas IF NOT EXISTS de
+  // migration_lock y rate_limits llenan los logs de Railway en cada arranque.
+  // Son información, no errores; los ERRORs de PostgreSQL siguen llegando.
+  onnotice: () => {},
 });
 
 const db = drizzle(sql, { schema });
