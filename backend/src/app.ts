@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { config } from './config.js';
 import { apiLimiter, webhookLimiter, createLimiter } from './middleware/rateLimit.js';
 import { requestLogger } from './middleware/requestLogger.js';
+import { logger } from './utils/logger.js';
 import { errorHandler } from './middleware/error.js';
 import { cloudflareIP } from './middleware/cloudflare.js';
 import { isCloudflareIP } from './middleware/cloudflare.js';
@@ -133,7 +134,11 @@ export function createApp() {
         workerSrc: ["'none'"],
         manifestSrc: ["'self'"],
         upgradeInsecureRequests: [],
-        reportUri: ['/api/csp-report'],
+        // D9-M: helmet 8 no soporta report-uri (verificado en index.mjs: 0
+        // referencias) — la directiva era código muerto silencioso; Chrome
+        // además eliminó report-uri en favor de report-to + Reporting-Endpoints.
+        // Se conserva el endpoint /api/csp-report solo por compatibilidad
+        // residual; el reporte real queda para Sentry frontend.
       },
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -153,8 +158,10 @@ export function createApp() {
 
   app.post('/api/csp-report', createLimiter({ prefix: 'csp', max: 10, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }), express.json({ type: ['application/csp-report', 'application/reports+json'], limit: '64kb' }), (req, res) => {
     const report = req.body?.['csp-report'] ?? req.body;
+    // D9-M: antes console.warn — inconsistente con el resto del logging
+    // (sin requestId, sin nivel pino, formato distinto a Railway).
     if (config.NODE_ENV !== 'test' && report) {
-      console.warn('[CSP]', String(report?.['violated-directive'] ?? 'unknown').slice(0, 120), String(report?.['blocked-uri'] ?? '').slice(0, 200));
+      logger.warn({ violatedDirective: String(report?.['violated-directive'] ?? 'unknown').slice(0, 120), blockedUri: String(report?.['blocked-uri'] ?? '').slice(0, 200) }, 'Reporte de violación CSP');
     }
     res.status(204).end();
   });
@@ -190,6 +197,15 @@ export function createApp() {
       return;
     }
 
+    // S6-M: el endpoint es público (readiness de Railway) — antes exponía
+    // `configured: true/false` + latencias de cada servicio externo (qué
+    // proveedores usa la app y su salud: reconocimiento previo a ataque).
+    // Se responden SOLO los status; los detalles se loguean server-side.
+    const publicChecks: Record<string, { status: string }> = {};
+    for (const [name, check] of Object.entries(checks)) {
+      publicChecks[name] = { status: check.status };
+    }
+
     const overall = checks.database.status === 'error'
       ? 'unhealthy'
       : Object.values(checks).some(c => c.status !== 'ok')
@@ -197,7 +213,7 @@ export function createApp() {
         : 'healthy';
 
     const statusCode = overall === 'unhealthy' ? 503 : 200;
-    res.status(statusCode).json({ status: overall, checks });
+    res.status(statusCode).json({ status: overall, checks: publicChecks });
   });
 
   app.use('/uploads', express.static('uploads', { maxAge: '1y', immutable: true }));

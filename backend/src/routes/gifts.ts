@@ -209,12 +209,17 @@ router.post('/public-sse-token', verifyTurnstile, validateUuidParam('eventId'), 
   res.json({ token: sseToken, url: `${config.BACKEND_URL}/api/events/${eventId}/gifts/subscribe` });
 }));
 
-const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
+// D8-M: los contadores de conexiones SSE viven en Mapas por proceso
+// (notifications.ts). En cluster un cliente podía abrir N× el tope (3 pestañas
+// × N workers) y un evento N×50 conexiones. Los cupos globales se reparten
+// entre workers (ceil para no dejarlos en 0 en configs pequeñas).
+const clusterWorkers = config.CLUSTER_WORKERS > 0 ? config.CLUSTER_WORKERS : 1;
+const SSE_MAX_CONNECTIONS_PER_EVENT = Math.ceil(50 / clusterWorkers);
 // E2: 3→10 — con egress de Netlify compartido por PoP (ver rateLimit.ts), 3
 // conexiones por IP bloqueaban el SSE en vivo de un evento con 4+ invitados
 // en el mismo PoP. El tope global por evento (50) y el token SSE de 2 min
 // siguen acotando el uso.
-const SSE_MAX_PER_IP = 10;
+const SSE_MAX_PER_IP = Math.ceil(10 / clusterWorkers);
 // F4: el token SSE expira a los 2 min y la conexión DEBE cortarse exactamente
 // al expirar (enviando 'reconnect' para que el cliente renueve token). Antes
 // el timeout era de 4 min: entre el minuto 2 y el 4 la conexión seguía viva

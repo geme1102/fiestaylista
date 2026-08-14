@@ -30,7 +30,11 @@ function logError(err: unknown, errorId: string, req?: Request): void {
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
+  // D6-M: con headers ya enviados (SSE tras writeHead, streams, compression
+  // flush) no se puede responder JSON, pero el error SÍ se loguea — antes era
+  // el único camino de error 100% invisible del backend (ni pino ni Sentry).
   if (res.headersSent) {
+    logError(err, randomUUID(), req);
     return;
   }
 

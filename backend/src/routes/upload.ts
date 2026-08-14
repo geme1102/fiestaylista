@@ -150,9 +150,13 @@ async function uploadWithRetry(filePath: string, mimeType: string, maxRetries = 
       return await cloudinaryUploadWithTimeout(filePath, mimeType);
     } catch (err) {
       lastError = err;
-      if (attempt < maxRetries - 1) {
-        await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
-      }
+      // D5-M: NO reintentar el timeout propio — 25s + 1s + 25s = 51s >
+      // server.timeout (30s): el socket muere con el upload aún en curso y
+      // cleanupFile() puede borrar el archivo temporal mientras el 2º intento
+      // lo lee. Solo tienen sentido los reintentos por fallos transitorios de
+      // Cloudinary (red/5xx), que NO marcan timedOut.
+      if ((err as Error & { timedOut?: boolean })?.timedOut || attempt >= maxRetries - 1) break;
+      await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
     }
   }
   throw lastError;
@@ -173,7 +177,9 @@ async function cloudinaryUploadWithTimeout(filePath: string, mimeType: string): 
           if (abortHandle.publicId) {
             cloudinary.uploader.destroy(abortHandle.publicId).catch(() => {});
           }
-          reject(new Error('Cloudinary upload timed out after 25s'));
+          const timeoutError = new Error('Cloudinary upload timed out after 25s') as Error & { timedOut?: boolean };
+          timeoutError.timedOut = true;
+          reject(timeoutError);
         }, 25000);
       }),
     ]);

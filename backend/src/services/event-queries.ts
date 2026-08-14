@@ -196,10 +196,10 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
       eventLocation: eventsTable.eventLocation,
       eventNote: eventsTable.eventNote,
       viewCount: eventsTable.viewCount,
-      // ownerTier: expone el plan del dueño (free/pro/pro_plus) para que el
-      // frontend oculte la UI de fotos en eventos free — requisito de negocio:
-      // FREE no sube ni comparte fotos.
-      ownerTier: users.tier,
+      // S5-M: antes se exponía ownerTier (free/pro/pro_plus) — info financiera
+      // del host. El frontend SOLO necesita saber si las fotos están habilitadas
+      // (el plan free no comparte fotos); se envía un booleano sin revelar el plan.
+      photosEnabled: sql<boolean>`${users.tier} <> 'free'`,
     })
     .from(eventsTable)
     .innerJoin(users, eq(users.id, eventsTable.userId))
@@ -240,7 +240,7 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
 
   // MEDIUM-1: el dueño free (downgrade) NO comparte fotos — se ocultan de la
   // vista pública (galería y og:image) sin borrarlas: si reactiva Pro vuelven.
-  const isFreeEvent = (event.ownerTier ?? 'free') === 'free';
+  const isFreeEvent = !event.photosEnabled;
 
   const [eventGifts, eventPhotos] = await Promise.all([
     db

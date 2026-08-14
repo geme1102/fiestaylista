@@ -13,6 +13,12 @@ let healthTimer: ReturnType<typeof setInterval> | null = null;
 let heartbeatSenderTimer: ReturnType<typeof setInterval> | null = null;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let lastHeartbeat = 0;
+// D7-M: backoff exponencial del listener (10s→60s, cap). Antes reintentaba cada
+// 10s fijos e infinitos con 1 log.error por intento: con Neon caído eran
+// ~8.600 líneas/día por instancia, justo cuando más claridad se necesita.
+let retryCount = 0;
+const RETRY_BASE_MS = 10_000;
+const RETRY_MAX_MS = 60_000;
 
 export async function startSSEListener(): Promise<void> {
   try {
@@ -31,15 +37,18 @@ export async function startSSEListener(): Promise<void> {
     });
     unlistenFn = handle.unlisten;
     lastHeartbeat = Date.now();
+    retryCount = 0;
     log.info({ channel: CHANNEL }, 'SSE pub/sub listener iniciado');
     startHealthCheck();
   } catch (err) {
-    log.error({ err }, 'Error iniciando SSE pub/sub listener — reintentando en 10s...');
+    const delay = Math.min(RETRY_BASE_MS * Math.pow(2, retryCount), RETRY_MAX_MS);
+    retryCount++;
+    log.error({ err, attempt: retryCount, nextRetryMs: delay }, 'Error iniciando SSE pub/sub listener — reintentando con backoff');
     if (retryTimer) clearTimeout(retryTimer);
     retryTimer = setTimeout(() => {
       retryTimer = null;
       startSSEListener();
-    }, 10000);
+    }, delay);
   }
 }
 

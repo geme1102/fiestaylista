@@ -51,7 +51,9 @@ export interface Event {
   eventDate?: string | null;
   eventLocation?: string | null;
   eventNote?: string | null;
-  ownerTier?: Tier;
+  // S5-M: heredado de ownerTier — el plan del host ya no se expone
+  // públicamente; solo se indica si las fotos están habilitadas para invitados.
+  photosEnabled?: boolean;
   frozenAt?: string | null;
   createdAt: string;
   updatedAt: string;

@@ -221,6 +221,20 @@ export async function createPromise(
         return { contribution: row, fund: updatedFund };
       }
 
+      // F2-M: re-promesa con monto distinto sobre una promesa PENDIENTE — antes
+      // no se ajustaba collectedAmount (solo el branch no-promised lo hacía) y
+      // la barra del host divergía del total real hasta el reconcile horario.
+      const delta = amountInCents - existing.amount;
+      if (delta !== 0) {
+        await tx
+          .update(cashFunds)
+          .set({
+            collectedAmount: sql`${cashFunds.collectedAmount} + ${delta}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(cashFunds.id, cashFundId));
+      }
+
       const [fundAfter] = await tx
         .select()
         .from(cashFunds)

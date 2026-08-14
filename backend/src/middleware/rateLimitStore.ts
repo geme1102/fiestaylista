@@ -8,6 +8,7 @@ const TABLE_NAME = 'rate_limits';
 const CLEANUP_INTERVAL_MS = 60_000;
 
 let cleanupTimer: ReturnType<typeof setInterval> | null = null;
+let lastErrorLogAt = 0;
 
 export class PostgresStore implements Store {
   localKeys = false;
@@ -72,7 +73,13 @@ export class PostgresStore implements Store {
       // D2-A3: fail-open REAL — devolver totalHits: 0 hacía que express-rate-limit
       // lanzara ERR_ERL_INVALID_HITS (500 por request). Al lanzar aquí, el limiter
       // con passOnStoreError: true deja pasar el request.
-      log.error({ err, key }, 'Rate limit store increment falló — permitiendo request (passOnStoreError)');
+      // D7-M: con Neon caído el fail-open logueaba UNA línea por request y limiter
+      // (cientos/min en el peor momento). Throttle a 1 log/min.
+      const now = Date.now();
+      if (now - lastErrorLogAt > 60_000) {
+        lastErrorLogAt = now;
+        log.error({ err, key }, 'Rate limit store increment falló — permitiendo request (passOnStoreError)');
+      }
       throw err;
     }
   }
