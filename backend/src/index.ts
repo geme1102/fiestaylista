@@ -29,8 +29,33 @@ if (cluster.isPrimary && workerCount > 1) {
   const MAX_RESTART_ATTEMPTS = 10;
   const RESTART_BACKOFF_BASE_MS = 1000;
 
+  // E12: el contador de reinicios nunca se reseteaba — un único crash
+  // transitorio (ej. OOM de un worker) incrementaba la cuenta para siempre y
+  // bastaban 10 crashes espaciados en días para abortar el cluster completo.
+  // Ahora: si un worker lleva STABLE_WINDOW_MS vivo, el contador vuelve a 0.
+  const STABLE_WINDOW_MS = 30_000;
+  const stableTimers = new Map<number, NodeJS.Timeout>();
+  const scheduleStableReset = (worker: Worker) => {
+    const prev = stableTimers.get(worker.id);
+    if (prev) clearTimeout(prev);
+    const timer = setTimeout(() => {
+      stableTimers.delete(worker.id);
+      if (restartAttempts > 0) {
+        logger.info({ attempts: restartAttempts }, 'Worker estable — reseteando contador de reinicios');
+      }
+      restartAttempts = 0;
+    }, STABLE_WINDOW_MS);
+    stableTimers.set(worker.id, timer);
+  };
+  cluster.on('online', scheduleStableReset);
+
   cluster.on('exit', (worker, code, signal) => {
     if (isShuttingDown) return;
+    const stableTimer = stableTimers.get(worker.id);
+    if (stableTimer) {
+      clearTimeout(stableTimer);
+      stableTimers.delete(worker.id);
+    }
     restartAttempts++;
     if (restartAttempts > MAX_RESTART_ATTEMPTS) {
       logger.fatal({ attempts: restartAttempts }, 'Demasiados reinicios de worker — abortando cluster');

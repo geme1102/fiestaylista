@@ -25,7 +25,9 @@ vi.mock('../db/index.js', () => ({
     transaction: vi.fn(),
     select: vi.fn(),
     update: vi.fn(),
-    insert: vi.fn(),
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({ onConflictDoNothing: vi.fn().mockResolvedValue(undefined) })),
+    })),
     execute: vi.fn(),
   },
 }));
@@ -35,6 +37,7 @@ vi.mock('../db/schema.js', () => ({
   subscriptions: {},
   proPayments: {},
   emailTracking: {},
+  pendingMpCancellations: {},
 }));
 
 vi.mock('../services/subscription.js', () => mockSubsService);
@@ -199,6 +202,24 @@ describe('handleProPayment', () => {
       expect.anything(),
     );
     expect(mockMp.cancelPreapproval).toHaveBeenCalledWith('PA-OLD');
+  });
+
+  it('E4: si la cancelación del preapproval viejo falla, se encola en pending_mp_cancellations (no queda doble cobro en silencio)', async () => {
+    const { db } = await import('../db/index.js');
+    const tx = makePaymentTx({ mpSubscriptionId: 'PA-OLD', tier: 'pro', status: 'active' });
+    vi.mocked(db.transaction).mockImplementation(async (cb: any) => cb(tx));
+    mockMp.fetchPreapprovalInfo.mockImplementation((id: string) => {
+      if (id === 'PA-NEW') return Promise.resolve({ id, status: 'active', dateCreated: '2026-08-05T00:00:00Z' });
+      return Promise.resolve({ id, status: 'active', dateCreated: '2026-07-01T00:00:00Z' });
+    });
+    mockMp.cancelPreapproval.mockRejectedValue(new Error('MP caído (retryable agotado)'));
+
+    await handleProPayment('pay-e4', 'user-1', 'month', 'pro_plus', 'PA-NEW');
+
+    // El retryable del mock lanza el error de cancelPreapproval → el catch de
+    // reemplazo encola el preapproval viejo ANTES del bloque de email.
+    const valuesMock = (vi.mocked(db.insert).mock.results[0]?.value as { values: ReturnType<typeof vi.fn> }).values;
+    expect(valuesMock).toHaveBeenCalledWith({ userId: 'user-1', mpSubscriptionId: 'PA-OLD' });
   });
 
   it('C1 (pago): ignora de forma conservadora si no se puede comparar antigüedad (MP caído)', async () => {

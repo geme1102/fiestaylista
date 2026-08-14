@@ -12,6 +12,11 @@ function logError(err: unknown, errorId: string, req?: Request): void {
     errorId,
     err: errMessage,
     statusCode,
+    // E9: los 500 se logueaban SÓLO con el mensaje — un error de DB o un
+    // TypeError sin stack es inútil para debuggear producción (Sentry del
+    // backend no stratifica; el log es la única fuente). Se agregan las
+    // primeras 6 líneas del stack.
+    errStack: err instanceof Error ? err.stack?.split('\n').slice(0, 6).join(' | ') : undefined,
   };
 
   if (req) {

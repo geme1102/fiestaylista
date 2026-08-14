@@ -210,7 +210,13 @@ export async function getEventBySlug(eventSlug: string, giftParams: PaginationPa
     throw new NotFoundError('Evento no encontrado');
   }
 
-  if (!event.isActive) {
+  // E11: los eventos FINALIZADOS (status='completed') siguen visibles para
+  // invitados (recap de regalos/fotos/mensajes) — antes la página pública
+  // devolvía 404 porque completeEvent apaga isActive. Los congelados sí
+  // permanecen ocultos. Es seguro: todas las escrituras contienen un check de
+  // isActive (gifts/photos/messages/cash/rsvp), así que ver un evento
+  // finalizado no permite modificar nada.
+  if (!event.isActive && event.status !== 'completed') {
     throw new NotFoundError('Este evento no está disponible');
   }
 

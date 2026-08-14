@@ -853,15 +853,57 @@ const TIMESTAMPTZ_ALTERS: string[] = [
 
 const TIMESTAMPTZ_MIGRATION_NAME = 'timestamptz_conversion';
 
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+// E7: el conjunto de migraciones del código actual (journal completo).
+const ALL_MIGRATION_NAMES = [
+  ...COLUMN_MIGRATIONS.map(m => m.name),
+  TIMESTAMPTZ_MIGRATION_NAME,
+];
+
+function isJournalComplete(applied: string[]): boolean {
+  const appliedSet = new Set(applied);
+  return ALL_MIGRATION_NAMES.every(name => appliedSet.has(name));
+}
+
 export async function runMigrations(): Promise<void> {
   // Acquire migration lock via DB table (works with any pool config, unlike advisory locks)
   await sql.unsafe(`CREATE TABLE IF NOT EXISTS "migration_lock" ("id" integer PRIMARY KEY, "locked_at" timestamptz NOT NULL DEFAULT now())`);
   await sql.unsafe(`CREATE INDEX IF NOT EXISTS idx_migration_lock_locked_at ON migration_lock(locked_at)`);
   await sql.unsafe(`DELETE FROM "migration_lock" WHERE "locked_at" < now() - interval '30 minutes'`);
-  const lockResult = await sql`INSERT INTO "migration_lock" ("id", "locked_at") VALUES (1, now()) ON CONFLICT ("id") DO NOTHING RETURNING "locked_at"`;
-  if (lockResult.length === 0) {
-    log.info('Otra instancia está ejecutando migraciones — omitiendo');
-    return;
+
+  // E7: gate de migraciones en cluster. Antes, el worker sin lock arrancaba
+  // INMEDIATO y servía tráfico contra el schema viejo mientras el holder
+  // aplicaba ALTERs pesados (500s transitorios "column does not exist"); y si
+  // el holder moría a mitad, nadie volvía a migrar hasta el próximo boot.
+  // Ahora: poll del journal cada 2s (timeout 5 min); si el holder muere
+  // (heartbeat stale >2 min), se recupera el lock y este worker migra.
+  const lockDeadline = Date.now() + 5 * 60 * 1000;
+  let lockResult: { lockedAt: Date }[] = await sql`INSERT INTO "migration_lock" ("id", "locked_at") VALUES (1, now()) ON CONFLICT ("id") DO NOTHING RETURNING "locked_at"`;
+
+  while (lockResult.length === 0) {
+    const journalRows = await sql`SELECT "name" FROM "migration_journal"`.catch(() => [] as Array<{ name: string }>);
+    const applied = Array.isArray(journalRows) ? (journalRows as Array<{ name: string }>).map(r => r.name) : [];
+    if (isJournalComplete(applied)) {
+      log.info('Otra instancia completó las migraciones — omitiendo');
+      return;
+    }
+
+    if (Date.now() >= lockDeadline) {
+      log.error('Timeout de 5 min esperando a que otra instancia complete las migraciones — arrancando en modo degradado');
+      return;
+    }
+
+    // Alias camelCase: postgres.js devuelve las columnas en snake_case.
+    const [holder] = await sql`SELECT "locked_at" AS "lockedAt" FROM "migration_lock" WHERE "id" = 1`.catch(() => []);
+    const holderStale = holder && Date.now() - new Date(holder.lockedAt).getTime() > 2 * 60 * 1000;
+    if (holderStale) {
+      log.warn('Holder de migraciones sin heartbeat — recuperando lock');
+      await sql`DELETE FROM "migration_lock" WHERE "id" = 1`.catch(() => {});
+    }
+
+    await sleep(2000);
+    lockResult = await sql`INSERT INTO "migration_lock" ("id", "locked_at") VALUES (1, now()) ON CONFLICT ("id") DO NOTHING RETURNING "locked_at"`;
   }
 
   const heartbeatTimer = setInterval(async () => {

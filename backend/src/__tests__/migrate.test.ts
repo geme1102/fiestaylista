@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../db/index.js', () => ({
-  sql: { unsafe: vi.fn() },
+  sql: Object.assign(vi.fn(), { unsafe: vi.fn() }),
 }));
 
 vi.mock('../utils/logger.js', () => ({
   createModuleLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-import { COLUMN_MIGRATIONS, isIdempotentError } from '../db/migrate.js';
+import { COLUMN_MIGRATIONS, isIdempotentError, runMigrations } from '../db/migrate.js';
 
 describe('migraciones', () => {
   it('F2: isIdempotentError solo absorbe "already exists" (no errores reales)', () => {
@@ -56,5 +56,25 @@ describe('migraciones', () => {
     expect(recalcIdx).toBeGreaterThan(deleteIdx);
     expect(notNullIdx).toBeGreaterThan(recalcIdx);
     expect(uniqueIdx).toBeGreaterThan(notNullIdx);
+  });
+
+  it('E7: sin lock pero con journal completo, el worker arranca sin esperar ni migrar', async () => {
+    const { sql } = await import('../db/index.js');
+    const mockSql = sql as unknown as ReturnType<typeof vi.fn> & { unsafe: ReturnType<typeof vi.fn> };
+    mockSql.mockReset();
+    mockSql.unsafe.mockReset();
+    mockSql.unsafe.mockResolvedValue([]);
+    // INSERT lock no lo consigue (otra instancia lo tiene) → [] , luego SELECT journal → completo
+    mockSql
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        ...COLUMN_MIGRATIONS.map(m => ({ name: m.name })),
+        { name: 'timestamptz_conversion' },
+      ]);
+
+    await runMigrations();
+
+    // No intentó aplicar migraciones (3 unsafe = lock table + index + cleanup stale)
+    expect(mockSql.unsafe).toHaveBeenCalledTimes(3);
   });
 });

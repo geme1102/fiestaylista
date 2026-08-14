@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import type { AuthRequest } from '../types/index.js';
 import { config } from '../config.js';
 import { PostgresStore } from './rateLimitStore.js';
@@ -12,6 +12,28 @@ function keyGenerator(req: AuthRequest): string {
   const userId = req.user?.userId;
   const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
   return userId ? `user:${userId}:${ip}` : `ip:${ip}`;
+}
+
+function emailFromBody(req: AuthRequest): string | null {
+  const email = (req.body as { email?: unknown } | undefined)?.email;
+  return typeof email === 'string' && email.includes('@') ? email.trim().toLowerCase() : null;
+}
+
+// E2: el SPA llama /api/* same-origin → el proxy de Netlify reenvía a Railway,
+// así que req.ip es la IP egress de Netlify compartida por TODO un PoP.
+// Netlify NO publica rangos de IP (posición oficial: fluctuantes, allowlist
+// solo con el add-on Enterprise Private Connectivity) → no se puede ampliar
+// `trust proxy` con rangos. Clave compuesta email+IP: cada cuenta real del PoP
+// tiene su propia cuota (un atacante con 10 fallos YA NO bloquea el login del
+// PoP completo). El atacante que rota muchos emails queda cubierto por el
+// lockout por email de lockout.ts (15 fallos/30 min) y el throttle IP
+// multi-cuenta (isIpThrottled).
+export function authKeyGenerator(req: AuthRequest): string {
+  const email = emailFromBody(req);
+  const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+  if (!email) return `ip:${ip}`;
+  const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
+  return `email:${emailHash}:ip:${ip}`;
 }
 
 export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string; windowMs?: number }) {
@@ -36,7 +58,7 @@ export function createLimiter(opts: { prefix: string; max: number; message: stri
 // ventana fija de 60s (300 intentos/hora por IP vs umbral de lockout de 20).
 const AUTH_WINDOW_MS = 15 * 60 * 1000;
 
-export const authLimiter = createLimiter({ prefix: 'auth', max: 10, windowMs: AUTH_WINDOW_MS, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
+export const authLimiter = createLimiter({ prefix: 'auth', max: 10, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const apiLimiter = createLimiter({ prefix: 'api', max: config.API_RATE_LIMIT, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
@@ -44,11 +66,14 @@ export const uploadLimiter = createLimiter({ prefix: 'upload', max: 10, message:
 
 export const guestUploadLimiter = createLimiter({ prefix: 'guest-upload', max: 10, message: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' });
 
-export const resetLimiter = createLimiter({ prefix: 'reset', max: 5, windowMs: AUTH_WINDOW_MS, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
+export const resetLimiter = createLimiter({ prefix: 'reset', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const giftLimiter = createLimiter({ prefix: 'gift', max: 30, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
-export const refreshLimiter = createLimiter({ prefix: 'refresh', max: 10, message: 'Demasiados intentos de refresco. Intenta de nuevo en un minuto.' });
+// E2: 10→30/min — con egress de Netlify compartido por PoP, 10 refrescos/min
+// de toda la red de un PoP colapsaban en falsos 429. Sigue siendo por usuario
+// autenticado (keyGenerator con req.user.userId) cuando el token es válido.
+export const refreshLimiter = createLimiter({ prefix: 'refresh', max: 30, message: 'Demasiados intentos de refresco. Intenta de nuevo en un minuto.' });
 
 export const contributeLimiter = createLimiter({ prefix: 'contribute', max: 10, message: 'Demasiadas contribuciones. Intenta de nuevo en un minuto.' });
 
@@ -72,9 +97,12 @@ export const rsvpLimiter = createLimiter({ prefix: 'rsvp', max: 5, message: 'Dem
 
 export const createEventLimiter = createLimiter({ prefix: 'create-event', max: 10, message: 'Demasiados eventos creados. Intenta de nuevo en un minuto.' });
 
-const strictKeyGenerator = (req: AuthRequest) => {
+export const strictKeyGenerator = (req: AuthRequest) => {
+  const email = emailFromBody(req);
   const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
-  return `turnstile-fallback:${ip}`;
+  // E2: clave compuesta email+IP — ver comentario de authKeyGenerator.
+  const identity = email ? `email:${createHash('sha256').update(email).digest('hex').slice(0, 16)}:ip:${ip}` : `ip:${ip}`;
+  return `turnstile-fallback:${identity}`;
 };
 
 export const strictFallbackLimiter = createLimiter({ prefix: 'strict', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: strictKeyGenerator, message: 'Demasiados intentos sin verificación de seguridad. Intenta de nuevo en 15 minutos.' });

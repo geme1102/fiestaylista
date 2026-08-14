@@ -22,7 +22,7 @@ vi.mock('../middleware/rateLimitStore.js', () => ({
 }));
 
 import rateLimit from 'express-rate-limit';
-import { createLimiter } from '../middleware/rateLimit.js';
+import { createLimiter, authKeyGenerator, strictKeyGenerator } from '../middleware/rateLimit.js';
 
 function optsFor(prefix: string): { windowMs: number; max: number } | undefined {
   const call = vi.mocked(rateLimit).mock.calls.find((c) => {
@@ -61,6 +61,26 @@ describe('createLimiter', () => {
   it('D2-A3: usa passOnStoreError: true (fail-open real ante fallo del store)', () => {
     const call = vi.mocked(rateLimit).mock.calls.find((c) => (c[0] as { passOnStoreError?: boolean }).passOnStoreError === true);
     expect(call, 'ningún limiter usa passOnStoreError').toBeDefined();
+  });
+
+  it('E2: authKeyGenerator usa clave compuesta email+IP (egress compartido de Netlify)', () => {
+    const req = { body: { email: 'Usuario@Example.COM ' }, ip: '203.0.113.7' };
+    const key = authKeyGenerator(req as never);
+    expect(key.startsWith('email:')).toBe(true);
+    expect(key).toContain('203.0.113.7');
+    // Normaliza email (trim + lowercase) para no crear keys polimórficas
+    const req2 = { body: { email: 'usuario@example.com' }, ip: '203.0.113.7' };
+    expect(authKeyGenerator(req2 as never)).toBe(key);
+  });
+
+  it('E2: authKeyGenerator sin email usa ip (fallback para endpoints sin body)', () => {
+    expect(authKeyGenerator({ socket: { remoteAddress: '198.51.100.9' } } as never)).toBe('ip:198.51.100.9');
+  });
+
+  it('E2: strictKeyGenerator también compone email+IP con prefijo turnstile-fallback', () => {
+    const key = strictKeyGenerator({ body: { email: 'a@b.co' }, ip: '203.0.113.7' } as never);
+    expect(key.startsWith('turnstile-fallback:email:')).toBe(true);
+    expect(strictKeyGenerator({ socket: { remoteAddress: '198.51.100.9' } } as never)).toBe('turnstile-fallback:ip:198.51.100.9');
   });
 });
 

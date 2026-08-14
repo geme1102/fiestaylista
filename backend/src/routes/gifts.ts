@@ -210,7 +210,11 @@ router.post('/public-sse-token', verifyTurnstile, validateUuidParam('eventId'), 
 }));
 
 const SSE_MAX_CONNECTIONS_PER_EVENT = 50;
-const SSE_MAX_PER_IP = 3;
+// E2: 3→10 — con egress de Netlify compartido por PoP (ver rateLimit.ts), 3
+// conexiones por IP bloqueaban el SSE en vivo de un evento con 4+ invitados
+// en el mismo PoP. El tope global por evento (50) y el token SSE de 2 min
+// siguen acotando el uso.
+const SSE_MAX_PER_IP = 10;
 // F4: el token SSE expira a los 2 min y la conexión DEBE cortarse exactamente
 // al expirar (enviando 'reconnect' para que el cliente renueve token). Antes
 // el timeout era de 4 min: entre el minuto 2 y el 4 la conexión seguía viva

@@ -8,8 +8,15 @@ const MAX_EMAIL_FAILED_ATTEMPTS = 15;
 const LOCKOUT_MINUTES = 15;
 const EMAIL_LOCKOUT_MINUTES = 30;
 const WINDOW_MINUTES = 15;
-const MAX_IP_ACROSS_ACCOUNTS = 20;
-const MAX_IP_DISTINCT_ACCOUNTS = 3;
+// E2: con el proxy de Netlify, req.ip es la IP egress compartida por TODO un
+// PoP (Netlify no publica rangos fijos). 20 fallos/15 min de todo el PoP
+// (atacante o usuarios reales equivocando contraseñas) bloqueaban el login
+// GLOBAL. Subidos a 40 fallos totales con ≥5 cuentas distintas reales
+// implicadas: un atacante rotando emails se sigue detectando, un PoP con
+// tecleos fallidos pasa. El lockout por email (15 fallos/30 min) sigue siendo
+// la defensa primaria contra fuerza bruta dirigida.
+const MAX_IP_ACROSS_ACCOUNTS = 40;
+const MAX_IP_DISTINCT_ACCOUNTS = 5;
 
 function emailHash(email: string): string {
   return createHash('sha256').update(email.toLowerCase()).digest('hex');

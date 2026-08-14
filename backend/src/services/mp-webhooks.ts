@@ -1,7 +1,7 @@
 import { eq, and, sql } from 'drizzle-orm';
 import { config } from '../config.js';
 import { db } from '../db/index.js';
-import { users, subscriptions, proPayments, emailTracking } from '../db/schema.js';
+import { users, subscriptions, proPayments, emailTracking, pendingMpCancellations } from '../db/schema.js';
 import * as subscriptionService from './subscription.js';
 import * as emailService from './email.js';
 import { escapeHtml } from '../utils/sanitize.js';
@@ -11,6 +11,23 @@ import { createModuleLogger } from '../utils/logger.js';
 import { TIER_ORDER } from '../types/index.js';
 
 const log = createModuleLogger('MP');
+
+// E4: si la cancelación del preapproval reemplazado falla (retryable agotado),
+// se encola en pending_mp_cancellations (mismo patrón D3-M1 de delete-account):
+// el cron retryPendingMpCancellations lo reintenta con backoff exponencial.
+// Antes el catch solo logueaba → el preapproval viejo seguía cobrando para
+// siempre y el usuario pagaba dos suscripciones sin saberlo.
+async function enqueueMpCancellation(userId: string, mpSubscriptionId: string, reason: string): Promise<void> {
+  try {
+    await db
+      .insert(pendingMpCancellations)
+      .values({ userId, mpSubscriptionId })
+      .onConflictDoNothing();
+    log.info({ userId, mpSubscriptionId, reason }, 'Cancelación MP encolada para reintento en background');
+  } catch (err) {
+    log.error({ err, userId, mpSubscriptionId }, 'Error encolando cancelación MP — el preapproval puede seguir cobrando');
+  }
+}
 
 // C1: compara antigüedad de dos preapprovals en MP (por date_created) para
 // distinguir un pago/webhook del preapproval REEMPLAZADO (ignorar) de uno de
@@ -144,7 +161,10 @@ export async function handleProPayment(paymentId: string, userId: string, interv
       );
       log.info({ oldMpSubscriptionId, userId, from: oldTier, to: tier }, 'Preapproval anterior cancelado por reemplazo de suscripción');
     } catch (err) {
-      log.warn({ err, userId, from: oldTier, to: tier }, 'Error no crítico cancelando preapproval anterior por reemplazo');
+      // E4: retryable agotado (~30s de fallos de MP) — encolar para el cron,
+      // NO dejar el doble cobro en silencio.
+      log.warn({ err, userId, from: oldTier, to: tier }, 'Cancelación inline fallida — encolando preapproval anterior para reintento background');
+      await enqueueMpCancellation(userId, oldMpSubscriptionId, 'upgrade-replacement-payment');
     }
   }
 
@@ -394,7 +414,9 @@ export async function handleSubscriptionNotification(preapprovalId: string): Pro
         );
         log.info({ oldMpSubscriptionId: replacedMpSubscriptionId, userId, to: detectedTier }, 'Preapproval reemplazado cancelado por webhook active');
       } catch (err) {
-        log.warn({ err, userId }, 'Error no crítico cancelando preapproval reemplazado por webhook active');
+        // E4: retryable agotado — encolar para el cron, NO dejar el doble cobro.
+        log.warn({ err, userId }, 'Cancelación inline fallida — encolando preapproval reemplazado para reintento background');
+        await enqueueMpCancellation(userId, replacedMpSubscriptionId, 'upgrade-replacement-webhook');
       }
     }
   } else if (info.status === 'authorized') {

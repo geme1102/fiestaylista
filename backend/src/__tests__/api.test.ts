@@ -722,9 +722,9 @@ describe('Public Routes', () => {
     expect(res.body.status).toBe('online');
   });
 
-  it('GET /api/public/events', async () => {
+  it('E3: GET /api/public/events devuelve 404 (directorio público del catálogo eliminado)', async () => {
     const res = await request(app).get('/api/public/events');
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(404);
   });
 });
 
