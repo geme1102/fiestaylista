@@ -36,7 +36,12 @@ export default defineConfig({
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
-        navigateFallback: '/offline.html',
+        // E1-CRIT: fallback navegación → index.html (SPA). Antes apuntaba a
+        // offline.html, que es una página estática SIN el bundle JS: con la app
+        // cacheada pero el usuario sin conexión, cualquier refresh de ruta
+        // interna (/login, /e/*, /dashboard...) renderizaba HTML vacío y la
+        // app se "rompía" sin que el SW recuperara la SPA.
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
