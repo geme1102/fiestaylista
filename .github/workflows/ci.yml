@@ -115,9 +115,7 @@ jobs:
           export CLOUDINARY_API_KEY="test"
           export CLOUDINARY_API_SECRET="test"
           export TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
-          # Aplicar migraciones
-          npm run db:migrate
-          # Arrancar backend en background
+          # Arrancar backend en background (runMigrations() se ejecuta al inicio)
           npm run build
           node dist/backend/src/index.js > backend.log 2>&1 &
           BACKEND_PID=$!
