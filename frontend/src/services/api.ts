@@ -27,9 +27,9 @@ export function getAccessToken(): string | null {
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-interface RequestOptions {
+export interface RequestOptions {
   headers?: Record<string, string>;
   params?: Record<string, string>;
   timeout?: number;
@@ -40,19 +40,7 @@ interface RequestOptions {
 
 async function request<T>(method: HttpMethod, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
   const timeout = options?.timeout ?? REQUEST_TIMEOUT;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  const onParentAbort = options?.signal
-    ? () => controller.abort()
-    : null;
-
-  if (options?.signal && onParentAbort) {
-    options.signal.addEventListener('abort', onParentAbort, { once: true });
-  }
-
-  try {
-    const url = new URL(`${BASE_URL}${path}`, window.location.origin);
+  const url = new URL(`${BASE_URL}${path}`, window.location.origin);
     if (options?.params) {
       Object.entries(options.params).forEach(([key, value]) => {
         url.searchParams.set(key, value);
@@ -70,7 +58,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
     const fetchOptions: RequestInit = {
       method,
       headers,
-      signal: controller.signal,
       credentials: 'include',
     };
 
@@ -89,8 +76,20 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
         await delay(Math.min(1000 * Math.pow(2, attempt - 1), 4000));
       }
 
+      // F3-M: timeout POR INTENTO (mismo patrón que el retry post-401 de B2).
+      // Antes el AbortController y su setTimeout se creaban UNA vez antes del
+      // loop: un error de red a los ~9.5s + el backoff de 1s cruzaba el
+      // presupuesto de 10s y el intento 1 arrancaba con la señal YA abortada →
+      // falso "La solicitud tardó demasiado" y el reintento nunca ocurría.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const onParentAbort = options?.signal ? () => controller.abort() : null;
+      if (options?.signal && onParentAbort) {
+        options.signal.addEventListener('abort', onParentAbort, { once: true });
+      }
+
       try {
-        res = await fetch(url.toString(), fetchOptions);
+        res = await fetch(url.toString(), { ...fetchOptions, signal: controller.signal });
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           throw new Error('La solicitud tardó demasiado. Intenta de nuevo.');
@@ -101,6 +100,11 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           continue;
         }
         throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
+      } finally {
+        clearTimeout(timeoutId);
+        if (options?.signal && onParentAbort) {
+          options.signal.removeEventListener('abort', onParentAbort);
+        }
       }
 
       if (res.status === 401) {
@@ -192,12 +196,6 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
     }
 
     throw lastError ?? new Error('Error de conexión. Verifica tu internet e intenta de nuevo.');
-  } finally {
-    clearTimeout(timeoutId);
-    if (options?.signal && onParentAbort) {
-      options.signal.removeEventListener('abort', onParentAbort);
-    }
-  }
 }
 
 let refreshPromise: Promise<boolean> | null = null;

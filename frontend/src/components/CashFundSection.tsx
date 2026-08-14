@@ -35,32 +35,46 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
   const shouldReduceMotion = useReducedMotion();
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activateSubmittingRef = useRef(false);
+  // F7-M: contador de secuencia para descartar respuestas de loadFund
+  // solapadas (SSE cash:contribution + acciones admin → 2 loadFund concurrentes
+  // podían sobrescribir datos frescos con viejos). Sin mounted guard: setState
+  // post-unmount si navega durante el fetch.
+  const loadSeqRef = useRef(0);
 
   const canContribute = !isOwner && fund?.isActive;
 
   const loadFund = useCallback(async () => {
+    const seq = ++loadSeqRef.current;
+    const controller = new AbortController();
     setLoadError(false);
     try {
-      const res = await getCashFund(eventId);
+      const res = await getCashFund(eventId, { signal: controller.signal });
+      // Si hubo otro loadFund disparado mientras, descartamos esta respuesta
+      if (seq !== loadSeqRef.current) return;
       setFund(res.cashFund);
       setPromisedTotal(res.promisedTotal ?? 0);
       if (res.cashFund) {
         try {
-          const contribRes = await getContributions(res.cashFund.id);
+          const contribRes = await getContributions(res.cashFund.id, { signal: controller.signal });
+          if (seq !== loadSeqRef.current) return;
           setContributions(contribRes.contributions.filter((c) => c.status === 'promised'));
         } catch (err) {
-          reportError(err, { source: 'CashFundSection' });
-          // guests cannot see contributions list, that's fine
+          if ((err as Error).name !== 'AbortError') {
+            reportError(err, { source: 'CashFundSection' });
+            // guests cannot see contributions list, that's fine
+          }
         }
       }
     } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      if (seq !== loadSeqRef.current) return;
       reportError(err, { source: 'CashFundSection' });
       setLoadError(true);
       const message = err instanceof Error ? err.message : 'Error al cargar la Lluvia de Sobres. Recarga la página e intenta de nuevo.';
       showToast(message, 'error');
       if (import.meta.env.DEV) console.error('[CashFund] loadFund error:', err);
     } finally {
-      setLoading(false);
+      if (seq === loadSeqRef.current) setLoading(false);
     }
   }, [eventId]);
 

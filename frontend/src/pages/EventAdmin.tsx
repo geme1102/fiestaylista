@@ -235,12 +235,21 @@ export default function EventAdmin() {
     onMessagePosted: () => {
       setMessageRefreshKey((k) => k + 1);
     },
-    onPhotoUploaded: () => {
-      if (id) {
-        apiClient.get<{ event: { photos?: Photo[] } }>(`/api/events/${id}`).then((res) => {
-          if (mountedRef.current) setPhotos(res.event.photos || []);
-        }).catch((err) => { reportError(err, { source: 'EventAdmin' }); });
-      }
+    onPhotoUploaded: (data) => {
+      // F6-M: replicar patrón guest (D2-A5) — inserción optimista con dedupe
+      // por URL en vez de refetch total GET /api/events/:id (evento+gifts+photos).
+      // Con N admins/tabs conectados eran N GETs pesados por foto.
+      if (!data?.photoUrl) return;
+      setPhotos((prev) => {
+        if (prev.some((p) => p.url === data.photoUrl)) return prev;
+        return [{
+          id: `sse-${Date.now()}`,
+          eventId: id ?? '',
+          url: data.photoUrl,
+          caption: '',
+          createdAt: new Date().toISOString(),
+        }, ...prev];
+      });
     },
   });
 

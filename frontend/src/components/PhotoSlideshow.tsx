@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
+import { downloadPhoto } from '../lib/downloadPhoto';
 import type { Photo } from '../types';
 
 interface PhotoSlideshowProps {
@@ -12,6 +13,7 @@ interface PhotoSlideshowProps {
 
 export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: PhotoSlideshowProps) {
   const [current, setCurrent] = useState(initialIndex);
+  const [downloading, setDownloading] = useState(false);
   const slideshowRef = useFocusTrap(true);
   useLockedBody(true);
   const shouldReduceMotion = useReducedMotion();
@@ -51,11 +53,15 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
           {current + 1} / {photos.length}
         </span>
         <button
-          onClick={() => {
-            const a = document.createElement('a');
-            a.href = photo.url;
-            a.download = `foto-${current + 1}`;
-            a.click();
+          onClick={async () => {
+            if (downloading) return;
+            // F4-M: antes `<a download>` con URL cross-origin (Cloudinary):
+            // el atributo download se ignora y la SPA era reemplazada por la
+            // imagen (se perdían slideshow/scroll/drafts). Ahora fetch→blob
+            // con timeout y share móvil (mismo patrón del grid de invitados).
+            setDownloading(true);
+            await downloadPhoto(photo.url);
+            setDownloading(false);
           }}
           className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
           aria-label="Descargar"

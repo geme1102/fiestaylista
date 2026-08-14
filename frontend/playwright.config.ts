@@ -9,14 +9,17 @@ export default defineConfig({
   timeout: 60_000,
   reporter: 'html',
   use: {
-    baseURL: process.env.VITE_APP_URL || 'http://localhost:5173',
+    baseURL: process.env.VITE_APP_URL || 'http://localhost:4173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     permissions: ['clipboard-read', 'clipboard-write'],
   },
+  // ST2-M: e2e contra el build de preview (no dev server) — genera sw.js,
+  // assets hasheados, headers de producción. Antes usaba `npm run dev`
+  // (sin SW, sin minificación) y el hallazgo #1 (SW offline) nunca lo detectó.
   webServer: {
-    command: 'VITE_TURNSTILE_SITE_KEY=1 npm run dev',
-    url: 'http://localhost:5173',
+    command: 'npm run preview',
+    url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
     cwd: '.',
     timeout: 60_000,

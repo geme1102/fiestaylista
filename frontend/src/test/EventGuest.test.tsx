@@ -58,7 +58,20 @@ describe('EventGuest page', () => {
     expect(container.querySelector('div')).toBeTruthy();
   });
 
-  it('MEDIUM-1: evento free (sin ownerTier) no muestra el upload de fotos — muestra candado', () => {
+  it('MEDIUM-1: evento free (photosEnabled false) no muestra el upload de fotos — muestra candado', () => {
+    mockUseEventPage.mockReturnValue({
+      event: { id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento', isActive: true, createdAt: '2025-01-01', photosEnabled: false },
+      gifts: [], photos: [], loading: false, error: null,
+      claimingId: null, guestName: '', setGuestName: vi.fn(), shaking: false,
+      showConfetti: false, showSuccessModal: false, setShowSuccessModal: vi.fn(),
+      easyReadMode: false, setEasyReadMode: vi.fn(),
+      categoryFilter: null, setCategoryFilter: vi.fn(),
+      inputRef: { current: null }, filterBarRef: { current: null },
+      turnstileRef: { current: null },
+      availableGifts: [], claimedGifts: [], categories: [], filteredGifts: [],
+      eventDateFormatted: '', eventTimeFormatted: '',
+    });
+
     render(
       <MemoryRouter initialEntries={['/event/mi-evento']}>
         <EventGuestPage />
@@ -70,9 +83,9 @@ describe('EventGuest page', () => {
     expect(screen.getByText('Cuando el anfitrión active el Plan Pro podrán subirse fotos aquí')).toBeInTheDocument();
   });
 
-  it('MEDIUM-1: evento con ownerTier pro sí muestra el upload de fotos', () => {
+  it('MEDIUM-1: evento con photosEnabled true sí muestra el upload de fotos', () => {
     mockUseEventPage.mockReturnValue({
-      event: { id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento', isActive: true, createdAt: '2025-01-01', ownerTier: 'pro' },
+      event: { id: 'evt-1', title: 'Mi Evento', eventType: 'BABY_SHOWER', slug: 'mi-evento', isActive: true, createdAt: '2025-01-01', photosEnabled: true },
       gifts: [], photos: [], loading: false, error: null,
       claimingId: null, guestName: '', setGuestName: vi.fn(), shaking: false,
       showConfetti: false, showSuccessModal: false, setShowSuccessModal: vi.fn(),

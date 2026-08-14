@@ -4,6 +4,7 @@ import { apiClient } from '../services/api';
 import { getEventBySlug } from '../services/events';
 import { showToast } from './useToast';
 import { reportError } from '../lib/reportError';
+import { downloadPhoto } from '../lib/downloadPhoto';
 import { useTurnstile, waitForTurnstile } from './useTurnstile';
 import { getGiftCategory } from '../data/giftEmojis';
 import { useSSE } from './useSSE';
@@ -154,7 +155,13 @@ export function useEventPage() {
       if (document.hidden) {
         stopPolling();
       } else {
-        loadEventRef.current?.();
+        // F5-M: antes recargaba el payload completo (evento + 50 regalos + 15
+        // fotos) en CADA vuelta a la pestaña aunque el SSE estuviera vivo —
+        // contradice D2-A5 (eliminar reloads con SSE conectado). El poll
+        // periódico ya se autoguarda con sseConnectedRef (línea 143).
+        if (!sseConnectedRef.current) {
+          loadEventRef.current?.();
+        }
         startPolling();
       }
     }
@@ -317,37 +324,9 @@ export function useEventPage() {
   }, [event, guestName, loadEvent]);
 
   const handleDownload = useCallback(async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      if (navigator.share && (/Mobi|Android/i.test(navigator.userAgent) || 'ontouchstart' in window)) {
-        try {
-          const file = new File([blob], url.split('/').pop() || 'photo.jpg', { type: blob.type });
-          await navigator.share({ files: [file], title: 'Foto del evento' });
-          return;
-        } catch (err) { reportError(err, { source: 'useEventPage' }); }
-      }
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = url.split('/').pop() || 'photo.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      reportError(err, { source: 'useEventPage' });
-      try {
-        const safe = new URL(url);
-        if (safe.protocol === 'https:' || safe.protocol === 'http:') {
-          window.open(url, '_blank', 'noopener');
-        }
-      } catch {
-        /* invalid URL — ignore */
-      }
-    }
+    // F4-M/F11-B: lógica unificada en lib/downloadPhoto (fetch→blob→objectURL
+    // con timeout 15s + share móvil + fallback window.open).
+    await downloadPhoto(url);
   }, []);
 
   const availableGifts = useMemo(() => gifts.filter((g) => !g.isClaimed), [gifts]);

@@ -533,7 +533,7 @@ export default function EventGuest() {
             </div>
 
             <SectionErrorBoundary sectionName="GuestPhotoUpload">
-              {(event.ownerTier ?? 'free') === 'free' ? (
+              {(event.photosEnabled === false) ? (
                 <div className="mb-6 p-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center gap-3 bg-surface-container-low/40">
                   <span className="material-symbols-outlined text-on-surface-variant/60" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                   <p className="font-semibold text-sm text-on-surface-variant/80">
@@ -549,7 +549,7 @@ export default function EventGuest() {
               <div className="text-center py-8 text-on-surface-variant/80">
                 <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>photo_library</span>
                 <p className="font-medium text-sm">No hay fotos aún</p>
-                {(event.ownerTier ?? 'free') === 'free' ? (
+{(event.photosEnabled === false) ? (
                   <p className="text-xs mt-1">Cuando el anfitrión active el Plan Pro podrán subirse fotos aquí</p>
                 ) : (
                   <p className="text-xs mt-1">¡Sé el primero en subir una foto desde el botón de arriba!</p>
