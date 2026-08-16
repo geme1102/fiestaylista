@@ -123,18 +123,17 @@ jobs:
           BACKEND_PID=$!
           echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
           echo "Backend PID: $BACKEND_PID"
-          # Esperar healthcheck con timeout - probar endpoint simple primero
+          # Esperar a que el puerto TCP 3001 escuche (healthcheck a nivel TCP, evita rate limiter/TrustProxy)
           for i in {1..60}; do
-            # Usar --max-time para que curl no se cuelgue, -v para debug si falla
-            if curl --max-time 5 -sf http://localhost:3001/api/health >/dev/null; then
-              echo "Backend listo en http://localhost:3001 (health simple OK)"
-              # Verificar también readiness
-              if curl --max-time 5 -sf http://localhost:3001/api/health/ready >/dev/null; then
-                echo "Readiness OK"
+            if nc -z localhost 3001 2>/dev/null; then
+              echo "Backend puerto 3001 abierto"
+              # Verificar que el proceso sigue vivo
+              if kill -0 $BACKEND_PID 2>/dev/null; then
+                echo "Backend proceso vivo (PID: $BACKEND_PID)"
                 break
               else
-                echo "Health OK pero readiness falla - continuando de todos modos"
-                break
+                echo "ERROR: Backend murió"
+                exit 1
               fi
             fi
             # Verificar que el proceso sigue vivo
@@ -146,8 +145,12 @@ jobs:
             sleep 1
           done
           # Verificación final
-          if ! curl --max-time 5 -sf http://localhost:3001/api/health >/dev/null; then
-            echo "ERROR: Backend no respondió al healthcheck tras 60s"
+          if ! nc -z localhost 3001 2>/dev/null; then
+            echo "ERROR: Backend no abrió puerto 3001 tras 60s"
+            exit 1
+          fi
+          if ! kill -0 $BACKEND_PID 2>/dev/null; then
+            echo "ERROR: Backend proceso muerto"
             exit 1
           fi
       - name: Run Playwright tests
