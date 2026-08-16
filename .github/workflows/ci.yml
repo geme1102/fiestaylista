@@ -98,6 +98,7 @@ jobs:
       - name: Start backend for e2e
         working-directory: backend
         run: |
+          set -euo pipefail
           npm ci
           # Variables de test para el backend
           export DATABASE_URL="postgresql://test:test@localhost:5432/fiestaylista_test"
@@ -115,19 +116,34 @@ jobs:
           export CLOUDINARY_API_KEY="test"
           export CLOUDINARY_API_SECRET="test"
           export TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
-          # Arrancar backend en background (runMigrations() se ejecuta al inicio)
+          # Build y arrancar backend
           npm run build
-          node dist/backend/src/index.js > backend.log 2>&1 &
+          # Iniciar backend con log visible y verificar que arranca
+          node dist/backend/src/index.js &
           BACKEND_PID=$!
           echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
-          # Esperar a que el healthcheck responda
-          for i in {1..30}; do
+          echo "Backend PID: $BACKEND_PID"
+          # Esperar healthcheck con timeout
+          for i in {1..60}; do
             if curl -sf http://localhost:3001/api/health/ready >/dev/null; then
-              echo "Backend listo"
+              echo "Backend listo en http://localhost:3001"
               break
             fi
+            # Verificar que el proceso sigue vivo
+            if ! kill -0 $BACKEND_PID 2>/dev/null; then
+              echo "ERROR: Backend murió inesperadamente"
+              echo "--- Logs del backend ---"
+              cat backend.log 2>/dev/null || echo "(no log file)"
+              exit 1
+            fi
+            echo "Esperando backend... ($i/60)"
             sleep 1
           done
+          # Verificación final
+          if ! curl -sf http://localhost:3001/api/health/ready >/dev/null; then
+            echo "ERROR: Backend no respondió al healthcheck tras 60s"
+            exit 1
+          fi
       - name: Run Playwright tests
         run: npx playwright test --timeout 30000
         env:
