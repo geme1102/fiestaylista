@@ -97,6 +97,12 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Build frontend
         run: npm run build
+        # VITE_* se hornea en build-time y el e2e corre contra este build (preview).
+        # Sin VITE_TURNSTILE_SITE_KEY, useTurnstile() nunca emite token y cada submit
+        # espera 5-10s en waitForTurnstile() → las aserciones de 5s fallan (10 tests).
+        # 1x0...AA es la site key de PRUEBA de Cloudflare (verificación siempre OK).
+        env:
+          VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000000000AA
       - name: Start backend for e2e
         working-directory: backend
         run: |
