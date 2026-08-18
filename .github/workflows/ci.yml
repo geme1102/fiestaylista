@@ -204,7 +204,24 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      # AR-01: el bundle de producción se hornea con VITE_* en build-time. Sin la
+      # site key de Turnstile el widget nunca se renderiza y los 12 endpoints con
+      # verifyTurnstile estricto responden 400 (claims, RSVP, fotos, mensajes,
+      # cash, checkout, reset de password). La variable es PÚBLICA (es una site
+      # key) y NO debe sustituirse por la test key: eso desactivaría la defensa
+      # anti-bot en producción.
+      - name: Verify required build vars
+        run: |
+          if [ -z "$VITE_TURNSTILE_SITE_KEY" ]; then
+            echo "::error::vars.VITE_TURNSTILE_SITE_KEY no está definida en GitHub (Settings → Secrets and variables → Actions → Variables). El deploy se cancela para no subir un bundle roto."
+            exit 1
+          fi
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
       - run: npm run build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
       - name: Deploy to Netlify
         run: npx netlify-cli deploy --prod --dir=dist --no-build
         env:
@@ -233,6 +250,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
+        env:
+          # AR-01: los previews también necesitan la site key en el bundle para
+          # probar flujos con Turnstile estricto (claims, RSVP, checkout).
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
       - name: Deploy preview to Netlify
         id: netlify
         run: |
