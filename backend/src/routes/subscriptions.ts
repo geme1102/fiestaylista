@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.js';
 import { paymentLimiter, cancelLimiter } from '../middleware/rateLimit.js';
-import { verifyTurnstile } from '../middleware/turnstile.js';
+import { verifyTurnstileOptional } from '../middleware/turnstile.js';
 import { config } from '../config.js';
 import * as mercadopagoService from '../services/mercadopago.js';
 import * as subscriptionService from '../services/subscription.js';
@@ -59,7 +59,12 @@ const cancelSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida para confirmar'),
 });
 
-router.post('/create-checkout', verifyTurnstile, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
+// FE-02: verifyTurnstileOptional — el flujo ya tiene requireAuth + paymentLimiter
+// + validateRedirectUrl (schema) y el strictFallbackLimiter (5/15min por IP) tapa
+// el abuso sin token. Antes era estricto y el frontend ("Puedes continuar" sin
+// token) recibía 400: el pago era imposible para usuarios con bloqueador de
+// anuncios/red corporativa donde Turnstile falla.
+router.post('/create-checkout', verifyTurnstileOptional, requireAuth, paymentLimiter, asyncHandlerWithValidation(async (req: AuthRequest, res) => {
   const data = checkoutSchema.parse(req.body);
 
   if (data.tier === 'pro_plus' && data.interval !== 'month') {
