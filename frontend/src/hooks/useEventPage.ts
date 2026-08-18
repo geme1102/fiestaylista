@@ -181,6 +181,11 @@ export function useEventPage() {
   useSSE({
     eventId: event?.id ?? '',
     sseTokenEndpoint: event?.id ? `/api/events/${event.id}/gifts/public-sse-token` : '',
+    // DB-01: /public-sse-token exige verifyTurnstile estricto — el POST debe
+    // llevar el token del widget. Tras consumirlo (single-use), resetTurnstile
+    // emite uno fresco para los claims.
+    turnstileTokenProvider: () => turnstileTokenRef.current,
+    onTurnstileTokenRefreshed: resetTurnstile,
     maxRetries: 10,
     initialRetryDelay: 2000,
     onConnected: () => {

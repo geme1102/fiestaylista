@@ -195,6 +195,11 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 ### D4 (Bajos — documentados, NO ejecutados)
 - Auditoría completa: 4 agentes READ-ONLY. Los hallazgos bajos (mensajes de log tipados, validación de email en verify, etc.) quedaron documentados en la sesión sin cambios.
 
+## Auditoría Forense — Fase E (Críticos, Ago 2026)
+
+- **AR-01**: el build de `deploy-frontend`/`deploy-preview` hornea `VITE_TURNSTILE_SITE_KEY` + `VITE_SENTRY_DSN` desde `vars.*` del repo (antes buildeaba sin VITE_* y subía con `--no-build`: bundle de producción sin site key → el widget jamás se renderizaba y los 12 endpoints con `verifyTurnstile` estricto respondían 400). Guard fail-fast: el deploy se cancela si la variable no existe. **Nunca usar la test key (`1x00000000000000000000000000AA`) como fallback en producción** — desactivaría la defensa anti-bot (solo se usa en el job e2e).
+- **DB-01/FE-01**: SSE de invitados muerto en producción — `POST /public-sse-token` exige `verifyTurnstile` estricto pero `useSSE` posteaba sin body → 400 en cada intento y 10 reportes a Sentry por visita (en dev pasaba por el bypass sin `TURNSTILE_SECRET_KEY`). Fix (enfoque A, backend intacto): `useSSE` acepta `turnstileTokenProvider` + `onTurnstileTokenRefreshed` (useEventPage los conecta con `turnstileTokenRef`/`resetTurnstile`). El connect espera el token del widget (hasta 5s), lo manda en el body y tras el POST (éxito o error) resetea el widget — los tokens Turnstile son de un solo uso y un claim previo los consume. Sin token → no postea (el polling de 30s queda como fallback). NOTA: en `/public-sse-token` NO usar `verifyTurnstileOptional`: su `strictFallbackLimiter` (5/15min por IP) mataría el SSE para invitados 6+ tras un NAT móvil (mismo problema que E2).
+
 ### Counters
 - Backend: 375 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
-- Frontend: 386 tests | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
+- Frontend: 390 tests (antes 386) | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)

@@ -189,4 +189,65 @@ describe('useSSE', () => {
     await waitFor(() => expect(esInstances.length).toBe(2));
     expect(esInstances[0].readyState).toBe(2);
   });
+
+  it('envía el token Turnstile en el body del POST cuando hay provider', async () => {
+    const { useSSE } = await import('../hooks/useSSE');
+    renderHook(() => useSSE({
+      eventId: 'evt-1',
+      sseTokenEndpoint: '/api/public/sse/token',
+      turnstileTokenProvider: () => 'turnstile-tok-1',
+    }));
+
+    await waitForES();
+
+    expect(mockApiPost).toHaveBeenCalledWith('/api/public/sse/token', { turnstileToken: 'turnstile-tok-1' });
+  });
+
+  it('pide un token fresco tras el POST exitoso (single-use)', async () => {
+    const onRefresh = vi.fn();
+    const { useSSE } = await import('../hooks/useSSE');
+    renderHook(() => useSSE({
+      eventId: 'evt-1',
+      sseTokenEndpoint: '/api/public/sse/token',
+      turnstileTokenProvider: () => 'turnstile-tok-1',
+      onTurnstileTokenRefreshed: onRefresh,
+    }));
+
+    await waitForES();
+
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it('pide un token fresco tras error del POST (posible consumo por un claim)', async () => {
+    const onRefresh = vi.fn();
+    mockApiPost.mockRejectedValueOnce(new Error('Token de seguridad requerido'));
+    const { useSSE } = await import('../hooks/useSSE');
+    renderHook(() => useSSE({
+      eventId: 'evt-1',
+      sseTokenEndpoint: '/api/public/sse/token',
+      turnstileTokenProvider: () => 'turnstile-tok-1',
+      onTurnstileTokenRefreshed: onRefresh,
+      maxRetries: 0,
+    }));
+
+    await waitFor(() => expect(onRefresh).toHaveBeenCalled());
+  });
+
+  it('no postea sin token Turnstile y se desconecta (fallback al polling)', async () => {
+    const onDisconnected = vi.fn();
+    const { useSSE } = await import('../hooks/useSSE');
+    renderHook(() => useSSE({
+      eventId: 'evt-1',
+      sseTokenEndpoint: '/api/public/sse/token',
+      turnstileTokenProvider: () => null,
+      maxRetries: 0,
+      onDisconnected,
+    }));
+
+    // 25 intentos × 200ms de espera ≈ 5s antes de rendirse
+    await waitFor(() => expect(onDisconnected).toHaveBeenCalled(), { timeout: 7000 });
+
+    expect(mockApiPost).not.toHaveBeenCalled();
+    expect(esInstances.length).toBe(0);
+  }, 10000);
 });
