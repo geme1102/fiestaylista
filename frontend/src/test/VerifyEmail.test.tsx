@@ -82,4 +82,16 @@ describe('VerifyEmail', () => {
     renderPage();
     expect(screen.getByTestId('auth-bottom-nav')).toBeTruthy();
   });
+
+  it('refresca el usuario al llegar con status=success (LF-01)', async () => {
+    const refreshUser = vi.fn().mockResolvedValue(undefined);
+    mockUseAuth.mockReturnValue({ refreshUser, resendVerification: vi.fn() });
+    mockUseSearchParams.mockReturnValue([new URLSearchParams('?status=success'), vi.fn()]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(refreshUser).toHaveBeenCalled();
+    });
+  });
 });

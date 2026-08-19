@@ -160,10 +160,14 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
           }
         } else {
           clearTokens();
+          // FE-04: con skipAuthRedirect el mensaje prometía una redirección que
+          // nunca ocurre (callers de invitados: muro, fotos, gifts) — el toast
+          // engañoso quedaba flotando sin acción.
           if (typeof window !== 'undefined' && !options?.skipAuthRedirect) {
             window.dispatchEvent(new CustomEvent('auth:session-expired'));
+            throw new Error('Sesión expirada. Serás redirigido al inicio de sesión.');
           }
-          throw new Error('Sesión expirada. Serás redirigido al inicio de sesión.');
+          throw new Error('Tu sesión expiró. Vuelve a iniciar sesión para continuar.');
         }
       }
 

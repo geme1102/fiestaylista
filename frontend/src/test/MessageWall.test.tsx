@@ -50,4 +50,19 @@ describe('MessageWall (B8 drafts)', () => {
       expect(localStorage.getItem('fy_msg_draft:event-1')).toBeNull();
     });
   });
+
+  it('muestra botón de reintento cuando la carga falla (UX-02)', async () => {
+    mockGet.mockRejectedValueOnce(new Error('Network error'));
+
+    render(<MessageWall eventId="event-1" guestName="Ana" />);
+
+    const retryBtn = await screen.findByRole('button', { name: /reintentar/i });
+    expect(retryBtn).toBeTruthy();
+
+    fireEvent.click(retryBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/sé el primero en dejar un mensaje/i)).toBeTruthy();
+    });
+  });
 });

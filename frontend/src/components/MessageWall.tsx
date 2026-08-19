@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { apiClient } from '../services/api';
 import { showToast } from '../hooks/useToast';
@@ -22,6 +22,7 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
   const DRAFT_KEY = `fy_msg_draft:${eventId}`;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [newMessage, setNewMessage] = useState(() => {
     try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
@@ -32,6 +33,22 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const submittingRef = useRef(false);
 
+  // UX-02: el muro ahora permite reintentar la carga ante un fallo de red —
+  // antes el error quedaba invisible y el invitado veía "Sé el primero..." en vacío.
+  const loadMessages = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const res = await apiClient.get<{ messages: Message[] }>(`/api/events/${eventId}/messages`, { skipAuthRedirect: true });
+      setMessages(res.messages || []);
+    } catch (err) {
+      reportError(err, { source: 'MessageWall' });
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -40,13 +57,17 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
         if (!cancelled) setMessages(res.messages || []);
       } catch (err) {
         reportError(err, { source: 'MessageWall' });
-        showToast('Error al cargar los mensajes', 'error');
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [eventId, refreshKey]);
+
+  const handleRetry = () => {
+    loadMessages();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +158,11 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 bg-surface-container-highest rounded-2xl animate-pulse" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="text-center py-8">
+          <p className="text-sm text-on-surface-variant/80 mb-3">No se pudieron cargar los mensajes.</p>
+          <Button variant="secondary" onClick={handleRetry}>Reintentar</Button>
         </div>
       ) : messages.length === 0 ? (
         <div className="text-center py-8 text-sm text-on-surface-variant/80">

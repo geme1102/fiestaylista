@@ -41,6 +41,9 @@ export default function VerifyEmail() {
     if (statusParam === 'success') {
       setStatus('success');
       setMessage('¡Correo verificado exitosamente!');
+      // LF-01: el estado de auth quedaba stale si el usuario verificó su correo
+      // con la sesión ya iniciada — el onboarding no se desbloqueaba hasta recargar.
+      refreshUser().catch((err) => reportError(err, { source: 'VerifyEmail' }));
       return;
     }
 

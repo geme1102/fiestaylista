@@ -202,6 +202,15 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **FE-02**: `POST /create-checkout` pasó de `verifyTurnstile` a `verifyTurnstileOptional` — Pricing/Account mostraban "Puedes continuar" sin token y el backend respondía 400: el pago era imposible para usuarios con bloqueador de anuncios/red corporativa. El flujo ya tiene `requireAuth` + `paymentLimiter` + `validateRedirectUrl`, y el `strictFallbackLimiter` tapa el abuso sin token. Los 12 endpoints estrictos restantes (claims, RSVP, fotos, mensajes, cash, forgot/reset, public-sse) no cambian. 2 tests nuevos en `turnstile.test.ts` (el camino del limiter corre async: usar `vi.waitFor` antes de asertar `next`).
 - **B1/B2**: los crons de correos ignoraban eventos borrados — `deleteEvent` marca `deletedAt` pero NO apaga `isActive`, así que `processReminders` (reminder.ts) y `processEmailSequence` (emailSequence.ts) mandaban recordatorios con links 404 a eventos eliminados. Fix: filtros `isNull(deletedAt)` en eventos (query principal y selección por userId) y en gifts (subquery EXISTS de sin-apartar y conteos). 4 tests nuevos en `email-crons.test.ts` (mock de drizzle con resolución de queries por índice de creación del chain — con `queue.shift()` el orden de `Promise.all` sobre thenables sincrónicos no es determinista).
 
+## Auditoría Forense — Fase F (Bajos, Ago 2026)
+
+- **LF-01**: `VerifyEmail` con `status=success` refrescaba el usuario — el onboarding no se desbloqueaba hasta recargar si el correo se verificó con la sesión ya iniciada. `refreshUser().catch(reportError)` en el branch success (el efecto no es async; usar `.catch`, no `await`).
+- **UX-02**: `MessageWall` con estado `loadError` + botón "Reintentar" — antes un fallo de red en la carga inicial quedaba invisible y el invitado veía "Sé el primero en dejar un mensaje" en vacío.
+- **UX-01**: `handleClaim` de `useEventPage` avisa con toast informativo ("Ya estás apartando un regalo...") cuando hay un claim en vuelo — antes el tap en otra card se ignoraba sin feedback.
+- **FE-03**: `yearlyPrice` muerto en Pro Plus — la UI ya excluye pro_plus del toggle anual ("solo plan mensual"). Se quitó el campo y `PLANS` ahora tipado con `Plan` (`yearlyPrice?: number`) + fallback `?? plan.price` en el precio.
+- **FE-04**: mensaje 401 sin redirección prometida — con `skipAuthRedirect` el error decía "Serás redirigido..." pero no se redirige (callers de invitados: muro, fotos, gifts). Ahora lanza "Tu sesión expiró..." sin despachar `auth:session-expired`.
+- **AR-02**: scripts de conveniencia raíz `npm run typecheck` y `npm run lint` (backend + frontend secuenciales).
+
 ### Counters
 - Backend: 386 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
-- Frontend: 390 tests (antes 386) | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
+- Frontend: 394 tests (antes 386) | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)

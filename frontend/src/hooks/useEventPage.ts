@@ -238,7 +238,12 @@ export function useEventPage() {
   const claimInFlightRef = useRef(false);
 
   const handleClaim = useCallback(async (giftId: string, giftName: string) => {
-    if (claimInFlightRef.current) return;
+    // UX-01: un claim en vuelo ignoraba los taps en otras cards sin feedback —
+    // el invitado tocaba y no pasaba nada. Ahora avisamos y seguimos.
+    if (claimInFlightRef.current) {
+      showToast('Ya estás apartando un regalo. Espera un momento...', 'info');
+      return;
+    }
     if (!event || !guestName.trim()) {
       inputRef.current?.focus();
       inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -264,6 +264,24 @@ describe('401 refresh token flow', () => {
 
     window.removeEventListener('auth:session-expired', handler);
   });
+
+  it('does not dispatch session-expired and uses neutral message with skipAuthRedirect (FE-04)', async () => {
+    mockFetchOnce(401);
+    mockFetchOnce(401);
+
+    const events: string[] = [];
+    const handler = (e: Event) => events.push(e.type);
+    window.addEventListener('auth:session-expired', handler);
+
+    setTokens('expired-token');
+    await expect(apiClient.get('/api/public-with-guest', { skipAuthRedirect: true })).rejects.toThrow(
+      'Tu sesión expiró. Vuelve a iniciar sesión para continuar.'
+    );
+    expect(getAccessToken()).toBeNull();
+    expect(events).not.toContain('auth:session-expired');
+
+    window.removeEventListener('auth:session-expired', handler);
+  });
 });
 
 describe('tryRefreshToken', () => {

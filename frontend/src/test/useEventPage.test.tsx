@@ -186,6 +186,27 @@ describe('useEventPage', () => {
     expect(result.current.claimingId).toBeNull();
   });
 
+  it('handleClaim: avisa cuando ya hay un claim en vuelo (UX-01)', async () => {
+    let resolveClaim!: (v: unknown) => void;
+    mockApiClientPut.mockReturnValue(new Promise((r) => { resolveClaim = r; }));
+
+    const { result } = renderEventPageHook();
+
+    await waitFor(() => {
+      expect(result.current.event).toBeTruthy();
+    });
+
+    act(() => { result.current.setGuestName('Test'); });
+    const p1 = act(async () => { await result.current.handleClaim('g-1', 'Olla'); });
+    await act(async () => { result.current.handleClaim('g-2', 'Cobija'); });
+
+    expect(mockShowToast).toHaveBeenCalledWith('Ya estás apartando un regalo. Espera un momento...', 'info');
+    expect(mockApiClientPut).toHaveBeenCalledTimes(1);
+
+    resolveClaim?.({ gift: { id: 'g-1', name: 'Olla', isClaimed: true, claimedBy: 'Test' } });
+    await p1;
+  });
+
   it('handleClaim: shows already-claimed error', async () => {
     mockApiClientPut.mockRejectedValue(new Error('El regalo ya ha sido reservado'));
 

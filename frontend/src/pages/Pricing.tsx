@@ -14,7 +14,17 @@ import NavbarPremium from '../components/NavbarPremium';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
 
-const PLANS = [
+interface Plan {
+  tier: Tier;
+  name: string;
+  price: number;
+  yearlyPrice?: number;
+  popular: boolean;
+  badge?: string;
+  features: { text: string; included: boolean }[];
+}
+
+const PLANS: Plan[] = [
   {
     tier: 'free' as const,
     name: 'Gratis',
@@ -51,7 +61,8 @@ const PLANS = [
     tier: 'pro_plus' as const,
     name: 'Pro Plus',
     price: 99900,
-    yearlyPrice: 1098900,
+    // FE-03: sin yearlyPrice — Pro Plus es solo plan mensual (el toggle anual
+    // muestra "(solo plan mensual)"); el campo duplicaba el precio muerto.
     popular: false,
     badge: 'TODO INCLUIDO',
     features: [
@@ -313,7 +324,7 @@ export default function Pricing() {
           <section className="md:max-w-5xl mx-auto px-4">
             <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-6">
               {PLANS.map((plan) => {
-                const price = yearly && plan.tier !== 'pro_plus' ? plan.yearlyPrice : plan.price;
+                const price = yearly && plan.tier !== 'pro_plus' ? (plan.yearlyPrice ?? plan.price) : plan.price;
                 const isCurrent = user?.tier === plan.tier;
                 const userTierLevel = user ? TIER_ORDER[user.tier] : -1;
                 const planTierLevel = TIER_ORDER[plan.tier];
