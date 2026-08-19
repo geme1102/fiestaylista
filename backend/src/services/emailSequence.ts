@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, inArray, type SQL } from 'drizzle-orm';
+import { eq, and, sql, desc, inArray, isNull, type SQL } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { users, events, gifts, cashFunds, emailTracking } from '../db/schema.js';
 import { config } from '../config.js';
@@ -78,7 +78,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
       db
         .select({ id: events.id, userId: events.userId, title: events.title, slug: events.slug, createdAt: events.createdAt })
         .from(events)
-        .where(inArray(events.userId, userIds))
+        .where(and(inArray(events.userId, userIds), isNull(events.deletedAt)))
         .orderBy(desc(events.createdAt)),
       loadSentMap(userIds),
     ]);
@@ -98,7 +98,7 @@ export async function processEmailSequence(): Promise<{ processed: number }> {
               count: sql<number>`count(*)::int`,
             })
             .from(gifts)
-            .where(and(inArray(gifts.eventId, eventIds), eq(gifts.isClaimed, false)))
+            .where(and(inArray(gifts.eventId, eventIds), eq(gifts.isClaimed, false), isNull(gifts.deletedAt)))
             .groupBy(gifts.eventId)
         : Promise.resolve([] as { eventId: string; count: number }[]),
       eventIds.length > 0

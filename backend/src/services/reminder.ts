@@ -1,4 +1,4 @@
-import { eq, sql, and, inArray } from 'drizzle-orm';
+import { eq, sql, and, inArray, isNull } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { events, gifts, users, emailTracking } from '../db/schema.js';
 import { sendReminderEmail } from './email.js';
@@ -30,7 +30,8 @@ export async function processReminders(): Promise<ReminderResult> {
     .where(
       and(
         sql`${events.isActive} = true`,
-        sql`EXISTS (SELECT 1 FROM ${gifts} WHERE ${gifts.eventId} = ${events.id} AND ${gifts.isClaimed} = false)`,
+        isNull(events.deletedAt),
+        sql`EXISTS (SELECT 1 FROM ${gifts} WHERE ${gifts.eventId} = ${events.id} AND ${gifts.isClaimed} = false AND ${gifts.deletedAt} IS NULL)`,
         sql`NOT EXISTS (SELECT 1 FROM ${emailTracking} WHERE ${emailTracking.userId} = ${events.userId} AND ${emailTracking.type} = 'reminder' AND ${emailTracking.sentAt} > ${cooldownDate.toISOString()}::timestamptz)`,
       ),
     )
@@ -44,7 +45,11 @@ export async function processReminders(): Promise<ReminderResult> {
           count: sql<number>`count(*)::int`,
         })
         .from(gifts)
-        .where(and(inArray(gifts.eventId, eventIds), eq(gifts.isClaimed, false)))
+        .where(and(
+          inArray(gifts.eventId, eventIds),
+          eq(gifts.isClaimed, false),
+          isNull(gifts.deletedAt),
+        ))
         .groupBy(gifts.eventId)
     : [];
 
