@@ -13,6 +13,8 @@ const drizzleMocks = vi.hoisted(() => ({
 
 vi.mock('drizzle-orm', () => drizzleMocks);
 
+vi.mock('../config.js', () => ({ config: { NODE_ENV: 'test', FRONTEND_URL: 'http://localhost:5173' } }));
+
 const queue: any[] = [];
 const chains: any[] = [];
 
