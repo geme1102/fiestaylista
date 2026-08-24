@@ -28,7 +28,7 @@
     "k6:webhook:staging": "k6 run -e BASE_URL=https://fiestaylista-staging.up.railway.app k6/webhook-avalanche.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
+    "concurrently": "^10.0.5",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1"
   },
