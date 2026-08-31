@@ -103,7 +103,6 @@ export function useTurnstile({ enabled = true }: { enabled?: boolean } = {}) {
               });
             } else if (widgetId.current && window.turnstile) {
               window.turnstile.reset(widgetId.current);
-              window.turnstile.execute(widgetId.current);
             }
           },
           appearance: 'execute',
@@ -130,7 +129,6 @@ export function useTurnstile({ enabled = true }: { enabled?: boolean } = {}) {
     setReady(false);
     if (widgetId.current && window.turnstile) {
       window.turnstile.reset(widgetId.current);
-      window.turnstile.execute(widgetId.current);
     }
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     resetTimerRef.current = setTimeout(() => setReady(true), 500);

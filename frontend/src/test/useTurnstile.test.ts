@@ -135,12 +135,12 @@ describe('useTurnstile', () => {
     expect(result.current.ready).toBe(true);
 
     const renderOptions = mockTurnstile.render.mock.calls[0][1];
-    mockTurnstile.execute.mockImplementation(() => renderOptions.callback('fresh-token'));
+    mockTurnstile.reset.mockImplementation(() => renderOptions.callback('fresh-token'));
 
     act(() => { result.current.reset(); });
 
     expect(mockTurnstile.reset).toHaveBeenCalledWith('widget-1');
-    expect(mockTurnstile.execute).toHaveBeenCalledWith('widget-1');
+    expect(mockTurnstile.execute).not.toHaveBeenCalled();
     expect(result.current.token).toBe('fresh-token');
   });
 

@@ -18,7 +18,12 @@ export async function mockTurnstile(page: Page) {
             return id;
           },
           getResponse: () => 'mock-turnstile-token',
-          reset: () => {},
+          reset: (id) => {
+            const cb = window.__turnstileCallbacks && window.__turnstileCallbacks[id];
+            if (cb) {
+              cb('mock-turnstile-token');
+            }
+          },
           remove: (id) => {
             if (window.__turnstileCallbacks) {
               delete window.__turnstileCallbacks[id];

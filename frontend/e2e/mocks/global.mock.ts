@@ -21,7 +21,10 @@ export async function mockGlobalApi(page: Page) {
         return id;
       },
       getResponse: () => 'mock-turnstile-token',
-      reset: () => {},
+      reset: (id: string) => {
+        const cb = (window as any).__turnstileCallbacks?.[id];
+        if (cb) cb('mock-turnstile-token');
+      },
       remove: (id: string) => {
         const w = window as any;
         if (w.__turnstileCallbacks) delete w.__turnstileCallbacks[id];
