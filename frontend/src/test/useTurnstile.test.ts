@@ -126,6 +126,24 @@ describe('useTurnstile', () => {
     expect(result.current.ready).toBe(true);
   });
 
+  it('reset re-executes the widget so a fresh token can arrive', async () => {
+    const { useTurnstile } = await import('../hooks/useTurnstile');
+    const { result } = renderHook(() => useTurnstile());
+
+    setContainerRef(result);
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(result.current.ready).toBe(true);
+
+    const renderOptions = mockTurnstile.render.mock.calls[0][1];
+    mockTurnstile.execute.mockImplementation(() => renderOptions.callback('fresh-token'));
+
+    act(() => { result.current.reset(); });
+
+    expect(mockTurnstile.reset).toHaveBeenCalledWith('widget-1');
+    expect(mockTurnstile.execute).toHaveBeenCalledWith('widget-1');
+    expect(result.current.token).toBe('fresh-token');
+  });
+
   it('cleanup removes turnstile widget on unmount', async () => {
     const { useTurnstile } = await import('../hooks/useTurnstile');
     const { result, unmount } = renderHook(() => useTurnstile());

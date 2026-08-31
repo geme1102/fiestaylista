@@ -12,13 +12,24 @@ export async function mockGlobalApi(page: Page) {
     };
     window.turnstile = {
       render: (_container, options) => {
+        const w = window as any;
+        w.__turnstileCallbacks = w.__turnstileCallbacks || {};
+        w.__turnstileCounter = (w.__turnstileCounter || 0) + 1;
+        const id = 'mock-widget-' + w.__turnstileCounter;
+        w.__turnstileCallbacks[id] = options?.callback ?? null;
         options?.callback?.('mock-turnstile-token');
-        return 'mock-widget-id';
+        return id;
       },
       getResponse: () => 'mock-turnstile-token',
       reset: () => {},
-      remove: () => {},
-      execute: () => {},
+      remove: (id: string) => {
+        const w = window as any;
+        if (w.__turnstileCallbacks) delete w.__turnstileCallbacks[id];
+      },
+      execute: (id: string) => {
+        const cb = (window as any).__turnstileCallbacks?.[id];
+        if (cb) cb('mock-turnstile-token');
+      },
     };
   });
 
