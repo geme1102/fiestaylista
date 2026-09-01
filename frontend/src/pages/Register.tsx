@@ -40,6 +40,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const navigatedRef = useRef(false);
   const submittingRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -91,6 +92,7 @@ export default function Register() {
 
     submittingRef.current = true;
     setLoading(true);
+    setRateLimited(false);
 
     try {
       let token = turnstileToken;
@@ -121,7 +123,11 @@ export default function Register() {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       resetTurnstile();
       reportError(err, { source: 'Register' });
-      showToast(err instanceof Error ? err.message : 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Demasiados')) {
+        setRateLimited(true);
+      }
+      showToast(msg || 'Error al crear tu cuenta. Verifica tus datos e intenta de nuevo.', 'error');
     } finally {
       submittingRef.current = false;
       setLoading(false);
@@ -290,6 +296,13 @@ export default function Register() {
                 </p>
               )}
             </form>
+
+            {rateLimited && (
+              <div role="alert" className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">hourglass_top</span>
+                <p>Has alcanzado el límite de intentos. Espera 15 minutos y vuelve a intentarlo.</p>
+              </div>
+            )}
 
             <div ref={containerRef} className="absolute" />
           </div>

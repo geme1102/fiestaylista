@@ -105,4 +105,4 @@ export const strictKeyGenerator = (req: AuthRequest) => {
   return `turnstile-fallback:${identity}`;
 };
 
-export const strictFallbackLimiter = createLimiter({ prefix: 'strict', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: strictKeyGenerator, message: 'Demasiados intentos sin verificación de seguridad. Intenta de nuevo en 15 minutos.' });
+export const strictFallbackLimiter = createLimiter({ prefix: 'strict', max: 10, windowMs: AUTH_WINDOW_MS, keyGenerator: strictKeyGenerator, message: 'Demasiados intentos sin verificación de seguridad. Intenta de nuevo en 15 minutos.' });

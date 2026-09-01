@@ -32,7 +32,7 @@ describe('auth service', () => {
       password: 'Pass123!',
       name: 'Test User',
       turnstileToken: 'turnstile-token',
-    });
+    }, { skipAuthRedirect: true, skipRefresh: true });
   });
 
   it('calls register without turnstile token', async () => {
@@ -43,7 +43,7 @@ describe('auth service', () => {
 
     expect(mockPost).toHaveBeenCalledWith('/api/auth/register', expect.not.objectContaining({
       turnstileToken: expect.anything(),
-    }));
+    }), { skipAuthRedirect: true, skipRefresh: true });
   });
 
   it('calls login with email, password, and turnstile token', async () => {

@@ -177,7 +177,17 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown, opti
       }
 
       if (res.status === 429) {
-        throw new Error('Has hecho demasiadas solicitudes. Espera un momento y vuelve a intentar.');
+        // UX-429: el backend envía un mensaje específico ("Demasiados intentos.
+        // Intenta de nuevo en 15 minutos") — mostrarlo tal cual en vez del
+        // genérico para que el usuario sepa exactamente qué esperar.
+        let errorMsg = 'Has hecho demasiadas solicitudes. Espera un momento y vuelve a intentar.';
+        try {
+          const err = await res.json();
+          errorMsg = err.error ?? err.message ?? errorMsg;
+        } catch {
+          // ignore
+        }
+        throw new Error(errorMsg);
       }
 
       if (!res.ok) {

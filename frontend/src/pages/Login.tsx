@@ -18,6 +18,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [buttonStatus, setButtonStatus] = useState<'idle' | 'loading' | 'success' | 'shake'>('idle');
+  const [rateLimited, setRateLimited] = useState(false);
   const navigatedRef = useRef(false);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -50,6 +51,7 @@ export default function Login() {
     submittingRef.current = true;
     setLoading(true);
     setButtonStatus('loading');
+    setRateLimited(false);
 
     try {
       let token = turnstileToken;
@@ -101,6 +103,9 @@ export default function Login() {
       setLoading(false);
       shakeTimerRef.current = setTimeout(() => setButtonStatus('idle'), 500);
       const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Demasiados')) {
+        setRateLimited(true);
+      }
       if (msg.includes('Credenciales inválidas')) {
         showToast('Credenciales inválidas. Verifica tu correo y contraseña e intenta de nuevo.', 'error');
       } else if (msg) {
@@ -230,6 +235,13 @@ export default function Login() {
                 {loading ? 'Iniciando sesión, por favor espera' : buttonStatus === 'success' ? 'Sesión iniciada correctamente' : buttonStatus === 'shake' ? 'Error al iniciar sesión, verifica tus credenciales' : ''}
               </span>
             </form>
+
+            {rateLimited && (
+              <div role="alert" className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">hourglass_top</span>
+                <p>Has alcanzado el límite de intentos. Espera 15 minutos y vuelve a intentarlo.</p>
+              </div>
+            )}
 
             {turnstileError && (
               <div className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/60 text-sm text-amber-800 mt-6">

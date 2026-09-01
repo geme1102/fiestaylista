@@ -55,7 +55,7 @@ describe('createLimiter', () => {
 
   it('F6: strictFallbackLimiter usa ventana de 15 min', () => {
     expect(optsFor('strict')?.windowMs).toBe(15 * 60 * 1000);
-    expect(optsFor('strict')?.max).toBe(5);
+    expect(optsFor('strict')?.max).toBe(10);
   });
 
   it('D2-A3: usa passOnStoreError: true (fail-open real ante fallo del store)', () => {
