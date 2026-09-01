@@ -35,7 +35,7 @@ export default function SubscriptionBanners({
             <p className="font-medium text-sm text-red-800">Pago rechazado</p>
             <p className="text-xs text-red-700/70 mt-0.5">El pago no fue procesado. Puedes intentar de nuevo desde la página de planes.</p>
           </div>
-          <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-all min-h-[44px] flex items-center">
+          <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-all min-h-[44px] flex items-center">
             Reintentar
           </Link>
         </div>
@@ -51,7 +51,7 @@ export default function SubscriptionBanners({
           <button
             onClick={onPaymentSync}
             disabled={syncingPayment}
-            className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-all disabled:opacity-50 min-h-[44px] flex items-center gap-2"
+            className="shrink-0 px-4 py-2 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-all disabled:opacity-50 min-h-[44px] flex items-center gap-2"
           >
             {syncingPayment ? (
               <><LoadingSpinner size="sm" /> Verificando</>
@@ -69,7 +69,7 @@ export default function SubscriptionBanners({
             <p className="font-medium text-sm text-blue-800">Suscripción pendiente</p>
             <p className="text-xs text-blue-700/70 mt-0.5">Estamos esperando la confirmación de Mercado Pago. Esto suele tomar unos minutos.</p>
           </div>
-          <Link to="/account" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+          <Link to="/account" className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all min-h-[44px] flex items-center">
             Ir a cuenta
           </Link>
         </div>
@@ -82,7 +82,7 @@ export default function SubscriptionBanners({
             <p className="font-medium text-sm text-red-800">Error al cargar suscripción</p>
             <p className="text-xs text-red-700/70 mt-0.5">No pudimos verificar el estado de tu suscripción. Intenta recargar la página.</p>
           </div>
-          <button onClick={() => window.location.reload()} className="shrink-0 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-all min-h-[44px] flex items-center">
+          <button onClick={() => window.location.reload()} className="shrink-0 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-all min-h-[44px] flex items-center">
             Recargar
           </button>
         </div>
@@ -95,7 +95,7 @@ export default function SubscriptionBanners({
             <p className="font-medium text-sm text-amber-800">Pago pendiente</p>
             <p className="text-xs text-amber-700/70 mt-0.5">Tu suscripción Pro tiene un pago vencido. Actualiza tu método de pago para mantener el acceso a todas las funciones.</p>
           </div>
-          <Link to="/account" className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-all min-h-[44px] flex items-center">
+          <Link to="/account" className="shrink-0 px-4 py-2 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-all min-h-[44px] flex items-center">
             Ir a cuenta
           </Link>
         </div>
@@ -115,7 +115,7 @@ export default function SubscriptionBanners({
                   <p className="text-xs text-red-600 font-semibold mt-1">⚠️ Tus datos se eliminarán permanentemente en {daysUntilPurge} {daysUntilPurge === 1 ? 'día' : 'días'}.</p>
                 )}
               </div>
-              <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+              <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all min-h-[44px] flex items-center">
                 Ver planes
               </Link>
             </div>

@@ -105,7 +105,7 @@ export default function ResetPassword() {
         <meta name="twitter:title" content="Nueva Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Establece una nueva contraseña para tu cuenta de Fiesta y Lista." />
       </Helmet>
-      <main className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
+      <main id="main-content" tabIndex={-1} className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" aria-label="Ir al inicio" className="inline-flex items-center gap-2 mb-6 group">
@@ -153,7 +153,7 @@ export default function ResetPassword() {
                     { check: /[A-Z]/.test(password), label: 'Una mayúscula' },
                     { check: /[0-9]/.test(password), label: 'Un número' },
                   ].map((req) => (
-                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : 'text-on-surface-variant/80'}`}>
+                    <div key={req.label} className={`flex items-center gap-2 text-xs transition-colors ${req.check ? 'text-green-600' : 'text-on-surface-variant'}`}>
                       <span className={`material-symbols-outlined text-sm ${req.check ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                         {req.check ? 'check_circle' : 'radio_button_unchecked'}
                       </span>
@@ -161,8 +161,15 @@ export default function ResetPassword() {
                     </div>
                   ))}
                   <div className="mt-1">
-                    <div className="flex items-center gap-3" aria-label={`Fortaleza de contraseña: ${getPasswordStrength(password).label}`}>
-                      <div className="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden"
+                        role="progressbar"
+                        aria-label={`Fortaleza de contraseña: ${getPasswordStrength(password).label}`}
+                        aria-valuenow={getPasswordStrength(password).score}
+                        aria-valuemin={0}
+                        aria-valuemax={5}
+                      >
                         <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength(password).color}`} style={{ width: `${(getPasswordStrength(password).score / 5) * 100}%` }} />
                       </div>
                       <span className={`text-xs font-medium whitespace-nowrap ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>{getPasswordStrength(password).label}</span>

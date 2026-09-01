@@ -80,7 +80,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                 <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-square" />
 
                 {photo.isFeatured && (
-                  <div className="absolute top-3.5 left-3.5 bg-amber-400 text-white rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg p-2.5">
+                  <div className="absolute top-3.5 left-3.5 bg-amber-600 text-white rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg p-2.5">
                     <Star className="w-3.5 h-3.5" fill="currentColor" />
                   </div>
                 )}
@@ -93,7 +93,7 @@ export const PhotoGallery = memo(function PhotoGallery({
                           e.stopPropagation();
                           onToggleFeatured(photo.id);
                         }}
-                        className={`p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95 ${photo.isFeatured ? 'bg-amber-400 text-white' : 'bg-white/90 hover:bg-white text-amber-500'}`}
+                        className={`p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full shadow cursor-pointer transition-transform hover:scale-105 active:scale-95 ${photo.isFeatured ? 'bg-amber-600 text-white' : 'bg-white/90 hover:bg-white text-amber-700'}`}
                         title={photo.isFeatured ? 'Quitar destacada' : 'Marcar como destacada'}
                         aria-label={photo.isFeatured ? 'Quitar destacada' : 'Marcar como destacada'}
                       >

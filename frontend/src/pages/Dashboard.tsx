@@ -302,13 +302,13 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-surface font-outfit tracking-tight">
-            Mis Eventos <span className="text-on-surface-variant/80 font-normal text-xl sm:text-2xl">({eventCount})</span>
+            Mis Eventos <span className="text-on-surface-variant font-normal text-xl sm:text-2xl">({eventCount})</span>
           </h1>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={user?.tier === 'free' ? 'neutral' : user?.tier === 'pro_plus' ? 'gold' : 'primary'} size="sm" icon={user?.tier === 'free' ? 'redeem' : 'auto_awesome'}>
               {user?.tier === 'free' ? 'Plan Gratis' : user?.tier === 'pro_plus' ? 'Pro Plus' : 'Plan Pro'}
             </Badge>
-            <span className="text-sm text-on-surface-variant/80">
+            <span className="text-sm text-on-surface-variant">
               Tus celebraciones, todas en un solo lugar.
             </span>
           </div>
@@ -359,8 +359,8 @@ export default function Dashboard() {
               </div>
               <div className="min-w-0">
                 <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{stat.value}</p>
-                <p className="text-xs text-on-surface-variant/80 mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
-                <p className="text-xs text-on-surface-variant/80 mt-0.5">{stat.subtitle}</p>
+                <p className="text-xs text-on-surface-variant mt-0.5 font-medium uppercase tracking-wide">{stat.label}</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{stat.subtitle}</p>
               </div>
             </div>
           ))}
@@ -374,7 +374,7 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-3xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>celebration</span>
             </div>
             <h2 className="text-2xl font-bold text-on-surface font-outfit tracking-tight">¿Qué evento quieres crear?</h2>
-            <p className="text-sm text-on-surface-variant/80 mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
+            <p className="text-sm text-on-surface-variant mt-2 leading-relaxed">Elige el tipo de evento y empieza a armar tu lista en segundos.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
               {ONBOARDING_TYPES.map((type) => (
@@ -427,12 +427,12 @@ export default function Dashboard() {
                         )}
                       </div>
 
-                      <h3 className="text-lg font-bold text-on-surface mb-3 truncate tracking-tight">{event.title}</h3>
+                      <h2 className="text-lg font-bold text-on-surface mb-3 truncate tracking-tight">{event.title}</h2>
 
                       <div className="space-y-3 mb-5">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-on-surface-variant/80 font-medium">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? <span className="ml-2 pl-2 border-l border-outline-variant/20">{event.photoCount} fotos</span> : ''}</span>
-                          <span className="font-bold text-sm" style={{ color: theme.primary }}>{Math.round(progress)}%</span>
+                          <span className="text-on-surface-variant font-medium">{total} / {limits.maxGiftsPerEvent} regalos{event.photoCount !== undefined ? <span className="ml-2 pl-2 border-l border-outline-variant/20">{event.photoCount} fotos</span> : ''}</span>
+                          <span className="font-bold text-sm" style={{ color: theme.dark }}>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full h-2.5 bg-surface-container-highest rounded-full overflow-hidden shadow-inner">
                           <div
@@ -452,7 +452,7 @@ export default function Dashboard() {
                         ) : (
                           <Link
                             to={`/event/${event.id}`}
-                            className="flex items-center gap-2 text-sm font-medium text-primary/60 hover:text-primary transition-all group/link"
+                            className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary transition-all group/link"
                           >
                             <span className="material-symbols-outlined text-base">add_circle</span>
                             <span>Activar Lluvia de Sobres</span>
@@ -465,7 +465,7 @@ export default function Dashboard() {
                         <Link
                           to={`/event/${event.id}`}
                           className="flex-1 text-center px-4 py-2.5 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90 active:scale-[0.98]"
-                          style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.dark})` }}
+                          style={{ background: `linear-gradient(135deg, ${theme.dark}, ${theme.dark})` }}
                           aria-label={`Administrar ${event.title}`}
                         >
                           Administrar
@@ -624,7 +624,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
 
       <div>
         <label htmlFor="title" className="block text-sm font-bold text-on-surface-variant mb-2">
-          Nombre del evento <span className="text-xs text-on-surface-variant/80">{formData.title.length}/100</span>
+          Nombre del evento <span className="text-xs text-on-surface-variant">{formData.title.length}/100</span>
         </label>
         <input
           id="title"

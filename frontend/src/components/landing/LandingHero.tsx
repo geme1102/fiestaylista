@@ -21,7 +21,7 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
           <h1 className="text-fluid-hero font-extrabold tracking-tight text-on-surface mb-3 font-outfit leading-[1.1]">
             <span className="text-on-surface">La forma más fácil de</span>
             <span className="block relative min-h-[1.3em] mt-1">
-              <span className="bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-container to-brand-berry bg-clip-text text-transparent">
                 {typedText}
               </span>
               <span className="animate-typewriter-cursor text-primary font-extralight">|</span>

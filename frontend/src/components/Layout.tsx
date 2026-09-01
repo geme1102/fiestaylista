@@ -43,13 +43,13 @@ const Layout = memo(function Layout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-primary">
         Saltar al contenido principal
       </a>
-      <nav className="sticky top-0 z-50 crystal-nav border-b border-white/20 pt-safe">
+      <nav aria-label="Navegación principal" className="sticky top-0 z-50 crystal-nav border-b border-white/20 pt-safe">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link to="/dashboard" aria-label="Ir al inicio" className="flex items-center gap-2 shrink-0 group">
 <Logo className="w-[45px] h-[45px] transition-transform group-hover:scale-105" />
-                <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-secondary-container bg-clip-text text-transparent font-outfit">
+                <span className="hidden sm:inline text-xl font-bold bg-gradient-to-r from-primary via-primary-container to-brand-berry bg-clip-text text-transparent font-outfit">
                   Fiesta y Lista
                 </span>
               </Link>
@@ -58,7 +58,7 @@ const Layout = memo(function Layout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    aria-label={item.label}
+                    aria-current={pathname === item.path ? 'page' : undefined}
                     className={cn(
                       'px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center',
                       pathname === item.path
@@ -77,7 +77,7 @@ const Layout = memo(function Layout() {
                 <Link
                   to="/pricing"
                   aria-label="Desbloquear más eventos"
-                  className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-gold to-gold-light text-white px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-gold/20 transition-all active:scale-95 group"
+                  className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-gold to-gold text-white px-6 py-2 rounded-full font-label-md text-label-md shadow-md hover:shadow-lg hover:shadow-gold/20 transition-all active:scale-95 group"
                 >
                   <span className="material-symbols-outlined text-lg group-hover:animate-[lock-bounce_0.3s_ease-out]">lock</span>
                   <span>Desbloquear</span>
@@ -107,6 +107,8 @@ const Layout = memo(function Layout() {
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-black/5"
                 aria-label="Menú"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-menu"
               >
                 <span className="material-symbols-outlined">
                   {mobileOpen ? 'close' : 'menu'}
@@ -124,6 +126,7 @@ const Layout = memo(function Layout() {
                 style={{ transformOrigin: 'top' }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="md:hidden border-t border-outline/20 overflow-hidden"
+                id="mobile-menu"
               >
                 <div className="py-3 space-y-1">
                   {NAV_ITEMS.map((item) => (
@@ -131,6 +134,7 @@ const Layout = memo(function Layout() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileOpen(false)}
+                      aria-current={pathname === item.path ? 'page' : undefined}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
                         pathname === item.path
@@ -176,18 +180,19 @@ const Layout = memo(function Layout() {
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-safe rounded-t-xl">
+      <nav aria-label="Navegación inferior" className="fixed bottom-0 left-0 right-0 z-50 sm:hidden crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] pb-safe rounded-t-xl">
         <div className="flex items-center justify-around h-16 px-4">
           {NAV_ITEMS.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 aria-label={item.label}
+                aria-current={pathname === item.path ? 'page' : undefined}
                 className={cn(
                   'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px] text-xs font-medium transition-all duration-200 relative',
                   pathname === item.path
                     ? 'text-primary after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full'
-                    : 'text-on-surface-variant/60 hover:text-primary',
+                    : 'text-on-surface-variant hover:text-primary',
                 )}
               >
               <span className={cn(

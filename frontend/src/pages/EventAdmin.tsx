@@ -513,7 +513,7 @@ export default function EventAdmin() {
             ⚠️
           </div>
           <p className="text-on-surface-variant font-semibold mb-2">Error al cargar el evento</p>
-          <p className="text-sm text-on-surface-variant/80 mb-6 max-w-md mx-auto">Revisa tu conexión e intenta de nuevo.</p>
+          <p className="text-sm text-on-surface-variant mb-6 max-w-md mx-auto">Revisa tu conexión e intenta de nuevo.</p>
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => { setLoadError(false); setLoading(true); loadEvent(); }}
@@ -546,7 +546,7 @@ export default function EventAdmin() {
       <div className="absolute bottom-[0px] left-[-250px] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[160px] pointer-events-none -z-10" />
 
       {/* Glossy Navigation Bar */}
-      <nav className="sticky top-0 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 pt-safe flex items-center justify-between" style={{ zIndex: Z_LAYERS.sticky }}>
+      <nav aria-label="Navegación principal" className="sticky top-0 crystal-nav border-b border-white/20 px-4 py-4 md:px-8 pt-safe flex items-center justify-between" style={{ zIndex: Z_LAYERS.sticky }}>
         <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.08 }}
@@ -559,7 +559,7 @@ export default function EventAdmin() {
           </motion.button>
 
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary/60">PANEL DE CONTROL</span>
+            <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary">PANEL DE CONTROL</span>
             <h1 className="text-lg md:text-xl font-extrabold text-primary tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
               {event?.title || 'Evento'}
             </h1>
@@ -912,7 +912,7 @@ export default function EventAdmin() {
 
       {/* Bottom Navigation */}
       {/* Bottom Navigation */}
-      <nav className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] rounded-t-xl" style={{ zIndex: Z_LAYERS.sticky }}>
+      <nav aria-label="Navegación inferior" className="sm:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 px-4 pb-safe crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(177,14,107,0.1)] rounded-t-xl" style={{ zIndex: Z_LAYERS.sticky }}>
         <Link to="/dashboard" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full active:scale-90 duration-200">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
           <span className="font-label-md text-label-md">Eventos</span>

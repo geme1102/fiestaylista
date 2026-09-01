@@ -122,7 +122,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
             <div className="p-5 mt-2 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4">
               <div>
                 <label htmlFor="rsvp-companions" className="block text-sm font-semibold text-on-surface mb-1">
-                  Acompañantes {companions > 0 && <span className="text-on-surface-variant/80 font-normal">({companions} {companions === 1 ? 'persona' : 'personas'})</span>}
+                  Acompañantes {companions > 0 && <span className="text-on-surface-variant font-normal">({companions} {companions === 1 ? 'persona' : 'personas'})</span>}
                 </label>
                 <input
                   id="rsvp-companions"
@@ -137,7 +137,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
                   }}
                   className="w-full accent-primary"
                 />
-                <div className="flex justify-between text-xs text-on-surface-variant/80 mt-1">
+                <div className="flex justify-between text-xs text-on-surface-variant mt-1">
                   <span>0</span>
                   <span>10+</span>
                 </div>
@@ -163,10 +163,10 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
               <div ref={containerRef} />
 
               {error && (
-                <p className="text-xs text-error font-medium">{error}</p>
+                <p id="rsvp-error" role="alert" className="text-xs text-error font-medium">{error}</p>
               )}
 
-              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || submitting}>
+              <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || submitting} aria-describedby={error ? 'rsvp-error' : undefined}>
                 {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
               </Button>
             </div>

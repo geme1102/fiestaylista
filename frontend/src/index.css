@@ -22,32 +22,32 @@
   --font-label-md: 'Plus Jakarta Sans', sans-serif;
   --font-caption: 'Plus Jakarta Sans', sans-serif;
 
-  --text-display-lg: 48px;
-  --text-display-lg--line-height: 56px;
+  --text-display-lg: 3rem;
+  --text-display-lg--line-height: 3.5rem;
   --text-display-lg--font-weight: 900;
   --text-display-lg--letter-spacing: -0.02em;
-  --text-headline-lg: 32px;
-  --text-headline-lg--line-height: 40px;
+  --text-headline-lg: 2rem;
+  --text-headline-lg--line-height: 2.5rem;
   --text-headline-lg--font-weight: 800;
   --text-headline-lg--letter-spacing: -0.01em;
-  --text-headline-lg-mobile: 28px;
-  --text-headline-lg-mobile--line-height: 34px;
+  --text-headline-lg-mobile: 1.75rem;
+  --text-headline-lg-mobile--line-height: 2.125rem;
   --text-headline-lg-mobile--font-weight: 800;
-  --text-headline-md: 24px;
-  --text-headline-md--line-height: 32px;
+  --text-headline-md: 1.5rem;
+  --text-headline-md--line-height: 2rem;
   --text-headline-md--font-weight: 700;
-  --text-body-lg: 18px;
-  --text-body-lg--line-height: 28px;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.75rem;
   --text-body-lg--font-weight: 400;
-  --text-body-md: 16px;
-  --text-body-md--line-height: 24px;
+  --text-body-md: 1rem;
+  --text-body-md--line-height: 1.5rem;
   --text-body-md--font-weight: 400;
-  --text-label-md: 14px;
-  --text-label-md--line-height: 20px;
+  --text-label-md: 0.875rem;
+  --text-label-md--line-height: 1.25rem;
   --text-label-md--font-weight: 600;
   --text-label-md--letter-spacing: 0.05em;
-  --text-caption: 12px;
-  --text-caption--line-height: 16px;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
   --text-caption--font-weight: 500;
 
   --color-primary: #b10e6b;
@@ -103,8 +103,8 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  --color-gold: #D97706;
-  --color-gold-light: #fe932c;
+  --color-gold: #b45309;
+  --color-gold-light: #d97706;
 
   --color-brand-berry: #8c0053;
   --color-brand-pink: #d23284;
@@ -553,7 +553,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 @media (prefers-reduced-motion: reduce) {

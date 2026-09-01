@@ -45,7 +45,7 @@ export default function InstallPwaBanner() {
         <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>ios_share</span>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-primary">Instala Fiesta y Lista</p>
-          <p className="text-xs text-on-surface-variant/80 mt-0.5">Toca el botón Compartir <span className="font-semibold">📤</span> y luego <span className="font-semibold">Añadir a pantalla de inicio ➕</span></p>
+          <p className="text-xs text-on-surface-variant mt-0.5">Toca el botón Compartir <span className="font-semibold">📤</span> y luego <span className="font-semibold">Añadir a pantalla de inicio ➕</span></p>
         </div>
         <button
           onClick={() => setDismissed(true)}
@@ -73,7 +73,7 @@ export default function InstallPwaBanner() {
       <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>install_mobile</span>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm text-primary">Instala Fiesta y Lista</p>
-        <p className="text-xs text-on-surface-variant/80 mt-0.5">Agrega la app a tu pantalla de inicio para acceder más rápido a tus eventos.</p>
+        <p className="text-xs text-on-surface-variant mt-0.5">Agrega la app a tu pantalla de inicio para acceder más rápido a tus eventos.</p>
       </div>
       <button
         onClick={handleInstall}

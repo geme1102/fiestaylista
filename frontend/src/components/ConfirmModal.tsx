@@ -55,7 +55,7 @@ export const ConfirmModal = memo(function ConfirmModal({
           <button data-testid="confirm-confirm" onClick={onConfirm} disabled={loading} className={cn(
             'flex-1 py-3 min-h-[44px] text-sm font-bold text-white rounded-xl transition-all disabled:opacity-50',
             destructive
-              ? 'bg-red-500 hover:opacity-90 shadow-lg shadow-red-500/20'
+              ? 'bg-red-600 hover:opacity-90 shadow-lg shadow-red-500/20'
               : 'bg-gradient-to-r from-primary to-primary-container hover:shadow-lg',
           )}>
             {loading ? '...' : confirmLabel}

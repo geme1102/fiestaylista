@@ -127,7 +127,7 @@ export default function Login() {
         <meta name="twitter:title" content="Iniciar Sesión - Fiesta y Lista" />
         <meta name="twitter:description" content="Inicia sesión en Fiesta y Lista." />
       </Helmet>
-      <main className="min-h-screen bg-surface pb-24 sm:pb-0">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-surface pb-24 sm:pb-0">
         <NavbarPremium />
         <div className="flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">

@@ -123,7 +123,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
           )}
         </div>
         <div className="p-5 opacity-30 select-none">
-          <h3 className="text-lg font-bold text-on-surface mb-1">{gift.name}</h3>
+          <h4 className="text-lg font-bold text-on-surface mb-1">{gift.name}</h4>
         </div>
       </motion.div>
     );
@@ -177,10 +177,10 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
             </span>
           </div>
 
-          <h4 className="text-base sm:text-lg font-extrabold text-on-surface mt-2 tracking-tight group-hover:text-primary transition-colors capitalize">
+          <h3 className="text-base sm:text-lg font-extrabold text-on-surface mt-2 tracking-tight group-hover:text-primary transition-colors capitalize">
             {gift.name}
-          </h4>
-          <p className="text-on-surface-variant/80 text-xs font-semibold leading-normal mt-0.5">
+          </h3>
+          <p className="text-on-surface-variant text-xs font-semibold leading-normal mt-0.5">
             Set de regalo ideal para {category.label.toLowerCase()}.
           </p>
         </div>
@@ -232,7 +232,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
       {/* Group Gift: Claims list */}
       {isGroupGift && claims.length > 0 && (
         <div className="mt-4 space-y-1.5">
-          <p className="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider flex items-center gap-1">
+          <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1">
             <span className="material-symbols-outlined text-sm">group</span>
             {claims.length} {claims.length === 1 ? 'persona' : 'personas'} participan
           </p>

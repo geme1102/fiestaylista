@@ -64,7 +64,7 @@ describe('GuestPhotoUpload', () => {
     fireEvent.change(fileInput);
 
     expect(URL.createObjectURL).toHaveBeenCalled();
-    const preview = screen.getByAltText('Preview');
+    const preview = screen.getByAltText('Vista previa de la foto seleccionada');
     expect(preview).toBeInTheDocument();
   });
 

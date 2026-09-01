@@ -67,7 +67,7 @@ export default function ForgotPassword() {
         <meta name="twitter:title" content="Recuperar Contraseña - Fiesta y Lista" />
         <meta name="twitter:description" content="Recupera tu contraseña de Fiesta y Lista." />
       </Helmet>
-      <main className="min-h-screen bg-surface pb-24 sm:pb-0">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-surface pb-24 sm:pb-0">
         <div className="flex items-center justify-center px-4 min-h-[calc(100dvh-6rem)] sm:min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -91,7 +91,7 @@ export default function ForgotPassword() {
                 Si existe una cuenta con <strong className="text-on-surface-variant">{email}</strong>,
                 recibirás un enlace para restablecer tu contraseña en unos minutos.
               </p>
-              <p className="text-xs text-on-surface-variant/80 mb-6">
+              <p className="text-xs text-on-surface-variant mb-6">
                 ¿No lo encuentras? Revisa tu carpeta de spam o correo no deseado.
               </p>
               <div className="flex flex-col gap-3">

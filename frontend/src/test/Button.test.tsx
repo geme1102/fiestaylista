@@ -68,7 +68,7 @@ describe('Button', () => {
   it('applies destructive variant', () => {
     const { container } = render(<Button variant="destructive">Delete</Button>);
     const btn = container.firstChild as HTMLElement;
-    expect(btn.className).toContain('bg-red-500');
+    expect(btn.className).toContain('bg-red-600');
   });
 
   it('applies custom className', () => {

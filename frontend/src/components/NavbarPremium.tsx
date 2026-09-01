@@ -24,6 +24,9 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
         scrolled ? 'shadow-md' : ''
       }`}
     >
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+        Saltar al contenido principal
+      </a>
       <div className={`flex justify-between items-center px-container-margin md:px-section-gap-mobile max-w-full h-full transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
         <Link to="/" aria-label="Ir al inicio" className="flex items-center gap-3 group cursor-pointer">
 <Logo className="w-[45px] h-[45px] transition-transform group-hover:scale-105" />
@@ -50,6 +53,7 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                     type="button"
                     data-testid="logout-button-mobile"
                     onClick={logout}
+                    aria-label="Cerrar sesión"
                     className="sm:hidden inline-flex items-center min-h-[44px] text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors px-3 py-2 border border-outline/30 rounded-full"
                   >
                     <span className="material-symbols-outlined text-lg">logout</span>
@@ -78,14 +82,14 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                   </Link>
                   <Link
                     to="/register"
-                    className="hidden sm:inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                    className="hidden sm:inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
                     <div className="absolute inset-0 animate-shimmer" />
                   </Link>
                   <Link
                     to="/register"
-                    className="sm:hidden inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-secondary-container text-on-primary px-4 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                    className="sm:hidden inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
                     <div className="absolute inset-0 animate-shimmer" />

@@ -131,7 +131,9 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
             onSubmit={handleSubmit}
           >
             <div className="p-4 mb-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+              <label htmlFor="message-input" className="sr-only">Tu mensaje para el anfitrión</label>
               <textarea
+                id="message-input"
                 value={newMessage}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -144,6 +146,9 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
                 rows={3}
                 required
               />
+              {!guestName.trim() && (
+                <p className="text-xs text-on-surface-variant">Escribe tu nombre arriba para publicar un mensaje.</p>
+              )}
               <div ref={containerRef} />
               <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || !newMessage.trim() || submitting}>
                 {submitting ? 'Publicando...' : 'Publicar mensaje 💬'}
@@ -161,11 +166,11 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
         </div>
       ) : loadError ? (
         <div className="text-center py-8">
-          <p className="text-sm text-on-surface-variant/80 mb-3">No se pudieron cargar los mensajes.</p>
+          <p className="text-sm text-on-surface-variant mb-3">No se pudieron cargar los mensajes.</p>
           <Button variant="secondary" onClick={handleRetry}>Reintentar</Button>
         </div>
       ) : messages.length === 0 ? (
-        <div className="text-center py-8 text-sm text-on-surface-variant/80">
+        <div className="text-center py-8 text-sm text-on-surface-variant">
           <p>Sé el primero en dejar un mensaje ✨</p>
         </div>
       ) : (
@@ -182,7 +187,7 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
                   <span className="text-[11px] font-bold text-primary">{msg.authorName.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="text-sm font-bold text-on-surface">{msg.authorName}</span>
-                <span className="text-[10px] text-on-surface-variant/80 ml-auto">
+                <span className="text-[10px] text-on-surface-variant ml-auto">
                   {new Date(msg.createdAt).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}
                 </span>
               </div>

@@ -76,6 +76,7 @@ constructor(props: Props) {
       const errorId = this.state.errorId;
       return (
         <main
+          role="alert"
           className="relative min-h-screen w-full flex items-center justify-center p-container-margin overflow-hidden bg-surface"
         >
           <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />

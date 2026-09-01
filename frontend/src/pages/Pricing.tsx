@@ -247,7 +247,7 @@ export default function Pricing() {
           })}
         </script>
       </Helmet>
-      <main className="min-h-screen bg-surface">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-surface">
         <NavbarPremium />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
@@ -344,9 +344,9 @@ export default function Pricing() {
                         plan.popular && 'glow-shadow-pro',
                       )}
                     >
-                      <h3 className="font-headline-md text-headline-md mb-4 text-on-surface">
+                      <h2 className="font-headline-md text-headline-md mb-4 text-on-surface">
                         {plan.name}
-                      </h3>
+                      </h2>
                       <div className="mb-6">
                         <span className="font-display-lg text-display-lg text-on-surface">
                           ${price.toLocaleString('es-CO')}
@@ -355,7 +355,7 @@ export default function Pricing() {
                           {plan.price === 0 ? '' : yearly && plan.tier !== 'pro_plus' ? '/año' : '/mes'}
                         </span>
                         {yearly && plan.tier === 'pro_plus' && (
-                          <div className="font-caption text-caption text-on-surface-variant/80 mt-1">(solo plan mensual)</div>
+                          <div className="font-caption text-caption text-on-surface-variant mt-1">(solo plan mensual)</div>
                         )}
                       </div>
                       <ul className="space-y-4 mb-8 text-left w-full">

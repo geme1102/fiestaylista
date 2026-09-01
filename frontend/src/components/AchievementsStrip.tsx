@@ -43,7 +43,7 @@ export const AchievementsStrip = memo(function AchievementsStrip({
         );
       })}
       {earned.length === 0 && locked.length === ACHIEVEMENTS.length && (
-        <p className="text-xs text-on-surface-variant/80 px-2">
+        <p className="text-xs text-on-surface-variant px-2">
           Completa acciones para desbloquear logros 🏆
         </p>
       )}

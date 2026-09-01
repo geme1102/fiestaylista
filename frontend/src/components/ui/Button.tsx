@@ -21,8 +21,8 @@ const VARIANTS: Record<Variant, string> = {
     'bg-gradient-to-r from-secondary to-secondary-container text-on-secondary-container shadow-md hover:shadow-lg hover:shadow-secondary/20',
   ghost: 'text-on-surface-variant hover:bg-surface-container-high',
   outline: 'border border-outline-variant text-on-surface hover:bg-surface-container-low hover:border-primary/40',
-  destructive: 'bg-red-500 text-white shadow-md hover:opacity-90 shadow-red-500/20',
-  gold: 'bg-gradient-to-r from-gold to-gold-light text-white shadow-md hover:shadow-lg hover:shadow-gold/30',
+  destructive: 'bg-red-600 text-white shadow-md hover:opacity-90 shadow-red-500/20',
+  gold: 'bg-gradient-to-r from-gold to-gold text-white shadow-md hover:shadow-lg hover:shadow-gold/30',
 };
 
 const SIZES: Record<Size, string> = {
@@ -71,12 +71,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       onClick={handleClick}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       whileHover={prefersReducedMotion ? {} : { scale: disabled || loading ? 1 : 1.02 }}
       whileTap={prefersReducedMotion ? {} : { scale: disabled || loading ? 1 : 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={cn(
         'relative overflow-hidden inline-flex items-center justify-center gap-2 font-bold transition-colors duration-200 select-none',
         'disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
         VARIANTS[variant],
         SIZES[size],
         fullWidth && 'w-full',

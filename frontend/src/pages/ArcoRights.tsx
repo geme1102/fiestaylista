@@ -207,7 +207,7 @@ export default function ArcoRights() {
   };
 
   return (
-    <main className="min-h-screen bg-surface">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -394,7 +394,7 @@ export default function ArcoRights() {
               <button onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={!deletePassword || loading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleDeleteAccount} disabled={!deletePassword || loading} className="flex-1 py-3 bg-red-600 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>

@@ -137,7 +137,7 @@ export default function VerifyEmail() {
 
   return (
     <>
-      <main className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
+      <main id="main-content" tabIndex={-1} className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
       <div className="text-center max-w-md">
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
           {status === 'verifying' ? (
@@ -157,7 +157,7 @@ export default function VerifyEmail() {
             <p className="text-sm text-on-surface-variant mb-6">
               Ahora puedes crear eventos, compartir listas de regalos y recibir aportes de tus invitados.
             </p>
-            <p className="text-xs text-on-surface-variant/80 mb-4">
+            <p className="text-xs text-on-surface-variant mb-4">
               Serás redirigido al Dashboard en {redirectCountdown} segundos...
             </p>
             <button

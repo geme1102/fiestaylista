@@ -131,12 +131,15 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
         >
           <input
             ref={fileInputRef}
+            id="guest-photo-file"
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handleFileSelect}
             className="hidden"
+            aria-label="Seleccionar foto para subir"
           />
+          <label htmlFor="guest-photo-file" className="sr-only">Foto</label>
           <Button
             variant="outline"
             fullWidth
@@ -148,11 +151,13 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
           {preview && (
             <div className="relative rounded-xl overflow-hidden">
-              <img src={preview} alt="Preview" loading="lazy" className="w-full h-48 object-cover rounded-xl" />
+              <img src={preview} alt="Vista previa de la foto seleccionada" loading="lazy" className="w-full h-48 object-cover rounded-xl" />
             </div>
           )}
 
+          <label htmlFor="guest-photo-caption" className="sr-only">Descripción de la foto (opcional)</label>
           <input
+            id="guest-photo-caption"
             type="text"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}

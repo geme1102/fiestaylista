@@ -30,7 +30,7 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
           <span className="material-symbols-outlined text-2xl text-red-400">error_outline</span>
         </div>
         <p className="text-sm font-semibold text-on-surface-variant">Error al cargar invitados</p>
-        <p className="text-xs text-on-surface-variant/80 mt-1">Revisa tu conexión e intenta de nuevo.</p>
+        <p className="text-xs text-on-surface-variant mt-1">Revisa tu conexión e intenta de nuevo.</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
             <span className="material-symbols-outlined text-2xl text-on-surface-variant">how_to_reg</span>
           </div>
           <p className="text-sm font-semibold text-on-surface-variant">No hay invitados aún</p>
-          <p className="text-xs text-on-surface-variant/80 mt-1">Cuando alguien confirme asistencia, aparecerá aquí.</p>
+          <p className="text-xs text-on-surface-variant mt-1">Cuando alguien confirme asistencia, aparecerá aquí.</p>
         </div>
       ) : (
         <>
@@ -109,7 +109,7 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-on-surface truncate">{guest.name}</p>
-                    <div className="flex items-center gap-2 text-[11px] text-on-surface-variant/80">
+                    <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
                       {guest.email && <span className="truncate max-w-[150px]">{guest.email}</span>}
                       {guest.companions > 0 && <span>+{guest.companions} {guest.companions === 1 ? 'acompañante' : 'acompañantes'}</span>}
                     </div>

@@ -133,7 +133,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
         <p className="text-sm text-red-700 mb-4">No pudimos cargar la Lluvia de Sobres.</p>
         <button
           onClick={loadFund}
-          className="px-5 py-2.5 bg-red-500 text-white text-sm font-semibold rounded-xl min-h-[44px]"
+          className="px-5 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl min-h-[44px]"
         >
           Reintentar
         </button>
@@ -219,17 +219,17 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
                 <motion.div
-                  initial={shouldReduceMotion ? { width: 0 } : { scaleX: 0 }}
-                  animate={shouldReduceMotion ? { width: `${Math.min(progressPercent, 100)}%` } : { scaleX: Math.min(progressPercent, 100) / 100 }}
-                  transition={shouldReduceMotion ? { duration: 0.3 } : { duration: 1.2, ease: 'easeOut' }}
-                  style={shouldReduceMotion ? { height: '100%' } : { transformOrigin: 'left', width: '100%' }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: Math.min(progressPercent, 100) / 100 }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                  style={{ transformOrigin: 'left', width: '100%' }}
                   className="h-full bg-gradient-to-r from-secondary-container to-secondary shimmer-bg rounded-full"
                 />
               </div>
               {promisedTotal > 0 && (
                 <p className="text-xs text-on-surface-variant pt-1">
                   <span className="font-semibold">+ {formatCOP(promisedTotal)} prometido</span>
-                  <span className="text-on-surface-variant/80"> (aportes por confirmar)</span>
+                  <span className="text-on-surface-variant"> (aportes por confirmar)</span>
                 </p>
               )}
             </div>
@@ -408,7 +408,7 @@ function AdminBankConfig({ fund, eventId, onUpdate }: { fund: CashFund; eventId:
       </button>
       {show && (
         <div className="mt-4 space-y-3">
-          <p className="text-xs text-on-surface-variant/80">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
+          <p className="text-xs text-on-surface-variant">Comparte tu Nequi, Daviplata o Bancolombia para que los invitados te transfieran directo.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="bank-type" className="sr-only">Tipo de cuenta</label>
@@ -647,7 +647,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-secondary">account_balance</span>
         <div>
-          <p className="text-xs text-on-surface-variant/80 font-semibold uppercase tracking-wide">Tipo de cuenta</p>
+          <p className="text-xs text-on-surface-variant font-semibold uppercase tracking-wide">Tipo de cuenta</p>
           <p className="font-bold text-on-surface">
             {bankType === 'nequi' && 'Nequi'}
             {bankType === 'daviplata' && 'Daviplata'}
@@ -659,7 +659,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-secondary">smartphone</span>
         <div>
-          <p className="text-xs text-on-surface-variant/80 font-semibold uppercase tracking-wide">Número</p>
+          <p className="text-xs text-on-surface-variant font-semibold uppercase tracking-wide">Número</p>
           <p className="font-bold text-on-surface text-lg tracking-wider">{displayPhone}</p>
         </div>
         {isMasked && !revealedPhone ? (

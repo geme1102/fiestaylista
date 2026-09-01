@@ -26,7 +26,7 @@ export default function NotFound() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center px-container-margin py-20 relative">
+      <main id="main-content" tabIndex={-1} className="flex-grow flex items-center justify-center px-container-margin py-20 relative">
         <div className="absolute top-1/4 left-10 w-32 h-32 bg-primary-container/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-10 w-48 h-48 bg-secondary-container/10 rounded-full blur-3xl" />
         <div className="max-w-2xl w-full text-center space-y-12 relative z-10">
@@ -39,12 +39,12 @@ export default function NotFound() {
             </div>
           </div>
           <div className="space-y-4">
-            <h1 className="font-display-lg text-display-lg text-primary tracking-tighter sm:text-7xl md:text-8xl">
+            <p className="font-display-lg text-display-lg text-primary tracking-tighter sm:text-7xl md:text-8xl" aria-hidden="true">
               404
-            </h1>
-            <p className="font-headline-lg text-headline-lg text-on-surface-variant">
-              Página no encontrada
             </p>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface-variant">
+              Página no encontrada
+            </h1>
             <p className="font-body-lg text-body-lg text-outline max-w-md mx-auto">
               Parece que el regalo que buscabas no está en esta lista. No te preocupes, ¡la celebración continúa!
             </p>

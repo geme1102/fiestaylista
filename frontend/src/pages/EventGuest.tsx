@@ -218,7 +218,7 @@ export default function EventGuest() {
         </script>
       </Helmet>
 
-      <main className={`min-h-screen bg-surface transition-all duration-300 pb-bottom-nav ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
+      <main id="main-content" tabIndex={-1} className={`min-h-screen bg-surface transition-all duration-300 pb-bottom-nav ${easyReadMode ? 'text-lg space-y-6' : ''}`}>
         <Suspense fallback={null}><ConfettiCanvas ref={confettiRef} /></Suspense>
 
         {showEnvelope && event && (
@@ -231,6 +231,9 @@ export default function EventGuest() {
         )}
 
         <header className="fixed top-0 left-0 w-full z-50 crystal-nav border-b border-white/20 flex justify-between items-center px-4 h-safe">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-primary">
+            Saltar al contenido principal
+          </a>
           <div className="flex items-center gap-3">
             <Link to="/" className="font-headline-md text-headline-md font-black text-primary">Fiesta y Lista</Link>
           </div>
@@ -282,9 +285,9 @@ export default function EventGuest() {
               </div>
 
               <span
-                className="text-[10px] uppercase font-extrabold tracking-[0.25em] px-4 py-1.5 rounded-full border animate-pulse font-display shadow-xs mb-4"
+                className="text-[10px] uppercase font-extrabold tracking-[0.25em] px-4 py-1.5 rounded-full border animate-pulse font-headline-md shadow-xs mb-4"
                 style={{
-                  color: THEME_COLORS[event.eventType]?.primary,
+                  color: THEME_COLORS[event.eventType]?.dark,
                   backgroundColor: `${THEME_COLORS[event.eventType]?.primary}12`,
                   borderColor: `${THEME_COLORS[event.eventType]?.primary}35`,
                 }}
@@ -299,46 +302,47 @@ export default function EventGuest() {
               <div
                 className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-5 mb-6 text-xs font-bold uppercase tracking-widest px-5 py-3 rounded-2xl border shadow-xs"
                 style={{
-                  color: THEME_COLORS[event.eventType]?.primary,
+                  color: THEME_COLORS[event.eventType]?.dark,
                   backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`,
                   borderColor: `${THEME_COLORS[event.eventType]?.primary}25`,
                 }}
               >
                 <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>card_giftcard</span>
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.dark }}>card_giftcard</span>
                     {availableGifts.length} regalos{claimedGifts.length > 0 ? ` · ${claimedGifts.length} apartados` : ''}
                   </span>
                   {eventDateFormatted && (
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>calendar_month</span>
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.dark }}>calendar_month</span>
                     {eventDateFormatted}{eventTimeFormatted ? ` • ${eventTimeFormatted}` : ''}
                   </span>
                 )}
                 {event?.eventLocation && (
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.primary }}>location_on</span>
+                    <span className="material-symbols-outlined text-sm" style={{ color: THEME_COLORS[event.eventType]?.dark }}>location_on</span>
                     {event.eventLocation}
                   </span>
                 )}
               </div>
 
               {displayNote && (
-                <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-8 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+                <p className="font-body-lg text-body-lg italic font-semibold tracking-wide max-w-lg mb-8 leading-relaxed" style={{ color: THEME_COLORS[event.eventType]?.dark }}>
                   &ldquo;{displayNote}&rdquo;
                 </p>
               )}
 
               <div className="flex items-center gap-3 px-4 py-2 rounded-full mb-6 z-10" style={{ backgroundColor: `${THEME_COLORS[event.eventType]?.primary}08`, border: `1px solid ${THEME_COLORS[event.eventType]?.primary}20` }}>
-                <span className="font-bold text-xs uppercase tracking-wider" style={{ color: THEME_COLORS[event.eventType]?.primary }}>
+                <span className="font-bold text-xs uppercase tracking-wider" style={{ color: THEME_COLORS[event.eventType]?.dark }}>
                   Texto más grande
                 </span>
                 <button
                   onClick={() => setEasyReadMode(!easyReadMode)}
                   role="switch"
                   aria-checked={easyReadMode}
+                  aria-label="Texto más grande"
                   className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${easyReadMode ? 'bg-primary' : 'bg-gray-200'}`}
                 >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'left-7' : 'left-1'}`} />
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${easyReadMode ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
               </div>
 
@@ -535,8 +539,8 @@ export default function EventGuest() {
             <SectionErrorBoundary sectionName="GuestPhotoUpload">
               {(event.photosEnabled === false) ? (
                 <div className="mb-6 p-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center gap-3 bg-surface-container-low/40">
-                  <span className="material-symbols-outlined text-on-surface-variant/60" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-                  <p className="font-semibold text-sm text-on-surface-variant/80">
+                  <span className="material-symbols-outlined text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                  <p className="font-semibold text-sm text-on-surface-variant">
                     La galería de fotos se abrirá cuando el anfitrión active el Plan Pro
                   </p>
                 </div>
@@ -546,7 +550,7 @@ export default function EventGuest() {
             </SectionErrorBoundary>
 
             {photos.length === 0 ? (
-              <div className="text-center py-8 text-on-surface-variant/80">
+              <div className="text-center py-8 text-on-surface-variant">
                 <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>photo_library</span>
                 <p className="font-medium text-sm">No hay fotos aún</p>
 {(event.photosEnabled === false) ? (
@@ -562,7 +566,16 @@ export default function EventGuest() {
                     key={photo.id}
                     whileHover={{ scale: 1.03 }}
                     onClick={() => setSlideshowIndex(idx)}
-                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group cursor-pointer"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSlideshowIndex(idx);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={photo.caption || `Ver foto ${idx + 1}`}
+                    className="relative overflow-hidden bg-surface-container-high ring-1 ring-gray-200/50 rounded-xl group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <ImageWithSkeleton src={photo.url} alt={photo.caption || 'Foto del evento'} aspectRatio="aspect-[4/3]" />
                     {photo.caption && (
@@ -628,7 +641,7 @@ export default function EventGuest() {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-bottom-safe px-4">
+        <nav aria-label="Navegación inferior" className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl crystal-nav border-t border-white/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-center items-center h-bottom-safe px-4">
           <Link to="/" className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] text-primary font-bold relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full transition-all" aria-label="Ir al inicio">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             <span className="font-label-md text-label-md">Inicio</span>

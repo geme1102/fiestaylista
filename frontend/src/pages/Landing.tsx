@@ -101,7 +101,7 @@ export default function Landing() {
           })}
         </script>
       </Helmet>
-      <main className="min-h-screen bg-surface">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-surface">
       <FloatingOrbs />
       <LandingNavbar scrolled={scrolled > 50} isAuthenticated={isAuthenticated} />
       <LandingHero typedText={typedText} isAuthenticated={isAuthenticated} onNavigate={navigate} />

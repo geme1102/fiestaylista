@@ -51,6 +51,18 @@ export function EnvelopeReveal({
     cleanup();
   }, [cleanup]);
 
+  // Accesibilidad: con prefers-reduced-motion saltamos directo al final (sin
+  // los timers de fase ni blur/rotaciones), respetando la preferencia del usuario.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShowMiniCard(true);
+      setEnvelopeOpacity(0);
+      setEnvelopeBlur(0);
+      setBackdropVisible(false);
+      cleanup();
+    }
+  }, [cleanup]);
+
   const handleSealClick = useCallback(() => {
     if (phase !== 'waiting') return;
     setPhase('breaking');

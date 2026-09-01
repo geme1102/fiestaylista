@@ -418,7 +418,7 @@ export default function Account() {
                               <p className="text-xs text-red-600 font-semibold mt-1">⚠️ Tus datos se eliminarán permanentemente en {daysUntilPurge} {daysUntilPurge === 1 ? 'día' : 'días'}.</p>
                             )}
                           </div>
-                          <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
+                          <Link to="/pricing" className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-600 transition-all min-h-[44px] flex items-center">
                             Ver planes
                           </Link>
                         </div>
@@ -501,7 +501,7 @@ export default function Account() {
       ) : (
         <div className="rounded-2xl p-6 sm:p-8 mb-8 glass-card-premium">
           <h2 className="text-lg font-semibold text-on-surface mb-4">Historial de Pagos</h2>
-          <div className="text-center py-8 text-on-surface-variant/80">
+          <div className="text-center py-8 text-on-surface-variant">
             <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
             <p className="font-medium text-sm">No hay pagos registrados aún</p>
             <p className="text-xs mt-1">Cuando realices tu primera compra, aparecerá aquí.</p>
@@ -568,7 +568,7 @@ export default function Account() {
               <button onClick={() => { setShowCancelConfirm(false); setCancelPassword(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleCancelSubscription} disabled={!cancelPassword || cancelLoading} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleCancelSubscription} disabled={!cancelPassword || cancelLoading} className="flex-1 py-3 bg-red-600 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {cancelLoading ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Cancelando...</span> : 'Confirmar'}
               </button>
             </div>
@@ -620,7 +620,7 @@ export default function Account() {
               <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteConfirmText(''); }} className="flex-1 py-3 text-on-surface-variant font-medium rounded-xl bg-surface-container-high">
                 Cancelar
               </button>
-              <button onClick={handleDeleteAccount} disabled={deleteConfirmText !== 'ELIMINAR MI CUENTA' || !deletePassword || deletingAccount} className="flex-1 py-3 bg-red-500 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
+              <button onClick={handleDeleteAccount} disabled={deleteConfirmText !== 'ELIMINAR MI CUENTA' || !deletePassword || deletingAccount} className="flex-1 py-3 bg-red-600 text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center">
                 {deletingAccount ? <span className="flex items-center gap-2"><span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Eliminando...</span> : 'Eliminar'}
               </button>
             </div>

@@ -46,7 +46,7 @@ export default class SectionErrorBoundary extends Component<Props, State> {
             </div>
           </div>
           <div className="space-y-2">
-            <h3 className="font-headline-sm-mobile md:font-headline-sm text-headline-sm-mobile md:text-headline-sm text-on-surface tracking-tight">
+            <h3 className="font-headline-md text-headline-md text-on-surface tracking-tight">
               Algo salió mal en esta sección
             </h3>
             <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mx-auto leading-relaxed">
