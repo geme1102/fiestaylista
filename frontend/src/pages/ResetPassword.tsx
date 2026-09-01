@@ -77,7 +77,7 @@ export default function ResetPassword() {
   if (done) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
+        <main id="main-content" tabIndex={-1} className="min-h-screen flex items-center justify-center bg-surface px-4 pb-24 sm:pb-0">
           <div className="w-full max-w-md text-center">
             <span className="material-symbols-outlined text-5xl mb-4 block text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <h1 className="text-2xl font-bold text-on-surface mb-2">Contraseña actualizada</h1>
@@ -89,7 +89,7 @@ export default function ResetPassword() {
               Iniciar sesión
             </Link>
           </div>
-        </div>
+        </main>
         <AuthBottomNav />
       </>
     );

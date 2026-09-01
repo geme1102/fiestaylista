@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useId } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLockedBody } from '../hooks/useLockedBody';
 import { cn } from '../utils/cn';
@@ -19,6 +19,7 @@ export const ConfirmModal = memo(function ConfirmModal({
   const dialogRef = useFocusTrap(true);
   useLockedBody(true);
   const shouldReduceMotion = useReducedMotion();
+  const titleId = useId();
 
   return (
     <motion.div
@@ -37,7 +38,7 @@ export const ConfirmModal = memo(function ConfirmModal({
         transition={shouldReduceMotion ? { duration: 0.15 } : { type: 'spring', damping: 25, stiffness: 300 }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-title"
+        aria-labelledby={titleId}
         data-testid="confirm-modal"
         className="w-full max-w-md bg-surface p-8 rounded-3xl shadow-2xl text-center"
       >
@@ -46,7 +47,7 @@ export const ConfirmModal = memo(function ConfirmModal({
             <span className="material-symbols-outlined text-4xl" aria-hidden="true">warning</span>
           </div>
         )}
-        <h2 id="confirm-title" className="text-lg font-bold text-on-surface mb-2">¿Estás seguro?</h2>
+        <h2 id={titleId} className="text-lg font-bold text-on-surface mb-2">¿Estás seguro?</h2>
         <p className="text-sm text-on-surface-variant mb-8">{message}</p>
         <div className="flex gap-3">
           <button data-testid="confirm-cancel" data-dialog-close onClick={onClose} disabled={loading} className="flex-1 py-3 min-h-[44px] text-sm font-bold text-on-surface-variant border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">

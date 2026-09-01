@@ -113,7 +113,7 @@ export default function Register() {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       navigatedRef.current = true;
       if (planParam === 'pro' || planParam === 'pro_plus') {
-        navigate(`/pricing?intent=pro&interval=${intervalParam || 'month'}`, { replace: true });
+        navigate(`/pricing?interval=${intervalParam || 'month'}`, { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
       }
@@ -284,6 +284,11 @@ export default function Register() {
               <Button variant="primary" fullWidth loading={loading} type="submit" disabled={!isFormValid}>
                 {loading ? 'Creando cuenta...' : 'Empezar gratis'}
               </Button>
+              {!isFormValid && !loading && (
+                <p className="text-xs text-center text-on-surface-variant mt-3">
+                  Completa todos los campos y acepta los términos para continuar. Si el botón sigue deshabilitado, espera un momento mientras verificamos que no eres un robot.
+                </p>
+              )}
             </form>
 
             <div ref={containerRef} className="absolute" />

@@ -103,6 +103,8 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
     <div ref={formRef} className="mb-8">
       <button
         onClick={() => setShowForm(!showForm)}
+        aria-expanded={showForm}
+        aria-controls="rsvp-form-panel"
         className="w-full p-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center justify-between gap-3 hover:border-primary/50 hover:bg-primary-fixed/20 transition-all min-h-[56px] group"
       >
         <div className="flex items-center gap-3">
@@ -114,7 +116,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
         <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${showForm ? 'rotate-180' : ''}`}>expand_more</span>
       </button>
 
-      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div id="rsvp-form-panel" className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
           <form
             onSubmit={handleSubmit}
@@ -169,6 +171,9 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
               <Button variant="primary" fullWidth loading={submitting} type="submit" disabled={!guestName.trim() || submitting} aria-describedby={error ? 'rsvp-error' : undefined}>
                 {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
               </Button>
+              {!guestName.trim() && (
+                <p className="text-xs text-on-surface-variant text-center">Escribe tu nombre arriba para confirmar tu asistencia.</p>
+              )}
             </div>
           </form>
         </div>

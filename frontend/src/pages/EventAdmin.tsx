@@ -560,9 +560,9 @@ export default function EventAdmin() {
 
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary">PANEL DE CONTROL</span>
-            <h1 className="text-lg md:text-xl font-extrabold text-primary tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
+            <p aria-hidden="true" className="text-lg md:text-xl font-extrabold text-primary tracking-tight flex items-center gap-2 truncate max-w-[200px] md:max-w-xs">
               {event?.title || 'Evento'}
-            </h1>
+            </p>
           </div>
         </div>
 
@@ -576,14 +576,14 @@ export default function EventAdmin() {
       <div className="max-w-4xl mx-auto px-4 mt-8 relative z-10">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant mb-6 font-semibold px-2">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-on-surface-variant mb-6 font-semibold px-2">
           <Link to="/dashboard" className="hover:text-rose-950 hover:underline transition-colors duration-200">Mis Eventos</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-          <span className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-primary font-black shadow-sm flex items-center gap-1">
+          <span aria-current="page" className="bg-surface/70 border border-rose-100/35 px-3 py-1 rounded-full text-primary font-black shadow-sm flex items-center gap-1">
             <Home className="w-3 h-3 text-primary" />
             {event.title}
           </span>
-        </div>
+        </nav>
 
         {/* Main Event Card */}
           <section className="relative bg-surface/80 backdrop-blur-xl rounded-[32px] p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(162,27,83,0.06)] border border-white/70 mb-8 overflow-hidden">
@@ -605,9 +605,9 @@ export default function EventAdmin() {
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <h2 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5 truncate">
+                    <h1 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight flex items-center gap-1.5 truncate">
                       {event.title}
-                    </h2>
+                    </h1>
                     <motion.button
                       type="button"
                       data-testid="edit-event-button"
@@ -760,7 +760,7 @@ export default function EventAdmin() {
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                <h3 className="text-gray-900 font-extrabold text-sm tracking-widest uppercase">Detalles del Evento</h3>
+                <h2 className="text-gray-900 font-extrabold text-sm tracking-widest uppercase">Detalles del Evento</h2>
               </div>
             </div>
 

@@ -40,7 +40,7 @@ export default function Statistics() {
         <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center mb-5">
           <span className="material-symbols-outlined text-3xl text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
         </div>
-        <h2 className="text-xl font-bold text-on-surface mb-2">Estadísticas exclusivas para Plan Pro y Pro Plus</h2>
+        <h1 className="text-xl font-bold text-on-surface mb-2">Estadísticas exclusivas para Plan Pro y Pro Plus</h1>
         <p className="text-sm text-on-surface-variant mb-6 max-w-sm">
           Actualiza a Pro o Pro Plus para acceder a gráficas, métricas y análisis detallados de tus eventos.
         </p>
@@ -68,7 +68,7 @@ export default function Statistics() {
         <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-5">
           <span className="material-symbols-outlined text-3xl text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>error_outline</span>
         </div>
-        <h2 className="text-xl font-bold text-on-surface mb-2">Error al cargar estadísticas</h2>
+        <h1 className="text-xl font-bold text-on-surface mb-2">Error al cargar estadísticas</h1>
         <p className="text-sm text-on-surface-variant mb-6 max-w-sm">
           {error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intenta de nuevo.'}
         </p>
@@ -135,7 +135,7 @@ export default function Statistics() {
             <span className="material-symbols-outlined text-xl text-primary">savings</span>
           </div>
           <div className="min-w-0">
-            <p className="text-xl md:text-2xl font-bold text-on-surface truncate">{formatCOP(totalRaised)}</p>
+            <p className="text-xl md:text-2xl font-bold text-on-surface truncate tabular-nums">{formatCOP(totalRaised)}</p>
             <p className="text-xs text-on-surface-variant mt-0.5 font-medium uppercase tracking-wide">Recaudado</p>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function Statistics() {
                 {event.cashFund?.collectedAmount ? (
                   <div className="mt-3 pt-3 border-t border-outline-variant/20 flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-base text-secondary">savings</span>
-                    <span className="font-semibold text-on-surface">{formatCOP(event.cashFund.collectedAmount)}</span>
+                    <span className="font-semibold text-on-surface tabular-nums">{formatCOP(event.cashFund.collectedAmount)}</span>
                     <span className="text-on-surface-variant">recaudados</span>
                   </div>
                 ) : null}

@@ -92,13 +92,12 @@ export const EventReadyBar = memo(function EventReadyBar({
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
           style={{ transformOrigin: 'left' }}
           className={cn(
-            'h-full rounded-full relative',
+            'h-full rounded-full relative overflow-hidden animate-shimmer-gpu',
             isComplete
               ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
               : 'bg-gradient-to-r from-primary to-primary-container',
           )}
         >
-          <div className="absolute inset-0 animate-card-shine rounded-full" />
         </motion.div>
       </div>
 

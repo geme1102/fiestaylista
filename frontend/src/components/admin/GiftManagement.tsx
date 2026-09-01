@@ -87,6 +87,8 @@ export default memo(function GiftManagement({
             role="combobox"
             aria-expanded={showSuggestions && !!newGiftName && filteredSuggestions.length > 0}
             aria-autocomplete="list"
+            aria-controls="gift-suggestions-listbox"
+            aria-label="Nombre del regalo"
           />
 
           <motion.button
@@ -103,7 +105,7 @@ export default memo(function GiftManagement({
         </div>
 
         {showSuggestions && newGiftName && filteredSuggestions.length > 0 && (
-          <div className="mt-3 bg-surface border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto" role="listbox">
+          <div id="gift-suggestions-listbox" className="mt-3 bg-surface border border-rose-100 rounded-xl shadow-lg max-h-48 overflow-y-auto" role="listbox">
             {filteredSuggestions.map((s, idx) => (
               <button
                 key={s}

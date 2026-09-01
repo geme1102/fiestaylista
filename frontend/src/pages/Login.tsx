@@ -157,6 +157,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={buttonStatus === 'shake' ? true : undefined}
                   maxLength={254}
                   className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="tu@correo.com"
@@ -176,6 +177,7 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    aria-invalid={buttonStatus === 'shake' ? true : undefined}
                     maxLength={64}
                     className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
                     placeholder="••••••••"

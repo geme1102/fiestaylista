@@ -117,6 +117,8 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
 
       <button
         onClick={() => setShowForm(!showForm)}
+        aria-expanded={showForm}
+        aria-controls="message-form-panel"
         className="w-full p-4 mb-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center justify-between gap-3 hover:border-primary/50 hover:bg-primary-fixed/20 transition-all min-h-[56px] group"
       >
         <span className="font-semibold text-sm text-on-surface-variant group-hover:text-primary transition-colors">
@@ -125,7 +127,7 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
         <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${showForm ? 'rotate-180' : ''}`}>expand_more</span>
       </button>
 
-      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div id="message-form-panel" className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showForm ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
           <form
             onSubmit={handleSubmit}
@@ -174,9 +176,9 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
           <p>Sé el primero en dejar un mensaje ✨</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <ul className="space-y-3 list-none m-0 p-0">
           {messages.map((msg) => (
-            <motion.div
+            <motion.li
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -192,9 +194,9 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
                 </span>
               </div>
               <p className="text-sm text-on-surface-variant leading-relaxed">{msg.message}</p>
-            </motion.div>
+            </motion.li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

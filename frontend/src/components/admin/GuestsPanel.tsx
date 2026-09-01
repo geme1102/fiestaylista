@@ -64,7 +64,7 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
-          <h2 className="text-lg font-bold text-on-surface">Invitados</h2>
+          <h3 className="text-lg font-bold text-on-surface">Invitados</h3>
         </div>
         <span className="text-sm font-bold text-primary bg-primary-fixed/30 px-3 py-1 rounded-full">
           {confirmed.length} confirmados{totalPeople > 0 && ` · ${totalPeople} personas`}
@@ -100,9 +100,9 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <ul className="space-y-2 list-none m-0 p-0">
             {(showAll ? confirmed : confirmed.slice(0, 5)).map((guest) => (
-              <div key={guest.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low/50 border border-outline-variant/20">
+              <li key={guest.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low/50 border border-outline-variant/20">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-primary-fixed/40 flex items-center justify-center shrink-0">
                     <span className="text-sm font-bold text-primary">{guest.name.charAt(0).toUpperCase()}</span>
@@ -121,9 +121,9 @@ export default function GuestsPanel({ eventId }: GuestsPanelProps) {
                   )}
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" title="Confirmado" />
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
           {confirmed.length > 5 && !showAll && (
             <button

@@ -226,7 +226,7 @@ export const PhotoGallery = memo(function PhotoGallery({
             />
 
             <div className="mt-5 text-center bg-white/10 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/10 max-w-sm">
-              <h5 className="text-white text-sm font-bold truncate">{selectedPhotoForPreview.caption || 'Foto'}</h5>
+              <h4 className="text-white text-sm font-bold truncate">{selectedPhotoForPreview.caption || 'Foto'}</h4>
             </div>
           </motion.div>
         )}

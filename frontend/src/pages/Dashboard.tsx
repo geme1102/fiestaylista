@@ -270,7 +270,7 @@ export default function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <span className="material-symbols-outlined text-6xl text-red-400 mb-4" aria-hidden="true">error_outline</span>
-        <h2 className="text-xl font-bold text-on-surface mb-2">No pudimos cargar tus eventos</h2>
+        <h1 className="text-xl font-bold text-on-surface mb-2">No pudimos cargar tus eventos</h1>
         <p className="text-on-surface-variant mb-6 max-w-md">Revisa tu conexión e intenta de nuevo.</p>
         <button
           onClick={() => queryClient.invalidateQueries({ queryKey: ['events'] })}
@@ -284,7 +284,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div>
+      <div role="status" aria-live="polite">
         <div className="flex items-center justify-between mb-8">
           <div className="h-8 w-48 bg-surface-container-highest rounded-lg animate-pulse" />
           <div className="h-10 w-40 bg-surface-container-highest rounded-xl animate-pulse" />
@@ -318,7 +318,7 @@ export default function Dashboard() {
                     variant="gold"
                     onClick={() => navigate('/pricing')}
                     data-testid="upgrade-cta"
-                    className="animate-pulse-cta"
+                    className="animate-pulse-ring-gpu"
                     leftIcon={<span className="material-symbols-outlined">auto_awesome</span>}
                   >
                     Desbloquear más eventos
@@ -445,7 +445,7 @@ export default function Dashboard() {
                           <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200/30 flex items-center justify-between gap-2 shadow-sm">
                             <div className="flex items-center gap-2.5 text-sm font-bold text-amber-700 min-w-0 truncate">
                               <span className="material-symbols-outlined text-base shrink-0">savings</span>
-                              <span className="truncate">{formatCOP(fund.collectedAmount)}</span>
+                              <span className="truncate tabular-nums">{formatCOP(fund.collectedAmount)}</span>
                             </div>
                             <span className="text-[11px] font-bold text-amber-500 uppercase tracking-widest bg-amber-100/50 px-2 py-0.5 rounded-md shrink-0">COP</span>
                           </div>
@@ -631,6 +631,8 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="text"
           value={formData.title}
           onChange={(e) => handleTitleChange(e.target.value)}
+          aria-invalid={titleError ? true : undefined}
+          aria-describedby={titleError ? 'title-error' : undefined}
           className={cn(
             'w-full rounded-xl border bg-surface text-on-surface px-4 py-3 outline-none focus:ring-2 transition-all',
             titleError ? 'border-error focus:border-error focus:ring-error/20' : 'border-outline-variant focus:border-primary focus:ring-primary/20',
@@ -640,7 +642,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           autoFocus
           maxLength={200}
         />
-        {titleError && <p className="text-xs text-error mt-1.5 font-medium">{titleError}</p>}
+        {titleError && <p id="title-error" className="text-xs text-error mt-1.5 font-medium">{titleError}</p>}
       </div>
 
       <div>
@@ -652,6 +654,8 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           type="tel"
           value={formData.hostPhone}
           onChange={(e) => handlePhoneChange(e.target.value)}
+          aria-invalid={phoneError ? true : undefined}
+          aria-describedby={phoneError ? 'phone-error' : undefined}
           className={cn(
             'w-full rounded-xl border bg-surface text-on-surface px-4 py-3 outline-none focus:ring-2 transition-all',
             phoneError ? 'border-error focus:border-error focus:ring-error/20' : 'border-outline-variant focus:border-primary focus:ring-primary/20',
@@ -661,7 +665,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
           inputMode="tel"
           enterKeyHint="next"
         />
-        {phoneError && <p className="text-xs text-error mt-1.5 font-medium">{phoneError}</p>}
+        {phoneError && <p id="phone-error" className="text-xs text-error mt-1.5 font-medium">{phoneError}</p>}
       </div>
 
       <button

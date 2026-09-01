@@ -239,7 +239,7 @@ export default function ArcoRights() {
             <div className="grid sm:grid-cols-2 gap-6 mb-8">
               <button onClick={handleDownloadData} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
-                <h3 className="text-lg font-semibold text-on-surface mb-2">{content.access.title}</h3>
+                <h2 className="text-lg font-semibold text-on-surface mb-2">{content.access.title}</h2>
                 <p className="text-sm text-on-surface-variant mb-4">{content.access.desc}</p>
                 <span className="text-primary font-medium text-sm">
                   {loading ? content.access.loading : content.access.btn}
@@ -248,14 +248,14 @@ export default function ArcoRights() {
 
               <button onClick={() => openForm('rectify')}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
-                <h3 className="text-lg font-semibold text-on-surface mb-2">{content.rectify.title}</h3>
+                <h2 className="text-lg font-semibold text-on-surface mb-2">{content.rectify.title}</h2>
                 <p className="text-sm text-on-surface-variant mb-4">{content.rectify.desc}</p>
                 <span className="text-primary font-medium text-sm">{content.rectify.btn}</span>
               </button>
 
               <button onClick={() => setShowDeleteModal(true)} disabled={loading}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all disabled:opacity-50 glass-card-premium">
-                <h3 className="text-lg font-semibold text-red-600 mb-2">{content.cancel.title}</h3>
+                <h2 className="text-lg font-semibold text-red-600 mb-2">{content.cancel.title}</h2>
                 <p className="text-sm text-on-surface-variant mb-4">{content.cancel.desc}</p>
                 <span className="text-red-600 font-medium text-sm">
                   {loading ? content.cancel.deleting : content.cancel.btn}
@@ -264,7 +264,7 @@ export default function ArcoRights() {
 
               <button onClick={() => openForm('oppose')}
                 className="rounded-2xl p-6 text-left hover:shadow-lg transition-all glass-card-premium">
-                <h3 className="text-lg font-semibold text-on-surface mb-2">{content.oppose.title}</h3>
+                <h2 className="text-lg font-semibold text-on-surface mb-2">{content.oppose.title}</h2>
                 <p className="text-sm text-on-surface-variant mb-4">{content.oppose.desc}</p>
                 <span className="text-primary font-medium text-sm">{content.oppose.btn}</span>
               </button>
@@ -274,6 +274,7 @@ export default function ArcoRights() {
               <div
                 role="dialog"
                 aria-modal="true"
+                aria-label={formType === 'rectify' ? content.rectify.title : content.oppose.title}
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
                 onClick={() => setShowForm(false)}
                 onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}

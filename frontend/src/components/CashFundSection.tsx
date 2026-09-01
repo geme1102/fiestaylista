@@ -214,7 +214,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
             )}
               <div className="w-full space-y-2 mb-8">
               <div className="flex flex-wrap justify-between gap-1 text-xs font-bold text-secondary uppercase tracking-tighter">
-                <span className="min-w-0 truncate">{formatCOP(fund.collectedAmount)} / {formatCOP(fund.targetAmount || 0)}</span>
+                <span className="min-w-0 truncate tabular-nums">{formatCOP(fund.collectedAmount)} / {formatCOP(fund.targetAmount || 0)}</span>
                 <span className="shrink-0">{Math.round(progressPercent)}%</span>
               </div>
               <div className="h-3 w-full bg-white/50 rounded-full overflow-hidden border border-secondary/10">
@@ -228,7 +228,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
               </div>
               {promisedTotal > 0 && (
                 <p className="text-xs text-on-surface-variant pt-1">
-                  <span className="font-semibold">+ {formatCOP(promisedTotal)} prometido</span>
+                  <span className="font-semibold tabular-nums">+ {formatCOP(promisedTotal)} prometido</span>
                   <span className="text-on-surface-variant"> (aportes por confirmar)</span>
                 </p>
               )}
@@ -249,7 +249,7 @@ const CashFundSection = memo(function CashFundSection({ eventId, isOwner, easyRe
                       </div>
                       <span className="font-label-md text-label-md text-on-surface">{c.contributorName}</span>
                     </div>
-                    <span className="font-label-md text-label-md text-secondary">{formatCOP(c.amount)} COP</span>
+                    <span className="font-label-md text-label-md text-secondary tabular-nums">{formatCOP(c.amount)} COP</span>
                   </div>
                 ))}
               </div>
@@ -600,6 +600,9 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
           '✅ Ya transferí'
         )}
       </button>
+      {!amount && (
+        <p className="text-xs text-on-surface-variant text-center">Ingresa el monto que transferiste para registrar tu aporte.</p>
+      )}
     </form>
   );
 }

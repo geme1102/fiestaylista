@@ -1,6 +1,6 @@
 export default function EventAdminLoadingSkeleton() {
   return (
-    <div className="animate-pulse">
+    <div role="status" aria-live="polite" className="animate-pulse">
       <div className="flex items-center gap-4 mb-8 py-2">
         <div className="w-11 h-11 bg-surface-container-high rounded-2xl" />
         <div className="space-y-2">

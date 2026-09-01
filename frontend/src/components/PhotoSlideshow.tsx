@@ -40,7 +40,7 @@ export default function PhotoSlideshow({ photos, initialIndex = 0, onClose }: Ph
   if (!photo) return null;
 
   return (
-    <div ref={slideshowRef} className="fixed inset-0 z-[200] bg-black/95 flex flex-col pt-safe pb-safe">
+    <div ref={slideshowRef} role="dialog" aria-modal="true" aria-label={`Presentación de fotos: ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'}`} className="fixed inset-0 z-[200] bg-black/95 flex flex-col pt-safe pb-safe">
       <div className="flex items-center justify-between px-4 py-3 z-10">
         <button
           onClick={onClose}

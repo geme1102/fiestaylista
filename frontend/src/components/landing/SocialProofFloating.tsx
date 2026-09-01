@@ -14,6 +14,7 @@ export function SocialProofFloating() {
   const keyRef = useRef(0);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const interval = setInterval(() => {
       const next = (idxRef.current + 1) % SOCIAL_PROOFS.length;
       idxRef.current = next;

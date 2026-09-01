@@ -545,7 +545,6 @@
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: title-gradient-flow 10s linear infinite;
   display: inline-block;
   padding-bottom: 0.1em;
 }

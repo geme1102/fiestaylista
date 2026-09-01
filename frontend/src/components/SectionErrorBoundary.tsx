@@ -32,7 +32,7 @@ export default class SectionErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full rounded-2xl border border-outline-variant/30 bg-surface/60 backdrop-blur-sm p-6 text-center space-y-4">
+        <div role="alert" className="w-full rounded-2xl border border-outline-variant/30 bg-surface/60 backdrop-blur-sm p-6 text-center space-y-4">
           <div className="flex justify-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
               style={{

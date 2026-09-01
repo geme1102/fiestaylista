@@ -112,6 +112,8 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
     <div className="mb-6">
       <button
         onClick={() => setShowForm(!showForm)}
+        aria-expanded={showForm}
+        aria-controls="photo-form-panel"
         className="w-full p-4 rounded-2xl border border-dashed border-outline-variant/50 flex items-center justify-between gap-3 hover:border-primary/50 hover:bg-primary-fixed/20 transition-all min-h-[56px] group"
       >
         <div className="flex items-center gap-3">
@@ -125,6 +127,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
 
       {showForm && (
         <motion.div
+          id="photo-form-panel"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-5 mt-2 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4"

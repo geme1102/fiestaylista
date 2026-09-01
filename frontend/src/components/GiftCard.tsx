@@ -310,6 +310,9 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
                   )}
                 </button>
               </div>
+              {!claimName.trim() && (
+                <p className="text-xs text-on-surface-variant text-center mt-1">Escribe tu nombre para unirte al regalo.</p>
+              )}
             </div>
           )}
         </div>

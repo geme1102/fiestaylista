@@ -181,7 +181,7 @@ export default function App() {
       <WebviewBanner />
       <OfflineBanner />
       <ScrollToTop />
-    <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant font-medium animate-pulse">Cargando...</p></div>}>
+    <Suspense fallback={<div role="status" aria-live="polite" className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>

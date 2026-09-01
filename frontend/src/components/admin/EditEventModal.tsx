@@ -40,7 +40,7 @@ export default function EditEventModal({
       <div className="flex items-center justify-between pb-3.5 border-b border-gray-200">
         <div className="flex items-center gap-1.5 text-left">
           <span className="text-xl">✨</span>
-          <h4 className="text-lg font-black text-gray-900 tracking-tight">Editar Información de Evento</h4>
+          <h3 className="text-lg font-black text-gray-900 tracking-tight">Editar Información de Evento</h3>
         </div>
         <button
           onClick={onClose}

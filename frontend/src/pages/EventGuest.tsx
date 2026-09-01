@@ -125,7 +125,7 @@ export default function EventGuest() {
 
   if (loading) {
     return (
-      <div role="status" aria-live="polite" className="min-h-screen bg-surface">
+      <main role="status" aria-live="polite" className="min-h-screen bg-surface">
         <div className="pt-header-safe w-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-secondary-fixed/10 -z-10" />
           <div className="px-4 pt-10 pb-12 flex flex-col items-center text-center">
@@ -151,13 +151,13 @@ export default function EventGuest() {
             ))}
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4">
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-fixed/10 via-surface to-surface px-4">
         <div className="text-center max-w-sm">
           <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-fixed to-primary-fixed/50 flex items-center justify-center text-4xl">
             😕
@@ -168,7 +168,7 @@ export default function EventGuest() {
             Ir al inicio
           </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -458,16 +458,17 @@ export default function EventGuest() {
 
             <SectionErrorBoundary sectionName="GiftCardGrid">
             <AnimatePresence mode="wait">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 list-none m-0 p-0">
                 {filteredGifts.map((gift) => (
-                  <GiftCard
-                    key={gift.id}
-                    gift={gift}
-                    onClaim={handleClaimWithRef}
-                    claimingId={claimingId === gift.id ? claimingId : null}
-                  />
+                  <li key={gift.id}>
+                    <GiftCard
+                      gift={gift}
+                      onClaim={handleClaimWithRef}
+                      claimingId={claimingId === gift.id ? claimingId : null}
+                    />
+                  </li>
                 ))}
-              </div>
+              </ul>
             </AnimatePresence>
             </SectionErrorBoundary>
 
@@ -498,15 +499,16 @@ export default function EventGuest() {
                 </h3>
                 <SectionErrorBoundary sectionName="ClaimedGiftsGrid">
                 <AnimatePresence mode="wait">
-                  <div className="space-y-2">
+                  <ul className="space-y-2 list-none m-0 p-0">
                     {(categoryFilter ? claimedGifts.filter((g) => getGiftCategory(g.name).label === categoryFilter) : claimedGifts).map((gift) => (
-                      <GiftCard
-                        key={gift.id}
-                        gift={gift}
-                        isAdmin={false}
-                      />
+                      <li key={gift.id}>
+                        <GiftCard
+                          gift={gift}
+                          isAdmin={false}
+                        />
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </AnimatePresence>
                 </SectionErrorBoundary>
               </motion.div>
@@ -658,10 +660,15 @@ export default function EventGuest() {
           </Suspense>
         )}
 
+        <AnimatePresence>
         {showSuccessModal && (
-          <div
+          <motion.div
             ref={successRef}
             data-testid="success-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 backdrop-blur-xl"
             role="dialog"
             aria-modal="true"
@@ -669,7 +676,13 @@ export default function EventGuest() {
             onClick={(e) => { if (e.target === e.currentTarget) setShowSuccessModal(false); }}
             onKeyDown={(e) => { if (e.key === 'Escape') setShowSuccessModal(false); }}
           >
-            <div className="w-full max-w-sm rounded-[40px] p-8 text-center bg-white shadow-2xl">
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 24 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+              className="w-full max-w-sm rounded-[40px] p-8 text-center bg-white shadow-2xl"
+            >
               <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
                 <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               </div>
@@ -697,9 +710,10 @@ export default function EventGuest() {
               >
                 Seguir viendo
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </main>
     </>
   );

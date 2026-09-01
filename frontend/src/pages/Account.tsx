@@ -488,7 +488,7 @@ export default function Account() {
             {payments.map((p) => (
               <div key={p.id} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
                 <div>
-                  <p className="text-sm font-medium text-on-surface">{formatCOP(p.amount)}</p>
+                  <p className="text-sm font-medium text-on-surface tabular-nums">{formatCOP(p.amount)}</p>
                   <p className="text-xs text-on-surface-variant">{p.interval === 'year' ? 'Plan Anual' : 'Plan Mensual'} · {formatDate(p.createdAt)}</p>
                 </div>
                 <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">

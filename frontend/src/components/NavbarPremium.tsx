@@ -82,17 +82,15 @@ export default function NavbarPremium({ hideCta }: NavbarPremiumProps) {
                   </Link>
                   <Link
                     to="/register"
-                    className="hidden sm:inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                    className="hidden sm:inline-flex relative overflow-hidden animate-shimmer-gpu bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 sm:px-6 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
-                    <div className="absolute inset-0 animate-shimmer" />
                   </Link>
                   <Link
                     to="/register"
-                    className="sm:hidden inline-flex relative overflow-hidden bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
+                    className="sm:hidden inline-flex relative overflow-hidden animate-shimmer-gpu bg-gradient-to-r from-primary to-brand-berry text-on-primary px-4 py-2.5 rounded-full text-label-md font-label-md shadow-lg shadow-rose-500/20 active:scale-95 transition-all duration-200 whitespace-nowrap"
                   >
                     <span className="relative z-10">Crear Lista Gratis</span>
-                    <div className="absolute inset-0 animate-shimmer" />
                   </Link>
                 </div>
               )}

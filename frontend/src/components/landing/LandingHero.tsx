@@ -53,7 +53,7 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
                 >
                   →
                 </motion.span>
-                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent bg-[length:200%_100%] animate-card-shine" />
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               </Link>
             ) : (
               <>
@@ -61,7 +61,7 @@ export function LandingHero({ typedText, isAuthenticated, onNavigate }: LandingH
                   onClick={() => onNavigate('/register')}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-full text-lg font-semibold transition-all shadow-lg shadow-primary/20 overflow-hidden animate-pulse-cta"
+                  className="group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-full text-lg font-semibold transition-all shadow-lg shadow-primary/20 overflow-hidden animate-pulse-ring-gpu"
                 >
                   <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/40 to-white/5 pointer-events-none rounded-t-full rounded-b-[100%] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="absolute inset-0 rounded-full box-border border-t-[1.5px] border-white/60 pointer-events-none mix-blend-overlay"></div>

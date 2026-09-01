@@ -29,6 +29,11 @@ function GoldParticle({ index }: { index: number }) {
 export default function GoldStars({ count = 5, size = 14 }: GoldStarsProps) {
   const [showParticles, setShowParticles] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reducedMotionRef = useRef(false);
+
+  useEffect(() => {
+    reducedMotionRef.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -39,7 +44,7 @@ export default function GoldStars({ count = 5, size = 14 }: GoldStarsProps) {
   return (
     <span
       className="inline-flex gap-0.5 relative"
-      onMouseEnter={() => { setShowParticles(true); clearTimeout(timeoutRef.current); }}
+      onMouseEnter={() => { if (reducedMotionRef.current) return; setShowParticles(true); clearTimeout(timeoutRef.current); }}
       onMouseLeave={() => { timeoutRef.current = setTimeout(() => setShowParticles(false), 500); }}
     >
       {Array.from({ length: count }).map((_, i) => (
