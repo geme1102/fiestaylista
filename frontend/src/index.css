@@ -767,6 +767,12 @@ button, a, input, select, textarea, [role="button"] {
 }
 
 @layer base {
+  button, a.btn {
+    @apply active:scale-[0.97] transition-transform duration-200 ease-out;
+  }
+  button:disabled, a.btn:disabled {
+    @apply active:scale-100;
+  }
   button {
     -webkit-appearance: none;
     appearance: none;

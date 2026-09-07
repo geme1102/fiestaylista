@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { LazyAnimatePresence, LazyPageTransition as PageTransition } from './components/animations/LazyFramerMotion';
 import { Helmet } from 'react-helmet-async';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,29 +17,7 @@ function PageBoundary({ children }: { children: ReactNode }) {
   return <ErrorBoundary>{children}</ErrorBoundary>;
 }
 
-const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
-};
 
-function PageTransition({ children }: { children: ReactNode }) {
-  const shouldReduceMotion = useReducedMotion();
-  if (shouldReduceMotion) {
-    return <>{children}</>;
-  }
-  return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
@@ -183,7 +161,7 @@ export default function App() {
       <ScrollToTop />
     <Suspense fallback={<div role="status" aria-live="polite" className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface"><Logo className="w-16 h-16" alt="Fiesta y Lista" /><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /><p className="text-sm text-on-surface-variant font-medium animate-pulse">Cargando...</p></div>}>
       <TitleUpdater />
-      <AnimatePresence mode="wait">
+      <LazyAnimatePresence mode="popLayout">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<PageTransition><PageBoundary><Landing /></PageBoundary></PageTransition>} />
           <Route path="/login" element={<PageTransition><PageBoundary><Login /></PageBoundary></PageTransition>} />
@@ -217,7 +195,7 @@ export default function App() {
           <Route path="/arco-rights" element={<PageTransition><PageBoundary><ArcoRights /></PageBoundary></PageTransition>} />
           <Route path="*" element={<PageTransition><PageBoundary><NotFound /></PageBoundary></PageTransition>} />
         </Routes>
-      </AnimatePresence>
+      </LazyAnimatePresence>
     </Suspense>
     </QueryProvider>
   );

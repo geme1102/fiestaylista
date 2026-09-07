@@ -46,7 +46,7 @@ export default function Statistics() {
         </p>
         <Link
           to="/pricing"
-          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm"
+          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm active:scale-[0.97]"
         >
           Ver Planes
         </Link>
@@ -74,7 +74,7 @@ export default function Statistics() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm"
+          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm active:scale-[0.97]"
         >
           Reintentar
         </button>

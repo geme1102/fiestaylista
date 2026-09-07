@@ -6,6 +6,7 @@ import { refreshTokens, users, auditLogs } from '../db/schema.js';
 import { config } from '../config.js';
 import { UnauthorizedError } from '../utils/errors.js';
 import { createModuleLogger } from '../utils/logger.js';
+import { tokenVersionCache } from '../middleware/auth.js';
 
 const log = createModuleLogger('AuthTokens');
 
@@ -162,6 +163,8 @@ export async function rotateRefreshToken(
       .update(users)
       .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
       .where(eq(users.id, userId));
+      
+    tokenVersionCache.delete(userId);
   });
 
   // Audit best-effort: nunca debe bloquear la revocación de seguridad
@@ -200,4 +203,6 @@ export async function revokeAllUserTokens(userId: string, client: DbClient = db)
     .update(users)
     .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
     .where(eq(users.id, userId));
+    
+  tokenVersionCache.delete(userId);
 }

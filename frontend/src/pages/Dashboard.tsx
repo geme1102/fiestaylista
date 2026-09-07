@@ -272,12 +272,12 @@ export default function Dashboard() {
         <span className="material-symbols-outlined text-6xl text-red-400 mb-4" aria-hidden="true">error_outline</span>
         <h1 className="text-xl font-bold text-on-surface mb-2">No pudimos cargar tus eventos</h1>
         <p className="text-on-surface-variant mb-6 max-w-md">Revisa tu conexión e intenta de nuevo.</p>
-        <button
-          onClick={() => queryClient.invalidateQueries({ queryKey: ['events'] })}
-          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg min-h-[44px]"
-        >
-          Reintentar
-        </button>
+<button
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['events'] })}
+            className="px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg min-h-[44px] active:scale-[0.97] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+          >
+            Reintentar
+          </button>
       </div>
     );
   }
@@ -671,7 +671,7 @@ function CreateForm({ formData, setFormData, creating, handleCreate }: {
       <button
         type="submit"
         disabled={creating || !formData.title.trim()}
-        className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 btn-gpu disabled:opacity-50 flex items-center justify-center min-h-[52px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+        className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 btn-gpu disabled:opacity-50 flex items-center justify-center min-h-[52px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:scale-[0.97] transition-[transform] duration-150"
       >
         {creating ? <><LoadingSpinner size="sm" /><span className="ml-2">Creando...</span></> : 'Crear Lista de Regalos'}
       </button>

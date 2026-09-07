@@ -127,24 +127,32 @@ export async function login(
   try {
     const emailLower = email.toLowerCase();
     const ip = meta?.ipAddress;
-    if (ip && await isIpThrottled(ip)) {
-      throw new UnauthorizedError('Demasiados intentos desde esta dirección. Intenta de nuevo más tarde.');
-    }
+    
+    // Disparar checks de lockout en paralelo a la consulta DB (P5-H1)
+    const ipThrottledPromise = ip ? isIpThrottled(ip) : Promise.resolve(false);
+    const emailLockedPromise = isEmailLocked(emailLower);
 
     let rows: any[];
     try {
       rows = await sql`
         SELECT id, email, password_hash, name, tier, email_verified, created_at,
-               onboarding_completed, welcome_tutorial_completed
+               onboarding_completed, welcome_tutorial_completed, token_version
         FROM users WHERE email = ${emailLower} LIMIT 1
       `;
     } catch (err) {
       log.warn({ err }, 'Query con columnas opcionales falló — usando fallback');
       rows = await sql`
-        SELECT id, email, password_hash, name, tier, email_verified, created_at
+        SELECT id, email, password_hash, name, tier, email_verified, created_at, token_version
         FROM users WHERE email = ${emailLower} LIMIT 1
       `;
     }
+    
+    const [isThrottled, isEmLocked] = await Promise.all([ipThrottledPromise, emailLockedPromise]);
+
+    if (isThrottled) {
+      throw new UnauthorizedError('Demasiados intentos desde esta dirección. Intenta de nuevo más tarde.');
+    }
+
     const user = rows[0] as
       | {
           id: string;
@@ -154,13 +162,14 @@ export async function login(
           tier: string;
           email_verified: boolean;
           created_at: Date;
+          token_version: number;
           onboarding_completed?: boolean;
           welcome_tutorial_completed?: boolean;
         }
       | undefined;
 
     // Check email-based lockout BEFORE user lookup — catches non-existent emails too
-    if (await isEmailLocked(emailLower)) {
+    if (isEmLocked) {
       await bcrypt.compare(password, DUMMY_HASH);
       throw new UnauthorizedError('Demasiados intentos fallidos. Intenta de nuevo más tarde.');
     }
@@ -220,13 +229,8 @@ export async function login(
   await resetLockout(user.id);
   // Reset email lockout on successful login
   await resetEmailLockout(emailLower);
-  // Get current tokenVersion before issuing new tokens
-  const [currentUser] = await db
-    .select({ tokenVersion: users.tokenVersion })
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
-  const tokens = await issueTokenPair(user.id, user.email, currentUser?.tokenVersion ?? 0);
+  
+  const tokens = await issueTokenPair(user.id, user.email, user.token_version ?? 0);
 
   return {
     user: {

@@ -19,6 +19,37 @@ function isSseToken(decoded: unknown): boolean {
   );
 }
 
+interface CacheEntry {
+  version: number;
+  expires: number;
+}
+export const tokenVersionCache = new Map<string, CacheEntry>();
+
+async function getUserTokenVersion(userId: string): Promise<number | null> {
+  const cached = tokenVersionCache.get(userId);
+  if (cached && cached.expires > Date.now()) {
+    return cached.version;
+  }
+  
+  const [user] = await db
+    .select({ tokenVersion: users.tokenVersion })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) return null;
+
+  // Cleanup occasionally to prevent memory leaks in long-running processes
+  if (tokenVersionCache.size > 10000) tokenVersionCache.clear();
+
+  tokenVersionCache.set(userId, {
+    version: user.tokenVersion,
+    expires: Date.now() + 60000, // 60s TTL
+  });
+
+  return user.tokenVersion;
+}
+
 export async function requireAuth(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
@@ -39,18 +70,14 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
       throw new UnauthorizedError('Token inválido');
     }
 
-    // Verify tokenVersion matches current user tokenVersion (instant revocation)
-    const [user] = await db
-      .select({ tokenVersion: users.tokenVersion })
-      .from(users)
-      .where(eq(users.id, decoded.userId))
-      .limit(1);
+    // Verify tokenVersion matches current user tokenVersion (instant revocation up to 60s cache TTL)
+    const currentTokenVersion = await getUserTokenVersion(decoded.userId);
 
-    if (!user) {
+    if (currentTokenVersion === null) {
       throw new UnauthorizedError('Usuario no encontrado');
     }
 
-    if ((decoded.tokenVersion ?? 0) !== user.tokenVersion) {
+    if ((decoded.tokenVersion ?? 0) !== currentTokenVersion) {
       throw new UnauthorizedError('Token revocado. Por favor, inicia sesión de nuevo.');
     }
 
@@ -103,13 +130,9 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
       return;
     }
 
-    const [user] = await db
-      .select({ tokenVersion: users.tokenVersion })
-      .from(users)
-      .where(eq(users.id, decoded.userId))
-      .limit(1);
+    const currentTokenVersion = await getUserTokenVersion(decoded.userId);
 
-    if (user && (decoded.tokenVersion ?? 0) === user.tokenVersion) {
+    if (currentTokenVersion !== null && (decoded.tokenVersion ?? 0) === currentTokenVersion) {
       req.user = {
         userId: decoded.userId,
         email: decoded.email,

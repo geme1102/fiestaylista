@@ -258,7 +258,7 @@ export default function Account() {
               {user.tier === 'free' && (
                 <Link
                   to="/pricing"
-                  className="w-full block text-center py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-bold hover:shadow-lg transition-all mb-6"
+                  className="w-full block text-center py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-bold hover:shadow-lg transition-all mb-6 active:scale-[0.97] transition-[transform] duration-150"
                 >
                   Mejorar a Pro
                 </Link>
@@ -266,7 +266,7 @@ export default function Account() {
               {user.tier === 'pro' && (
                 <Link
                   to="/pricing"
-                  className="w-full block text-center py-3 bg-gradient-to-r from-secondary to-secondary-container text-on-secondary rounded-xl font-bold hover:shadow-lg transition-all mb-6"
+                  className="w-full block text-center py-3 bg-gradient-to-r from-secondary to-secondary-container text-on-secondary rounded-xl font-bold hover:shadow-lg transition-all mb-6 active:scale-[0.97] transition-[transform] duration-150"
                 >
                   Mejorar a Pro Plus
                 </Link>

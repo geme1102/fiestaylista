@@ -84,7 +84,7 @@ export default function ResetPassword() {
             <p className="text-on-surface-variant mb-6">Tu contraseña se ha restablecido correctamente.</p>
             <Link
               to="/login"
-              className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px]"
+              className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold hover:shadow-lg transition-all min-h-[44px] active:scale-[0.97]"
             >
               Iniciar sesión
             </Link>

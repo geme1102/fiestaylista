@@ -164,7 +164,7 @@ export default function EventGuest() {
           </div>
           <h1 className="text-2xl font-bold text-on-surface mb-2">Evento no encontrado</h1>
           <p className="text-on-surface-variant mb-6">{error || 'Este evento no existe o ha sido desactivado.'}</p>
-          <Link to="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center">
+          <Link to="/" className="inline-flex px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-semibold hover:shadow-lg transition-all min-h-[44px] items-center active:scale-[0.97] transition-[transform] duration-150">
             Ir al inicio
           </Link>
         </div>
