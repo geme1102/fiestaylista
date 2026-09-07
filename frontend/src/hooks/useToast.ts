@@ -6,7 +6,3 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
     position: 'bottom-center',
   });
 }
-
-export function dismissAllToasts() {
-  toast.dismiss();
-}

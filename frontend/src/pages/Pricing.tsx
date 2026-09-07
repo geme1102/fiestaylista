@@ -154,7 +154,7 @@ export default function Pricing() {
       }
       try {
         token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
-      } catch (err) {
+      } catch {
         token = null;
       }
       if (!token && turnstileError) {
