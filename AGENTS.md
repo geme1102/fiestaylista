@@ -122,6 +122,7 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 ### Fase 6 — Defensa bot
 - `createLimiter` acepta `windowMs` configurable (default 60s, resto de limiters intactos)
 - Limiters de seguridad en ventana de 15 min alineada con `lockout.ts` (`WINDOW_MINUTES`): `authLimiter` 10, `resetLimiter` 5, `strictFallbackLimiter` 5 — antes 60s fijos = 300 intentos/hora por IP vs umbral de lockout de 20/15min
+- **UX-429**: `authLimiter`/`resetLimiter` usan `skipSuccessfulRequests` (login exitoso NO consume cuota — el increment pre-handler se decrementa con `store.decrement()` si la respuesta es <400). Usuario legítimo no se auto-bloquea entrando/saliendo; fuerza bruta (401) sí consume. `strictFallbackLimiter` sin cambio (control de seguridad). NOTA diagnóstico: un 429 con body `text/plain "rate limited"` y `server: railway-hikari` NO es de la app — es el edge de Railway (verificar WAF/Under Attack Mode en el dashboard; `/health` también lo recibe porque se bloquea antes de llegar al servicio)
 
 ### Fase 7 — Bajas (unsubscribe/email)
 - Correos críticos (`verification`, `password_reset`) ignoran `email_suppressions` — antes un email con bounce/complaint/baja no podía verificar su cuenta ni recuperar su contraseña (atrapado fuera)
@@ -212,5 +213,5 @@ cd frontend && npm run test:e2e   # playwright, requiere frontend corriendo
 - **AR-02**: scripts de conveniencia raíz `npm run typecheck` y `npm run lint` (backend + frontend secuenciales).
 
 ### Counters
-- Backend: 386 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
-- Frontend: 394 tests (antes 386) | typecheck 0 errors | lint 0 errors (35 warnings preexistentes)
+- Backend: 389 tests (antes 231) | typecheck 0 errors | lint 0 errors (11 warnings preexistentes)
+- Frontend: 395 tests (antes 386) | typecheck 0 errors | lint 0 errors (36 warnings preexistentes)

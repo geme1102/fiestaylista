@@ -24,12 +24,12 @@ vi.mock('../middleware/rateLimitStore.js', () => ({
 import rateLimit from 'express-rate-limit';
 import { createLimiter, authKeyGenerator, strictKeyGenerator } from '../middleware/rateLimit.js';
 
-function optsFor(prefix: string): { windowMs: number; max: number } | undefined {
+function optsFor(prefix: string): { windowMs: number; max: number; skipSuccessfulRequests?: boolean } | undefined {
   const call = vi.mocked(rateLimit).mock.calls.find((c) => {
     const opts = c[0] as { keyGenerator: (req: unknown) => string };
     return opts.keyGenerator({ socket: {} }).startsWith(prefix);
   });
-  return call?.[0] as { windowMs: number; max: number } | undefined;
+  return call?.[0] as { windowMs: number; max: number; skipSuccessfulRequests?: boolean } | undefined;
 }
 
 describe('createLimiter', () => {
@@ -56,6 +56,18 @@ describe('createLimiter', () => {
   it('F6: strictFallbackLimiter usa ventana de 15 min', () => {
     expect(optsFor('strict')?.windowMs).toBe(15 * 60 * 1000);
     expect(optsFor('strict')?.max).toBe(10);
+  });
+
+  it('UX-429: authLimiter usa skipSuccessfulRequests (login exitoso no consume cuota)', () => {
+    expect(optsFor('auth')?.skipSuccessfulRequests).toBe(true);
+  });
+
+  it('UX-429: resetLimiter usa skipSuccessfulRequests', () => {
+    expect(optsFor('reset')?.skipSuccessfulRequests).toBe(true);
+  });
+
+  it('UX-429: strictFallbackLimiter NO usa skipSuccessfulRequests (control de seguridad intacto)', () => {
+    expect(optsFor('strict')?.skipSuccessfulRequests).toBeFalsy();
   });
 
   it('D2-A3: usa passOnStoreError: true (fail-open real ante fallo del store)', () => {

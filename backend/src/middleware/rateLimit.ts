@@ -36,7 +36,7 @@ export function authKeyGenerator(req: AuthRequest): string {
   return `email:${emailHash}:ip:${ip}`;
 }
 
-export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string; windowMs?: number }) {
+export function createLimiter(opts: { prefix: string; max: number; message: string; keyGenerator?: (req: AuthRequest) => string; windowMs?: number; skipSuccessful?: boolean }) {
   const baseKeyGenerator = opts.keyGenerator ?? keyGenerator;
   return rateLimit({
     store: new PostgresStore(),
@@ -44,6 +44,11 @@ export function createLimiter(opts: { prefix: string; max: number; message: stri
     max: opts.max,
     standardHeaders: true,
     legacyHeaders: false,
+    // UX-429: los logins EXITOSOS no consumen cuota — el increment ocurre antes
+    // del handler y express-rate-limit decrementa vía store.decrement() cuando
+    // la respuesta es < 400. Un usuario legítimo que entra/sale N veces no se
+    // auto-bloquea; un atacante con passwords erróneas (401) sí consume.
+    skipSuccessfulRequests: opts.skipSuccessful ?? false,
     // D2-A3: si el store lanza (Neon caído, pool saturado), dejar pasar el
     // request en vez de devolver 500 — el rate limiting es defensa, no un
     // punto único de fallo.
@@ -58,7 +63,7 @@ export function createLimiter(opts: { prefix: string; max: number; message: stri
 // ventana fija de 60s (300 intentos/hora por IP vs umbral de lockout de 20).
 const AUTH_WINDOW_MS = 15 * 60 * 1000;
 
-export const authLimiter = createLimiter({ prefix: 'auth', max: 10, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
+export const authLimiter = createLimiter({ prefix: 'auth', max: 10, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, skipSuccessful: true, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const apiLimiter = createLimiter({ prefix: 'api', max: config.API_RATE_LIMIT, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 
@@ -66,7 +71,7 @@ export const uploadLimiter = createLimiter({ prefix: 'upload', max: 10, message:
 
 export const guestUploadLimiter = createLimiter({ prefix: 'guest-upload', max: 10, message: 'Demasiadas subidas de invitado. Intenta de nuevo en un minuto.' });
 
-export const resetLimiter = createLimiter({ prefix: 'reset', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
+export const resetLimiter = createLimiter({ prefix: 'reset', max: 5, windowMs: AUTH_WINDOW_MS, keyGenerator: authKeyGenerator, skipSuccessful: true, message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' });
 
 export const giftLimiter = createLimiter({ prefix: 'gift', max: 30, message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' });
 

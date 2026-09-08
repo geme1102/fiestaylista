@@ -103,7 +103,7 @@ export default function Login() {
       setLoading(false);
       shakeTimerRef.current = setTimeout(() => setButtonStatus('idle'), 500);
       const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('Demasiados')) {
+      if (msg.toLowerCase().includes('demasiad')) {
         setRateLimited(true);
       }
       if (msg.includes('Credenciales inválidas')) {
