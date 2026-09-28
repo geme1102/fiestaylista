@@ -24,7 +24,7 @@ export default function Login() {
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const submittingRef = useRef(false);
 
-  const { containerRef, token: turnstileToken, error: turnstileError, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, error: turnstileError, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const isFormValid = email.length > 0 && password.length > 0 && (!!turnstileToken || !import.meta.env.VITE_TURNSTILE_SITE_KEY);
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
@@ -56,6 +56,9 @@ export default function Login() {
     try {
       let token = turnstileToken;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+          executeTurnstile();
+        }
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {

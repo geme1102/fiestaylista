@@ -41,7 +41,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   const submittingRef = useRef(false);
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -58,6 +58,7 @@ export default function RsvpForm({ eventId, guestName }: RsvpFormProps) {
     let token = turnstileTokenRef.current;
     try {
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
 

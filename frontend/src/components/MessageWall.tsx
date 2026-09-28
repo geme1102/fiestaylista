@@ -28,7 +28,7 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
     try { return localStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
   });
   const [submitting, setSubmitting] = useState(false);
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const submittingRef = useRef(false);
@@ -82,6 +82,7 @@ export default function MessageWall({ eventId, guestName, refreshKey = 0 }: Mess
     try {
       let token = turnstileTokenRef.current;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       const res = await apiClient.post<{ message: Message }>(`/api/events/${eventId}/messages`, {

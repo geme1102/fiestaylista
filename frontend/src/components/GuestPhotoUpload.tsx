@@ -20,7 +20,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
   const [preview, setPreview] = useState<string | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const submittingRef = useRef(false);
@@ -58,6 +58,7 @@ export default function GuestPhotoUpload({ eventId, onUploaded }: GuestPhotoUplo
     try {
       let token = turnstileTokenRef.current;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       const compressed = await compressImage(file);

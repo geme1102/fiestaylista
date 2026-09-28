@@ -479,7 +479,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
   const [message, setMessage] = useState(draft.message);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const promiseSubmittingRef = useRef(false);
@@ -504,6 +504,7 @@ function PromiseForm({ fundId, loadFund, guestName }: { fundId: string; loadFund
     try {
       let token = turnstileTokenRef.current;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       await createPromise({
@@ -611,7 +612,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
   const isMasked = phone.startsWith('****');
   const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
   const [revealLoading, setRevealLoading] = useState(false);
-  const { containerRef, token: revealToken, reset: resetReveal } = useTurnstile();
+  const { containerRef, token: revealToken, reset: resetReveal, execute: executeTurnstile } = useTurnstile();
   const revealTokenRef = useRef(revealToken);
   useEffect(() => { revealTokenRef.current = revealToken; }, [revealToken]);
 
@@ -622,6 +623,7 @@ function BankContact({ phone, bankType, eventId }: { phone: string; bankType: st
     try {
       let token = revealTokenRef.current;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => revealTokenRef.current);
       }
       const { apiClient } = await import('../services/api');

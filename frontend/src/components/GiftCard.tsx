@@ -37,7 +37,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
   // D1-C3: el widget de Turnstile solo se crea al abrir el form de claim grupal
   // (antes el hook corría con polling 200ms en TODAS las cards de la página).
   const turnstileActive = isGroupGift && !gift.isClaimed && showClaimForm;
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile({ enabled: turnstileActive });
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile({ enabled: turnstileActive });
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const submittingRef = useRef(false);
@@ -62,6 +62,7 @@ const GiftCard = memo(function GiftCard({ gift, onClaim, onFree, onDelete, claim
     try {
       let token = turnstileTokenRef.current;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       const res = await apiClient.put<{ claim: GiftClaim }>(`/api/events/${gift.eventId}/gifts/${gift.id}/group-claim`, {

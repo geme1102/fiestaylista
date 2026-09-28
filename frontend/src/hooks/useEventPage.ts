@@ -68,7 +68,7 @@ export function useEventPage() {
   const cancelPollRef = useRef<(() => void) | null>(null);
   const startPollingRef = useRef<(() => void) | null>(null);
   const rollbackRef = useRef<Gift[]>([]);
-  const { containerRef: turnstileRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef: turnstileRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -258,6 +258,7 @@ export function useEventPage() {
     let token = turnstileTokenRef.current;
     try {
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
     } catch (err) {

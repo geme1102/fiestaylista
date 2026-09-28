@@ -52,7 +52,7 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
-  const { containerRef, token: turnstileToken, reset: resetTurnstile } = useTurnstile();
+  const { containerRef, token: turnstileToken, reset: resetTurnstile, execute: executeTurnstile } = useTurnstile();
   const isFormValid = name.length > 0 && email.length > 0 && password.length >= 8
     && /[A-Z]/.test(password) && /[0-9]/.test(password) && acceptTerms && acceptPrivacy
     && (!!turnstileToken || !import.meta.env.VITE_TURNSTILE_SITE_KEY);
@@ -97,6 +97,7 @@ export default function Register() {
     try {
       let token = turnstileToken;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       if (!token && import.meta.env.VITE_TURNSTILE_SITE_KEY) {

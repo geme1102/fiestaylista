@@ -100,7 +100,7 @@ export default function Pricing() {
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
+  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -153,6 +153,7 @@ export default function Pricing() {
         showToast('Verificando que no eres un robot...', 'info');
       }
       try {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
       } catch {
         token = null;

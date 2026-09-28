@@ -16,7 +16,7 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const { containerRef, token: turnstileToken } = useTurnstile();
+  const { containerRef, token: turnstileToken, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
   const submittingRef = useRef(false);
@@ -39,6 +39,7 @@ export default function ForgotPassword() {
     try {
       let token = turnstileToken;
       if (!token) {
+        if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
         token = await waitForTurnstile(() => turnstileTokenRef.current);
       }
       if (!token) {

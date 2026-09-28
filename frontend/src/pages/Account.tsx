@@ -53,7 +53,7 @@ export default function Account() {
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const cancelSubmittingRef = useRef(false);
   const deleteAccountSubmittingRef = useRef(false);
-  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError } = useTurnstile();
+  const { containerRef, token: turnstileToken, ready: turnstileReady, error: turnstileError, execute: executeTurnstile } = useTurnstile();
   const turnstileTokenRef = useRef(turnstileToken);
   useEffect(() => { turnstileTokenRef.current = turnstileToken; }, [turnstileToken]);
 
@@ -326,7 +326,8 @@ export default function Account() {
                                 showToast('Verificando que no eres un robot...', 'info');
                               }
                               try {
-                                token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
+                                if (import.meta.env.VITE_TURNSTILE_SITE_KEY) executeTurnstile();
+        token = await waitForTurnstile(() => turnstileTokenRef.current, 50);
                               } catch {
                                 token = null;
                               }

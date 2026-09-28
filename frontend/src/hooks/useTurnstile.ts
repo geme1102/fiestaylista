@@ -134,5 +134,11 @@ export function useTurnstile({ enabled = true }: { enabled?: boolean } = {}) {
     resetTimerRef.current = setTimeout(() => setReady(true), 500);
   }, []);
 
-  return { containerRef, token, ready, reset, error };
+  const execute = useCallback(() => {
+    if (widgetId.current && window.turnstile) {
+      window.turnstile.execute(widgetId.current);
+    }
+  }, []);
+
+  return { containerRef, token, ready, reset, error, execute };
 }
